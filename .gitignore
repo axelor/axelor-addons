@@ -1,0 +1,47 @@
+# Gradle
+build
+.gradle
+
+# Eclispe
+bin
+.project
+.classpath
+.settings
+.metadata
+
+# Intellij
+out
+.idea
+*.iml
+*.ipr
+*.iws
+atlassian-ide-plugin.xml
+
+# NetBeans
+.nbattrs
+
+# virtual machine crash logs
+hs_err_pid*
+
+# Backup files
+*.sw[nop]
+*~
+.#*
+[#]*#
+
+# dotenv or direnv
+.env
+.envrc
+
+# Miscellaneous
+*.log
+.clover
+.DS_Store
+
+# Profiler and heap dumps
+*.jps
+*.hprof
+/.nb-gradle/
+
+# JavaScript
+node_modules
