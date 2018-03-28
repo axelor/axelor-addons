@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<menuitem name="admin-root-batch-redmine" parent="admin-root-batch"
+		title="Redmine batches" action="admin.root.batch.redmine"/>
+
+	<action-view name="admin.root.batch.redmine" title="Redmine batches"
+		model="com.axelor.apps.redmine.db.RedmineBatch" >
+		<view type="grid" name="redmine-batch-grid"/>
+		<view type="form" name="redmine-batch-form"/>
+	</action-view>
+</object-views>
