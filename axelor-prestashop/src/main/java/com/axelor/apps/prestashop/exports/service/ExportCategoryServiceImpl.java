@@ -75,7 +75,7 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
 			filter.append(" AND EXISTS(Select 1 From Product where productCategory = self and sellable = true)");
 		}
 		q.filter(filter.toString(), params.toArray());
-		q.order("-self.parentProductCategory.id");
+		q.order("-parentProductCategory.id");
 
 		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
