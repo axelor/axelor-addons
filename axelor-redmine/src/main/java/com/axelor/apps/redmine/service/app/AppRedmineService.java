@@ -1,7 +1,5 @@
 package com.axelor.apps.redmine.service.app;
 
-import java.util.List;
-
 import com.axelor.apps.helpdesk.db.Ticket;
 import com.axelor.apps.helpdesk.db.TicketType;
 import com.axelor.exception.AxelorException;
@@ -19,7 +17,7 @@ public interface AppRedmineService {
 	
 	public void createTicketType(TicketType ticketType);
 	
-	public void createTicketsFromIssues(List<Issue> issues, String projectCode);
+	public void createTicketFromIssue(Issue issue, String projectCode);
 	
 	public boolean isTicketTypeExist(String ticketType);
 	

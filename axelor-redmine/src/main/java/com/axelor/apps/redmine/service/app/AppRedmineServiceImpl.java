@@ -20,6 +20,7 @@ import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
+import com.taskadapter.redmineapi.Params;
 import com.taskadapter.redmineapi.RedmineAuthenticationException;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
@@ -62,7 +63,6 @@ public class AppRedmineServiceImpl implements AppRedmineService{
 
 	@Override
 	public int[] getIssuesOfAllRedmineProjects() throws RedmineException {
-		Integer queryId = null;
 		SUCCEEDED_TICKET_COUNT = 0;
 		ANOMALY_TICKET_COUNT = 0;
 		
@@ -72,16 +72,30 @@ public class AppRedmineServiceImpl implements AppRedmineService{
 		List<com.taskadapter.redmineapi.bean.Project> commomProjects = new ArrayList<>();//Common projects between ABS projects and Redmine projects
 		
 		mgr.getProjectManager().getProjects().stream().forEach(project -> {
-			if(projectCodes.stream().anyMatch(project.getIdentifier()::equalsIgnoreCase))
+			if(projectCodes.stream().anyMatch(project.getIdentifier()::equalsIgnoreCase)) 
 				commomProjects.add(project);
 		});
+		 
+		Params params = new Params()
+				.add("f[]", "project_id")
+				.add("op[project_id]", "=")
+				.add("f[]", "issue_id")
+				.add("op[issue_id]", "!");
 		
-		for (com.taskadapter.redmineapi.bean.Project singleCommonProject : commomProjects) {
-			List<Issue> issues = mgr.getIssueManager().getIssues(singleCommonProject.getIdentifier(), queryId);
-			if(issues!=null && issues.size()>0) {
-				String code = projectCodes.stream().filter(codes -> codes.equalsIgnoreCase(singleCommonProject.getIdentifier())).findFirst().orElse(null);
+		commomProjects.stream().forEach(singleCommonProject -> {
+			params.add("v[project_id][]", singleCommonProject.getId().toString());
+		});
+		ticketRepo.all().fetch().stream().forEach(ticket -> {
+			params.add("v[issue_id][]",ticket.getRedmineId().toString());
+		});
+			
+		List<Issue> issues = mgr.getIssueManager().getIssues(params).getResults();
+		
+		if(issues!=null && issues.size()>0) {
+			for (Issue issue : issues) {
+				String code = commomProjects.stream().filter(singleCommonProject -> singleCommonProject.getId().equals(issue.getProjectId())).findFirst().get().getIdentifier().toUpperCase().toString();
 				if(code!=null)
-					createTicketsFromIssues(issues,code);
+					createTicketFromIssue(issue,code);
 			}
 		}
 		return new int[] { SUCCEEDED_TICKET_COUNT , ANOMALY_TICKET_COUNT };
@@ -103,38 +117,34 @@ public class AppRedmineServiceImpl implements AppRedmineService{
 	}
 	
 	@Override
-	public void createTicketsFromIssues(List<Issue> issues, String projectCode) {
+	public void createTicketFromIssue(Issue issue, String projectCode) {
 		
 		Project absProject = Beans.get(ProjectRepository.class).findByCode(projectCode);
-		for (Issue issue : issues) {	
-			Ticket ticket = ticketRepo.all().filter("self.redmineId = ?1",issue.getId()).fetchOne();
-			if(ticket==null) {
-				ticket = new Ticket();
-				ticket.setRedmineId(issue.getId());
-				ticket.setSubject(issue.getSubject());
-				ticket.setProject(absProject);
-				ticket.setDescription(issue.getDescription());
-				ticket.setPrioritySelect(issue.getPriorityId());
-				ticket.setProgressSelect(issue.getDoneRatio());
-				ticket.setStartDateT(LocalDateTime.ofInstant(issue.getStartDate().toInstant(), ZoneId.systemDefault()));
-				
-				if(isTicketTypeExist(issue.getTracker().getName()))
-					ticket.setTicketType(ticketTypeRepo.findByName(issue.getTracker().getName()));
-				else {
-					TicketType ticketType = new TicketType();
-					ticketType.setName(issue.getTracker().getName());
-					createTicketType(ticketType);
-					ticket.setTicketType(ticketType);
-				}
-				
-				if(isAssignedToUserExist(issue.getAssigneeName()))
-						ticket.setAssignedToUser(userRepo.findByName(issue.getAssigneeName()));	
-				if(createTicket(ticket)==1)
-					SUCCEEDED_TICKET_COUNT  += 1;
-				else 
-					ANOMALY_TICKET_COUNT += 1;
-			}
+		Ticket ticket = new Ticket();
+		ticket.setRedmineId(issue.getId());
+		ticket.setSubject(issue.getSubject());
+		ticket.setProject(absProject);
+		ticket.setDescription(issue.getDescription());
+		ticket.setPrioritySelect(issue.getPriorityId());
+		ticket.setProgressSelect(issue.getDoneRatio());
+		ticket.setStartDateT(LocalDateTime.ofInstant(issue.getStartDate().toInstant(), ZoneId.systemDefault()));
+		
+		if(isTicketTypeExist(issue.getTracker().getName()))
+			ticket.setTicketType(ticketTypeRepo.findByName(issue.getTracker().getName()));
+		else {
+			TicketType ticketType = new TicketType();
+			ticketType.setName(issue.getTracker().getName());
+			createTicketType(ticketType);
+			ticket.setTicketType(ticketType);
 		}
+		
+		if(isAssignedToUserExist(issue.getAssigneeName()))
+				ticket.setAssignedToUser(userRepo.findByName(issue.getAssigneeName()));	
+		if(createTicket(ticket)==1)
+			SUCCEEDED_TICKET_COUNT  += 1;
+		else 
+			ANOMALY_TICKET_COUNT += 1;
+		
 	}
 
 	@Override
