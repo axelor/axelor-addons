@@ -243,9 +243,9 @@ public class ExportProductServiceImpl implements ExportProductService {
 						remoteProduct.setWeight(weight);
 					}
 
-					// FIXME handle language correctly, only override value for appConfig.textsLanguage
 					remoteProduct.getName().setTranslation(language, localProduct.getName());
 					remoteProduct.getDescription().setTranslation(language, localProduct.getDescription());
+					remoteProduct.setTaxRulesGroupId(1); // FIXME Need to have a mapping and use getAccountManagementList
 					remoteProduct.setEan13(localProduct.getEan13());
 					if(localProduct.getSalesUnit() != null) {
 						remoteProduct.setUnity(localProduct.getSalesUnit().getLabelToPrinting());
