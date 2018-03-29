@@ -342,10 +342,10 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 			remoteRow.setProductPrice(localRow.getPrice().setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
 			if(localRow.getDiscountTypeSelect() != null) {
 				switch(localRow.getDiscountTypeSelect()) {
-				case PriceListLineRepository.TYPE_PERCENT:
+				case PriceListLineRepository.AMOUNT_TYPE_PERCENT:
 					remoteRow.setDiscountPercent(localRow.getDiscountAmount().setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
 					break;
-				case PriceListLineRepository.TYPE_FIXED:
+				case PriceListLineRepository.AMOUNT_TYPE_FIXED:
 					remoteRow.setDiscountAmount(localRow.getDiscountAmount().setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
 					break;
 				}
@@ -494,7 +494,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 			ws.save(PrestashopResourceType.ORDER_PAYMENTS, payment);
 		}
 
-		if(localOrder.getDeliveryState() == SaleOrderRepository.STATE_DELIVERED) {
+		if(localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_DELIVERED) {
 			if(remoteDelivery == null) {
 				remoteDelivery = new PrestashopDelivery();
 				remoteDelivery.setCarrierId(1); // FIXME Handle a mapping in freight port products?
