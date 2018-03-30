@@ -2,9 +2,9 @@ package com.axelor.apps.redmine.service.app;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import com.axelor.apps.base.db.repo.UserBaseRepository;
 import com.axelor.apps.helpdesk.db.Ticket;
@@ -20,11 +20,13 @@ import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
+import com.taskadapter.redmineapi.IssueManager;
 import com.taskadapter.redmineapi.Params;
 import com.taskadapter.redmineapi.RedmineAuthenticationException;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.RedmineManagerFactory;
+import com.taskadapter.redmineapi.bean.CustomFieldDefinition;
 import com.taskadapter.redmineapi.bean.Issue;
 
 @Singleton
@@ -40,10 +42,10 @@ public class AppRedmineServiceImpl implements AppRedmineService{
 	UserBaseRepository userRepo;
 
 	private RedmineManager mgr;
-
-	private int SUCCEEDED_TICKET_COUNT;
 	
-	private int ANOMALY_TICKET_COUNT;
+	private IssueManager imgr;
+	
+	private Map<Integer, Project> commonProjects;
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -62,64 +64,55 @@ public class AppRedmineServiceImpl implements AppRedmineService{
 	}
 
 	@Override
-	public int[] getIssuesOfAllRedmineProjects() throws RedmineException {
-		SUCCEEDED_TICKET_COUNT = 0;
-		ANOMALY_TICKET_COUNT = 0;
+	public List<Issue> getIssuesOfAllRedmineProjects() throws RedmineException {
 		
-		//ABS projects code
-		List<String> projectCodes = Beans.get(ProjectRepository.class).all().fetchSteam().map(p -> p.getCode()).collect(Collectors.toList());
-				
-		List<com.taskadapter.redmineapi.bean.Project> commomProjects = new ArrayList<>();//Common projects between ABS projects and Redmine projects
+		List<Project> absProjects = Beans.get(ProjectRepository.class).all().fetch();
 		
-		mgr.getProjectManager().getProjects().stream().forEach(project -> {
-			if(projectCodes.stream().anyMatch(project.getIdentifier()::equalsIgnoreCase)) 
-				commomProjects.add(project);
-		});
-		 
-		Params params = new Params()
-				.add("f[]", "project_id")
-				.add("op[project_id]", "=")
-				.add("f[]", "issue_id")
-				.add("op[issue_id]", "!");
+		commonProjects = new HashMap<>(); 
 		
-		commomProjects.stream().forEach(singleCommonProject -> {
-			params.add("v[project_id][]", singleCommonProject.getId().toString());
-		});
-		ticketRepo.all().fetch().stream().forEach(ticket -> {
-			params.add("v[issue_id][]",ticket.getRedmineId().toString());
-		});
+		absProjects.stream().forEach(project -> {
+			com.taskadapter.redmineapi.bean.Project redmineProject;
+			try {
+				redmineProject = mgr.getProjectManager().getProjectByKey(project.getCode().toLowerCase().toString());
+				commonProjects.put(redmineProject.getId(), project);
+			} catch (RedmineException e) {	e.printStackTrace();	}
 			
-		List<Issue> issues = mgr.getIssueManager().getIssues(params).getResults();
+		});
+	 
+		Params params = new Params();
 		
-		if(issues!=null && issues.size()>0) {
-			for (Issue issue : issues) {
-				String code = commomProjects.stream().filter(singleCommonProject -> singleCommonProject.getId().equals(issue.getProjectId())).findFirst().get().getIdentifier().toUpperCase().toString();
-				if(code!=null)
-					createTicketFromIssue(issue,code);
+		if(commonProjects.size()>0) {
+			params.add("f[]", "project_id")
+			.add("op[project_id]", "=");
+			
+			commonProjects.entrySet().forEach(singleCommonProject ->  {
+				params.add("v[project_id][]", singleCommonProject.getKey().toString());
+			});
+			
+			CustomFieldDefinition cdf = mgr.getCustomFieldManager().getCustomFieldDefinitions()
+			.stream().filter(df -> df.getName().contains("isImported")).findFirst().orElse(null);
+			
+			if(cdf!=null) {
+				params.add("f[]", "cf_"+cdf.getId())
+				.add("op[cf_"+cdf.getId()+"]", "!")
+				.add("v[cf_"+cdf.getId()+"][]","1");
 			}
+			
+			List<Issue> issues = null;
+			imgr = mgr.getIssueManager();
+			issues = imgr.getIssues(params).getResults();
+			
+			if(issues!=null && issues.size()>0)
+				return issues;
 		}
-		return new int[] { SUCCEEDED_TICKET_COUNT , ANOMALY_TICKET_COUNT };
+		return null;
 	}
 	
 	@Override
 	@Transactional
-	public int createTicket(Ticket ticket) {
-		if(ticketRepo.save(ticket)!=null)
-			return 1;
-		else 
-			return 0;
-	}
-
-	@Override
-	@Transactional
-	public void createTicketType(TicketType ticketType) {
-		ticketTypeRepo.save(ticketType);
-	}
-	
-	@Override
-	public void createTicketFromIssue(Issue issue, String projectCode) {
+	public void createTicketFromIssue(Issue issue) throws RedmineException{
+		Project absProject = commonProjects.get(issue.getProjectId());
 		
-		Project absProject = Beans.get(ProjectRepository.class).findByCode(projectCode);
 		Ticket ticket = new Ticket();
 		ticket.setRedmineId(issue.getId());
 		ticket.setSubject(issue.getSubject());
@@ -128,23 +121,19 @@ public class AppRedmineServiceImpl implements AppRedmineService{
 		ticket.setPrioritySelect(issue.getPriorityId());
 		ticket.setProgressSelect(issue.getDoneRatio());
 		ticket.setStartDateT(LocalDateTime.ofInstant(issue.getStartDate().toInstant(), ZoneId.systemDefault()));
-		
+		issue.getCustomFieldByName("isImported").setValue("1");
 		if(isTicketTypeExist(issue.getTracker().getName()))
 			ticket.setTicketType(ticketTypeRepo.findByName(issue.getTracker().getName()));
 		else {
 			TicketType ticketType = new TicketType();
 			ticketType.setName(issue.getTracker().getName());
-			createTicketType(ticketType);
 			ticket.setTicketType(ticketType);
 		}
 		
 		if(isAssignedToUserExist(issue.getAssigneeName()))
-				ticket.setAssignedToUser(userRepo.findByName(issue.getAssigneeName()));	
-		if(createTicket(ticket)==1)
-			SUCCEEDED_TICKET_COUNT  += 1;
-		else 
-			ANOMALY_TICKET_COUNT += 1;
-		
+				ticket.setAssignedToUser(userRepo.findByName(issue.getAssigneeName()));
+		ticketRepo.save(ticket);
+		imgr.update(issue);
 	}
 
 	@Override
