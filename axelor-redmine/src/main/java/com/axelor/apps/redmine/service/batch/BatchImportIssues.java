@@ -1,25 +1,38 @@
 package com.axelor.apps.redmine.service.batch;
 
+import java.util.List;
+
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.app.AppRedmineService;
+import com.axelor.exception.AxelorException;
+import com.axelor.exception.db.IException;
 import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineException;
+import com.taskadapter.redmineapi.bean.Issue;
 
 public class BatchImportIssues extends AbstractBatch{
 
 	@Inject
 	AppRedmineService redmineService;
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	protected void process() {
+		List<Issue> issues = null;
 		try {
-			int[] count = redmineService.getIssuesOfAllRedmineProjects();
-			for (int i = 0; i < count[0]; i++) {  incrementDone(); }
-			for (int i = 0; i < count[1]; i++) {  incrementAnomaly(); }
-		} catch (RedmineException e) {
-			e.printStackTrace();
+			issues = redmineService.getIssuesOfAllRedmineProjects();
+			if(issues!=null && issues.size()>0) {
+				for (Issue issue : issues) {
+					try {
+						redmineService.createTicketFromIssue(issue);
+						incrementDone();
+					} catch (RedmineException e) {	incrementAnomaly();	 }
+				}
+			}
+		} catch (RedmineException e1) {
+			new AxelorException("No issues for Projects found!!", IException.CONFIGURATION_ERROR);
 		}
 	}
 	
