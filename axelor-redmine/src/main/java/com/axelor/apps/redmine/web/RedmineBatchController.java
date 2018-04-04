@@ -3,7 +3,7 @@ package com.axelor.apps.redmine.web;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.service.app.AppRedmineService;
+import com.axelor.apps.redmine.service.app.RedmineService;
 import com.axelor.apps.redmine.service.batch.RedmineBatchService;
 import com.axelor.exception.AxelorException;
 import com.axelor.rpc.ActionRequest;
@@ -20,7 +20,7 @@ public class RedmineBatchController {
 	RedmineBatchService redmineBatchService;
 	
 	@Inject
-	AppRedmineService redmineService;
+	RedmineService redmineService;
 	
 	public void actionImport(ActionRequest request, ActionResponse response) throws AxelorException{
 
