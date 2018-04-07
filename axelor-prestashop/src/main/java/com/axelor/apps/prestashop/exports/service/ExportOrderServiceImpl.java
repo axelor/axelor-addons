@@ -33,7 +33,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +44,7 @@ import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.base.service.CurrencyService;
+import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.prestashop.entities.Associations.CartRowsAssociationElement;
 import com.axelor.apps.prestashop.entities.Associations.OrderRowsAssociationElement;
@@ -73,22 +73,25 @@ import com.google.inject.persist.Transactional;
 public class ExportOrderServiceImpl implements ExportOrderService {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
-	private SaleOrderRepository saleOrderRepo;
-	private AddressService addressService;
-	private CurrencyService currencyService;
-	private UnitConversionService unitConversionService;
-	private InvoiceRepository invoiceRepository;
+	protected InvoiceRepository invoiceRepository;
+	protected SaleOrderRepository saleOrderRepo;
+
+	protected AddressService addressService;
+	protected CurrencyService currencyService;
+	protected PartnerService partnerService;
+	protected UnitConversionService unitConversionService;
 
 	@Inject
-	public ExportOrderServiceImpl(SaleOrderRepository saleOrderRepo, AddressService addressService, InvoiceRepository invoiceRepository,
-			CurrencyService currencyService, UnitConversionService unitConversionService) {
+	public ExportOrderServiceImpl(InvoiceRepository invoiceRepository, SaleOrderRepository saleOrderRepo,
+			AddressService addressService, CurrencyService currencyService, PartnerService partnerService,
+			UnitConversionService unitConversionService) {
+		this.invoiceRepository = invoiceRepository;
 		this.saleOrderRepo = saleOrderRepo;
 		this.addressService = addressService;
-		this.invoiceRepository = invoiceRepository;
 		this.currencyService = currencyService;
+		this.partnerService = partnerService;
 		this.unitConversionService = unitConversionService;
 	}
-
 
 	@Override
 	@Transactional
@@ -182,7 +185,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 				if(localOrder.getPaymentCondition() != null) {
 					remoteOrder.setPayment(localOrder.getPaymentCondition().getName());
 				} else {
-					remoteOrder.setPayment(I18n.getBundle(new Locale(StringUtils.defaultString(localOrder.getClientPartner().getLanguageSelect(), "en"))).getString("Unknown"));
+					remoteOrder.setPayment(I18n.getBundle(new Locale(partnerService.getPartnerLanguageCode(localOrder.getClientPartner()))).getString("Unknown"));
 				}
 				remoteOrder.setModule("ps_checkpayment"); // FIXME make this configurable (through translation table?)
 				remoteOrder.setSecureKey(RandomStringUtils.random(32, "0123456789abcdef"));

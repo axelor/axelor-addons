@@ -304,7 +304,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 					if(remoteOrder.getTotalPaidTaxIncluded().compareTo(localOrder.getInTaxTotal()) != 0) {
 						logWriter.write(String.format(" - Remote and local order total differs (%f vs %f)", remoteOrder.getTotalPaidTaxIncluded(), localOrder.getInTaxTotal()));
 						if((localOrder.getStatusSelect() != SaleOrderRepository.STATUS_DRAFT && localOrder.getStatusSelect() != SaleOrderRepository.STATUS_FINALIZED) ||
-								localOrder.getDeliveryState() != SaleOrderRepository.STATE_NOT_DELIVERED ||
+								localOrder.getDeliveryState() != SaleOrderRepository.DELIVERY_STATE_DELIVERED ||
 								(localOrder.getAmountInvoiced() == null || BigDecimal.ZERO.compareTo(localOrder.getAmountInvoiced()) != 0)) {
 							final String additionalComment = I18n.get("<p>WARNING: Order has been modified on PrestaShop but could not be updated locally.</p>");
 							if(localOrder.getInternalNote().indexOf(additionalComment) < 0) {
@@ -370,17 +370,17 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 			}
 
 			if(localStatus.getShipped()) {
-				if(localOrder.getDeliveryState() == SaleOrderRepository.STATE_NOT_DELIVERED) {
+				if(localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
 					localOrder.setDeliveryDate(remoteOrder.getDeliveryDate().toLocalDate());
 					try {
 						StockMove delivery = deliveryService.createStocksMovesFromSaleOrder(localOrder);
 						stockMoveService.realize(delivery, true);
 						for(SaleOrderLine line : localOrder.getSaleOrderLineList()) {
 							if(ProductRepository.PRODUCT_TYPE_SERVICE.equals(line.getProduct().getProductTypeSelect())) {
-								line.setDeliveryState(SaleOrderRepository.STATE_DELIVERED);
+								line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
 							}
 						}
-						localOrder.setDeliveryState(SaleOrderRepository.STATE_DELIVERED);
+						localOrder.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
 					} catch(AxelorException ae) {
 						TraceBackService.trace(ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
 						logWriter.write(String.format(" [ERROR] An error occured while generating delivery for sale order: %s%n", ae.getLocalizedMessage()));
@@ -421,13 +421,13 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 				localLine.setProductName(remoteLine.getProductName());
 				localLine.setPrice(remoteLine.getProductPrice());
 				if(remoteLine.getDiscountPercent().compareTo(BigDecimal.ZERO) != 0) {
-					localLine.setDiscountTypeSelect(PriceListLineRepository.TYPE_PERCENT);
+					localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_PERCENT);
 					localLine.setDiscountAmount(remoteLine.getDiscountPercent());
 				} else if(remoteLine.getDiscountAmount().compareTo(BigDecimal.ZERO) != 0) {
-					localLine.setDiscountTypeSelect(PriceListLineRepository.TYPE_FIXED);
+					localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_FIXED);
 					localLine.setDiscountAmount(remoteLine.getDiscountAmount());
 				} else {
-					localLine.setDiscountTypeSelect(PriceListLineRepository.TYPE_NONE);
+					localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_NONE);
 				}
 				localLine.setPriceDiscounted(saleOrderLineService.computeDiscount(localLine));
 
@@ -471,7 +471,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
 			localLine.setQty(BigDecimal.ONE);
 			localLine.setPrice(deliveryAmount);
-			localLine.setDiscountTypeSelect(PriceListLineRepository.TYPE_NONE);
+			localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_NONE);
 			localLine.setPriceDiscounted(deliveryAmount);
 
 			// Sets exTaxTotal, inTaxTotal, companyInTaxTotal, companyExTaxTotal
