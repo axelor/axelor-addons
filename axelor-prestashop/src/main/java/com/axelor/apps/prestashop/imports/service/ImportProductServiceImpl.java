@@ -99,6 +99,7 @@ public class ImportProductServiceImpl implements ImportProductService {
 
 			try {
 				if(PrestashopProduct.PRODUCT_TYPE_PACK.equals(remoteProduct.getType())) {
+					// Warning, if ever handled, you'll have to handle them in order management too
 					logWriter.write(String.format("[ERROR] Product is a pack, this is not handled right now, skipping%n"));
 					continue;
 				}

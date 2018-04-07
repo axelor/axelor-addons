@@ -32,7 +32,6 @@ import com.axelor.apps.prestashop.db.PrestaShopBatch;
 import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.imports.PrestaShopServiceImport;
 import com.axelor.i18n.I18n;
-import com.google.inject.persist.Transactional;
 
 public class ImportPrestaShop extends AbstractBatch {
 	private static final Logger LOG = LoggerFactory.getLogger( MethodHandles.lookup().lookupClass() );
@@ -49,7 +48,6 @@ public class ImportPrestaShop extends AbstractBatch {
 	}
 
 	@Override
-	@Transactional
 	protected void process() {
 		try {
 			PrestaShopBatch prestaShopBatch = (PrestaShopBatch) model;

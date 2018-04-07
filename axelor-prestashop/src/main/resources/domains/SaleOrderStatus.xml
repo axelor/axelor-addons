@@ -5,7 +5,7 @@
 
 	<entity name="SaleOrderStatus" lang="java" cachable="true">
 		<integer name="absStatus" selection="sale.order.status.select" title="Sale order status"/>
-		<integer name="prestaShopStatus" selection="presta.shop.sale.order.status.select" title="PrestaShop Sale order status"/>
+		<many-to-one name="prestaShopStatus" ref="PrestashopOrderStatusCacheEntry"/>
 	</entity>
 
 </domain-models>
