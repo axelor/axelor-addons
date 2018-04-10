@@ -25,7 +25,6 @@ import com.axelor.db.Model;
  * @author dubaux
  *
  */
-@Deprecated
 public interface IPrestaShopBatch {
 
 	/**

@@ -27,13 +27,6 @@
 		    <field name="prestaShopBatchLog" title="Logs" widget="binary-link"/>
 		    <field name="comments" showTitle="false" colSpan="12"/>
 		    <button name="showTraceBack" title="Anomalies" colSpan="2" onClick="save,action-batch-show-trace-back"/>
-		    <button name="showInvoice" title="Invoices" hidden="true" colSpan="2" onClick="save,action-batch-show-invoice"/>
-		    <button name="showReimbursement" title="Reimbursements" hidden="true" colSpan="2" onClick="save,action-batch-show-reimbursement"/>
-		    <button name="showPaymentScheduleLine" title="Schedule lines" hidden="true" colSpan="2" onClick="save,action-batch-show-payment-schedule-line"/>
-		    <button name="showPartner" title="Partners" hidden="true" colSpan="2" onClick="save,action-batch-show-partner"/>
-		    <button name="showAccountingSituation" title="Accounting situations" hidden="true" colSpan="2" onClick="save,action-batch-show-accounting-situation"/>
-		    <button name="showPaymentVoucher" title="Payment vouchers" hidden="true" colSpan="2" onClick="save,action-batch-show-payment-voucher"/>
-		    <button name="showAccountingReport" title="Accounting Export" hidden="true" colSpan="2" onClick="save,action-batch-show-accounting-report"/>
 		</panel>
     </form>
 

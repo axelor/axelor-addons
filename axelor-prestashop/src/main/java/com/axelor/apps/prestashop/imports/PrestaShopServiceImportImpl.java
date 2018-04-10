@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.prestashop.imports;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
@@ -87,14 +86,12 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
 	@Override
 	public void importFromPrestaShop(AppPrestashop appConfig, ZonedDateTime endDate, Batch batch) throws IOException, PrestaShopWebserviceException, TransformerException, JAXBException, JSONException {
 		StringBuilderWriter logWriter = new StringBuilderWriter(1024);
-		BufferedWriter bufferedWriter = new BufferedWriter(logWriter); // FIXME remove once refactored
 		try {
-			importAxelorBase(appConfig, endDate, bufferedWriter);
-			//orderService.importOrder(bufferedWriter);
-			//orderDetailService.importOrderDetail(bufferedWriter);
-			bufferedWriter.write(String.format("%n==== END OF LOG ====%n"));
+			importAxelorBase(appConfig, endDate, logWriter);
+			orderService.importOrder(appConfig, endDate, logWriter);
+			logWriter.write(String.format("%n==== END OF LOG ====%n"));
 		} finally {
-			IOUtils.closeQuietly(bufferedWriter);
+			IOUtils.closeQuietly(logWriter);
 			MetaFile importMetaFile = metaFiles.upload(new ByteArrayInputStream(logWriter.toString().getBytes()), "import-log.txt");
 			batch.setPrestaShopBatchLog(importMetaFile);
 		}

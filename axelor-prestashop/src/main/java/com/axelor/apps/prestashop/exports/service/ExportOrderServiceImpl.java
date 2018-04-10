@@ -41,19 +41,16 @@ import com.axelor.apps.account.db.InvoicePayment;
 import com.axelor.apps.account.db.repo.InvoicePaymentRepository;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
 import com.axelor.apps.base.db.AppPrestashop;
-import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.base.service.UnitConversionService;
-import com.axelor.apps.prestashop.db.SaleOrderStatus;
 import com.axelor.apps.prestashop.entities.Associations.CartRowsAssociationElement;
 import com.axelor.apps.prestashop.entities.Associations.OrderRowsAssociationElement;
 import com.axelor.apps.prestashop.entities.PrestashopCart;
 import com.axelor.apps.prestashop.entities.PrestashopDelivery;
 import com.axelor.apps.prestashop.entities.PrestashopOrder;
-import com.axelor.apps.prestashop.entities.PrestashopOrderHistory;
 import com.axelor.apps.prestashop.entities.PrestashopOrderInvoice;
 import com.axelor.apps.prestashop.entities.PrestashopOrderPayment;
 import com.axelor.apps.prestashop.entities.PrestashopOrderRowDetails;
@@ -76,24 +73,25 @@ import com.google.inject.persist.Transactional;
 public class ExportOrderServiceImpl implements ExportOrderService {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
+	protected InvoiceRepository invoiceRepository;
 	protected SaleOrderRepository saleOrderRepo;
+
 	protected AddressService addressService;
 	protected CurrencyService currencyService;
-	protected UnitConversionService unitConversionService;
-	protected InvoiceRepository invoiceRepository;
 	protected PartnerService partnerService;
+	protected UnitConversionService unitConversionService;
 
 	@Inject
-	public ExportOrderServiceImpl(SaleOrderRepository saleOrderRepo, AddressService addressService, InvoiceRepository invoiceRepository,
-			CurrencyService currencyService, UnitConversionService unitConversionService, PartnerService partnerService) {
+	public ExportOrderServiceImpl(InvoiceRepository invoiceRepository, SaleOrderRepository saleOrderRepo,
+			AddressService addressService, CurrencyService currencyService, PartnerService partnerService,
+			UnitConversionService unitConversionService) {
+		this.invoiceRepository = invoiceRepository;
 		this.saleOrderRepo = saleOrderRepo;
 		this.addressService = addressService;
-		this.invoiceRepository = invoiceRepository;
 		this.currencyService = currencyService;
-		this.unitConversionService = unitConversionService;
 		this.partnerService = partnerService;
+		this.unitConversionService = unitConversionService;
 	}
-
 
 	@Override
 	@Transactional
@@ -115,10 +113,6 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 			filter.append("AND (self.createdOn > ?1 OR self.updatedOn > ?2 OR self.prestaShopId IS NULL)");
 			params.add(endDate);
 			params.add(endDate);
-		}
-
-		if(appConfig.getIsOrderStatus() == Boolean.TRUE) {
-			filter.append("AND (self.statusSelect = 1)");
 		}
 
 		if(appConfig.getExportNonPrestashopOrders() == Boolean.FALSE) {
@@ -181,18 +175,17 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 				remoteOrder = new PrestashopOrder();
 				remoteCart = new PrestashopCart();
 
-				Partner clientPartner = localOrder.getClientPartner();
-				remoteOrder.setCustomerId(clientPartner.getPrestaShopId());
+				remoteOrder.setCustomerId(localOrder.getClientPartner().getPrestaShopId());
 				remoteOrder.setCurrencyId(localOrder.getCurrency().getPrestaShopId());
 				remoteOrder.setDeliveryAddressId(localOrder.getDeliveryAddress().getPrestaShopId());
 				remoteOrder.setInvoiceAddressId(localOrder.getMainInvoicingAddress().getPrestaShopId());
-				remoteOrder.setLanguageId(1); // FIXME Handle language correctly
+				remoteOrder.setLanguageId(appConfig.getTextsLanguage().getPrestaShopId() == null ? 1 : appConfig.getTextsLanguage().getPrestaShopId());
 				remoteOrder.setCarrierId(1); // TODO We should have a way to provide mapping between FreightCarrierModes and PrestaShop carriers
 				remoteOrder.setAddDate(localOrder.getCreatedOn());
 				if(localOrder.getPaymentCondition() != null) {
 					remoteOrder.setPayment(localOrder.getPaymentCondition().getName());
 				} else {
-					remoteOrder.setPayment(I18n.getBundle(new Locale(partnerService.getPartnerLanguageCode(clientPartner))).getString("Unknown"));
+					remoteOrder.setPayment(I18n.getBundle(new Locale(partnerService.getPartnerLanguageCode(localOrder.getClientPartner()))).getString("Unknown"));
 				}
 				remoteOrder.setModule("ps_checkpayment"); // FIXME make this configurable (through translation table?)
 				remoteOrder.setSecureKey(RandomStringUtils.random(32, "0123456789abcdef"));
@@ -264,30 +257,6 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 			remoteOrder.setTotalShippingTaxIncluded(taxIncludedShippingCosts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
 			remoteOrder.setTotalShippingTaxExcluded(taxExcludedShippingCosts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
 
-			SaleOrderStatus orderStatus = null;
-
-			// FIXME This is too dumb to use with prestashop, we've to enforce things
-			// with following statuses (user only provides mapping) :
-			//  - awaiting payment (since there's no status for "on hold" on prestashop): no payment nor delivery
-			//  - payment accepted:  fully paid and no delivery
-			//  - preparation: partially delivered
-			//  - shipped: totally delivered
-			// Also, only export orders that are confirmed, we may create carts for earlier statuses but this
-			// won't have a big interest.
-			if(Boolean.TRUE.equals(appConfig.getIsOrderStatus())) {
-				for(SaleOrderStatus status : appConfig.getSaleOrderStatusList()) {
-					if(status.getAbsStatus() == localOrder.getStatusSelect()) {
-						orderStatus = status;
-						break;
-					}
-				}
-				if(orderStatus == null) {
-					logBuffer.write(String.format(" [WARNING] No mapping for order status %s, leaving untouched%n"));
-				} else {
-					remoteOrder.setCurrentState(orderStatus.getPrestaShopStatus());
-				}
-			}
-
 			// TODO Check if recreating on every run is an issue, we could also perform a diff on the order
 			List<OrderRowsAssociationElement> remoteOrderRows = remoteOrder.getAssociations().getOrderRows().getOrderRows();
 			remoteOrderRows.clear();
@@ -328,20 +297,6 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 
 			exportLines(appConfig, ws, localOrder, localRows, remoteInvoiceId, logBuffer);
 
-
-			if(orderStatus != null) {
-				Map<String, String> historyFilter = new HashMap<>();
-				historyFilter.put("id_order", remoteOrder.getId().toString());
-				historyFilter.put("id_order_state", orderStatus.getPrestaShopStatus().toString());
-				PrestashopOrderHistory history = ws.fetchOne(PrestashopResourceType.ORDER_HISTORIES, historyFilter);
-				if(history == null) {
-					logBuffer.write(String.format(" — Order status changed, recording new one"));
-					history = new PrestashopOrderHistory();
-					history.setOrderId(remoteOrder.getId().intValue());
-					history.setOrderStateId(orderStatus.getPrestaShopStatus().intValue());
-					history = ws.save(PrestashopResourceType.ORDER_HISTORIES, history);
-				}
-			}
 
 			// We've to save *after* the lines are updated since totalPaid fields are totally ignored and forced
 			// to product base price * qty otherwhise.

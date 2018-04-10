@@ -5,7 +5,10 @@
 
 	<entity name="SaleOrder" lang="java">
 		<integer name="prestaShopId" nullable="true"/>
-		<string name="deletedSaleOrderLine"/>
+
+		<unique-constraint columns="prestaShopId"/>
+
+		<finder-method name="findByPrestaShopId" using="prestaShopId"/>
 	</entity>
 
 </domain-models>

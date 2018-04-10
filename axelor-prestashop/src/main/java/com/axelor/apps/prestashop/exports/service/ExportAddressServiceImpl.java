@@ -52,8 +52,7 @@ public class ExportAddressServiceImpl implements ExportAddressService {
 	private Logger log = LoggerFactory.getLogger(getClass());
 
 	protected PartnerAddressRepository partnerAddressRepo;
-	
-	protected PartnerService partnerService; 
+	protected PartnerService partnerService;
 
 	@Inject
 	public ExportAddressServiceImpl(PartnerAddressRepository partnerAddressRepo, PartnerService partnerService) {
@@ -102,14 +101,13 @@ public class ExportAddressServiceImpl implements ExportAddressService {
 						continue;
 					}
 				} else {
-					Partner partner = partnerAddress.getPartner();
-					if(partner.getPrestaShopId() == null) {
+					if(partnerAddress.getPartner().getPrestaShopId() == null) {
 						logBuffer.write(String.format(" [WARNING] Address belongs to a not-yet synced customer, skipping%n"));
 						continue;
 					}
 					remoteAddress = new PrestashopAddress();
-					remoteAddress.setCustomerId(partner.getPrestaShopId());
-					remoteAddress.setAlias(I18n.getBundle(new Locale(partnerService.getPartnerLanguageCode(partner))).getString("Main address"));
+					remoteAddress.setCustomerId(partnerAddress.getPartner().getPrestaShopId());
+					remoteAddress.setAlias(I18n.getBundle(new Locale(partnerService.getPartnerLanguageCode(partnerAddress.getPartner()))).getString("Main address"));
 
 					// Do this on creation, it seems hazardous to update data since user can update them on its
 					// side too… I guess import job should trigger new address creation when too much data

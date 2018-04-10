@@ -35,23 +35,6 @@ public interface IExceptionMessage {
 	/**
 	 * Base batch service
 	 */
-	static final public String PRESTASHOP_BATCH_1 = /*$$(*/ "Unknown action %s for the %s prestashop" /*)*/;
+	static final public String PRESTASHOP_BATCH_1 = /*$$(*/ "Unknown action %s for prestashop batch %s" /*)*/;
 	static final public String PRESTASHOP_BATCH_2 = /*$$(*/ "Batch %s unknown" /*)*/;
-	
-	/**
-	 * Batch log
-	 */
-	static final String INVALID_CURRENCY = /*$$(*/ "Currency code /name is null or invalid" /*)*/;
-	static final String INVALID_COUNTRY = /*$$(*/ "Country is null or invalid" /*)*/;
-	static final String INVALID_CONTACT = /*$$(*/ "Contact is null or invalid" /*)*/;
-	static final String INVALID_INDIVIDUAL = /*$$(*/ "Individual is null or invalid" /*)*/;
-	static final String INVALID_EMAIL = /*$$(*/ "Email is null or invalid" /*)*/;
-	static final String INVALID_COMPANY = /*$$(*/ "Company/Firstname is null or invalid" /*)*/;
-	static final String INVALID_CITY = /*$$(*/ "City is null or invalid" /*)*/;
-	static final String INVALID_PRODUCT_CATEGORY = /*$$(*/ "Product Category is null or invalid" /*)*/;
-	static final String INVALID_PRODUCT = /*$$(*/ "Product Name is null or invalid" /*)*/;
-	static final String INVALID_ADDRESS = /*$$(*/ "Address is null or invalid" /*)*/;
-	static final String INVALID_ORDER = /*$$(*/ "Order is null or invalid" /*)*/;
-	static final String INVALID_ORDER_LINE = /*$$(*/ "This order is not on prestashop or invalid product" /*)*/;
-	static final String INVALID_CUSTOMER = /*$$(*/ "Customer is null or invalid" /*)*/;
 }

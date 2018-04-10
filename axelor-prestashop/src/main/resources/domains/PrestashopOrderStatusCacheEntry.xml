@@ -6,7 +6,7 @@
 	<!-- Local cache of available order statuses -->
 	<entity name="PrestashopOrderStatusCacheEntry" lang="java" cachable="true">
 		<integer name="prestaShopId" nullable="false"/>
-		<string name="name" nullable="false"/>
+		<string name="name" nullable="false" namecolumn="true"/>
 		<boolean name="delivered" nullable="false"/>
 		<boolean name="invoiced" nullable="false"/>
 		<boolean name="shipped" nullable="false"/>

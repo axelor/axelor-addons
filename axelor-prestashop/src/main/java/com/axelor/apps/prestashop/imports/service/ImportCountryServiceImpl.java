@@ -55,9 +55,11 @@ public class ImportCountryServiceImpl implements ImportCountryService {
 
 		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 		List<PrestashopCountry> remoteCountries = ws.fetchAll(PrestashopResourceType.COUNTRIES);
+		final int language = (appConfig.getTextsLanguage().getPrestaShopId() == null ? 1 : appConfig.getTextsLanguage().getPrestaShopId());
+
 
 		for(PrestashopCountry remoteCountry : remoteCountries) {
-			logBuffer.write(String.format("Importing country #%d (%s) – ", remoteCountry.getId(), remoteCountry.getName().getTranslation(1)));
+			logBuffer.write(String.format("Importing country #%d (%s) – ", remoteCountry.getId(), remoteCountry.getName().getTranslation(language)));
 
 			Country localCountry = countryRepo.findByPrestaShopId(remoteCountry.getId());
 			if(localCountry == null) {
@@ -84,7 +86,7 @@ public class ImportCountryServiceImpl implements ImportCountryService {
 			localCountry.setPrestaShopZoneId(remoteCountry.getZoneId());
 
 			if(localCountry.getId() == null || appConfig.getPrestaShopMasterForCountries() == Boolean.TRUE) {
-				localCountry.setName(remoteCountry.getName().getTranslation(1)); // TODO Handle language correctly
+				localCountry.setName(remoteCountry.getName().getTranslation(language));
 				if(remoteCountry.getCallPrefix() != null) {
 					localCountry.setPhonePrefix(remoteCountry.getCallPrefix().toString());
 				}
