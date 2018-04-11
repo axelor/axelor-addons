@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.cmms.service;
 
+import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.app.AppService;
 import com.axelor.apps.cmms.db.MaintenanceRequest;
 import com.axelor.apps.cmms.db.repo.MaintenanceRequestRepository;
 import com.google.inject.Inject;
@@ -26,6 +28,9 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
 	
 	@Inject
 	private MaintenanceRequestRepository maintenanceRequestRepo;
+	
+	@Inject
+	private AppBaseService appBaseService;
 	
 	@Transactional
 	public MaintenanceRequest confirm(MaintenanceRequest  maintenanceRequest) {
@@ -40,6 +45,7 @@ public class MaintenanceRequestServiceImpl implements MaintenanceRequestService 
 	public MaintenanceRequest complete(MaintenanceRequest  maintenanceRequest) {
 		
 		maintenanceRequest.setStatusSelect(MaintenanceRequestRepository.STATUS_COMPLETED);
+		maintenanceRequest.setDoneOn(appBaseService.getTodayDate());
 		
 		return maintenanceRequestRepo.save(maintenanceRequest);
 		

@@ -52,9 +52,8 @@
 	    <field name="assignedTo"/>
 	    <field name="actionSelect"/>
 	    <field name="doneOn"/>
-		<hilite color="danger" if="doneOn == null &amp;&amp; expectedDate != null &amp;&amp; expectedDate.isAfter(_todayDate)"/>
+		<hilite color="danger" if="doneOn == null"/>
 		<hilite color="success" if="doneOn != null"/>
-		<hilite color="info" if="doneOn == null &amp;&amp; expectedDate != null &amp;&amp; expectedDate.isBefore(_todayDate)"/>
         <template>
             <![CDATA[
             <h4>{{record.equipementMaintenance.maintenanceCategory.name || ''}}</h4>
