@@ -1,0 +1,17 @@
+package com.axelor.apps.redmine.service.app;
+
+import java.util.List;
+
+import com.axelor.exception.AxelorException;
+import com.taskadapter.redmineapi.RedmineException;
+import com.taskadapter.redmineapi.RedmineManager;
+import com.taskadapter.redmineapi.bean.Issue;
+
+public interface RedmineService {
+	
+	public RedmineManager checkRedmineCredentials(String uri, String apiAccessKey) throws AxelorException ;
+	
+	public List<Issue> getIssuesOfAllRedmineProjects() throws RedmineException, AxelorException;
+	
+	public void createTicketFromIssue(Issue issue) throws RedmineException;
+}
