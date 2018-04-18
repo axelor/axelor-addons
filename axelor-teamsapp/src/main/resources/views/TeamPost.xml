@@ -13,7 +13,7 @@
 			<field name="name" />
 			<field name="title" />
 			<field name="typeSelect"/>
-			<field name="parentTeamPost" domain="self.original = null"/>
+			<field name="parentTeamPost" onSelect="action-team-post-attrs-parent-team-post-domain"/>
 			<field name="content"  widget="html" colSpan="12"/>
 		</panel>	
 		<panel title="Project">
@@ -27,5 +27,9 @@
 		  <mail-followers />
 	  	</panel-mail>
 	</form>
+	
+	<action-attrs name="action-team-post-attrs-parent-team-post-domain">
+		<attribute name="domain" for="parentTeamPost" expr="eval:&quot;self.originalTeamPost is null and self.id != ${id}&quot;"/>
+	</action-attrs>
 
 </object-views>

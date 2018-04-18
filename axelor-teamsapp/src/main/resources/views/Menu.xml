@@ -10,7 +10,7 @@
 	<action-view name="team.post.all" title="Team post" model="com.axelor.apps.teamsapp.db.TeamPost">
 	    <view type="grid" name="team-post-grid"/>
 	    <view type="form" name="team-post-form"/>
-	    <domain>self.original = null</domain>
+	    <domain>self.originalTeamPost = null</domain>
 	</action-view>
 
 </object-views>
