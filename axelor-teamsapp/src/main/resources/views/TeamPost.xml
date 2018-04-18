@@ -13,7 +13,7 @@
 			<field name="name" />
 			<field name="title" />
 			<field name="typeSelect"/>
-			<field name="parentTeamPost" />
+			<field name="parentTeamPost" domain="self.original = null"/>
 			<field name="content"  widget="html" colSpan="12"/>
 		</panel>	
 		<panel title="Project">

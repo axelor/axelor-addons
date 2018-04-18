@@ -13,6 +13,8 @@
 	<many-to-one name="parentTeamPost" ref="TeamPost" title="Parent" />
 	<many-to-one name="project" ref="com.axelor.apps.project.db.Project" title="Project" />
 	<many-to-many name="membersUserSet" ref="com.axelor.auth.db.User" title="Membres"/>
+	<many-to-one name='original' ref='TeamPost'/>
+	<one-to-many name='history'  ref='TeamPost' mappedBy='original'/>
 	<track>
 		<field name="name" />
 		<field name="creationDate" on="CREATE" />
