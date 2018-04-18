@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+  
+  <form name="app-redmine-config-form" title="App Redmine" model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false" width="large">
+    <panel>
+      <field name="uri" title="URI"/>
+  	  <field name="apiAccessKey" title="Api Access Key"/>
+    </panel>
+  </form>
+  
+  <action-view name="admin.root.conf.redmine.config" title="Redmine configurations"
+    model="com.axelor.apps.redmine.db.RedmineConfig" >
+    <view type="form" name="redmine-config-form"/>
+  </action-view>
+  
+</object-views>
