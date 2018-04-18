@@ -1,0 +1,2 @@
+"name";"code";"installOrder";"description";"imagePath";"modules";"dependsOn";"sequence"
+"Redmine";"redmine";30;"Redmine configuration";"app-redmine.png";"axelor-redmine";"project,helpdesk";53
