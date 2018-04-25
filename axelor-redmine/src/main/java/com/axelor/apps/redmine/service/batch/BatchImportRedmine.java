@@ -17,15 +17,13 @@
  */
 package com.axelor.apps.redmine.service.batch;
 
-import java.util.List;
-
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.RedmineService;
+import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineException;
-import com.taskadapter.redmineapi.bean.Issue;
 
 public class BatchImportRedmine extends AbstractBatch {
 
@@ -34,28 +32,21 @@ public class BatchImportRedmine extends AbstractBatch {
 
 	@Override
 	protected void process() {
-		List<Issue> issues = null;
+			
 		try {
-			issues = redmineService.getIssues(batch);
-			if (issues != null && issues.size() > 0) {
-				for (Issue issue : issues) {
-					try {
-						redmineService.createTicketFromIssue(issue);
-						incrementDone();
-					} catch (RedmineException e) {
-						incrementAnomaly();
-					}
-				}
-			}
-		} catch (RedmineException e1) {
-			throw new RuntimeException(e1);
+			redmineService.importRedmineIssues(batch, ticket -> incrementDone(), error -> incrementAnomaly());
+		} 
+		catch (AxelorException | RedmineException e) {
+			throw new RuntimeException(e);
 		}
+		
 		setResetImport();
 	}
 
 	private void setResetImport() {
-		if (batch.getRedmineBatch().getIsResetImported())
+		if (batch.getRedmineBatch().getIsResetImported()) {
 			batch.getRedmineBatch().setIsResetImported(false);
+		}
 	}
 
 	@Override

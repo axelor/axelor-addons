@@ -17,18 +17,15 @@
  */
 package com.axelor.apps.redmine.service;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.helpdesk.db.Ticket;
 import com.axelor.exception.AxelorException;
 import com.taskadapter.redmineapi.RedmineException;
-import com.taskadapter.redmineapi.bean.Issue;
 
 public interface RedmineService {
 
-	public void checkRedmineCredentials(String uri, String apiAccessKey) throws AxelorException;
-
-	public List<Issue> getIssues(Batch batch) throws RedmineException;
-
-	public void createTicketFromIssue(Issue issue) throws RedmineException;
+	public void importRedmineIssues(Batch batch, Consumer<Ticket> onSuccess, Consumer<Throwable> onError) throws AxelorException, RedmineException;
+	
 }
