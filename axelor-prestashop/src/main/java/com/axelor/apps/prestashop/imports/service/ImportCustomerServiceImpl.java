@@ -34,6 +34,7 @@ import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.IAdministration;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.base.db.repo.SequenceRepository;
 import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.administration.SequenceService;
@@ -93,7 +94,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
 					// Assign a company to generate an accounting situation
 					localCustomer.addCompanySetItem(AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany());
 					if(appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
-						localCustomer.setPartnerSeq(Beans.get(SequenceService.class).getSequenceNumber(IAdministration.PARTNER));
+						localCustomer.setPartnerSeq(Beans.get(SequenceService.class).getSequenceNumber(SequenceRepository.PARTNER));
 						if(localCustomer.getPartnerSeq() == null) {
 							++errors;
 							logBuffer.write(String.format("No sequence configured for partners, unable to create customer, skipping [ERROR]%n"));
@@ -126,7 +127,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
 							mainContact.setFullName(partnerService.computeFullName(mainContact));
 							mainContact.setMainPartner(localCustomer);
 							if(appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
-								mainContact.setPartnerSeq(Beans.get(SequenceService.class).getSequenceNumber(IAdministration.PARTNER));
+								mainContact.setPartnerSeq(Beans.get(SequenceService.class).getSequenceNumber(SequenceRepository.PARTNER));
 								if(mainContact.getPartnerSeq() == null) {
 									++errors;
 									logBuffer.write(String.format("No sequence configured for partners, unable to import main contact, skipping [ERROR]%n"));
