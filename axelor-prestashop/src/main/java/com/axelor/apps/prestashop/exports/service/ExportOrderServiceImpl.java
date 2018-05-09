@@ -355,9 +355,9 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 			}
 			remoteRow.setEan13(localRow.getProduct().getEan13());
 			remoteRow.setProductReference(localRow.getProduct().getCode());
-			if(localRow.getProduct().getGrossWeight() != null) {
+			if(localRow.getProduct().getGrossMass() != null) {
 				try {
-					remoteRow.setProductWeight(unitConversionService.convert(localRow.getProduct().getWeightUnit(), appConfig.getPrestaShopWeightUnit(), localRow.getProduct().getGrossWeight()));
+					remoteRow.setProductWeight(unitConversionService.convert(localRow.getProduct().getMassUnit(), appConfig.getPrestaShopWeightUnit(), localRow.getProduct().getGrossMass()));
 				} catch(AxelorException e) {
 					log.error("Exception while converting product weight");
 				}

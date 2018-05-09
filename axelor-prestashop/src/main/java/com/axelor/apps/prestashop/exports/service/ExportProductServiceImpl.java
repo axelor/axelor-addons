@@ -236,9 +236,9 @@ public class ExportProductServiceImpl implements ExportProductService {
 						remoteProduct.setHeight(localProduct.getHeight());
 						remoteProduct.setDepth(localProduct.getLength());
 					}
-					BigDecimal weight = localProduct.getGrossWeight() == null ? localProduct.getNetWeight() : localProduct.getGrossWeight();
-					if(localProduct.getWeightUnit() != null) {
-						remoteProduct.setWeight(unitConversionService.convert(appConfig.getPrestaShopWeightUnit(), localProduct.getWeightUnit(), weight));
+					BigDecimal weight = localProduct.getGrossMass() == null ? localProduct.getNetMass() : localProduct.getGrossMass();
+					if(localProduct.getMassUnit() != null) {
+						remoteProduct.setWeight(unitConversionService.convert(appConfig.getPrestaShopWeightUnit(), localProduct.getMassUnit(), weight));
 					} else {
 						remoteProduct.setWeight(weight);
 					}

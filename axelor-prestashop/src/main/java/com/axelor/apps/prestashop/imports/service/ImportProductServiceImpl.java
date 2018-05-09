@@ -163,8 +163,8 @@ public class ImportProductServiceImpl implements ImportProductService {
 							logWriter.write(" [WARNING] Unable to convert sale price, check your currency conversion rates");
 						}
 					}
-					if(localProduct.getWeightUnit() == null) localProduct.setWeightUnit(appConfig.getPrestaShopWeightUnit());
-					localProduct.setGrossWeight(convert(appConfig.getPrestaShopWeightUnit(), localProduct.getWeightUnit(), remoteProduct.getWeight()));
+					if(localProduct.getMassUnit() == null) localProduct.setMassUnit(appConfig.getPrestaShopWeightUnit());
+					localProduct.setGrossMass(convert(appConfig.getPrestaShopWeightUnit(), localProduct.getMassUnit(), remoteProduct.getWeight()));
 
 					if(localProduct.getLengthUnit() == null) localProduct.setLengthUnit(appConfig.getPrestaShopLengthUnit());
 					localProduct.setWidth(convert(appConfig.getPrestaShopLengthUnit(), localProduct.getLengthUnit(), remoteProduct.getWidth()));
