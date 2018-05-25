@@ -269,7 +269,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
 				// Now handle status, this is rather complicated since PrestaShop status also handle
 				// invoicing, payment and delivery
-				if(localOrder.getStatusSelect() == SaleOrderRepository.STATUS_DRAFT) {
+				if(localOrder.getStatusSelect() == SaleOrderRepository.STATUS_DRAFT_QUOTATION) {
 					try {
 						// Note that in case of taxes mismatch, this will probably blow everything up
 						saleOrderComputeService.computeSaleOrder(localOrder);
@@ -283,7 +283,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 					// Consider this as finalized, draft would be a cart without order, unhandled right now
 					localOrder.setManualUnblock(Boolean.TRUE);
 					try {
-						saleOrderWorkflowService.finalizeSaleOrder(localOrder);
+						saleOrderWorkflowService.finalizeQuotation(localOrder);
 					} catch(AxelorException ae) {
 						TraceBackService.trace(ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
 						logWriter.write(String.format(" [ERROR] An error occured while finalizing sale order: %s%n", ae.getLocalizedMessage()));
@@ -303,7 +303,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 					// OK so order exists, we've to see if we need to update something
 					if(remoteOrder.getTotalPaidTaxIncluded().compareTo(localOrder.getInTaxTotal()) != 0) {
 						logWriter.write(String.format(" - Remote and local order total differs (%f vs %f)", remoteOrder.getTotalPaidTaxIncluded(), localOrder.getInTaxTotal()));
-						if((localOrder.getStatusSelect() != SaleOrderRepository.STATUS_DRAFT && localOrder.getStatusSelect() != SaleOrderRepository.STATUS_FINALIZED) ||
+						if((localOrder.getStatusSelect() != SaleOrderRepository.STATUS_DRAFT_QUOTATION && localOrder.getStatusSelect() != SaleOrderRepository.STATUS_FINALIZED_QUOTATION) ||
 								localOrder.getDeliveryState() != SaleOrderRepository.DELIVERY_STATE_DELIVERED ||
 								(localOrder.getAmountInvoiced() == null || BigDecimal.ZERO.compareTo(localOrder.getAmountInvoiced()) != 0)) {
 							final String additionalComment = I18n.get("<p>WARNING: Order has been modified on PrestaShop but could not be updated locally.</p>");
@@ -323,7 +323,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 				}
 			}
 
-			if((localStatus.getPaid() || localStatus.getDelivered() || localStatus.getInvoiced() || localStatus.getShipped()) && localOrder.getStatusSelect() == SaleOrderRepository.STATUS_FINALIZED) {
+			if((localStatus.getPaid() || localStatus.getDelivered() || localStatus.getInvoiced() || localStatus.getShipped()) && localOrder.getStatusSelect() == SaleOrderRepository.STATUS_FINALIZED_QUOTATION) {
 				// Order has been paid or invoiced, it means it's confirmed
 				localOrder.setManualUnblock(Boolean.TRUE);
 				try {
@@ -436,7 +436,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 				// discounted price is computed
 				// TODO Have a tax mapping?
 				saleOrderLineService.computeValues(localOrder, localLine);
-				saleOrderLineService.computeSubMargin(localLine);
+				saleOrderLineService.computeSubMargin(localOrder, localLine);
 
 				localOrder.addSaleOrderLineListItem(localLine);
 			} catch(AxelorException ae) {
@@ -478,7 +478,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 			// We just prey for rounding & tax rates to be consistent between PS & ABS since
 			// discounted price is computed
 			saleOrderLineService.computeValues(localOrder, localLine);
-			saleOrderLineService.computeSubMargin(localLine);
+			saleOrderLineService.computeSubMargin(localOrder, localLine);
 
 			localOrder.addSaleOrderLineListItem(localLine);
 		} catch(AxelorException ae) {
