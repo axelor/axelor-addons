@@ -29,7 +29,7 @@ import com.axelor.apps.prestashop.service.exports.batch.ExportPrestaShop;
 import com.axelor.apps.prestashop.service.imports.batch.ImportPrestaShop;
 import com.axelor.db.Model;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.IException;
+import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 
@@ -69,11 +69,11 @@ public class PrestaShopBatchService extends AbstractBatchService {
 				break;
 
 			default:
-				throw new AxelorException(IException.INCONSISTENCY, String.format(I18n.get(IExceptionMessage.PRESTASHOP_BATCH_1), prestaShopBatch.getActionSelect(), batchCode));
+				throw new AxelorException(TraceBackRepository.CATEGORY_INCONSISTENCY, String.format(I18n.get(IExceptionMessage.PRESTASHOP_BATCH_1), prestaShopBatch.getActionSelect(), batchCode));
 			}
 		}
 		else {
-			throw new AxelorException(IException.INCONSISTENCY, String.format(I18n.get(IExceptionMessage.PRESTASHOP_BATCH_2), batchCode));
+			throw new AxelorException(TraceBackRepository.CATEGORY_INCONSISTENCY, String.format(I18n.get(IExceptionMessage.PRESTASHOP_BATCH_2), batchCode));
 		}
 		return batch;
 	}

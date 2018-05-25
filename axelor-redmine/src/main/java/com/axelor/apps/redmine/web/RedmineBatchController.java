@@ -26,7 +26,7 @@ import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.apps.redmine.service.batch.RedmineBatchService;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.IException;
+import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Inject;
@@ -36,7 +36,7 @@ public class RedmineBatchController {
 
 	@Inject
 	private AppRedmineRepository appRedmineRepo;
-	
+
 	@Inject
 	private RedmineBatchRepository redmineBatchRepo;
 
@@ -52,13 +52,13 @@ public class RedmineBatchController {
 		if(!StringUtils.isNullOrEmpty(appRedmine.getUri()) && !StringUtils.isNullOrEmpty(appRedmine.getApiAccessKey())) {
 			// checking redmine credentials using Api access key
 			redmineService.checkRedmineCredentials(appRedmine.getUri(), appRedmine.getApiAccessKey());
-			
+
 			Batch batch = redmineBatchService.importIssues(redmineBatchRepo.find(request.getContext().asType(RedmineBatch.class).getId()));
 			if (batch != null)
 				response.setFlash(batch.getComments());
 			response.setReload(true);
 		} else {
-			throw new AxelorException(IException.CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_1);
+			throw new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_1);
 		}
 	}
 }
