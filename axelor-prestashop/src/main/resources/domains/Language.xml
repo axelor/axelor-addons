@@ -5,6 +5,7 @@
 
 	<entity name="Language" lang="java" cachable="true">
 		<integer name="prestaShopId" nullable="true" readonly="true"/>
+		<integer name="prestaShopVersion" nullable="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 		

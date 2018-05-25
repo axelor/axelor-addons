@@ -18,7 +18,6 @@
 package com.axelor.apps.prestashop.service.exports.batch;
 
 import java.lang.invoke.MethodHandles;
-import java.time.ZonedDateTime;
 
 import javax.inject.Inject;
 
@@ -27,8 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import com.axelor.apps.base.db.repo.AppPrestashopRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.prestashop.batch.PrestaShopBatchService;
-import com.axelor.apps.prestashop.db.PrestaShopBatch;
 import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.exports.PrestaShopServiceExport;
 import com.axelor.i18n.I18n;
@@ -38,25 +35,20 @@ public class ExportPrestaShop extends AbstractBatch {
 
 	private PrestaShopServiceExport prestaShopServiceExport;
 	private AppPrestashopRepository appRepository;
-	private PrestaShopBatchService batchService;
 
 	@Inject
-	public ExportPrestaShop(PrestaShopServiceExport prestaShopServiceExport, AppPrestashopRepository appRepository, PrestaShopBatchService batchService) {
+	public ExportPrestaShop(PrestaShopServiceExport prestaShopServiceExport, AppPrestashopRepository appRepository) {
 		this.prestaShopServiceExport = prestaShopServiceExport;
 		this.appRepository = appRepository;
-		this.batchService = batchService;
 	}
 
 	@Override
 	protected void process() {
 		try {
-			PrestaShopBatch prestaShopBatch = (PrestaShopBatch) model;
-
-			ZonedDateTime referenceDate = batchService.getLastSuccessfullRunStartDate(prestaShopBatch);
 			if(LOG.isDebugEnabled()) {
-				LOG.debug("Starting export from ABS to PrestaShop with reference date {}", referenceDate);
+				LOG.debug("Starting export from ABS to PrestaShop");
 			}
-			prestaShopServiceExport.export(appRepository.all().fetchOne(), referenceDate, batch);
+			prestaShopServiceExport.export(appRepository.all().fetchOne(), batch);
 
 			checkPoint(); // cannot call save directly as we've no transaction
 			incrementDone();

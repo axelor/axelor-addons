@@ -25,8 +25,6 @@ import java.math.BigDecimal;
 import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +75,7 @@ public class ExportProductServiceImpl implements ExportProductService {
 
 	@Override
 	@Transactional
-	public void exportProduct(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer)
+	public void exportProduct(AppPrestashop appConfig, Writer logBuffer)
 			throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
@@ -89,13 +87,7 @@ public class ExportProductServiceImpl implements ExportProductService {
 			return;
 		}
 
-		final List<Object> params = new ArrayList<>(2);
-		final StringBuilder filter = new StringBuilder("1 = 1");
-		if(endDate != null) {
-			filter.append(" AND (self.createdOn > ?1 OR self.updatedOn > ?2 OR self.prestaShopId = null)");
-			params.add(endDate);
-			params.add(endDate);
-		}
+		final StringBuilder filter = new StringBuilder("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
 		if(appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
 			filter.append(" AND (self.sellable = true)");
 		}
@@ -116,7 +108,7 @@ public class ExportProductServiceImpl implements ExportProductService {
 
 		final LocalDate today = LocalDate.now();
 
-		for (Product localProduct : productRepo.all().filter(filter.toString(), params.toArray()).fetch()) {
+		for (Product localProduct : productRepo.all().filter(filter.toString()).fetch()) {
 			try {
 				final String cleanedReference = localProduct.getCode().replaceAll("[<>;={}]", ""); // took from Prestashop's ValidateCore::isReference
 				logBuffer.write(String.format("Exporting product %s (%s/%s) – ", localProduct.getName(), localProduct.getCode(), cleanedReference));
@@ -295,6 +287,7 @@ public class ExportProductServiceImpl implements ExportProductService {
 					}
 
 					localProduct.setPrestaShopId(remoteProduct.getId());
+					localProduct.setPrestaShopVersion(localProduct.getVersion() + 1);
 				} else {
 					logBuffer.write("remote product exists and PrestaShop is master for products, leaving untouched");
 				}

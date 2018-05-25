@@ -20,7 +20,6 @@ package com.axelor.apps.prestashop.exports.service;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,18 +55,13 @@ public class ExportCurrencyServiceImpl implements ExportCurrencyService {
 
 	@Override
 	@Transactional
-	public void exportCurrency(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
+	public void exportCurrency(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
 
 		logBuffer.write(String.format("%n====== CURRENCIES ======%n"));
 
-		List<Currency> currencies;
-		if(endDate == null) {
-			currencies = currencyRepo.all().fetch();
-		} else {
-			currencies = currencyRepo.all().filter("self.createdOn > ?1 OR self.updatedOn > ?2 OR self.prestaShopId = null", endDate, endDate).fetch();
-		}
+		final List<Currency> currencies = currencyRepo.all().filter("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)").fetch();
 
 		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
@@ -126,6 +120,7 @@ public class ExportCurrencyServiceImpl implements ExportCurrencyService {
 					// newly created one, active & deleted should be left untouched.
 					remoteCurrency = ws.save(PrestashopResourceType.CURRENCIES, remoteCurrency);
 					localCurrency.setPrestaShopId(remoteCurrency.getId());
+					localCurrency.setPrestaShopVersion(localCurrency.getVersion() + 1);
 				} else {
 					logBuffer.write(" — remote currency exists and currencies are managed on prestashop, skipping");
 				}
