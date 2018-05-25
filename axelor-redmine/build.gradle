@@ -1,0 +1,19 @@
+apply plugin: "com.axelor.app-module"
+
+apply {
+	version = "5.0.0-SNAPSHOT"
+}
+
+axelor {
+	title "Axelor :: Redmine"
+	description "Axelor Redmine Module"
+
+	removable true
+}
+
+dependencies {
+	compile project(":modules:axelor-helpdesk")
+	compile project(":modules:axelor-project")
+	
+	compile 'com.taskadapter:redmine-java-api:3.1.0'
+}
