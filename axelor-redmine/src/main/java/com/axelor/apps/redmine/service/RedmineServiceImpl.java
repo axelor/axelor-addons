@@ -41,7 +41,7 @@ import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.IException;
+import com.axelor.exception.db.repo.TraceBackRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
@@ -92,7 +92,7 @@ public class RedmineServiceImpl implements RedmineService {
 	private final static String FILTER_BY_CUSTOM_FIELD1 = "cf_";
 
 	private static final Logger LOG =  LoggerFactory.getLogger( MethodHandles.lookup().lookupClass() );
-	
+
 	@Override
 	public void checkRedmineCredentials(String uri, String apiAccessKey) throws AxelorException {
 
@@ -104,10 +104,10 @@ public class RedmineServiceImpl implements RedmineService {
 					.filter(df -> df.getCustomizedType().equalsIgnoreCase(CUSTOM_FIELD1_TYPE))
 					.filter(df -> df.getFieldFormat().equalsIgnoreCase(CUSTOM_FIELD1_FORMAT))
 					.filter(df -> df.isFilter()).findFirst().orElseThrow(
-							() -> new AxelorException(IException.CONFIGURATION_ERROR, IMessage.REDMINE_CONFIGURATION));
+							() -> new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_CONFIGURATION));
 
 		} catch (RedmineException e) {
-			throw new AxelorException(IException.CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_2);
+			throw new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_2);
 		}
 	}
 
@@ -162,7 +162,7 @@ public class RedmineServiceImpl implements RedmineService {
 
 		commonProjects = new HashMap<>();
 		params = new Params();
-		
+
 		Set<Project> projects = batch.getRedmineBatch().getProjectSet();
 		if (projects.isEmpty())
 			projects = projectRepo.all().filter("self.code is not null").fetchSteam().collect(Collectors.toSet());
