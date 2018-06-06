@@ -19,9 +19,6 @@
 		<panel title="Project">
 			<field name="project" colSpan="12"></field>
 		</panel>
-			<panel title="Members">
-			<field name="membersUserSet" form-view="user-form" grid-view="user-grid" widget="TagSelect" colSpan="12" showTitle="false"/>
-		</panel>
 		<panel-mail>
 		  <mail-messages limit="4" />
 		  <mail-followers />
