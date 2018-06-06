@@ -12,9 +12,9 @@
 	<string name="typeSelect" default="discussion" selection="team.post.type.select"/>
 	<many-to-one name="parentTeamPost" ref="TeamPost" title="Parent" />
 	<many-to-one name="project" ref="com.axelor.apps.project.db.Project" title="Project" />
-	<many-to-many name="membersUserSet" ref="com.axelor.auth.db.User" title="Members"/>
 	<many-to-one name="originalTeamPost" ref="TeamPost"/>
 	<one-to-many name="historyTeamPostList"  ref="TeamPost" mappedBy="originalTeamPost" title="Team post history"/>
+	<many-to-many name="visitedUser" ref="com.axelor.auth.db.User" title="visited User"/>
 	<track>
 		<field name="name" if="typeSelect == 'page'"/>
 		<field name="statusSelect" if="typeSelect == 'page'"/>
