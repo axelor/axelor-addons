@@ -17,6 +17,4 @@
  */
 package com.axelor.apps.prestashop.entities;
 
-public abstract class PrestashopContainerEntity {
-
-}
+public abstract class PrestashopContainerEntity {}

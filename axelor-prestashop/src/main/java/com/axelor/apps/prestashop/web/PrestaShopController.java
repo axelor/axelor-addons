@@ -17,12 +17,6 @@
  */
 package com.axelor.apps.prestashop.web;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.text.ParseException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import org.xml.sax.SAXException;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.prestashop.batch.PrestaShopBatchService;
 import com.axelor.apps.prestashop.db.PrestaShopBatch;
@@ -32,58 +26,65 @@ import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.text.ParseException;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import org.xml.sax.SAXException;
 
 @Singleton
 public class PrestaShopController {
-	
-	@Inject
-	private PrestaShopBatchService prestaShopBatchService;
 
-	@Inject
-	private PrestaShopBatchRepository prestaShopBatchRepo;
-	
-	/**
-	 * Import objects/resources from prestashop to ABS
-	 * 
-	 * @param request
-	 * @param response
-	 * @throws PrestaShopWebserviceException
-	 * @throws ParseException
-	 * @throws TransformerException
-	 */
-	public void importPrestShop(ActionRequest request, ActionResponse response) throws PrestaShopWebserviceException, ParseException, TransformerException{
-		
-		PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
-		Batch batch = prestaShopBatchService.importPrestaShop(prestaShopBatchRepo.find(prestaShopBatch.getId()));
-		response.setValue("prestaShopBatchLog", batch.getPrestaShopBatchLog());
-		
-		if(batch != null)
-			response.setFlash(batch.getComments());
-		response.setReload(true);
-	}
-	
-	/**
-	 * Export objects/resources from ABS to prestashop
-	 * 
-	 * @param request
-	 * @param response
-	 * @throws PrestaShopWebserviceException
-	 * @throws TransformerException
-	 * @throws NumberFormatException
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 * @throws SAXException
-	 * @throws ParserConfigurationException
-	 */
-	public void exportPrestShop(ActionRequest request, ActionResponse response) throws PrestaShopWebserviceException, TransformerException, NumberFormatException, MalformedURLException, IOException, SAXException, ParserConfigurationException{
+  @Inject private PrestaShopBatchService prestaShopBatchService;
 
-		PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
-		
-		Batch batch = prestaShopBatchService.exportPrestaShop(prestaShopBatchRepo.find(prestaShopBatch.getId()));
-		response.setValue("prestaShopBatchLog", batch.getPrestaShopBatchLog());
-		
-		if(batch != null)
-			response.setFlash(batch.getComments());
-		response.setReload(true);
-	}
+  @Inject private PrestaShopBatchRepository prestaShopBatchRepo;
+
+  /**
+   * Import objects/resources from prestashop to ABS
+   *
+   * @param request
+   * @param response
+   * @throws PrestaShopWebserviceException
+   * @throws ParseException
+   * @throws TransformerException
+   */
+  public void importPrestShop(ActionRequest request, ActionResponse response)
+      throws PrestaShopWebserviceException, ParseException, TransformerException {
+
+    PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
+    Batch batch =
+        prestaShopBatchService.importPrestaShop(prestaShopBatchRepo.find(prestaShopBatch.getId()));
+    response.setValue("prestaShopBatchLog", batch.getPrestaShopBatchLog());
+
+    if (batch != null) response.setFlash(batch.getComments());
+    response.setReload(true);
+  }
+
+  /**
+   * Export objects/resources from ABS to prestashop
+   *
+   * @param request
+   * @param response
+   * @throws PrestaShopWebserviceException
+   * @throws TransformerException
+   * @throws NumberFormatException
+   * @throws MalformedURLException
+   * @throws IOException
+   * @throws SAXException
+   * @throws ParserConfigurationException
+   */
+  public void exportPrestShop(ActionRequest request, ActionResponse response)
+      throws PrestaShopWebserviceException, TransformerException, NumberFormatException,
+          MalformedURLException, IOException, SAXException, ParserConfigurationException {
+
+    PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
+
+    Batch batch =
+        prestaShopBatchService.exportPrestaShop(prestaShopBatchRepo.find(prestaShopBatch.getId()));
+    response.setValue("prestaShopBatchLog", batch.getPrestaShopBatchLog());
+
+    if (batch != null) response.setFlash(batch.getComments());
+    response.setReload(true);
+  }
 }

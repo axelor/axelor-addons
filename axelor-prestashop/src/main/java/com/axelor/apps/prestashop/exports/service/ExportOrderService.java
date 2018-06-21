@@ -17,19 +17,19 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
+import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import java.io.IOException;
 import java.io.Writer;
 
-import com.axelor.apps.base.db.AppPrestashop;
-import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-
 public interface ExportOrderService {
 
-	/**
-	 * Export axelor SaleOrder object
-	 *
-	 * @throws IOException
-	 * @throws PrestaShopWebserviceException
-	 */
-	public void exportOrder(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException;
+  /**
+   * Export axelor SaleOrder object
+   *
+   * @throws IOException
+   * @throws PrestaShopWebserviceException
+   */
+  public void exportOrder(AppPrestashop appConfig, Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException;
 }

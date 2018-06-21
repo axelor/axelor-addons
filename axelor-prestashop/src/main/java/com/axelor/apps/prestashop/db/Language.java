@@ -18,19 +18,19 @@
 package com.axelor.apps.prestashop.db;
 
 public class Language {
-	
-	private LanguageDetails language;
 
-	public LanguageDetails getLanguage() {
-		return language;
-	}
+  private LanguageDetails language;
 
-	public void setLanguage(LanguageDetails language) {
-		this.language = language;
-	}
-	
-	@Override
-	public String toString() {
-		return "Language [language=" + language + "]";
-	}
+  public LanguageDetails getLanguage() {
+    return language;
+  }
+
+  public void setLanguage(LanguageDetails language) {
+    this.language = language;
+  }
+
+  @Override
+  public String toString() {
+    return "Language [language=" + language + "]";
+  }
 }

@@ -17,13 +17,6 @@
  */
 package com.axelor.apps.prestashop.exports;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.Writer;
-
-import org.apache.commons.io.output.StringBuilderWriter;
-import org.apache.tika.io.IOUtils;
-
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.prestashop.exports.service.ExportAddressService;
@@ -38,66 +31,66 @@ import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.Writer;
+import org.apache.commons.io.output.StringBuilderWriter;
+import org.apache.tika.io.IOUtils;
 
 @Singleton
 public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
 
-	@Inject
-	private MetaFiles metaFiles;
+  @Inject private MetaFiles metaFiles;
 
-	@Inject
-	private ExportCurrencyService currencyService;
+  @Inject private ExportCurrencyService currencyService;
 
-	@Inject
-	private ExportCountryService countryService;
+  @Inject private ExportCountryService countryService;
 
-	@Inject
-	private ExportCustomerService customerService;
+  @Inject private ExportCustomerService customerService;
 
-	@Inject
-	private ExportAddressService addressService;
+  @Inject private ExportAddressService addressService;
 
-	@Inject
-	private ExportCategoryService categoryService;
+  @Inject private ExportCategoryService categoryService;
 
-	@Inject
-	private ExportProductService productService;
+  @Inject private ExportProductService productService;
 
-	@Inject
-	private ExportOrderService orderService;
+  @Inject private ExportOrderService orderService;
 
-	/**
-	 * Export base elements.
-	 * @param appConfig Prestashop module's configuration
-	 * @param logWriter Buffer used to write log messages to be displayed in Axelor.
-	 * @throws PrestaShopWebserviceException If any remote call fails or anything goes wrong
-	 * on a logic point of view
-	 * @throws IOException If any underlying I/O fails.
-	 */
-	public void exportAxelorBase(AppPrestashop appConfig, final Writer logWriter) throws PrestaShopWebserviceException, IOException {
-		currencyService.exportCurrency(appConfig, logWriter);
-		countryService.exportCountry(appConfig, logWriter);
-		customerService.exportCustomer(appConfig, logWriter);
-		addressService.exportAddress(appConfig, logWriter);
-		categoryService.exportCategory(appConfig, logWriter);
-		productService.exportProduct(appConfig, logWriter);
-	}
+  /**
+   * Export base elements.
+   *
+   * @param appConfig Prestashop module's configuration
+   * @param logWriter Buffer used to write log messages to be displayed in Axelor.
+   * @throws PrestaShopWebserviceException If any remote call fails or anything goes wrong on a
+   *     logic point of view
+   * @throws IOException If any underlying I/O fails.
+   */
+  public void exportAxelorBase(AppPrestashop appConfig, final Writer logWriter)
+      throws PrestaShopWebserviceException, IOException {
+    currencyService.exportCurrency(appConfig, logWriter);
+    countryService.exportCountry(appConfig, logWriter);
+    customerService.exportCustomer(appConfig, logWriter);
+    addressService.exportAddress(appConfig, logWriter);
+    categoryService.exportCategory(appConfig, logWriter);
+    productService.exportProduct(appConfig, logWriter);
+  }
 
-	/**
-	 * Export Axelor modules (Base, SaleOrder)
-	 */
-	@Override
-	public void export(AppPrestashop appConfig, Batch batch) throws PrestaShopWebserviceException, IOException {
-		StringBuilderWriter logWriter = new StringBuilderWriter(1024);
-		try {
-			exportAxelorBase(appConfig, logWriter);
+  /** Export Axelor modules (Base, SaleOrder) */
+  @Override
+  public void export(AppPrestashop appConfig, Batch batch)
+      throws PrestaShopWebserviceException, IOException {
+    StringBuilderWriter logWriter = new StringBuilderWriter(1024);
+    try {
+      exportAxelorBase(appConfig, logWriter);
 
-			orderService.exportOrder(appConfig, logWriter);
-			logWriter.write(String.format("%n==== END OF LOG ====%n"));
-		} finally {
-			IOUtils.closeQuietly(logWriter);
-			MetaFile exporMetaFile = metaFiles.upload(new ByteArrayInputStream(logWriter.toString().getBytes()), "export-log.txt");
-			batch.setPrestaShopBatchLog(exporMetaFile);
-		}
-	}
+      orderService.exportOrder(appConfig, logWriter);
+      logWriter.write(String.format("%n==== END OF LOG ====%n"));
+    } finally {
+      IOUtils.closeQuietly(logWriter);
+      MetaFile exporMetaFile =
+          metaFiles.upload(
+              new ByteArrayInputStream(logWriter.toString().getBytes()), "export-log.txt");
+      batch.setPrestaShopBatchLog(exporMetaFile);
+    }
+  }
 }

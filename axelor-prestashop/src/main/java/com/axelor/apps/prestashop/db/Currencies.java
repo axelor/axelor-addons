@@ -18,62 +18,71 @@
 package com.axelor.apps.prestashop.db;
 
 public class Currencies extends Base {
-	
-	private String name;
-	
-	private String iso_code;
-	
-	private String conversion_rate;
-	
-	private String deleted;
-	
-	private String active;
-	
-	public Currencies() {}
-	
-	public String getName() {
-		return name;
-	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
+  private String name;
 
-	public String getIso_code() {
-		return iso_code;
-	}
+  private String iso_code;
 
-	public void setIso_code(String iso_code) {
-		this.iso_code = iso_code;
-	}
+  private String conversion_rate;
 
-	public String getConversion_rate() {
-		return conversion_rate;
-	}
+  private String deleted;
 
-	public void setConversion_rate(String conversion_rate) {
-		this.conversion_rate = conversion_rate;
-	}
+  private String active;
 
-	public String getDeleted() {
-		return deleted;
-	}
+  public Currencies() {}
 
-	public void setDeleted(String deleted) {
-		this.deleted = deleted;
-	}
+  public String getName() {
+    return name;
+  }
 
-	public String getActive() {
-		return active;
-	}
+  public void setName(String name) {
+    this.name = name;
+  }
 
-	public void setActive(String active) {
-		this.active = active;
-	}
+  public String getIso_code() {
+    return iso_code;
+  }
 
-	@Override
-	public String toString() {
-		return "Currencies [name=" + name + ", iso_code=" + iso_code + ", conversion_rate=" + conversion_rate
-				+ ", deleted=" + deleted + ", active=" + active + "]";
-	}
+  public void setIso_code(String iso_code) {
+    this.iso_code = iso_code;
+  }
+
+  public String getConversion_rate() {
+    return conversion_rate;
+  }
+
+  public void setConversion_rate(String conversion_rate) {
+    this.conversion_rate = conversion_rate;
+  }
+
+  public String getDeleted() {
+    return deleted;
+  }
+
+  public void setDeleted(String deleted) {
+    this.deleted = deleted;
+  }
+
+  public String getActive() {
+    return active;
+  }
+
+  public void setActive(String active) {
+    this.active = active;
+  }
+
+  @Override
+  public String toString() {
+    return "Currencies [name="
+        + name
+        + ", iso_code="
+        + iso_code
+        + ", conversion_rate="
+        + conversion_rate
+        + ", deleted="
+        + deleted
+        + ", active="
+        + active
+        + "]";
+  }
 }

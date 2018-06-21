@@ -22,6 +22,8 @@ import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 
 public interface ImportMetaDataService {
-	void importLanguages(PSWebServiceClient ws) throws PrestaShopWebserviceException;
-	void importOrderStatuses(Language prestashopLanguage, PSWebServiceClient ws) throws PrestaShopWebserviceException;
+  void importLanguages(PSWebServiceClient ws) throws PrestaShopWebserviceException;
+
+  void importOrderStatuses(Language prestashopLanguage, PSWebServiceClient ws)
+      throws PrestaShopWebserviceException;
 }

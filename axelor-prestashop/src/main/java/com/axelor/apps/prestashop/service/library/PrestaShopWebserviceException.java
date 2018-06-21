@@ -20,11 +20,11 @@ package com.axelor.apps.prestashop.service.library;
 @SuppressWarnings("serial")
 public class PrestaShopWebserviceException extends Exception {
 
-    public PrestaShopWebserviceException(String message){
-        super(message);
-    }
+  public PrestaShopWebserviceException(String message) {
+    super(message);
+  }
 
-	public PrestaShopWebserviceException(String message, Throwable cause) {
-		super(message, cause);
-	}
+  public PrestaShopWebserviceException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

@@ -22,30 +22,30 @@ import javax.xml.bind.annotation.XmlValue;
 
 public class LanguageDetails {
 
-	private String id;
-	
-	private String value;
-	
-	@XmlAttribute
-	public String getId() {
-		return id;
-	}
+  private String id;
 
-	public void setId(String id) {
-		this.id = id;
-	}
-	
-	@XmlValue
-	public String getValue() {
-		return value;
-	}
+  private String value;
 
-	public void setValue(String value) {
-		this.value = value;
-	}
-	
-	@Override
-	public String toString() {
-		return "LanguageId [id=" + id + ", value=" + value + "]";
-	}
+  @XmlAttribute
+  public String getId() {
+    return id;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  @XmlValue
+  public String getValue() {
+    return value;
+  }
+
+  public void setValue(String value) {
+    this.value = value;
+  }
+
+  @Override
+  public String toString() {
+    return "LanguageId [id=" + id + ", value=" + value + "]";
+  }
 }

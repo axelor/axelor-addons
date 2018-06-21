@@ -16,9 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 @XmlJavaTypeAdapters({
-	@XmlJavaTypeAdapter(type=boolean.class, value=PrestashopBooleanAdapter.class),
-	@XmlJavaTypeAdapter(type=LocalDate.class, value=PrestashopLocalDateAdapter.class),
-	@XmlJavaTypeAdapter(type=LocalDateTime.class, value=PrestashopLocalDateTimeAdapter.class)
+  @XmlJavaTypeAdapter(type = boolean.class, value = PrestashopBooleanAdapter.class),
+  @XmlJavaTypeAdapter(type = LocalDate.class, value = PrestashopLocalDateAdapter.class),
+  @XmlJavaTypeAdapter(type = LocalDateTime.class, value = PrestashopLocalDateTimeAdapter.class)
 })
 package com.axelor.apps.prestashop.entities;
 

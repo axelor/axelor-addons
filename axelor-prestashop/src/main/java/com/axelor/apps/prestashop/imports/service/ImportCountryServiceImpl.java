@@ -17,14 +17,6 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.time.ZonedDateTime;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Country;
 import com.axelor.apps.base.db.repo.CountryRepository;
@@ -34,70 +26,93 @@ import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import java.io.IOException;
+import java.io.Writer;
+import java.time.ZonedDateTime;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImportCountryServiceImpl implements ImportCountryService {
-	private Logger log = LoggerFactory.getLogger(getClass());
+  private Logger log = LoggerFactory.getLogger(getClass());
 
-	private CountryRepository countryRepo;
+  private CountryRepository countryRepo;
 
-	@Inject
-	public ImportCountryServiceImpl(CountryRepository countryRepo) {
-		this.countryRepo = countryRepo;
-	}
+  @Inject
+  public ImportCountryServiceImpl(CountryRepository countryRepo) {
+    this.countryRepo = countryRepo;
+  }
 
-	@Override
-	@Transactional
-	public void importCountry(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
-		int done = 0;
-		int errors = 0;
+  @Override
+  @Transactional
+  public void importCountry(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException {
+    int done = 0;
+    int errors = 0;
 
-		logBuffer.write(String.format("%n====== COUNTRIES ======%n"));
+    logBuffer.write(String.format("%n====== COUNTRIES ======%n"));
 
-		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
-		List<PrestashopCountry> remoteCountries = ws.fetchAll(PrestashopResourceType.COUNTRIES);
-		final int language = (appConfig.getTextsLanguage().getPrestaShopId() == null ? 1 : appConfig.getTextsLanguage().getPrestaShopId());
+    final PSWebServiceClient ws =
+        new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
+    List<PrestashopCountry> remoteCountries = ws.fetchAll(PrestashopResourceType.COUNTRIES);
+    final int language =
+        (appConfig.getTextsLanguage().getPrestaShopId() == null
+            ? 1
+            : appConfig.getTextsLanguage().getPrestaShopId());
 
+    for (PrestashopCountry remoteCountry : remoteCountries) {
+      logBuffer.write(
+          String.format(
+              "Importing country #%d (%s) – ",
+              remoteCountry.getId(), remoteCountry.getName().getTranslation(language)));
 
-		for(PrestashopCountry remoteCountry : remoteCountries) {
-			logBuffer.write(String.format("Importing country #%d (%s) – ", remoteCountry.getId(), remoteCountry.getName().getTranslation(language)));
+      Country localCountry = countryRepo.findByPrestaShopId(remoteCountry.getId());
+      if (localCountry == null) {
+        localCountry = countryRepo.findByAlpha2Code(remoteCountry.getIsoCode());
+        if (localCountry == null) {
+          logBuffer.write("not found by ID and code not found, creating");
+          localCountry = new Country();
+          localCountry.setAlpha2Code(remoteCountry.getIsoCode());
+          localCountry.setPrestaShopId(remoteCountry.getId());
+        } else {
+          logBuffer.write(
+              String.format("found locally using its code %s", localCountry.getAlpha2Code()));
+        }
+      } else {
+        if (localCountry.getAlpha2Code().equals(remoteCountry.getIsoCode()) == false) {
+          log.error(
+              "Remote country #{} has not the same ISO code as the local one ({} vs {}), skipping",
+              remoteCountry.getId(),
+              remoteCountry.getIsoCode(),
+              localCountry.getAlpha2Code());
+          logBuffer.write(
+              String.format(
+                  " [ERROR] ISO code mismatch: %s vs %s%n",
+                  remoteCountry.getIsoCode(), localCountry.getAlpha2Code()));
+          ++errors;
+          continue;
+        }
+      }
 
-			Country localCountry = countryRepo.findByPrestaShopId(remoteCountry.getId());
-			if(localCountry == null) {
-				localCountry = countryRepo.findByAlpha2Code(remoteCountry.getIsoCode());
-				if(localCountry== null) {
-					logBuffer.write("not found by ID and code not found, creating");
-					localCountry = new Country();
-					localCountry.setAlpha2Code(remoteCountry.getIsoCode());
-					localCountry.setPrestaShopId(remoteCountry.getId());
-				} else {
-					logBuffer.write(String.format("found locally using its code %s", localCountry.getAlpha2Code()));
-				}
-			} else {
-				if(localCountry.getAlpha2Code().equals(remoteCountry.getIsoCode()) == false) {
-					log.error("Remote country #{} has not the same ISO code as the local one ({} vs {}), skipping",
-							remoteCountry.getId(), remoteCountry.getIsoCode(), localCountry.getAlpha2Code());
-					logBuffer.write(String.format(" [ERROR] ISO code mismatch: %s vs %s%n", remoteCountry.getIsoCode(), localCountry.getAlpha2Code()));
-					++errors;
-					continue;
-				}
-			}
+      // As the field is prestashop specific, always update it
+      localCountry.setPrestaShopZoneId(remoteCountry.getZoneId());
 
-			// As the field is prestashop specific, always update it
-			localCountry.setPrestaShopZoneId(remoteCountry.getZoneId());
+      if (localCountry.getId() == null
+          || appConfig.getPrestaShopMasterForCountries() == Boolean.TRUE) {
+        localCountry.setName(remoteCountry.getName().getTranslation(language));
+        if (remoteCountry.getCallPrefix() != null) {
+          localCountry.setPhonePrefix(remoteCountry.getCallPrefix().toString());
+        }
+        countryRepo.save(localCountry);
+      } else {
+        logBuffer.write(
+            " – local country exists and PrestaShop isn't master for countries, leaving untouched");
+      }
+      logBuffer.write(String.format(" [SUCCESS]%n"));
+      ++done;
+    }
 
-			if(localCountry.getId() == null || appConfig.getPrestaShopMasterForCountries() == Boolean.TRUE) {
-				localCountry.setName(remoteCountry.getName().getTranslation(language));
-				if(remoteCountry.getCallPrefix() != null) {
-					localCountry.setPhonePrefix(remoteCountry.getCallPrefix().toString());
-				}
-				countryRepo.save(localCountry);
-			} else {
-				logBuffer.write(" – local country exists and PrestaShop isn't master for countries, leaving untouched");
-			}
-			logBuffer.write(String.format(" [SUCCESS]%n"));
-			++done;
-		}
-
-		logBuffer.write(String.format("%n=== END OF COUNTRIES IMPORT, done: %d, errors: %d ===%n", done, errors));
-	}
+    logBuffer.write(
+        String.format("%n=== END OF COUNTRIES IMPORT, done: %d, errors: %d ===%n", done, errors));
+  }
 }

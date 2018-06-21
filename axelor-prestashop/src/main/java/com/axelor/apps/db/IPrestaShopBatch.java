@@ -23,22 +23,18 @@ import com.axelor.db.Model;
  * Interface of Event object. Enum all static variable of object.
  *
  * @author dubaux
- *
  */
 public interface IPrestaShopBatch {
 
-	/**
-	 * Static select in PrestaShopBatch
-	 */
-	// ACTION TYPE
-	static final int BATCH_IMPORT = 1;
-	static final int BATCH_EXPORT = 2;
+  /** Static select in PrestaShopBatch */
+  // ACTION TYPE
+  static final int BATCH_IMPORT = 1;
 
-	static final String TRACE_ORIGIN_IMPORT = "prestashopImport";
-	static final String TRACE_ORIGIN_EXPORT = "prestashopExport";
+  static final int BATCH_EXPORT = 2;
 
-	/**
-	 * @see Model#getImportOrigin()
-	 */
-	static final String IMPORT_ORIGIN_PRESTASHOP = "prestashop";
+  static final String TRACE_ORIGIN_IMPORT = "prestashopImport";
+  static final String TRACE_ORIGIN_EXPORT = "prestashopExport";
+
+  /** @see Model#getImportOrigin() */
+  static final String IMPORT_ORIGIN_PRESTASHOP = "prestashop";
 }
