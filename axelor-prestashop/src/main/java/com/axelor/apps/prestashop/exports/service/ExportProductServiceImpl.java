@@ -34,6 +34,8 @@ import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.entities.PrestashopTranslatableString;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.apps.stock.db.repo.StockLocationRepository;
+import com.axelor.apps.stock.db.repo.StockMoveRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
 import com.axelor.meta.MetaFiles;
@@ -324,6 +326,7 @@ public class ExportProductServiceImpl implements ExportProductService {
 
           remoteProduct.setUpdateDate(LocalDateTime.now());
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
+          productsById.put(remoteProduct.getId(), remoteProduct);
 
           if ((remoteProduct.getDefaultImageId() == null || remoteProduct.getDefaultImageId() == 0)
               && localProduct.getPicture() != null) {
@@ -333,42 +336,6 @@ public class ExportProductServiceImpl implements ExportProductService {
               PrestashopImage image =
                   ws.addImage(PrestashopResourceType.PRODUCTS, remoteProduct, is);
               remoteProduct.setDefaultImageId(image.getId());
-            }
-          }
-
-          // FIXME we should have a specific batch for this
-          AvailableStocksAssociationsEntry availableStocks =
-              remoteProduct.getAssociations().getAvailableStocks();
-          if (availableStocks == null || availableStocks.getStock().size() == 0) {
-            logBuffer.write(" [WARNING] No stock for this product, skipping stock update");
-          } else if (availableStocks.getStock().size() > 1
-              || Objects.equal(availableStocks.getStock().get(0).getProductAttributeId(), 0)
-                  == false) {
-            logBuffer.write(" [WARNING] Remote product appears to have variants, skipping");
-          } else {
-            AvailableStocksAssociationElement availableStockRef = availableStocks.getStock().get(0);
-            PrestashopAvailableStock availableStock =
-                ws.fetch(PrestashopResourceType.STOCK_AVAILABLES, availableStockRef.getId());
-            if (availableStock.isDependsOnStock()) {
-              logBuffer.write(
-                  " [WARNING] Remote product uses advanced stock management features, not updating stock");
-            } else {
-              BigDecimal currentStock =
-                  (BigDecimal)
-                      JPA.em()
-                          .createQuery(
-                              "SELECT SUM(line.realQty) "
-                                  + "FROM StockMoveLine line "
-                                  + "JOIN line.stockMove move "
-                                  + "JOIN move.fromStockLocation fromLocation "
-                                  + "JOIN move.toStockLocation toLocation "
-                                  + "WHERE move.statusSelect = 3 AND "
-                                  + "(fromLocation.typeSelect = 1 or toLocation.typeSelect = 1) and line.product = :product")
-                          .setParameter("product", localProduct)
-                          .getSingleResult();
-              if (currentStock == null) currentStock = BigDecimal.ZERO;
-              availableStock.setQuantity(currentStock.intValue());
-              ws.save(PrestashopResourceType.STOCK_AVAILABLES, availableStock);
             }
           }
 
@@ -393,8 +360,80 @@ public class ExportProductServiceImpl implements ExportProductService {
       }
     }
 
+    exportStocks(ws, productsById, logBuffer);
+
     logBuffer.write(
         String.format("%n=== END OF PRODUCTS EXPORT, done: %d, errors: %d ===%n", done, errors));
+  }
+
+  private void exportStocks(
+      final PSWebServiceClient ws,
+      final Map<Integer, PrestashopProduct> productsById,
+      Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException {
+    logBuffer.write(String.format("%n== STOCK EXPORTS ==%n"));
+
+    @SuppressWarnings("unchecked")
+    final List<Object[]> stocks =
+        JPA.em()
+            .createQuery(
+                "SELECT product, "
+                    + "("
+                    + "SELECT COALESCE(SUM(CASE WHEN fromLocation.typeSelect = :virtualLocation THEN line.realQty ELSE -line.realQty END), 0) "
+                    + "FROM StockMoveLine line "
+                    + "JOIN line.stockMove move "
+                    + "JOIN move.fromStockLocation fromLocation "
+                    + "JOIN move.toStockLocation toLocation "
+                    + "WHERE line.product = product "
+                    + "AND move.statusSelect != :canceledStatus "
+                    + "AND (fromLocation.typeSelect != :virtualLocation OR toLocation.typeSelect != :virtualLocation) "
+                    + "AND (fromLocation.typeSelect = :virtualLocation OR toLocation.typeSelect = :virtualLocation) "
+                    + ")"
+                    + "FROM Product product "
+                    + "LEFT JOIN product.stockLocationLines line "
+                    + "WHERE product.prestaShopId is not null "
+                    + "GROUP BY product")
+            .setParameter("canceledStatus", StockMoveRepository.STATUS_CANCELED)
+            .setParameter("virtualLocation", StockLocationRepository.TYPE_VIRTUAL)
+            .getResultList();
+    for (Object[] row : stocks) {
+      final Product localProduct = (Product) row[0];
+      final int currentStock = ((BigDecimal) row[1]).intValue();
+      logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
+      PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
+      if (remoteProduct == null) {
+        logBuffer.write(
+            String.format(
+                " [ERROR] id %d not found on PrestaShop, skipping%n",
+                localProduct.getPrestaShopId()));
+        continue;
+      }
+
+      AvailableStocksAssociationsEntry availableStocks =
+          remoteProduct.getAssociations().getAvailableStocks();
+      if (availableStocks == null || availableStocks.getStock().size() == 0) {
+        logBuffer.write(" [WARNING] No stock for this product, skipping stock update%n");
+      } else if (availableStocks.getStock().size() > 1
+          || Objects.equal(availableStocks.getStock().get(0).getProductAttributeId(), 0) == false) {
+        logBuffer.write(" [WARNING] Remote product appears to have variants, skipping%n");
+      } else {
+        AvailableStocksAssociationElement availableStockRef = availableStocks.getStock().get(0);
+        PrestashopAvailableStock availableStock =
+            ws.fetch(PrestashopResourceType.STOCK_AVAILABLES, availableStockRef.getId());
+        if (availableStock.isDependsOnStock()) {
+          logBuffer.write(
+              " [WARNING] Remote product uses advanced stock management features, not updating stock%n");
+        } else if (currentStock != availableStock.getQuantity()) {
+          availableStock.setQuantity(currentStock);
+          ws.save(PrestashopResourceType.STOCK_AVAILABLES, availableStock);
+          logBuffer.write(String.format(", setting stock to %d [SUCCESS]%n", currentStock));
+        } else {
+          logBuffer.write(String.format(", nothing to do [SUCCESS]%n"));
+        }
+      }
+    }
+
+    logBuffer.write(String.format("== END OF STOCK EXPORTS ==%n"));
   }
 
   // Null-safe version of UnitConversionService::Convert (feel free to integrate to base method).
