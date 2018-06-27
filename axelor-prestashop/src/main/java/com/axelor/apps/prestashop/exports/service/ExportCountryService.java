@@ -17,20 +17,20 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
+import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import java.io.IOException;
 import java.io.Writer;
 
-import com.axelor.apps.base.db.AppPrestashop;
-import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-
 public interface ExportCountryService {
 
-	/**
-	 * Export axelor Country object
-	 *
-	 * @param logBuffer  object of log file
-	 * @throws IOException
-	 * @throws PrestaShopWebserviceException
-	 */
-	public void exportCountry(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException;
+  /**
+   * Export axelor Country object
+   *
+   * @param logBuffer object of log file
+   * @throws IOException
+   * @throws PrestaShopWebserviceException
+   */
+  public void exportCountry(AppPrestashop appConfig, Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException;
 }

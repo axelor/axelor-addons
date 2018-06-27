@@ -19,6 +19,5 @@ package com.axelor.apps.prestashop.translation;
 
 public interface ITranslation {
 
-	public static final String PRESHTASHOP_APP_NAME = /*$$(*/ "value:PrestaShop"; /*)*/
-
+  public static final String PRESHTASHOP_APP_NAME = /*$$(*/ "value:PrestaShop"; /*)*/
 }

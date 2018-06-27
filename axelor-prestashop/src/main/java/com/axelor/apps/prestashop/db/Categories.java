@@ -19,51 +19,58 @@ package com.axelor.apps.prestashop.db;
 
 public class Categories extends Base {
 
-	private String active;
-	
-	private String id_parent;
-	
-	private Language name;
-	
-	private Language link_rewrite;
-	
-	public Categories() {}
+  private String active;
 
-	public String getActive() {
-		return active;
-	}
+  private String id_parent;
 
-	public void setActive(String active) {
-		this.active = active;
-	}
+  private Language name;
 
-	public String getId_parent() {
-		return id_parent;
-	}
+  private Language link_rewrite;
 
-	public void setId_parent(String id_parent) {
-		this.id_parent = id_parent;
-	}
+  public Categories() {}
 
-	public Language getName() {
-		return name;
-	}
+  public String getActive() {
+    return active;
+  }
 
-	public void setName(Language name) {
-		this.name = name;
-	}
+  public void setActive(String active) {
+    this.active = active;
+  }
 
-	public Language getLink_rewrite() {
-		return link_rewrite;
-	}
+  public String getId_parent() {
+    return id_parent;
+  }
 
-	public void setLink_rewrite(Language link_rewrite) {
-		this.link_rewrite = link_rewrite;
-	}
+  public void setId_parent(String id_parent) {
+    this.id_parent = id_parent;
+  }
 
-	@Override
-	public String toString() {
-		return "Categories [active=" + active + ", id_parent=" + id_parent + ", name=" + name + ", link_rewrite="
-				+ link_rewrite + "]";
-	}
+  public Language getName() {
+    return name;
+  }
+
+  public void setName(Language name) {
+    this.name = name;
+  }
+
+  public Language getLink_rewrite() {
+    return link_rewrite;
+  }
+
+  public void setLink_rewrite(Language link_rewrite) {
+    this.link_rewrite = link_rewrite;
+  }
+
+  @Override
+  public String toString() {
+    return "Categories [active="
+        + active
+        + ", id_parent="
+        + id_parent
+        + ", name="
+        + name
+        + ", link_rewrite="
+        + link_rewrite
+        + "]";
+  }
 }

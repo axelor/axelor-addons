@@ -18,83 +18,95 @@
 package com.axelor.apps.prestashop.db;
 
 public class Countries extends Base {
-	
-	private Language name;
-	
-	private String iso_code;
-	
-	private String id_zone;
-	
-	private String contains_states;
-	
-	private String need_identification_number;
-	
-	private String display_tax_label;
-	
-	private String active;
-	
-	public Countries() {}
 
-	public Language getName() {
-		return name;
-	}
+  private Language name;
 
-	public void setName(Language name) {
-		this.name = name;
-	}
+  private String iso_code;
 
-	public String getIso_code() {
-		return iso_code;
-	}
+  private String id_zone;
 
-	public void setIso_code(String iso_code) {
-		this.iso_code = iso_code;
-	}
+  private String contains_states;
 
-	public String getId_zone() {
-		return id_zone;
-	}
+  private String need_identification_number;
 
-	public void setId_zone(String id_zone) {
-		this.id_zone = id_zone;
-	}
+  private String display_tax_label;
 
-	public String getContains_states() {
-		return contains_states;
-	}
+  private String active;
 
-	public void setContains_states(String contains_states) {
-		this.contains_states = contains_states;
-	}
+  public Countries() {}
 
-	public String getNeed_identification_number() {
-		return need_identification_number;
-	}
+  public Language getName() {
+    return name;
+  }
 
-	public void setNeed_identification_number(String need_identification_number) {
-		this.need_identification_number = need_identification_number;
-	}
+  public void setName(Language name) {
+    this.name = name;
+  }
 
-	public String getDisplay_tax_label() {
-		return display_tax_label;
-	}
+  public String getIso_code() {
+    return iso_code;
+  }
 
-	public void setDisplay_tax_label(String display_tax_label) {
-		this.display_tax_label = display_tax_label;
-	}
+  public void setIso_code(String iso_code) {
+    this.iso_code = iso_code;
+  }
 
-	public String getActive() {
-		return active;
-	}
+  public String getId_zone() {
+    return id_zone;
+  }
 
-	public void setActive(String active) {
-		this.active = active;
-	}
+  public void setId_zone(String id_zone) {
+    this.id_zone = id_zone;
+  }
 
-	@Override
-	public String toString() {
-		return "Countries [name=" + name + ", iso_code=" + iso_code + ", id_zone=" + id_zone + ", contains_states="
-				+ contains_states + ", need_identification_number=" + need_identification_number
-				+ ", display_tax_label=" + display_tax_label + ", active=" + active + "]";
-	}
+  public String getContains_states() {
+    return contains_states;
+  }
+
+  public void setContains_states(String contains_states) {
+    this.contains_states = contains_states;
+  }
+
+  public String getNeed_identification_number() {
+    return need_identification_number;
+  }
+
+  public void setNeed_identification_number(String need_identification_number) {
+    this.need_identification_number = need_identification_number;
+  }
+
+  public String getDisplay_tax_label() {
+    return display_tax_label;
+  }
+
+  public void setDisplay_tax_label(String display_tax_label) {
+    this.display_tax_label = display_tax_label;
+  }
+
+  public String getActive() {
+    return active;
+  }
+
+  public void setActive(String active) {
+    this.active = active;
+  }
+
+  @Override
+  public String toString() {
+    return "Countries [name="
+        + name
+        + ", iso_code="
+        + iso_code
+        + ", id_zone="
+        + id_zone
+        + ", contains_states="
+        + contains_states
+        + ", need_identification_number="
+        + need_identification_number
+        + ", display_tax_label="
+        + display_tax_label
+        + ", active="
+        + active
+        + "]";
+  }
 }

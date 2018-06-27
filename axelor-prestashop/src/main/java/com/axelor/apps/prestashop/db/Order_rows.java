@@ -20,19 +20,19 @@ package com.axelor.apps.prestashop.db;
 import java.util.List;
 
 public class Order_rows {
-	
-	private List<Order_row> order_row;
 
-	public List<Order_row> getOrder_row() {
-		return order_row;
-	}
+  private List<Order_row> order_row;
 
-	public void setOrder_row(List<Order_row> order_row) {
-		this.order_row = order_row;
-	}
+  public List<Order_row> getOrder_row() {
+    return order_row;
+  }
 
-	@Override
-	public String toString() {
-		return "Order_rows [order_row=" + order_row + "]";
-	}
+  public void setOrder_row(List<Order_row> order_row) {
+    this.order_row = order_row;
+  }
+
+  @Override
+  public String toString() {
+    return "Order_rows [order_row=" + order_row + "]";
+  }
 }

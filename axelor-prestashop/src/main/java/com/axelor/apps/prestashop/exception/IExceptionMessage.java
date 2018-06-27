@@ -15,26 +15,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- *
- */
+/** */
 package com.axelor.apps.prestashop.exception;
 
-/**
- * @author axelor
- *
- */
+/** @author axelor */
 public interface IExceptionMessage {
 
-	/**
-	 * Batch operation
-	 */
-	static final String BATCH_IMPORT = /*$$(*/ "Import completed" /*)*/;
-	static final String BATCH_EXPORT = /*$$(*/ "Export completed" /*)*/;
+  /** Batch operation */
+  static final String BATCH_IMPORT = /*$$(*/ "Import completed" /*)*/;
 
-	/**
-	 * Base batch service
-	 */
-	static final public String PRESTASHOP_BATCH_1 = /*$$(*/ "Unknown action %s for prestashop batch %s" /*)*/;
-	static final public String PRESTASHOP_BATCH_2 = /*$$(*/ "Batch %s unknown" /*)*/;
+  static final String BATCH_EXPORT = /*$$(*/ "Export completed" /*)*/;
+
+  /** Base batch service */
+  public static final String PRESTASHOP_BATCH_1 = /*$$(*/
+      "Unknown action %s for prestashop batch %s" /*)*/;
+
+  public static final String PRESTASHOP_BATCH_2 = /*$$(*/ "Batch %s unknown" /*)*/;
 }

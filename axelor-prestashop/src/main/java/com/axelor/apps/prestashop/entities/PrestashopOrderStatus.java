@@ -20,148 +20,148 @@ package com.axelor.apps.prestashop.entities;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="order_state")
+@XmlRootElement(name = "order_state")
 public class PrestashopOrderStatus extends PrestashopIdentifiableEntity {
-	private Boolean unremovable;
-	private Boolean delivered;
-	private Boolean hidden;
-	private Boolean sendEmail;
-	private String moduleName;
-	private Boolean invoiced;
-	private String color;
-	private Boolean loggable;
-	private Boolean shipped;
-	private Boolean paid;
-	private Boolean pdfDelivery;
-	private Boolean pdfInvoice;
-	private Boolean deleted;
-	private PrestashopTranslatableString name;
-	private PrestashopTranslatableString template;
+  private Boolean unremovable;
+  private Boolean delivered;
+  private Boolean hidden;
+  private Boolean sendEmail;
+  private String moduleName;
+  private Boolean invoiced;
+  private String color;
+  private Boolean loggable;
+  private Boolean shipped;
+  private Boolean paid;
+  private Boolean pdfDelivery;
+  private Boolean pdfInvoice;
+  private Boolean deleted;
+  private PrestashopTranslatableString name;
+  private PrestashopTranslatableString template;
 
-	public Boolean getUnremovable() {
-		return unremovable;
-	}
+  public Boolean getUnremovable() {
+    return unremovable;
+  }
 
-	public void setUnremovable(Boolean unremovable) {
-		this.unremovable = unremovable;
-	}
+  public void setUnremovable(Boolean unremovable) {
+    this.unremovable = unremovable;
+  }
 
-	@XmlElement(name="delivery")
-	public Boolean getDelivered() {
-		return delivered;
-	}
+  @XmlElement(name = "delivery")
+  public Boolean getDelivered() {
+    return delivered;
+  }
 
-	public void setDelivered(Boolean delivered) {
-		this.delivered = delivered;
-	}
+  public void setDelivered(Boolean delivered) {
+    this.delivered = delivered;
+  }
 
-	public Boolean getHidden() {
-		return hidden;
-	}
+  public Boolean getHidden() {
+    return hidden;
+  }
 
-	public void setHidden(Boolean hidden) {
-		this.hidden = hidden;
-	}
+  public void setHidden(Boolean hidden) {
+    this.hidden = hidden;
+  }
 
-	@XmlElement(name="send_email")
-	public Boolean getSendEmail() {
-		return sendEmail;
-	}
+  @XmlElement(name = "send_email")
+  public Boolean getSendEmail() {
+    return sendEmail;
+  }
 
-	public void setSendEmail(Boolean sendEmail) {
-		this.sendEmail = sendEmail;
-	}
+  public void setSendEmail(Boolean sendEmail) {
+    this.sendEmail = sendEmail;
+  }
 
-	@XmlElement(name="module_name")
-	public String getModuleName() {
-		return moduleName;
-	}
+  @XmlElement(name = "module_name")
+  public String getModuleName() {
+    return moduleName;
+  }
 
-	public void setModuleName(String moduleName) {
-		this.moduleName = moduleName;
-	}
+  public void setModuleName(String moduleName) {
+    this.moduleName = moduleName;
+  }
 
-	@XmlElement(name="invoice")
-	public Boolean getInvoiced() {
-		return invoiced;
-	}
+  @XmlElement(name = "invoice")
+  public Boolean getInvoiced() {
+    return invoiced;
+  }
 
-	public void setInvoiced(Boolean invoiced) {
-		this.invoiced = invoiced;
-	}
+  public void setInvoiced(Boolean invoiced) {
+    this.invoiced = invoiced;
+  }
 
-	public String getColor() {
-		return color;
-	}
+  public String getColor() {
+    return color;
+  }
 
-	public void setColor(String color) {
-		this.color = color;
-	}
+  public void setColor(String color) {
+    this.color = color;
+  }
 
-	@XmlElement(name="logable")
-	public Boolean getLoggable() {
-		return loggable;
-	}
+  @XmlElement(name = "logable")
+  public Boolean getLoggable() {
+    return loggable;
+  }
 
-	public void setLoggable(Boolean loggable) {
-		this.loggable = loggable;
-	}
+  public void setLoggable(Boolean loggable) {
+    this.loggable = loggable;
+  }
 
-	public Boolean getShipped() {
-		return shipped;
-	}
+  public Boolean getShipped() {
+    return shipped;
+  }
 
-	public void setShipped(Boolean shipped) {
-		this.shipped = shipped;
-	}
+  public void setShipped(Boolean shipped) {
+    this.shipped = shipped;
+  }
 
-	public Boolean getPaid() {
-		return paid;
-	}
+  public Boolean getPaid() {
+    return paid;
+  }
 
-	public void setPaid(Boolean paid) {
-		this.paid = paid;
-	}
+  public void setPaid(Boolean paid) {
+    this.paid = paid;
+  }
 
-	@XmlElement(name="pdf_delivery")
-	public Boolean getPdfDelivery() {
-		return pdfDelivery;
-	}
+  @XmlElement(name = "pdf_delivery")
+  public Boolean getPdfDelivery() {
+    return pdfDelivery;
+  }
 
-	public void setPdfDelivery(Boolean pdfDelivery) {
-		this.pdfDelivery = pdfDelivery;
-	}
+  public void setPdfDelivery(Boolean pdfDelivery) {
+    this.pdfDelivery = pdfDelivery;
+  }
 
-	@XmlElement(name="pdf_invoice")
-	public Boolean getPdfInvoice() {
-		return pdfInvoice;
-	}
+  @XmlElement(name = "pdf_invoice")
+  public Boolean getPdfInvoice() {
+    return pdfInvoice;
+  }
 
-	public void setPdfInvoice(Boolean pdfInvoice) {
-		this.pdfInvoice = pdfInvoice;
-	}
+  public void setPdfInvoice(Boolean pdfInvoice) {
+    this.pdfInvoice = pdfInvoice;
+  }
 
-	public Boolean getDeleted() {
-		return deleted;
-	}
+  public Boolean getDeleted() {
+    return deleted;
+  }
 
-	public void setDeleted(Boolean deleted) {
-		this.deleted = deleted;
-	}
+  public void setDeleted(Boolean deleted) {
+    this.deleted = deleted;
+  }
 
-	public PrestashopTranslatableString getName() {
-		return name;
-	}
+  public PrestashopTranslatableString getName() {
+    return name;
+  }
 
-	public void setName(PrestashopTranslatableString name) {
-		this.name = name;
-	}
+  public void setName(PrestashopTranslatableString name) {
+    this.name = name;
+  }
 
-	public PrestashopTranslatableString getTemplate() {
-		return template;
-	}
+  public PrestashopTranslatableString getTemplate() {
+    return template;
+  }
 
-	public void setTemplate(PrestashopTranslatableString template) {
-		this.template = template;
-	}
+  public void setTemplate(PrestashopTranslatableString template) {
+    this.template = template;
+  }
 }

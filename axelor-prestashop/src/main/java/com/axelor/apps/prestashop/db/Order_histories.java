@@ -18,29 +18,29 @@
 package com.axelor.apps.prestashop.db;
 
 public class Order_histories {
-	
-	private String id_order;
-	
-	private String id_order_state;
 
-	public String getId_order() {
-		return id_order;
-	}
+  private String id_order;
 
-	public void setId_order(String id_order) {
-		this.id_order = id_order;
-	}
+  private String id_order_state;
 
-	public String getId_order_state() {
-		return id_order_state;
-	}
+  public String getId_order() {
+    return id_order;
+  }
 
-	public void setId_order_state(String id_order_state) {
-		this.id_order_state = id_order_state;
-	}
+  public void setId_order(String id_order) {
+    this.id_order = id_order;
+  }
 
-	@Override
-	public String toString() {
-		return "Order_histories [id_order=" + id_order + ", id_order_state=" + id_order_state + "]";
-	}
+  public String getId_order_state() {
+    return id_order_state;
+  }
+
+  public void setId_order_state(String id_order_state) {
+    this.id_order_state = id_order_state;
+  }
+
+  @Override
+  public String toString() {
+    return "Order_histories [id_order=" + id_order + ", id_order_state=" + id_order_state + "]";
+  }
 }
