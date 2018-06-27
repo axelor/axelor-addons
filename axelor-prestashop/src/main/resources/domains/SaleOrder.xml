@@ -5,6 +5,7 @@
 
 	<entity name="SaleOrder" lang="java">
 		<integer name="prestaShopId" nullable="true"/>
+		<integer name="prestaShopVersion" nullable="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 

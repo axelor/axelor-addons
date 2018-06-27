@@ -18,7 +18,6 @@
 package com.axelor.apps.prestashop.exports;
 
 import java.io.IOException;
-import java.time.ZonedDateTime;
 
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Batch;
@@ -35,5 +34,5 @@ public interface PrestaShopServiceExport {
 	 * @throws PrestaShopWebserviceException
 	 * @throws IOException
 	 */
-	public void export(AppPrestashop appConfig, ZonedDateTime referenceDate, Batch batch) throws PrestaShopWebserviceException, IOException;
+	public void export(AppPrestashop appConfig, Batch batch) throws PrestaShopWebserviceException, IOException;
 }

@@ -5,6 +5,8 @@
 
 	<entity name="Partner" lang="java">
 		<integer name="prestaShopId" nullable="true"/>
+		<integer name="prestaShopVersion" nullable="true"/>
+		<integer name="emailAddressPrestaShopVersion" nullable="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 

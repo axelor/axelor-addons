@@ -20,7 +20,6 @@ package com.axelor.apps.prestashop.exports;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
-import java.time.ZonedDateTime;
 
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.tika.io.IOUtils;
@@ -70,31 +69,30 @@ public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
 	/**
 	 * Export base elements.
 	 * @param appConfig Prestashop module's configuration
-	 * @param endDate End date of previous export batch run (<code>null</code> if none).
 	 * @param logWriter Buffer used to write log messages to be displayed in Axelor.
 	 * @throws PrestaShopWebserviceException If any remote call fails or anything goes wrong
 	 * on a logic point of view
 	 * @throws IOException If any underlying I/O fails.
 	 */
-	public void exportAxelorBase(AppPrestashop appConfig, ZonedDateTime endDate, final Writer logWriter) throws PrestaShopWebserviceException, IOException {
-		currencyService.exportCurrency(appConfig, endDate, logWriter);
-		countryService.exportCountry(appConfig, endDate, logWriter);
-		customerService.exportCustomer(appConfig, endDate, logWriter);
-		addressService.exportAddress(appConfig, endDate, logWriter);
-		categoryService.exportCategory(appConfig, endDate, logWriter);
-		productService.exportProduct(appConfig, endDate, logWriter);
+	public void exportAxelorBase(AppPrestashop appConfig, final Writer logWriter) throws PrestaShopWebserviceException, IOException {
+		currencyService.exportCurrency(appConfig, logWriter);
+		countryService.exportCountry(appConfig, logWriter);
+		customerService.exportCustomer(appConfig, logWriter);
+		addressService.exportAddress(appConfig, logWriter);
+		categoryService.exportCategory(appConfig, logWriter);
+		productService.exportProduct(appConfig, logWriter);
 	}
 
 	/**
 	 * Export Axelor modules (Base, SaleOrder)
 	 */
 	@Override
-	public void export(AppPrestashop appConfig, ZonedDateTime endDate, Batch batch) throws PrestaShopWebserviceException, IOException {
+	public void export(AppPrestashop appConfig, Batch batch) throws PrestaShopWebserviceException, IOException {
 		StringBuilderWriter logWriter = new StringBuilderWriter(1024);
 		try {
-			exportAxelorBase(appConfig, endDate, logWriter);
+			exportAxelorBase(appConfig, logWriter);
 
-			orderService.exportOrder(appConfig, endDate, logWriter);
+			orderService.exportOrder(appConfig, logWriter);
 			logWriter.write(String.format("%n==== END OF LOG ====%n"));
 		} finally {
 			IOUtils.closeQuietly(logWriter);

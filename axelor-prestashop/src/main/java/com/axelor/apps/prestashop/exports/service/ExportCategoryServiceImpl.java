@@ -20,7 +20,6 @@ package com.axelor.apps.prestashop.exports.service;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,7 +55,7 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
 
 	@Override
 	@Transactional
-	public void exportCategory(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
+	public void exportCategory(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
 
@@ -64,13 +63,8 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
 		logBuffer.write(String.format("%n====== PRODUCT CATEGORIES ======%n"));
 
 		final Query<ProductCategory> q = categoryRepo.all();
-		final StringBuilder filter = new StringBuilder("1 = 1");
+		final StringBuilder filter = new StringBuilder("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
 		final List<Object> params = new ArrayList<>(2);
-		if(endDate != null) {
-			filter.append(" AND (self.createdOn > ?1 OR self.updatedOn > ?2 OR self.prestaShopId IS NULL)");
-			params.add(endDate);
-			params.add(endDate);
-		}
 		if(appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
 			filter.append(" AND EXISTS(Select 1 From Product where productCategory = self and sellable = true)");
 		}
@@ -131,6 +125,7 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
 					}
 					remoteCategory = ws.save(PrestashopResourceType.PRODUCT_CATEGORIES, remoteCategory);
 					localCategory.setPrestaShopId(remoteCategory.getId());
+					localCategory.setPrestaShopVersion(localCategory.getVersion() + 1);
 				} else {
 					logBuffer.write("remote category exists and PrestaShop is master for categories, leaving untouched");
 				}

@@ -5,6 +5,7 @@
 
 	<entity name="ProductCategory" lang="java" cachable="true">
 		<integer name="prestaShopId" nullable="true"/>
+		<integer name="prestaShopVersion" nullable="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 

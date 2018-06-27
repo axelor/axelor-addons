@@ -19,7 +19,6 @@ package com.axelor.apps.prestashop.exports.service;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,19 +52,13 @@ public class ExportCountryServiceImpl implements ExportCountryService {
 
 	@Override
 	@Transactional
-	public void exportCountry(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
+	public void exportCountry(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
 
 		logBuffer.write(String.format("%n====== COUNTRIES ======%n"));
 
-		List<Country> countries;
-		if(endDate == null) {
-			countries = countryRepo.all().fetch();
-		} else {
-			countries = countryRepo.all().filter("self.createdOn > ?1 OR self.updatedOn > ?2 OR self.prestaShopId = null", endDate, endDate).fetch();
-		}
-
+		final List<Country> countries = countryRepo.all().filter("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)").fetch();
 		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
 		// Same as usual, perform a global fetch to speed up process
@@ -130,6 +123,7 @@ public class ExportCountryServiceImpl implements ExportCountryService {
 
 					remoteCountry = ws.save(PrestashopResourceType.COUNTRIES, remoteCountry);
 					localCountry.setPrestaShopId(remoteCountry.getId());
+					localCountry.setPrestaShopVersion(localCountry.getVersion() + 1);
 				} else {
 					logBuffer.write(" — remote country exists and countries are managed on prestashop, skipping");
 				}

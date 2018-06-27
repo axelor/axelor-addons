@@ -20,7 +20,6 @@ package com.axelor.apps.prestashop.exports.service;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -62,18 +61,14 @@ public class ExportAddressServiceImpl implements ExportAddressService {
 
 	@Override
 	@Transactional
-	public void exportAddress(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
+	public void exportAddress(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
 
 		logBuffer.write(String.format("%n====== ADDRESSES ======%n"));
 
-		List<PartnerAddress> addresses = null;
-		if(endDate == null) {
-			addresses = partnerAddressRepo.all().filter("self.partner.prestaShopId != null").fetch();
-		} else {
-			addresses = partnerAddressRepo.all().filter("(self.createdOn > ?1 OR self.updatedOn > ?2 OR self.address.updatedOn > ?3 OR self.address.prestaShopId = null) AND self.partner.prestaShopId != null", endDate, endDate, endDate).fetch();
-		}
+		final List<PartnerAddress> addresses = partnerAddressRepo.all().filter("self.partner.prestaShopId is not null and "
+				+ "(self.address.prestaShopVersion is null OR self.address.prestaShopVersion < self.address.version)").fetch();
 
 		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
@@ -159,6 +154,7 @@ public class ExportAddressServiceImpl implements ExportAddressService {
 					remoteAddress = ws.save(PrestashopResourceType.ADDRESSES, remoteAddress);
 					logBuffer.write(String.format(" [SUCCESS]%n"));
 					localAddress.setPrestaShopId(remoteAddress.getId());
+					localAddress.setPrestaShopVersion(localAddress.getVersion() + 1);
 				} else {
 					logBuffer.write(String.format(" - address was imported from PrestaShop, leave it untouched [SUCCESS]%n"));
 				}

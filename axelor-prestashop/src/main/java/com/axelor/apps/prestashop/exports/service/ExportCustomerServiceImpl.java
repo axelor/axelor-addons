@@ -21,8 +21,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +55,7 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 
 	@Override
 	@Transactional
-	public void exportCustomer(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
+	public void exportCustomer(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
 
@@ -65,17 +63,8 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 		log.debug("Starting customers export to PrestaShop");
 
 		final StringBuilder filter = new StringBuilder(128);
-		final List<Object> params = new ArrayList<>(4);
 
-		filter.append("(self.isCustomer = true)");
-
-		if(endDate != null) {
-			filter.append(" AND (self.createdOn > ?1 OR self.updatedOn > ?2 OR self.emailAddress.createdOn > ?3 OR self.emailAddress.updatedOn > ?4 OR self.prestaShopId is null)");
-			params.add(endDate);
-			params.add(endDate);
-			params.add(endDate);
-			params.add(endDate);
-		}
+		filter.append("(self.isCustomer = true AND (self.prestaShopVersion is null OR self.prestaShopVersion < self.version OR self.emailAddressPrestaShopVersion < self.emailAddress.version))");
 
 		if(appConfig.getExportNonPrestashopCustomers() == Boolean.FALSE) {
 			filter.append(" AND (self.prestaShopId IS NOT NULL)");
@@ -95,7 +84,7 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 
 		final LocalDateTime now = LocalDateTime.now();
 
-		for (Partner localCustomer : partnerRepo.all().filter(filter.toString(), params.toArray(new Object[0])).fetch()) {
+		for (Partner localCustomer : partnerRepo.all().filter(filter.toString()).fetch()) {
 			logBuffer.write(String.format("Exporting customer #%d (%s) - ", localCustomer.getId(), localCustomer.getName()));
 			try {
 				PrestashopCustomer remoteCustomer;
@@ -167,6 +156,8 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 					remoteCustomer.setUpdateDate(now);
 					remoteCustomer = ws.save(PrestashopResourceType.CUSTOMERS, remoteCustomer);
 					localCustomer.setPrestaShopId(remoteCustomer.getId());
+					localCustomer.setPrestaShopVersion(localCustomer.getVersion() + 1);
+					localCustomer.setEmailAddressPrestaShopVersion(localCustomer.getEmailAddress().getVersion());
 				} else {
 					logBuffer.write(" — remote customer exists and customers are managed on prestashop, skipping");
 				}

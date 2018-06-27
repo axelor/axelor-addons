@@ -22,8 +22,6 @@ import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -95,7 +93,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 
 	@Override
 	@Transactional
-	public void exportOrder(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
+	public void exportOrder(AppPrestashop appConfig, Writer logBuffer) throws IOException, PrestaShopWebserviceException {
 		int done = 0;
 		int errors = 0;
 
@@ -105,15 +103,8 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 		final PSWebServiceClient ws = new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
 		final StringBuilder filter = new StringBuilder(128);
-		final List<Object> params = new ArrayList<>(2);
 
-		filter.append("1 = 1");
-
-		if(endDate != null) {
-			filter.append("AND (self.createdOn > ?1 OR self.updatedOn > ?2 OR self.prestaShopId IS NULL)");
-			params.add(endDate);
-			params.add(endDate);
-		}
+		filter.append("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
 
 		if(appConfig.getExportNonPrestashopOrders() == Boolean.FALSE) {
 			// Only push back orders that come from prestashop
@@ -121,7 +112,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 		}
 
 		orderLoop: // Not very pretty
-		for (SaleOrder localOrder : saleOrderRepo.all().filter(filter.toString(), params.toArray()).fetch()) {
+		for (SaleOrder localOrder : saleOrderRepo.all().filter(filter.toString()).fetch()) {
 			logBuffer.write(String.format("Exporting order #%d (%s) ‑ ", localOrder.getId(), localOrder.getSaleOrderSeq()));
 			if(localOrder.getClientPartner().getPrestaShopId() == null) {
 				logBuffer.write(String.format(" [WARNING] Customer is not synced yet, skipping%n"));
@@ -292,6 +283,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 				}
 			}
 			localOrder.setPrestaShopId(remoteOrder.getId());
+			localOrder.setPrestaShopVersion(localOrder.getVersion() + 1);
 
 			logBuffer.write(String.format(" [SUCCESS]%n\tExporting lines:%n"));
 
