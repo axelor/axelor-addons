@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.Consts;
+import org.apache.http.Header;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.Credentials;
@@ -69,15 +71,18 @@ import org.slf4j.LoggerFactory;
 public class PSWebServiceClient {
   // HttpClient default content types are ISO-8859-1 encoded (except for JSON)
   private static final ContentType XML_CONTENT_TYPE = ContentType.create("text/xml", Consts.UTF_8);
+  /** Header containing the API version of webservices */
+  private static final String VERSION_HEADER = "PSWS-Version";
 
   private final Logger log = LoggerFactory.getLogger(getClass());
   private JAXBContext jaxbContext;
 
-  /** @var string Shop URL */
+  /** Shop URL */
   protected String url;
 
   private final CloseableHttpClient httpclient;
   private final Credentials credentials;
+  private String wsVersion;
 
   /**
    * PrestaShopWebservice constructor. <code>
@@ -157,6 +162,10 @@ public class PSWebServiceClient {
       result.response = httpclient.execute(request);
       checkStatusCode(result.response);
       result.content = result.response.getEntity().getContent();
+      Header versionHeader = result.response.getFirstHeader(VERSION_HEADER);
+      if (versionHeader != null) {
+        wsVersion = versionHeader.getValue();
+      }
 
       return result;
     } catch (UnsupportedOperationException | IOException | AuthenticationException e) {
@@ -573,6 +582,27 @@ public class PSWebServiceClient {
       uriBuilder.addParameter("id_group_shop", options.shopGroupId.toString());
 
     return uriBuilder.toString();
+  }
+
+  /**
+   * Compare this webservice version to the given one (MAJ.MIN.PATCH.REV), assume that all the
+   * version parts are numeric.
+   *
+   * @param version Version to compare to.
+   * @return <code>null</code> if no request has been made yet by this
+   */
+  public Integer compareVersion(final String version) {
+    if (wsVersion == null) return null;
+    int[] wsVersionParts =
+        Arrays.stream(wsVersion.split("\\.")).mapToInt(Integer::valueOf).toArray();
+    int[] versionParts = Arrays.stream(version.split("\\.")).mapToInt(Integer::valueOf).toArray();
+    int count = Math.max(wsVersionParts.length, versionParts.length);
+    for (int i = 0; i < count; ++i) {
+      if (wsVersionParts[i] > versionParts[i]) return 1;
+      if (wsVersionParts[i] < versionParts[i]) return -1;
+    }
+    if (wsVersionParts.length == versionParts.length) return 0;
+    return wsVersionParts.length > versionParts.length ? 1 : -1;
   }
 
   public static class Options {
