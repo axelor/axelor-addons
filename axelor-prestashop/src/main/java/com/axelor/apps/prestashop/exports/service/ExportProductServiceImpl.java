@@ -23,6 +23,7 @@ import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.UnitConversionService;
+import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.entities.Associations.AvailableStocksAssociationElement;
 import com.axelor.apps.prestashop.entities.Associations.AvailableStocksAssociationsEntry;
 import com.axelor.apps.prestashop.entities.Associations.CategoriesAssociationElement;
@@ -38,6 +39,8 @@ import com.axelor.apps.stock.db.repo.StockLocationRepository;
 import com.axelor.apps.stock.db.repo.StockMoveRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
+import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaFiles;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
@@ -385,6 +388,7 @@ public class ExportProductServiceImpl implements ExportProductService {
     }
 
     exportStocks(ws, productsById, logBuffer);
+    exportPictures(ws, productsById, logBuffer);
 
     logBuffer.write(
         String.format("%n=== END OF PRODUCTS EXPORT, done: %d, errors: %d ===%n", done, errors));
@@ -394,8 +398,8 @@ public class ExportProductServiceImpl implements ExportProductService {
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
       Writer logBuffer)
-      throws IOException, PrestaShopWebserviceException {
-    logBuffer.write(String.format("%n== STOCK EXPORTS ==%n"));
+      throws IOException {
+    logBuffer.write(String.format("%n== STOCKS EXPORT ==%n"));
 
     @SuppressWarnings("unchecked")
     final List<Object[]> stocks =
@@ -421,43 +425,100 @@ public class ExportProductServiceImpl implements ExportProductService {
             .setParameter("virtualLocation", StockLocationRepository.TYPE_VIRTUAL)
             .getResultList();
     for (Object[] row : stocks) {
-      final Product localProduct = (Product) row[0];
-      final int currentStock = ((BigDecimal) row[1]).intValue();
-      logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
-      PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
-      if (remoteProduct == null) {
-        logBuffer.write(
-            String.format(
-                " [ERROR] id %d not found on PrestaShop, skipping%n",
-                localProduct.getPrestaShopId()));
-        continue;
-      }
-
-      AvailableStocksAssociationsEntry availableStocks =
-          remoteProduct.getAssociations().getAvailableStocks();
-      if (availableStocks == null || availableStocks.getStock().size() == 0) {
-        logBuffer.write(" [WARNING] No stock for this product, skipping stock update%n");
-      } else if (availableStocks.getStock().size() > 1
-          || Objects.equal(availableStocks.getStock().get(0).getProductAttributeId(), 0) == false) {
-        logBuffer.write(" [WARNING] Remote product appears to have variants, skipping%n");
-      } else {
-        AvailableStocksAssociationElement availableStockRef = availableStocks.getStock().get(0);
-        PrestashopAvailableStock availableStock =
-            ws.fetch(PrestashopResourceType.STOCK_AVAILABLES, availableStockRef.getId());
-        if (availableStock.isDependsOnStock()) {
+      try {
+        final Product localProduct = (Product) row[0];
+        final int currentStock = ((BigDecimal) row[1]).intValue();
+        logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
+        PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
+        if (remoteProduct == null) {
           logBuffer.write(
-              " [WARNING] Remote product uses advanced stock management features, not updating stock%n");
-        } else if (currentStock != availableStock.getQuantity()) {
-          availableStock.setQuantity(currentStock);
-          ws.save(PrestashopResourceType.STOCK_AVAILABLES, availableStock);
-          logBuffer.write(String.format(", setting stock to %d [SUCCESS]%n", currentStock));
-        } else {
-          logBuffer.write(String.format(", nothing to do [SUCCESS]%n"));
+              String.format(
+                  " [ERROR] id %d not found on PrestaShop, skipping%n",
+                  localProduct.getPrestaShopId()));
+          continue;
         }
+
+        AvailableStocksAssociationsEntry availableStocks =
+            remoteProduct.getAssociations().getAvailableStocks();
+        if (availableStocks == null || availableStocks.getStock().size() == 0) {
+          logBuffer.write(" [WARNING] No stock for this product, skipping stock update%n");
+        } else if (availableStocks.getStock().size() > 1
+            || Objects.equal(availableStocks.getStock().get(0).getProductAttributeId(), 0)
+                == false) {
+          logBuffer.write(" [WARNING] Remote product appears to have variants, skipping%n");
+        } else {
+          AvailableStocksAssociationElement availableStockRef = availableStocks.getStock().get(0);
+          PrestashopAvailableStock availableStock =
+              ws.fetch(PrestashopResourceType.STOCK_AVAILABLES, availableStockRef.getId());
+          if (availableStock.isDependsOnStock()) {
+            logBuffer.write(
+                " [WARNING] Remote product uses advanced stock management features, not updating stock%n");
+          } else if (currentStock != availableStock.getQuantity()) {
+            availableStock.setQuantity(currentStock);
+            ws.save(PrestashopResourceType.STOCK_AVAILABLES, availableStock);
+            logBuffer.write(String.format(", setting stock to %d [SUCCESS]%n", currentStock));
+          } else {
+            logBuffer.write(String.format(", nothing to do [SUCCESS]%n"));
+          }
+        }
+      } catch (PrestaShopWebserviceException e) {
+        logBuffer.write(String.format(" [ERROR] exception occured: %s%n", e.getMessage()));
+        TraceBackService.trace(
+            e, I18n.get("Prestashop stocks export"), AbstractBatch.getCurrentBatchId());
       }
     }
 
-    logBuffer.write(String.format("== END OF STOCK EXPORTS ==%n"));
+    logBuffer.write(String.format("== END OF STOCKS EXPORT ==%n"));
+  }
+
+  /** Export all pictures that have been modified */
+  private void exportPictures(
+      final PSWebServiceClient ws,
+      final Map<Integer, PrestashopProduct> productsById,
+      Writer logBuffer)
+      throws IOException {
+    logBuffer.write(String.format("%n== PICTURES EXPORT ==%n"));
+
+    final List<Product> products =
+        productRepo
+            .all()
+            .filter(
+                "self.prestaShopId is not null and self.picture is not null and "
+                    + "(self.prestaShopImageVersion is null "
+                    + "OR self.prestaShopImageId is null "
+                    + "OR self.picture.version != self.prestaShopImageVersion "
+                    + "OR self.picture.id != self.prestaShopImageId)")
+            .order("code")
+            .fetch();
+
+    for (Product localProduct : products) {
+      try {
+        logBuffer.write(String.format("Updating picture for %s", localProduct.getCode()));
+        final PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
+        if (remoteProduct == null) {
+          logBuffer.write(
+              String.format(
+                  " [ERROR] id %d not found on PrestaShop, skipping%n",
+                  localProduct.getPrestaShopId()));
+          continue;
+        }
+
+        try (InputStream is =
+            new FileInputStream(MetaFiles.getPath(localProduct.getPicture()).toFile())) {
+          PrestashopImage image = ws.addImage(PrestashopResourceType.PRODUCTS, remoteProduct, is);
+          remoteProduct.setDefaultImageId(image.getId());
+          localProduct.setPrestaShopImageId(localProduct.getPicture().getId());
+          localProduct.setPrestaShopImageVersion(localProduct.getPicture().getVersion());
+          ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
+          logBuffer.write(String.format(" [SUCCESS]%n"));
+        }
+      } catch (PrestaShopWebserviceException e) {
+        logBuffer.write(String.format(" [ERROR] exception occured: %s%n", e.getMessage()));
+        TraceBackService.trace(
+            e, I18n.get("Prestashop product images export"), AbstractBatch.getCurrentBatchId());
+      }
+    }
+    logBuffer.write(String.format("%n== END OF PICTURES EXPORT ==%n"));
   }
 
   // Null-safe version of UnitConversionService::Convert (feel free to integrate to base method).
