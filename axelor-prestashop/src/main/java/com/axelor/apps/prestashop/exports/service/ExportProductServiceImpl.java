@@ -325,14 +325,26 @@ public class ExportProductServiceImpl implements ExportProductService {
           remoteProduct.setUpdateDate(LocalDateTime.now());
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
 
-          if ((remoteProduct.getDefaultImageId() == null || remoteProduct.getDefaultImageId() == 0)
-              && localProduct.getPicture() != null) {
-            logBuffer.write(" – no image stored, adding a new one");
-            try (InputStream is =
-                new FileInputStream(MetaFiles.getPath(localProduct.getPicture()).toFile())) {
-              PrestashopImage image =
-                  ws.addImage(PrestashopResourceType.PRODUCTS, remoteProduct, is);
-              remoteProduct.setDefaultImageId(image.getId());
+          if (localProduct.getPicture() != null) {
+            // FIXME If the unique modification we made to product is its picture, product version
+            // isn't updated, so we've to split this to another batch
+            if (Objects.equal(
+                        localProduct.getPicture().getVersion(),
+                        localProduct.getPrestaShopImageVersion())
+                    == false
+                || Objects.equal(
+                        localProduct.getPicture().getId(), localProduct.getPrestaShopImageId())
+                    == false) {
+              logBuffer.write(" – no image stored or image updated, adding a new one");
+              try (InputStream is =
+                  new FileInputStream(MetaFiles.getPath(localProduct.getPicture()).toFile())) {
+                PrestashopImage image =
+                    ws.addImage(PrestashopResourceType.PRODUCTS, remoteProduct, is);
+                remoteProduct.setDefaultImageId(image.getId());
+                localProduct.setPrestaShopImageId(localProduct.getPicture().getId());
+                localProduct.setPrestaShopImageVersion(localProduct.getPicture().getVersion());
+                remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
+              }
             }
           }
 
