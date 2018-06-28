@@ -41,6 +41,9 @@ import com.google.common.base.Objects;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,12 +56,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ExportProductServiceImpl implements ExportProductService {
   private Logger log = LoggerFactory.getLogger(getClass());
+
+  /**
+   * Version from which BOOM-5826 is fixed. FIXME Not accurate right now as bug is not fixed in last
+   * version so we can just put lastVersion+1 until a fix is released
+   */
+  private static final String FIX_POSITION_IN_CATEGORY_VERSION = "1.7.3.5";
 
   private ProductRepository productRepo;
   private UnitConversionService unitConversionService;
@@ -323,6 +330,11 @@ public class ExportProductServiceImpl implements ExportProductService {
           // TODO Should we handle supplier?
 
           remoteProduct.setUpdateDate(LocalDateTime.now());
+          if (ws.compareVersion(FIX_POSITION_IN_CATEGORY_VERSION) < 0) {
+            // Workaround Prestashop bug BOOM-5826 (position in category handling in prestashop's
+            // webservices is a joke). Trade-off is that we shuffle categories on each update…
+            remoteProduct.setPositionInCategory(0);
+          }
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
 
           if ((remoteProduct.getDefaultImageId() == null || remoteProduct.getDefaultImageId() == 0)
