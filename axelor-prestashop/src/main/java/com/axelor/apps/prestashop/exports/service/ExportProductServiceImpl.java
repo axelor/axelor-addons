@@ -24,9 +24,9 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.prestashop.entities.Associations;
 import com.axelor.apps.prestashop.entities.Associations.AvailableStocksAssociationElement;
 import com.axelor.apps.prestashop.entities.Associations.AvailableStocksAssociationsEntry;
-import com.axelor.apps.prestashop.entities.Associations.CategoriesAssociationElement;
 import com.axelor.apps.prestashop.entities.PrestashopAvailableStock;
 import com.axelor.apps.prestashop.entities.PrestashopImage;
 import com.axelor.apps.prestashop.entities.PrestashopProduct;
@@ -87,13 +87,8 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   @Override
-  @Transactional
   public void exportProduct(AppPrestashop appConfig, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
-    int done = 0;
-    int errors = 0;
-
-    logBuffer.write(String.format("%n====== PRODUCTS ======%n"));
 
     if (appConfig.getPrestaShopLengthUnit() == null
         || appConfig.getPrestaShopWeightUnit() == null) {
@@ -101,6 +96,31 @@ public class ExportProductServiceImpl implements ExportProductService {
       return;
     }
 
+    final PSWebServiceClient ws =
+        new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
+
+    final List<PrestashopProduct> remoteProducts = ws.fetchAll(PrestashopResourceType.PRODUCTS);
+    final Map<Integer, PrestashopProduct> productsById = new HashMap<>();
+    for (PrestashopProduct p : remoteProducts) {
+      productsById.put(p.getId(), p);
+    }
+
+    exportProducts(appConfig, ws, productsById, logBuffer);
+    exportStocks(ws, productsById, logBuffer);
+    exportPictures(ws, productsById, logBuffer);
+  }
+
+  @Transactional
+  private void exportProducts(
+      final AppPrestashop appConfig,
+      final PSWebServiceClient ws,
+      final Map<Integer, PrestashopProduct> productsById,
+      final Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException {
+    logBuffer.write(String.format("%n====== PRODUCTS ======%n"));
+
+    int done = 0;
+    int errors = 0;
     final StringBuilder filter =
         new StringBuilder(
             "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
@@ -108,28 +128,22 @@ public class ExportProductServiceImpl implements ExportProductService {
       filter.append(" AND (self.sellable = true)");
     }
 
-    final PSWebServiceClient ws =
-        new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
-
     final PrestashopProduct defaultProduct = ws.fetchDefault(PrestashopResourceType.PRODUCTS);
     final PrestashopProductCategory remoteRootCategory =
         ws.fetchOne(
             PrestashopResourceType.PRODUCT_CATEGORIES,
             Collections.singletonMap("is_root_category", "1"));
-
-    final List<PrestashopProduct> remoteProducts = ws.fetchAll(PrestashopResourceType.PRODUCTS);
-    final Map<Integer, PrestashopProduct> productsById = new HashMap<>();
-    final Map<String, PrestashopProduct> productsByReference = new HashMap<>();
-    for (PrestashopProduct p : remoteProducts) {
-      productsById.put(p.getId(), p);
-      productsByReference.put(p.getReference(), p);
-    }
     final int language =
         (appConfig.getTextsLanguage().getPrestaShopId() == null
             ? 1
             : appConfig.getTextsLanguage().getPrestaShopId());
 
     final LocalDate today = LocalDate.now();
+
+    final Map<String, PrestashopProduct> productsByReference = new HashMap<>();
+    for (PrestashopProduct p : productsById.values()) {
+      productsByReference.put(p.getReference(), p);
+    }
 
     for (Product localProduct : productRepo.all().filter(filter.toString()).fetch()) {
       try {
@@ -237,7 +251,8 @@ public class ExportProductServiceImpl implements ExportProductService {
                   .stream()
                   .anyMatch(c -> c.getId() == defaultCategoryId)
               == false) {
-            CategoriesAssociationElement e = new CategoriesAssociationElement();
+            Associations.CategoriesAssociationElement e =
+                new Associations.CategoriesAssociationElement();
             e.setId(defaultCategoryId);
             remoteProduct.getAssociations().getCategories().getAssociations().add(e);
           }
@@ -277,7 +292,7 @@ public class ExportProductServiceImpl implements ExportProductService {
                         .setScale(appConfig.getExportPriceScale(), BigDecimal.ROUND_HALF_UP));
               } catch (AxelorException e) {
                 logBuffer.write(
-                    " [WARNING] Unable to convert purchase price, check your currency convsersion rates");
+                    " [WARNING] Unable to convert purchase price, check your currency conversion rates");
               }
             } else {
               remoteProduct.setWholesalePrice(
@@ -343,29 +358,6 @@ public class ExportProductServiceImpl implements ExportProductService {
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           productsById.put(remoteProduct.getId(), remoteProduct);
 
-          if (localProduct.getPicture() != null) {
-            // FIXME If the unique modification we made to product is its picture, product version
-            // isn't updated, so we've to split this to another batch
-            if (Objects.equal(
-                        localProduct.getPicture().getVersion(),
-                        localProduct.getPrestaShopImageVersion())
-                    == false
-                || Objects.equal(
-                        localProduct.getPicture().getId(), localProduct.getPrestaShopImageId())
-                    == false) {
-              logBuffer.write(" – no image stored or image updated, adding a new one");
-              try (InputStream is =
-                  new FileInputStream(MetaFiles.getPath(localProduct.getPicture()).toFile())) {
-                PrestashopImage image =
-                    ws.addImage(PrestashopResourceType.PRODUCTS, remoteProduct, is);
-                remoteProduct.setDefaultImageId(image.getId());
-                localProduct.setPrestaShopImageId(localProduct.getPicture().getId());
-                localProduct.setPrestaShopImageVersion(localProduct.getPicture().getVersion());
-                remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
-              }
-            }
-          }
-
           localProduct.setPrestaShopId(remoteProduct.getId());
           localProduct.setPrestaShopVersion(localProduct.getVersion() + 1);
         } else {
@@ -375,6 +367,8 @@ public class ExportProductServiceImpl implements ExportProductService {
         logBuffer.write(String.format(" [SUCCESS]%n"));
         ++done;
       } catch (AxelorException | PrestaShopWebserviceException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop products export"), AbstractBatch.getCurrentBatchId());
         logBuffer.write(
             String.format(
                 " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));
@@ -387,19 +381,19 @@ public class ExportProductServiceImpl implements ExportProductService {
       }
     }
 
-    exportStocks(ws, productsById, logBuffer);
-    exportPictures(ws, productsById, logBuffer);
-
     logBuffer.write(
         String.format("%n=== END OF PRODUCTS EXPORT, done: %d, errors: %d ===%n", done, errors));
   }
 
+  @Transactional
   private void exportStocks(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
-      Writer logBuffer)
+      final Writer logBuffer)
       throws IOException {
-    logBuffer.write(String.format("%n== STOCKS EXPORT ==%n"));
+    int errors = 0;
+    int done = 0;
+    logBuffer.write(String.format("%n===== STOCKS =====%n"));
 
     @SuppressWarnings("unchecked")
     final List<Object[]> stocks =
@@ -435,6 +429,7 @@ public class ExportProductServiceImpl implements ExportProductService {
               String.format(
                   " [ERROR] id %d not found on PrestaShop, skipping%n",
                   localProduct.getPrestaShopId()));
+          ++errors;
           continue;
         }
 
@@ -461,23 +456,29 @@ public class ExportProductServiceImpl implements ExportProductService {
             logBuffer.write(String.format(", nothing to do [SUCCESS]%n"));
           }
         }
+        ++done;
       } catch (PrestaShopWebserviceException e) {
         logBuffer.write(String.format(" [ERROR] exception occured: %s%n", e.getMessage()));
         TraceBackService.trace(
             e, I18n.get("Prestashop stocks export"), AbstractBatch.getCurrentBatchId());
+        ++errors;
       }
     }
 
-    logBuffer.write(String.format("== END OF STOCKS EXPORT ==%n"));
+    logBuffer.write(
+        String.format("%n=== END OF STOCKS EXPORT, done: %d, errors: %d ===%n", done, errors));
   }
 
   /** Export all pictures that have been modified */
+  @Transactional
   private void exportPictures(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
-      Writer logBuffer)
+      final Writer logBuffer)
       throws IOException {
-    logBuffer.write(String.format("%n== PICTURES EXPORT ==%n"));
+    int errors = 0;
+    int done = 0;
+    logBuffer.write(String.format("%n===== PICTURES EXPORT =====%n"));
 
     final List<Product> products =
         productRepo
@@ -500,6 +501,7 @@ public class ExportProductServiceImpl implements ExportProductService {
               String.format(
                   " [ERROR] id %d not found on PrestaShop, skipping%n",
                   localProduct.getPrestaShopId()));
+          ++errors;
           continue;
         }
 
@@ -509,16 +511,20 @@ public class ExportProductServiceImpl implements ExportProductService {
           remoteProduct.setDefaultImageId(image.getId());
           localProduct.setPrestaShopImageId(localProduct.getPicture().getId());
           localProduct.setPrestaShopImageVersion(localProduct.getPicture().getVersion());
+          localProduct.setPrestaShopVersion(localProduct.getVersion() + 1);
           ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           logBuffer.write(String.format(" [SUCCESS]%n"));
         }
+        ++done;
       } catch (PrestaShopWebserviceException e) {
+        ++errors;
         logBuffer.write(String.format(" [ERROR] exception occured: %s%n", e.getMessage()));
         TraceBackService.trace(
             e, I18n.get("Prestashop product images export"), AbstractBatch.getCurrentBatchId());
       }
     }
-    logBuffer.write(String.format("%n== END OF PICTURES EXPORT ==%n"));
+    logBuffer.write(
+        String.format("%n=== END OF PICTURES EXPORT, done: %d, errors: %d ===%n", done, errors));
   }
 
   // Null-safe version of UnitConversionService::Convert (feel free to integrate to base method).
