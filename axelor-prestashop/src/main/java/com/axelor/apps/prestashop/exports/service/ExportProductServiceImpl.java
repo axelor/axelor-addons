@@ -412,7 +412,6 @@ public class ExportProductServiceImpl implements ExportProductService {
                     + "AND (fromLocation.typeSelect = :virtualLocation OR toLocation.typeSelect = :virtualLocation) "
                     + ")"
                     + "FROM Product product "
-                    + "LEFT JOIN product.stockLocationLines line "
                     + "WHERE product.prestaShopId is not null "
                     + "GROUP BY product")
             .setParameter("canceledStatus", StockMoveRepository.STATUS_CANCELED)
