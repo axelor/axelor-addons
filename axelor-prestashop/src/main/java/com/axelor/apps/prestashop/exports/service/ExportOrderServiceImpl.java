@@ -442,7 +442,6 @@ public class ExportOrderServiceImpl implements ExportOrderService {
             break;
         }
       }
-      // remoteRow.setEan13(localRow.getProduct().getEan13());
       remoteRow.setProductReference(localRow.getProduct().getCode());
       if (localRow.getProduct().getGrossWeight() != null) {
         try {
