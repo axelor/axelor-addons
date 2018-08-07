@@ -46,9 +46,6 @@ import com.google.common.base.Objects;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -61,6 +58,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ExportProductServiceImpl implements ExportProductService {
@@ -339,7 +338,7 @@ public class ExportProductServiceImpl implements ExportProductService {
           remoteProduct.getDescription().setTranslation(language, localProduct.getDescription());
           remoteProduct.setTaxRulesGroupId(
               1); // FIXME Need to have a mapping and use getAccountManagementList
-          remoteProduct.setEan13(localProduct.getEan13());
+          // remoteProduct.setEan13(localProduct.getEan13());
           if (localProduct.getSalesUnit() != null) {
             remoteProduct.setUnity(localProduct.getSalesUnit().getLabelToPrinting());
           } else if (localProduct.getUnit() != null) {

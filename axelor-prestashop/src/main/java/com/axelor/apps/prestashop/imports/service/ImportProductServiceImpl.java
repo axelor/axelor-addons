@@ -176,7 +176,7 @@ public class ImportProductServiceImpl implements ImportProductService {
           localProduct.setProductCategory(category);
           localProduct.setName(remoteProduct.getName().getTranslation(language));
           localProduct.setDescription(remoteProduct.getDescription().getTranslation(language));
-          localProduct.setEan13(StringUtils.defaultIfBlank(remoteProduct.getEan13(), null));
+          // localProduct.setEan13(StringUtils.defaultIfBlank(remoteProduct.getEan13(), null));
           localProduct.setCode(
               StringUtils.defaultIfBlank(
                   remoteProduct.getReference(),
