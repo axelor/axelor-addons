@@ -17,22 +17,20 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.time.ZonedDateTime;
-
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import java.io.IOException;
+import java.io.Writer;
 
 public interface ExportProductService {
 
-	/**
-	 * Export axelor Product object
-	 *
-	 * @param endDate date of last batch run
-	 * @param logBuffer  object of log file
-	 * @throws IOException
-	 * @throws PrestaShopWebserviceException
-	 */
-	public void exportProduct(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException;
+  /**
+   * Export axelor Product object
+   *
+   * @param logBuffer object of log file
+   * @throws IOException
+   * @throws PrestaShopWebserviceException
+   */
+  public void exportProduct(AppPrestashop appConfig, Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException;
 }

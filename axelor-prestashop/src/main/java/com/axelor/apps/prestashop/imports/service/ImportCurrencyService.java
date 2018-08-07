@@ -17,24 +17,23 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
+import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;
 
-import com.axelor.apps.base.db.AppPrestashop;
-import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-
 public interface ImportCurrencyService {
 
-	/**
-	 * Fetches currencies from prestashop and store them in ABS
-	 * @param appConfig Prestashop module's configuration
-	 * @param endDate End date of previous batch run or <code>null</code> if
-	 * first run.
-	 * @param logBuffer Buffer receiving log messages to be displayed in Axelor
-	 * interface
-	 * @throws IOException
-	 * @throws PrestaShopWebserviceException
-	 */
-	public void importCurrency(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer) throws IOException, PrestaShopWebserviceException;
+  /**
+   * Fetches currencies from prestashop and store them in ABS
+   *
+   * @param appConfig Prestashop module's configuration
+   * @param endDate End date of previous batch run or <code>null</code> if first run.
+   * @param logBuffer Buffer receiving log messages to be displayed in Axelor interface
+   * @throws IOException
+   * @throws PrestaShopWebserviceException
+   */
+  public void importCurrency(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer)
+      throws IOException, PrestaShopWebserviceException;
 }

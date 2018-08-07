@@ -19,49 +19,56 @@ package com.axelor.apps.prestashop.db;
 
 public class Cart_row {
 
-	private String id_address_delivery;
+  private String id_address_delivery;
 
-	private String id_product;
+  private String id_product;
 
-	private String id_product_attribute;
+  private String id_product_attribute;
 
-	private String quantity;
+  private String quantity;
 
-	public String getId_address_delivery() {
-		return id_address_delivery;
-	}
+  public String getId_address_delivery() {
+    return id_address_delivery;
+  }
 
-	public void setId_address_delivery(String id_address_delivery) {
-		this.id_address_delivery = id_address_delivery;
-	}
+  public void setId_address_delivery(String id_address_delivery) {
+    this.id_address_delivery = id_address_delivery;
+  }
 
-	public String getId_product() {
-		return id_product;
-	}
+  public String getId_product() {
+    return id_product;
+  }
 
-	public void setId_product(String id_product) {
-		this.id_product = id_product;
-	}
+  public void setId_product(String id_product) {
+    this.id_product = id_product;
+  }
 
-	public String getId_product_attribute() {
-		return id_product_attribute;
-	}
+  public String getId_product_attribute() {
+    return id_product_attribute;
+  }
 
-	public void setId_product_attribute(String id_product_attribute) {
-		this.id_product_attribute = id_product_attribute;
-	}
+  public void setId_product_attribute(String id_product_attribute) {
+    this.id_product_attribute = id_product_attribute;
+  }
 
-	public String getQuantity() {
-		return quantity;
-	}
+  public String getQuantity() {
+    return quantity;
+  }
 
-	public void setQuantity(String quantity) {
-		this.quantity = quantity;
-	}
+  public void setQuantity(String quantity) {
+    this.quantity = quantity;
+  }
 
-	@Override
-	public String toString() {
-		return "Cart_row [id_address_delivery=" + id_address_delivery + ", id_product=" + id_product
-				+ ", id_product_attribute=" + id_product_attribute + ", quantity=" + quantity + "]";
-	}
+  @Override
+  public String toString() {
+    return "Cart_row [id_address_delivery="
+        + id_address_delivery
+        + ", id_product="
+        + id_product
+        + ", id_product_attribute="
+        + id_product_attribute
+        + ", quantity="
+        + quantity
+        + "]";
+  }
 }

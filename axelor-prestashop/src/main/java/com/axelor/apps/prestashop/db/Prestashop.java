@@ -22,25 +22,35 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 
 @XmlRootElement(name = "prestashop")
-@XmlSeeAlso({Currencies.class, Countries.class, Customers.class, Addresses.class,
-			Categories.class, Products.class, Carts.class, Orders.class, Order_histories.class, Order_details.class})
+@XmlSeeAlso({
+  Currencies.class,
+  Countries.class,
+  Customers.class,
+  Addresses.class,
+  Categories.class,
+  Products.class,
+  Carts.class,
+  Orders.class,
+  Order_histories.class,
+  Order_details.class
+})
 public class Prestashop {
-	
-	private Object prestashop;
 
-	public Prestashop() {}
-	
-	@XmlElement
-	public Object getPrestashop() {
-		return prestashop;
-	}
+  private Object prestashop;
 
-	public void setPrestashop(Object prestashop) {
-		this.prestashop = prestashop;
-	}
+  public Prestashop() {}
 
-	@Override
-	public String toString() {
-		return "PrestaShop [prestashop=" + prestashop + "]";
-	}
+  @XmlElement
+  public Object getPrestashop() {
+    return prestashop;
+  }
+
+  public void setPrestashop(Object prestashop) {
+    this.prestashop = prestashop;
+  }
+
+  @Override
+  public String toString() {
+    return "PrestaShop [prestashop=" + prestashop + "]";
+  }
 }

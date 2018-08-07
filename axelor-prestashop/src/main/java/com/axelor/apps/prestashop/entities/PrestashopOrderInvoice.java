@@ -19,188 +19,187 @@ package com.axelor.apps.prestashop.entities;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="order_invoice")
+@XmlRootElement(name = "order_invoice")
 public class PrestashopOrderInvoice extends PrestashopIdentifiableEntity {
-	private int orderId;
-	private int number;
-	private int deliveryNumber;
-	private LocalDateTime deliveryDate;
-	private BigDecimal totalDiscountsTaxIncluded = BigDecimal.ZERO;
-	private BigDecimal totalDiscountsTaxExcluded = BigDecimal.ZERO;
-	private BigDecimal totalPaidTaxIncluded = BigDecimal.ZERO;
-	private BigDecimal totalPaidTaxExcluded = BigDecimal.ZERO;
-	private BigDecimal totalProductsTaxIncluded = BigDecimal.ZERO;
-	private BigDecimal totalProductsTaxExcluded = BigDecimal.ZERO;
-	private BigDecimal totalShippingTaxIncluded = BigDecimal.ZERO;
-	private BigDecimal totalShippingTaxExcluded = BigDecimal.ZERO;
-	private BigDecimal totalWrappingTaxIncluded = BigDecimal.ZERO;
-	private BigDecimal totalWrappingTaxExcluded = BigDecimal.ZERO;
-	private Integer shippingTaxComputationMethod;
-	private String shopAddress;
-	private String note;
-	private LocalDateTime addDate = LocalDateTime.now();
-	
-	@XmlElement(name="id_order")
-	public int getOrderId() {
-		return orderId;
-	}
-	
-	public void setOrderId(int orderId) {
-		this.orderId = orderId;
-	}
+  private int orderId;
+  private int number;
+  private int deliveryNumber;
+  private LocalDateTime deliveryDate;
+  private BigDecimal totalDiscountsTaxIncluded = BigDecimal.ZERO;
+  private BigDecimal totalDiscountsTaxExcluded = BigDecimal.ZERO;
+  private BigDecimal totalPaidTaxIncluded = BigDecimal.ZERO;
+  private BigDecimal totalPaidTaxExcluded = BigDecimal.ZERO;
+  private BigDecimal totalProductsTaxIncluded = BigDecimal.ZERO;
+  private BigDecimal totalProductsTaxExcluded = BigDecimal.ZERO;
+  private BigDecimal totalShippingTaxIncluded = BigDecimal.ZERO;
+  private BigDecimal totalShippingTaxExcluded = BigDecimal.ZERO;
+  private BigDecimal totalWrappingTaxIncluded = BigDecimal.ZERO;
+  private BigDecimal totalWrappingTaxExcluded = BigDecimal.ZERO;
+  private Integer shippingTaxComputationMethod;
+  private String shopAddress;
+  private String note;
+  private LocalDateTime addDate = LocalDateTime.now();
 
-	public int getNumber() {
-		return number;
-	}
+  @XmlElement(name = "id_order")
+  public int getOrderId() {
+    return orderId;
+  }
 
-	public void setNumber(int number) {
-		this.number = number;
-	}
-	
-	@XmlElement(name="delivery_number")
-	public int getDeliveryNumber() {
-		return deliveryNumber;
-	}
-	
-	public void setDeliveryNumber(int deliveryNumber) {
-		this.deliveryNumber = deliveryNumber;
-	}
+  public void setOrderId(int orderId) {
+    this.orderId = orderId;
+  }
 
-	@XmlElement(name="delivery_date")
-	public LocalDateTime getDeliveryDate() {
-		return deliveryDate;
-	}
+  public int getNumber() {
+    return number;
+  }
 
-	public void setDeliveryDate(LocalDateTime deliveryDate) {
-		this.deliveryDate = deliveryDate;
-	}
+  public void setNumber(int number) {
+    this.number = number;
+  }
 
-	@XmlElement(name="total_discount_tax_incl")
-	public BigDecimal getTotalDiscountsTaxIncluded() {
-		return totalDiscountsTaxIncluded;
-	}
+  @XmlElement(name = "delivery_number")
+  public int getDeliveryNumber() {
+    return deliveryNumber;
+  }
 
-	public void setTotalDiscountsTaxIncluded(BigDecimal totalDiscountsTaxIncluded) {
-		this.totalDiscountsTaxIncluded = totalDiscountsTaxIncluded;
-	}
+  public void setDeliveryNumber(int deliveryNumber) {
+    this.deliveryNumber = deliveryNumber;
+  }
 
-	@XmlElement(name="total_discount_tax_excl")
-	public BigDecimal getTotalDiscountsTaxExcluded() {
-		return totalDiscountsTaxExcluded;
-	}
+  @XmlElement(name = "delivery_date")
+  public LocalDateTime getDeliveryDate() {
+    return deliveryDate;
+  }
 
-	public void setTotalDiscountsTaxExcluded(BigDecimal totalDiscountsTaxExcluded) {
-		this.totalDiscountsTaxExcluded = totalDiscountsTaxExcluded;
-	}
+  public void setDeliveryDate(LocalDateTime deliveryDate) {
+    this.deliveryDate = deliveryDate;
+  }
 
-	@XmlElement(name="total_paid_tax_incl")
-	public BigDecimal getTotalPaidTaxIncluded() {
-		return totalPaidTaxIncluded;
-	}
+  @XmlElement(name = "total_discount_tax_incl")
+  public BigDecimal getTotalDiscountsTaxIncluded() {
+    return totalDiscountsTaxIncluded;
+  }
 
-	public void setTotalPaidTaxIncluded(BigDecimal totalPaidTaxIncluded) {
-		this.totalPaidTaxIncluded = totalPaidTaxIncluded;
-	}
+  public void setTotalDiscountsTaxIncluded(BigDecimal totalDiscountsTaxIncluded) {
+    this.totalDiscountsTaxIncluded = totalDiscountsTaxIncluded;
+  }
 
-	@XmlElement(name="total_paid_tax_excl")
-	public BigDecimal getTotalPaidTaxExcluded() {
-		return totalPaidTaxExcluded;
-	}
+  @XmlElement(name = "total_discount_tax_excl")
+  public BigDecimal getTotalDiscountsTaxExcluded() {
+    return totalDiscountsTaxExcluded;
+  }
 
-	public void setTotalPaidTaxExcluded(BigDecimal totalPaidTaxExcluded) {
-		this.totalPaidTaxExcluded = totalPaidTaxExcluded;
-	}
+  public void setTotalDiscountsTaxExcluded(BigDecimal totalDiscountsTaxExcluded) {
+    this.totalDiscountsTaxExcluded = totalDiscountsTaxExcluded;
+  }
 
-	@XmlElement(name="total_products_wt")
-	public BigDecimal getTotalProductsTaxIncluded() {
-		return totalProductsTaxIncluded;
-	}
+  @XmlElement(name = "total_paid_tax_incl")
+  public BigDecimal getTotalPaidTaxIncluded() {
+    return totalPaidTaxIncluded;
+  }
 
-	public void setTotalProductsTaxIncluded(BigDecimal totalProductsTaxIncluded) {
-		this.totalProductsTaxIncluded = totalProductsTaxIncluded;
-	}
+  public void setTotalPaidTaxIncluded(BigDecimal totalPaidTaxIncluded) {
+    this.totalPaidTaxIncluded = totalPaidTaxIncluded;
+  }
 
-	@XmlElement(name="total_products")
-	public BigDecimal getTotalProductsTaxExcluded() {
-		return totalProductsTaxExcluded;
-	}
+  @XmlElement(name = "total_paid_tax_excl")
+  public BigDecimal getTotalPaidTaxExcluded() {
+    return totalPaidTaxExcluded;
+  }
 
-	public void setTotalProductsTaxExcluded(BigDecimal totalProductsTaxExcluded) {
-		this.totalProductsTaxExcluded = totalProductsTaxExcluded;
-	}
+  public void setTotalPaidTaxExcluded(BigDecimal totalPaidTaxExcluded) {
+    this.totalPaidTaxExcluded = totalPaidTaxExcluded;
+  }
 
-	@XmlElement(name="total_shipping_tax_incl")
-	public BigDecimal getTotalShippingTaxIncluded() {
-		return totalShippingTaxIncluded;
-	}
+  @XmlElement(name = "total_products_wt")
+  public BigDecimal getTotalProductsTaxIncluded() {
+    return totalProductsTaxIncluded;
+  }
 
-	public void setTotalShippingTaxIncluded(BigDecimal totalShippingTaxIncluded) {
-		this.totalShippingTaxIncluded = totalShippingTaxIncluded;
-	}
+  public void setTotalProductsTaxIncluded(BigDecimal totalProductsTaxIncluded) {
+    this.totalProductsTaxIncluded = totalProductsTaxIncluded;
+  }
 
-	@XmlElement(name="total_shipping_tax_excl")
-	public BigDecimal getTotalShippingTaxExcluded() {
-		return totalShippingTaxExcluded;
-	}
+  @XmlElement(name = "total_products")
+  public BigDecimal getTotalProductsTaxExcluded() {
+    return totalProductsTaxExcluded;
+  }
 
-	public void setTotalShippingTaxExcluded(BigDecimal totalShippingTaxExcluded) {
-		this.totalShippingTaxExcluded = totalShippingTaxExcluded;
-	}
+  public void setTotalProductsTaxExcluded(BigDecimal totalProductsTaxExcluded) {
+    this.totalProductsTaxExcluded = totalProductsTaxExcluded;
+  }
 
-	@XmlElement(name="total_wrapping_tax_incl")
-	public BigDecimal getTotalWrappingTaxIncluded() {
-		return totalWrappingTaxIncluded;
-	}
+  @XmlElement(name = "total_shipping_tax_incl")
+  public BigDecimal getTotalShippingTaxIncluded() {
+    return totalShippingTaxIncluded;
+  }
 
-	public void setTotalWrappingTaxIncluded(BigDecimal totalWrappingTaxIncluded) {
-		this.totalWrappingTaxIncluded = totalWrappingTaxIncluded;
-	}
+  public void setTotalShippingTaxIncluded(BigDecimal totalShippingTaxIncluded) {
+    this.totalShippingTaxIncluded = totalShippingTaxIncluded;
+  }
 
-	@XmlElement(name="total_wrapping_tax_excl")
-	public BigDecimal getTotalWrappingTaxExcluded() {
-		return totalWrappingTaxExcluded;
-	}
+  @XmlElement(name = "total_shipping_tax_excl")
+  public BigDecimal getTotalShippingTaxExcluded() {
+    return totalShippingTaxExcluded;
+  }
 
-	public void setTotalWrappingTaxExcluded(BigDecimal totalWrappingTaxExcluded) {
-		this.totalWrappingTaxExcluded = totalWrappingTaxExcluded;
-	}
+  public void setTotalShippingTaxExcluded(BigDecimal totalShippingTaxExcluded) {
+    this.totalShippingTaxExcluded = totalShippingTaxExcluded;
+  }
 
-	@XmlElement(name="shipping_tax_computation_method")
-	public Integer getShippingTaxComputationMethod() {
-		return shippingTaxComputationMethod;
-	}
+  @XmlElement(name = "total_wrapping_tax_incl")
+  public BigDecimal getTotalWrappingTaxIncluded() {
+    return totalWrappingTaxIncluded;
+  }
 
-	public void setShippingTaxComputationMethod(Integer shippingTaxComputationMethod) {
-		this.shippingTaxComputationMethod = shippingTaxComputationMethod;
-	}
+  public void setTotalWrappingTaxIncluded(BigDecimal totalWrappingTaxIncluded) {
+    this.totalWrappingTaxIncluded = totalWrappingTaxIncluded;
+  }
 
-	@XmlElement(name="shop_address")
-	public String getShopAddress() {
-		return shopAddress;
-	}
+  @XmlElement(name = "total_wrapping_tax_excl")
+  public BigDecimal getTotalWrappingTaxExcluded() {
+    return totalWrappingTaxExcluded;
+  }
 
-	public void setShopAddress(String shopAddress) {
-		this.shopAddress = shopAddress;
-	}
+  public void setTotalWrappingTaxExcluded(BigDecimal totalWrappingTaxExcluded) {
+    this.totalWrappingTaxExcluded = totalWrappingTaxExcluded;
+  }
 
-	public String getNote() {
-		return note;
-	}
+  @XmlElement(name = "shipping_tax_computation_method")
+  public Integer getShippingTaxComputationMethod() {
+    return shippingTaxComputationMethod;
+  }
 
-	public void setNote(String note) {
-		this.note = note;
-	}
+  public void setShippingTaxComputationMethod(Integer shippingTaxComputationMethod) {
+    this.shippingTaxComputationMethod = shippingTaxComputationMethod;
+  }
 
-	@XmlElement(name="date_add")
-	public LocalDateTime getAddDate() {
-		return addDate;
-	}
+  @XmlElement(name = "shop_address")
+  public String getShopAddress() {
+    return shopAddress;
+  }
 
-	public void setAddDate(LocalDateTime addDate) {
-		this.addDate = addDate;
-	}
+  public void setShopAddress(String shopAddress) {
+    this.shopAddress = shopAddress;
+  }
+
+  public String getNote() {
+    return note;
+  }
+
+  public void setNote(String note) {
+    this.note = note;
+  }
+
+  @XmlElement(name = "date_add")
+  public LocalDateTime getAddDate() {
+    return addDate;
+  }
+
+  public void setAddDate(LocalDateTime addDate) {
+    this.addDate = addDate;
+  }
 }

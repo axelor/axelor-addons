@@ -23,11 +23,10 @@ import com.google.inject.Inject;
 
 public abstract class BatchStrategyImport extends AbstractBatch {
 
-	@Inject
-	protected PrestaShopServiceImport prestaShopServiceImport;
-	
-	protected BatchStrategyImport(PrestaShopServiceImport prestaShopServiceImport) {
-		super();
-		this.prestaShopServiceImport = prestaShopServiceImport;
-	}
+  @Inject protected PrestaShopServiceImport prestaShopServiceImport;
+
+  protected BatchStrategyImport(PrestaShopServiceImport prestaShopServiceImport) {
+    super();
+    this.prestaShopServiceImport = prestaShopServiceImport;
+  }
 }

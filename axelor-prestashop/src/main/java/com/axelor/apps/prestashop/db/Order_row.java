@@ -19,21 +19,18 @@ package com.axelor.apps.prestashop.db;
 
 public class Order_row {
 
-	private String product_id;
-	
+  private String product_id;
 
-	public String getProduct_id ()
-	{
-		return product_id;
-	}
-	
-	public void setProduct_id (String product_id)
-	{
-		this.product_id = product_id;
-	}
+  public String getProduct_id() {
+    return product_id;
+  }
 
-	@Override
-	public String toString() {
-		return "Order_row [product_id=" + product_id + "]";
-	}
+  public void setProduct_id(String product_id) {
+    this.product_id = product_id;
+  }
+
+  @Override
+  public String toString() {
+    return "Order_row [product_id=" + product_id + "]";
+  }
 }

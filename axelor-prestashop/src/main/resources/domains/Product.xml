@@ -5,6 +5,10 @@
 
 	<entity name="Product" lang="java">
 		<integer name="prestaShopId" nullable="true"/>
+		<integer name="prestaShopVersion" nullable="true"/>
+		<!-- LOCAL id of the picture stored on PS, to detect changes -->
+		<long name="prestaShopImageId" nullable="true"/>
+		<integer name="prestaShopImageVersion" nullable="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 

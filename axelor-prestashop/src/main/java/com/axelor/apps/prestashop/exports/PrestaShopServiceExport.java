@@ -17,23 +17,23 @@
  */
 package com.axelor.apps.prestashop.exports;
 
-import java.io.IOException;
-import java.time.ZonedDateTime;
-
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import java.io.IOException;
 
 public interface PrestaShopServiceExport {
 
-	/**
-	 * Exports ABS data to prestashop
-	 * @param appConfig Configuration allowing to tune which objects are exported
-	 * @param referenceDate Only objects created or modified after this timestamp
-	 * will be exported (or those without filled prestashop id)
-	 * @param batch Handle to currently running batch
-	 * @throws PrestaShopWebserviceException
-	 * @throws IOException
-	 */
-	public void export(AppPrestashop appConfig, ZonedDateTime referenceDate, Batch batch) throws PrestaShopWebserviceException, IOException;
+  /**
+   * Exports ABS data to prestashop
+   *
+   * @param appConfig Configuration allowing to tune which objects are exported
+   * @param referenceDate Only objects created or modified after this timestamp will be exported (or
+   *     those without filled prestashop id)
+   * @param batch Handle to currently running batch
+   * @throws PrestaShopWebserviceException
+   * @throws IOException
+   */
+  public void export(AppPrestashop appConfig, Batch batch)
+      throws PrestaShopWebserviceException, IOException;
 }

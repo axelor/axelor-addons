@@ -17,21 +17,21 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
+import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;
 
-import com.axelor.apps.base.db.AppPrestashop;
-import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-
 public interface ImportProductService {
 
-	/**
-	 * Import products from prestashop.
-	 *
-	 * @param bwImport object of import logfile
-	 * @throws IOException
-	 * @throws PrestaShopWebserviceException
-	 */
-	public void importProduct(AppPrestashop appConfig, ZonedDateTime endDate, Writer logWriter) throws IOException, PrestaShopWebserviceException;
+  /**
+   * Import products from prestashop.
+   *
+   * @param bwImport object of import logfile
+   * @throws IOException
+   * @throws PrestaShopWebserviceException
+   */
+  public void importProduct(AppPrestashop appConfig, ZonedDateTime endDate, Writer logWriter)
+      throws IOException, PrestaShopWebserviceException;
 }

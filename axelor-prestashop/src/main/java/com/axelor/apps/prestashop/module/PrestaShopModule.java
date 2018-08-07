@@ -57,26 +57,26 @@ import com.axelor.apps.prestashop.imports.service.ImportProductServiceImpl;
 
 public class PrestaShopModule extends AxelorModule {
 
-    @Override
-    protected void configure() {
-    	bind(AppPrestaShopService.class).to(AppPrestaShopServiceImpl.class);
-        bind(PrestaShopServiceImport.class).to(PrestaShopServiceImportImpl.class);
-        bind(PrestaShopServiceExport.class).to(PrestaShopServiceExportImpl.class);
-        bind(ExportCurrencyService.class).to(ExportCurrencyServiceImpl.class);
-        bind(ExportCountryService.class).to(ExportCountryServiceImpl.class);
-        bind(ExportCustomerService.class).to(ExportCustomerServiceImpl.class);
-        bind(ExportAddressService.class).to(ExportAddressServiceImpl.class);
-        bind(ExportCategoryService.class).to(ExportCategoryServiceImpl.class);
-        bind(ExportProductService.class).to(ExportProductServiceImpl.class);
-        bind(ExportOrderService.class).to(ExportOrderServiceImpl.class);
+  @Override
+  protected void configure() {
+    bind(AppPrestaShopService.class).to(AppPrestaShopServiceImpl.class);
+    bind(PrestaShopServiceImport.class).to(PrestaShopServiceImportImpl.class);
+    bind(PrestaShopServiceExport.class).to(PrestaShopServiceExportImpl.class);
+    bind(ExportCurrencyService.class).to(ExportCurrencyServiceImpl.class);
+    bind(ExportCountryService.class).to(ExportCountryServiceImpl.class);
+    bind(ExportCustomerService.class).to(ExportCustomerServiceImpl.class);
+    bind(ExportAddressService.class).to(ExportAddressServiceImpl.class);
+    bind(ExportCategoryService.class).to(ExportCategoryServiceImpl.class);
+    bind(ExportProductService.class).to(ExportProductServiceImpl.class);
+    bind(ExportOrderService.class).to(ExportOrderServiceImpl.class);
 
-        bind(ImportCurrencyService.class).to(ImportCurrencyServiceImpl.class);
-        bind(ImportCountryService.class).to(ImportCountryServiceImpl.class);
-        bind(ImportCustomerService.class).to(ImportCustomerServiceImpl.class);
-        bind(ImportAddressService.class).to(ImportAddressServiceImpl.class);
-        bind(ImportCategoryService.class).to(ImportCategoryServiceImpl.class);
-        bind(ImportProductService.class).to(ImportProductServiceImpl.class);
-        bind(ImportOrderService.class).to(ImportOrderServiceImpl.class);
-        bind(ImportMetaDataService.class).to(ImportMetaDataServiceImpl.class);
-    }
+    bind(ImportCurrencyService.class).to(ImportCurrencyServiceImpl.class);
+    bind(ImportCountryService.class).to(ImportCountryServiceImpl.class);
+    bind(ImportCustomerService.class).to(ImportCustomerServiceImpl.class);
+    bind(ImportAddressService.class).to(ImportAddressServiceImpl.class);
+    bind(ImportCategoryService.class).to(ImportCategoryServiceImpl.class);
+    bind(ImportProductService.class).to(ImportProductServiceImpl.class);
+    bind(ImportOrderService.class).to(ImportOrderServiceImpl.class);
+    bind(ImportMetaDataService.class).to(ImportMetaDataServiceImpl.class);
+  }
 }

@@ -17,14 +17,6 @@
  */
 package com.axelor.apps.prestashop.service.imports.batch;
 
-import java.lang.invoke.MethodHandles;
-import java.time.ZonedDateTime;
-
-import javax.inject.Inject;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.repo.AppPrestashopRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.batch.PrestaShopBatchService;
@@ -32,43 +24,55 @@ import com.axelor.apps.prestashop.db.PrestaShopBatch;
 import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.imports.PrestaShopServiceImport;
 import com.axelor.i18n.I18n;
+import java.lang.invoke.MethodHandles;
+import java.time.ZonedDateTime;
+import javax.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImportPrestaShop extends AbstractBatch {
-	private static final Logger LOG = LoggerFactory.getLogger( MethodHandles.lookup().lookupClass() );
+  private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-	private PrestaShopServiceImport prestaShopServiceImport;
-	private AppPrestashopRepository appRepository;
-	private PrestaShopBatchService batchService;
+  private PrestaShopServiceImport prestaShopServiceImport;
+  private AppPrestashopRepository appRepository;
+  private PrestaShopBatchService batchService;
 
-	@Inject
-	public ImportPrestaShop(PrestaShopServiceImport prestaShopServiceImport, AppPrestashopRepository appRepository, PrestaShopBatchService batchService) {
-		this.prestaShopServiceImport = prestaShopServiceImport;
-		this.appRepository = appRepository;
-		this.batchService = batchService;
-	}
+  @Inject
+  public ImportPrestaShop(
+      PrestaShopServiceImport prestaShopServiceImport,
+      AppPrestashopRepository appRepository,
+      PrestaShopBatchService batchService) {
+    this.prestaShopServiceImport = prestaShopServiceImport;
+    this.appRepository = appRepository;
+    this.batchService = batchService;
+  }
 
-	@Override
-	protected void process() {
-		try {
-			PrestaShopBatch prestaShopBatch = (PrestaShopBatch) model;
+  @Override
+  protected void process() {
+    try {
+      PrestaShopBatch prestaShopBatch = (PrestaShopBatch) model;
 
-			ZonedDateTime referenceDate = batchService.getLastSuccessfullRunStartDate(prestaShopBatch);
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("Starting import from PrestaShop to ABS with reference date {}", referenceDate);
-			}
-			prestaShopServiceImport.importFromPrestaShop(appRepository.all().fetchOne(), referenceDate, batch);
+      ZonedDateTime referenceDate = batchService.getLastSuccessfullRunStartDate(prestaShopBatch);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("Starting import from PrestaShop to ABS with reference date {}", referenceDate);
+      }
+      prestaShopServiceImport.importFromPrestaShop(
+          appRepository.all().fetchOne(), referenceDate, batch);
 
-			checkPoint(); // cannot call save directly as we've no transaction
-			incrementDone();
-		} catch (Exception e) {
-			LOG.error(String.format("An error occured while running prestashop export batch #%d", batch.getId()), e);
-			incrementAnomaly();
-		}
-	}
+      checkPoint(); // cannot call save directly as we've no transaction
+      incrementDone();
+    } catch (Exception e) {
+      LOG.error(
+          String.format(
+              "An error occured while running prestashop export batch #%d", batch.getId()),
+          e);
+      incrementAnomaly();
+    }
+  }
 
-	@Override
-	protected void stop() {
-		super.stop();
-		addComment(I18n.get(IExceptionMessage.BATCH_IMPORT));
-	}
+  @Override
+  protected void stop() {
+    super.stop();
+    addComment(I18n.get(IExceptionMessage.BATCH_IMPORT));
+  }
 }
