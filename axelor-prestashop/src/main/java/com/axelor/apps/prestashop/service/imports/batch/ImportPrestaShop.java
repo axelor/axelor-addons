@@ -23,6 +23,7 @@ import com.axelor.apps.prestashop.batch.PrestaShopBatchService;
 import com.axelor.apps.prestashop.db.PrestaShopBatch;
 import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.imports.PrestaShopServiceImport;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import java.lang.invoke.MethodHandles;
 import java.time.ZonedDateTime;
@@ -62,6 +63,7 @@ public class ImportPrestaShop extends AbstractBatch {
       checkPoint(); // cannot call save directly as we've no transaction
       incrementDone();
     } catch (Exception e) {
+      TraceBackService.trace(e, "Prestashop import batch", batch.getId());
       LOG.error(
           String.format(
               "An error occured while running prestashop export batch #%d", batch.getId()),
