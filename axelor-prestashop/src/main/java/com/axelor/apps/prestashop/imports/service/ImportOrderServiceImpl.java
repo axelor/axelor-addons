@@ -534,6 +534,11 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         ws.fetch(
             PrestashopResourceType.ORDER_DETAILS,
             Collections.singletonMap("id_order", remoteOrder.getId().toString()));
+    // There is absolutely no documentation on the meaning of fields on prestathop side
+    // so we compute total from lines, compare it to the total paid and add a discount product
+    // if needed
+    BigDecimal computedTotal = BigDecimal.ZERO;
+
     for (PrestashopOrderRowDetails remoteLine : remoteLines) {
       try {
         final Product product = productRepository.findByPrestaShopId(remoteLine.getProductId());
@@ -560,17 +565,20 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
         localLine.setQty(BigDecimal.valueOf(remoteLine.getProductQuantity()));
         localLine.setProductName(remoteLine.getProductName());
-        localLine.setPrice(remoteLine.getProductPrice());
-        if (remoteLine.getDiscountPercent().compareTo(BigDecimal.ZERO) != 0) {
-          localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_PERCENT);
-          localLine.setDiscountAmount(remoteLine.getDiscountPercent());
-        } else if (remoteLine.getDiscountAmount().compareTo(BigDecimal.ZERO) != 0) {
+        // poor attempt to preserve discount
+        if ((remoteLine.getUnitPriceTaxIncluded().compareTo(remoteLine.getProductPrice())) < 0) {
+          // We do not take into account any discount related field to avoid issues with
+          // rounding
+          localLine.setPrice(remoteLine.getProductPrice());
           localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_FIXED);
-          localLine.setDiscountAmount(remoteLine.getDiscountAmount());
+          localLine.setDiscountAmount(
+              remoteLine.getProductPrice().subtract(remoteLine.getUnitPriceTaxExcluded()));
         } else {
+          localLine.setPrice(remoteLine.getUnitPriceTaxExcluded());
           localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_NONE);
         }
-        localLine.setPriceDiscounted(saleOrderLineService.computeDiscount(localLine));
+        localLine.setPriceDiscounted(saleOrderLineService.computeDiscount(localLine, false));
+        computedTotal = computedTotal.add(remoteLine.getUnitPriceTaxExcluded());
 
         // Sets exTaxTotal, inTaxTotal, companyInTaxTotal, companyExTaxTotal
         // We just prey for rounding & tax rates to be consistent between PS & ABS since
@@ -602,26 +610,50 @@ public class ImportOrderServiceImpl implements ImportOrderService {
     }
 
     if (BigDecimal.ZERO.compareTo(remoteOrder.getTotalShippingTaxExcluded()) != 0) {
-      if (addDeliveryFeesLine(
-              appConfig, localOrder, remoteOrder.getTotalShippingTaxExcluded(), logWriter)
+      if (addCustomLine(
+              appConfig.getDefaultShippingCostsProduct(),
+              localOrder,
+              remoteOrder.getTotalShippingTaxExcluded(),
+              logWriter)
           == false) {
         return false;
       }
     }
+
+    BigDecimal footerDiscountAmount = computedTotal.subtract(remoteOrder.getTotalPaidTaxExcluded());
+    if (footerDiscountAmount.compareTo(BigDecimal.ZERO) < 0) {
+      logWriter.write(
+          String.format(
+              "[ERROR] Computed total (%f) is less than paid total (%f) looks like a bug",
+              computedTotal, remoteOrder.getTotalPaidTaxExcluded()));
+      return false;
+    } else if (footerDiscountAmount.compareTo(BigDecimal.ZERO) > 0) {
+      logWriter.write(
+          String.format(
+              " - total paid (%f) differs from computed total (%f) adding discount",
+              remoteOrder.getTotalPaidTaxExcluded(), computedTotal));
+
+      if (addCustomLine(
+              appConfig.getDiscountProduct(), localOrder, footerDiscountAmount.negate(), logWriter)
+          == false) {
+        return false;
+      }
+    }
+
     return true;
   }
 
-  private boolean addDeliveryFeesLine(
-      final AppPrestashop appConfig,
+  private boolean addCustomLine(
+      final Product product,
       final SaleOrder localOrder,
-      final BigDecimal deliveryAmount,
+      final BigDecimal price,
       final Writer logWriter)
       throws IOException {
     try {
       final SaleOrderLine localLine = new SaleOrderLine();
       localLine.setSaleOrder(localOrder);
       localLine.setTypeSelect(SaleOrderLineRepository.TYPE_NORMAL);
-      localLine.setProduct(appConfig.getDefaultShippingCostsProduct());
+      localLine.setProduct(product);
 
       // Set all default information (product name, tax, unit, cost price)
       // Even if we'll override some of them later, it does not hurt to pass
@@ -629,9 +661,9 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       saleOrderLineService.computeProductInformation(localLine, localOrder);
 
       localLine.setQty(BigDecimal.ONE);
-      localLine.setPrice(deliveryAmount);
+      localLine.setPrice(price);
       localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_NONE);
-      localLine.setPriceDiscounted(deliveryAmount);
+      localLine.setPriceDiscounted(price);
 
       // Sets exTaxTotal, inTaxTotal, companyInTaxTotal, companyExTaxTotal
       // We just prey for rounding & tax rates to be consistent between PS & ABS since
@@ -645,8 +677,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
       logWriter.write(
           String.format(
-              " [ERROR] An error occured while adding delivery fees line for sale order: %s: %s%n",
-              localOrder.getExternalReference(), ae.getMessage()));
+              " [ERROR] An error occured while adding custom line (product %s) for sale order: %s: %s%n",
+              product.getCode(), localOrder.getExternalReference(), ae.getMessage()));
       log.error(
           String.format(
               "An error occured while adding delivery fees line for sale order: %s",

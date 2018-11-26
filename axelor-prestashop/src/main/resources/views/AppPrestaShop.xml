@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+<object-views xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://axelor.com/xml/ns/object-views" xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
 
 	<form name="app-prestashop-config-form" title="App prestashop" model="com.axelor.apps.base.db.AppPrestashop" canDelete="false" canNew="false" width="large" onSave="action-app-prestashop-method-fetch-metadata">
 		<panel title="Connection">
@@ -25,10 +25,11 @@
 			<field name="invoicedStatus" required="true"/>
 			<field name="paidStatus" required="true"/>
 			<field name="deliveredStatus" required="true"/>
-			
+
 			<field name="defaultPaymentCondition" required="true"/>
 			<field name="defaultPaymentMode" required="true" form-view="prestaShop-payment-mode-form" grid-view="prestaShop-payment-mode-grid"/>
 			<field name="defaultShippingCostsProduct" required="true"/>
+			<field name="discountProduct" required="true"/>
 			<field name="defaultTax" required="true"/>
 		</panel>
 
