@@ -62,6 +62,9 @@ import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
@@ -70,8 +73,6 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.ListIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ImportOrderServiceImpl implements ImportOrderService {
@@ -389,8 +390,11 @@ public class ImportOrderServiceImpl implements ImportOrderService {
               final String additionalComment =
                   I18n.get(
                       "<p>WARNING: Order has been modified on PrestaShop but could not be updated locally.</p>");
-              if (localOrder.getInternalNote().indexOf(additionalComment) < 0) {
-                localOrder.setInternalNote(localOrder.getInternalNote() + additionalComment);
+              if (localOrder.getInternalNote() == null
+                  || localOrder.getInternalNote().indexOf(additionalComment) < 0) {
+                localOrder.setInternalNote(
+                    (localOrder.getInternalNote() == null ? "" : localOrder.getInternalNote())
+                        + additionalComment);
               }
               logWriter.write(
                   String.format(
