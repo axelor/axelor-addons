@@ -449,7 +449,9 @@ public class ExportOrderServiceImpl implements ExportOrderService {
               unitConversionService.convert(
                   localRow.getProduct().getWeightUnit(),
                   appConfig.getPrestaShopWeightUnit(),
-                  localRow.getProduct().getGrossWeight()));
+                  localRow.getProduct().getGrossWeight(),
+                  localRow.getProduct().getGrossWeight().scale(),
+                  localRow.getProduct()));
         } catch (AxelorException e) {
           log.error("Exception while converting product weight");
         }

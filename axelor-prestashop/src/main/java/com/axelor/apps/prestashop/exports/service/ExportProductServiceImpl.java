@@ -305,17 +305,20 @@ public class ExportProductServiceImpl implements ExportProductService {
                 convert(
                     appConfig.getPrestaShopLengthUnit(),
                     localProduct.getLengthUnit(),
-                    localProduct.getWidth()));
+                    localProduct.getWidth(),
+                    localProduct));
             remoteProduct.setHeight(
                 convert(
                     appConfig.getPrestaShopLengthUnit(),
                     localProduct.getLengthUnit(),
-                    localProduct.getHeight()));
+                    localProduct.getHeight(),
+                    localProduct));
             remoteProduct.setDepth(
                 convert(
                     appConfig.getPrestaShopLengthUnit(),
                     localProduct.getLengthUnit(),
-                    localProduct.getLength()));
+                    localProduct.getLength(),
+                    localProduct));
           } else {
             // assume homogeneous units
             remoteProduct.setWidth(localProduct.getWidth());
@@ -326,10 +329,14 @@ public class ExportProductServiceImpl implements ExportProductService {
               localProduct.getGrossWeight() == null
                   ? localProduct.getNetWeight()
                   : localProduct.getGrossWeight();
-          if (localProduct.getWeightUnit() != null) {
+          if (localProduct.getWeightUnit() != null && weight != null) {
             remoteProduct.setWeight(
                 unitConversionService.convert(
-                    appConfig.getPrestaShopWeightUnit(), localProduct.getWeightUnit(), weight));
+                    appConfig.getPrestaShopWeightUnit(),
+                    localProduct.getWeightUnit(),
+                    weight,
+                    weight.scale(),
+                    localProduct));
           } else {
             remoteProduct.setWeight(weight);
           }
@@ -525,8 +532,9 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   // Null-safe version of UnitConversionService::Convert (feel free to integrate to base method).
-  private BigDecimal convert(Unit from, Unit to, BigDecimal value) throws AxelorException {
+  private BigDecimal convert(Unit from, Unit to, BigDecimal value, Product product)
+      throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value);
+    return unitConversionService.convert(from, to, value, value.scale(), product);
   }
 }

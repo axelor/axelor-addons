@@ -222,7 +222,8 @@ public class ImportProductServiceImpl implements ImportProductService {
               convert(
                   appConfig.getPrestaShopWeightUnit(),
                   localProduct.getWeightUnit(),
-                  remoteProduct.getWeight()));
+                  remoteProduct.getWeight(),
+                  localProduct));
 
           if (localProduct.getLengthUnit() == null)
             localProduct.setLengthUnit(appConfig.getPrestaShopLengthUnit());
@@ -230,17 +231,20 @@ public class ImportProductServiceImpl implements ImportProductService {
               convert(
                   appConfig.getPrestaShopLengthUnit(),
                   localProduct.getLengthUnit(),
-                  remoteProduct.getWidth()));
+                  remoteProduct.getWidth(),
+                  localProduct));
           localProduct.setHeight(
               convert(
                   appConfig.getPrestaShopLengthUnit(),
                   localProduct.getLengthUnit(),
-                  remoteProduct.getHeight()));
+                  remoteProduct.getHeight(),
+                  localProduct));
           localProduct.setLength(
               convert(
                   appConfig.getPrestaShopLengthUnit(),
                   localProduct.getLengthUnit(),
-                  remoteProduct.getDepth()));
+                  remoteProduct.getDepth(),
+                  localProduct));
 
           if (remoteProduct.getDefaultImageId() != null && remoteProduct.getDefaultImageId() != 0) {
             try {
@@ -299,8 +303,9 @@ public class ImportProductServiceImpl implements ImportProductService {
   }
 
   /** @see ExportProductServiceImpl#convert */
-  private BigDecimal convert(Unit from, Unit to, BigDecimal value) throws AxelorException {
+  private BigDecimal convert(Unit from, Unit to, BigDecimal value, Product product)
+      throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value);
+    return unitConversionService.convert(from, to, value, value.scale(), product);
   }
 }
