@@ -302,6 +302,6 @@ public class ImportProductServiceImpl implements ImportProductService {
   /** @see ExportProductServiceImpl#convert */
   private BigDecimal convert(Unit from, Unit to, BigDecimal value) throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value);
+    return unitConversionService.convert(from, to, value, 2, null);
   }
 }

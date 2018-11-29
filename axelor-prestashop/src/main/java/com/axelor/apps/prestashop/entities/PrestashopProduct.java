@@ -102,9 +102,10 @@ public class PrestashopProduct extends PrestashopIdentifiableEntity {
   private PrestashopTranslatableString availableLater;
   private Associations associations = new Associations();
   private List<Element> additionalProperties = new LinkedList<>();
+  private boolean lowStockAlert = false;
 
-  public PrestashopProduct() {
-    associations.setCategories(new CategoriesAssociationsEntry());
+  public boolean isLowStockAlert() {
+    return lowStockAlert;
   }
 
   @XmlElement(name = "id_manufacturer")
@@ -665,5 +666,18 @@ public class PrestashopProduct extends PrestashopIdentifiableEntity {
 
   public void setAdditionalProperties(List<Element> additionalProperties) {
     this.additionalProperties = additionalProperties;
+  }
+
+  public void setLowStockAlert(boolean lowStockAlert) {
+    this.lowStockAlert = lowStockAlert;
+  }
+
+  @XmlElement(name = "low_stock_alert")
+  public boolean getLowStockAlert() {
+    return this.lowStockAlert;
+  }
+
+  public PrestashopProduct() {
+    associations.setCategories(new CategoriesAssociationsEntry());
   }
 }

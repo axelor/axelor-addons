@@ -13,8 +13,6 @@ spotless {
 axelor {
 	title "Axelor :: PrestaShop"
 	description "Axelor PrestaShop Module"
-
-	removable true
 }
 
 dependencies {

@@ -165,7 +165,7 @@ public class ExportProductServiceImpl implements ExportProductService {
               String.format(
                   "[ERROR] Product has variants, which are not handled right now, skipping%n"));
           continue;
-        } else if (localProduct.getIsPack() == Boolean.TRUE) {
+        } else if (localProduct.getProductTypeSelect() == ProductRepository.PRODUCT_TYPE_PACK) {
           // FIXME fairly easy to fix through product_bundle association + set type to pack
           logBuffer.write(
               String.format(
@@ -329,7 +329,11 @@ public class ExportProductServiceImpl implements ExportProductService {
           if (localProduct.getMassUnit() != null) {
             remoteProduct.setWeight(
                 unitConversionService.convert(
-                    appConfig.getPrestaShopWeightUnit(), localProduct.getMassUnit(), weight));
+                    appConfig.getPrestaShopWeightUnit(),
+                    localProduct.getMassUnit(),
+                    weight,
+                    2,
+                    localProduct));
           } else {
             remoteProduct.setWeight(weight);
           }
@@ -354,6 +358,7 @@ public class ExportProductServiceImpl implements ExportProductService {
             // webservices is a joke). Trade-off is that we shuffle categories on each update…
             remoteProduct.setPositionInCategory(0);
           }
+          remoteProduct.setLowStockAlert(true);
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           productsById.put(remoteProduct.getId(), remoteProduct);
 
@@ -528,6 +533,6 @@ public class ExportProductServiceImpl implements ExportProductService {
   // Null-safe version of UnitConversionService::Convert (feel free to integrate to base method).
   private BigDecimal convert(Unit from, Unit to, BigDecimal value) throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value);
+    return unitConversionService.convert(from, to, value, 2, null);
   }
 }

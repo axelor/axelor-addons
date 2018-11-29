@@ -53,12 +53,14 @@ import com.axelor.apps.sale.service.saleorder.SaleOrderCreateService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
 import com.axelor.apps.stock.db.StockMove;
+import com.axelor.apps.stock.db.repo.StockMoveRepository;
 import com.axelor.apps.stock.service.StockMoveService;
 import com.axelor.apps.supplychain.service.SaleOrderInvoiceService;
 import com.axelor.apps.supplychain.service.SaleOrderStockService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
@@ -485,12 +487,16 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         if (localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
           localOrder.setDeliveryDate(remoteOrder.getDeliveryDate().toLocalDate());
           try {
-            StockMove delivery = deliveryService.createStocksMovesFromSaleOrder(localOrder);
-            stockMoveService.realize(delivery, true);
-            for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
-              if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
-                  line.getProduct().getProductTypeSelect())) {
-                line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+            List<Long> stockMoveIds = deliveryService.createStocksMovesFromSaleOrder(localOrder);
+
+            for (Long stockMoveId : stockMoveIds) {
+              StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
+              stockMoveService.realize(delivery, true);
+              for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
+                if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
+                    line.getProduct().getProductTypeSelect())) {
+                  line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+                }
               }
             }
             localOrder.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
@@ -552,7 +558,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         // Set all default information (product name, tax, unit, cost price)
         // Even if we'll override some of them later, it does not hurt to pass
         // through service method
-        saleOrderLineService.computeProductInformation(localLine, localOrder);
+        saleOrderLineService.computeProductInformation(
+            localLine, localOrder, localLine.getPackPriceSelect());
 
         localLine.setQty(BigDecimal.valueOf(remoteLine.getProductQuantity()));
         localLine.setProductName(remoteLine.getProductName());
@@ -566,7 +573,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         } else {
           localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_NONE);
         }
-        localLine.setPriceDiscounted(saleOrderLineService.computeDiscount(localLine));
+        localLine.setPriceDiscounted(
+            saleOrderLineService.computeDiscount(localLine, localOrder.getInAti()));
 
         // Sets exTaxTotal, inTaxTotal, companyInTaxTotal, companyExTaxTotal
         // We just prey for rounding & tax rates to be consistent between PS & ABS since
@@ -622,7 +630,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       // Set all default information (product name, tax, unit, cost price)
       // Even if we'll override some of them later, it does not hurt to pass
       // through service method
-      saleOrderLineService.computeProductInformation(localLine, localOrder);
+      saleOrderLineService.computeProductInformation(
+          localLine, localOrder, localLine.getPackPriceSelect());
 
       localLine.setQty(BigDecimal.ONE);
       localLine.setPrice(deliveryAmount);
