@@ -165,7 +165,7 @@ public class ExportProductServiceImpl implements ExportProductService {
               String.format(
                   "[ERROR] Product has variants, which are not handled right now, skipping%n"));
           continue;
-        } else if (localProduct.getIsPack() == Boolean.TRUE) {
+        } else if (localProduct.getProductTypeSelect() == ProductRepository.PRODUCT_TYPE_PACK) {
           // FIXME fairly easy to fix through product_bundle association + set type to pack
           logBuffer.write(
               String.format(
@@ -326,14 +326,14 @@ public class ExportProductServiceImpl implements ExportProductService {
             remoteProduct.setDepth(localProduct.getLength());
           }
           BigDecimal weight =
-              localProduct.getGrossWeight() == null
-                  ? localProduct.getNetWeight()
-                  : localProduct.getGrossWeight();
-          if (localProduct.getWeightUnit() != null && weight != null) {
+              localProduct.getGrossMass() == null
+                  ? localProduct.getNetMass()
+                  : localProduct.getGrossMass();
+          if (localProduct.getMassUnit() != null && weight != null) {
             remoteProduct.setWeight(
                 unitConversionService.convert(
                     appConfig.getPrestaShopWeightUnit(),
-                    localProduct.getWeightUnit(),
+                    localProduct.getMassUnit(),
                     weight,
                     weight.scale(),
                     localProduct));
@@ -360,6 +360,7 @@ public class ExportProductServiceImpl implements ExportProductService {
             // webservices is a joke). Trade-off is that we shuffle categories on each update…
             remoteProduct.setPositionInCategory(0);
           }
+          remoteProduct.setLowStockAlert(true);
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           productsById.put(remoteProduct.getId(), remoteProduct);
 

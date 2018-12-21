@@ -27,6 +27,7 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.prestashop.entities.Associations.AvailableStocksAssociationsEntry;
 import com.axelor.apps.prestashop.entities.PrestashopProduct;
 import com.axelor.apps.prestashop.entities.PrestashopProductCategory;
@@ -46,6 +47,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -216,12 +218,12 @@ public class ImportProductServiceImpl implements ImportProductService {
                   " [WARNING] Unable to convert sale price, check your currency conversion rates");
             }
           }
-          if (localProduct.getWeightUnit() == null)
-            localProduct.setWeightUnit(appConfig.getPrestaShopWeightUnit());
-          localProduct.setGrossWeight(
+          if (localProduct.getMassUnit() == null)
+            localProduct.setMassUnit(appConfig.getPrestaShopWeightUnit());
+          localProduct.setGrossMass(
               convert(
                   appConfig.getPrestaShopWeightUnit(),
-                  localProduct.getWeightUnit(),
+                  localProduct.getMassUnit(),
                   remoteProduct.getWeight(),
                   localProduct));
 
@@ -306,6 +308,8 @@ public class ImportProductServiceImpl implements ImportProductService {
   private BigDecimal convert(Unit from, Unit to, BigDecimal value, Product product)
       throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value, value.scale(), product);
+    return unitConversionService
+        .convert(from, to, value, AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, product)
+        .setScale(AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, RoundingMode.HALF_EVEN);
   }
 }

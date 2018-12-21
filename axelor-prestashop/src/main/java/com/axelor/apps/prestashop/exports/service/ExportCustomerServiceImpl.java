@@ -175,6 +175,9 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 
           remoteCustomer.setUpdateDate(now);
           remoteCustomer = ws.save(PrestashopResourceType.CUSTOMERS, remoteCustomer);
+          if (remoteCustomer.getId() == 12) {
+            log.debug("Local customer name: {}", localCustomer.getName());
+          }
           localCustomer.setPrestaShopId(remoteCustomer.getId());
           localCustomer.setPrestaShopVersion(localCustomer.getVersion() + 1);
           localCustomer.setEmailAddressPrestaShopVersion(
