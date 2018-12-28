@@ -442,7 +442,6 @@ public class ExportOrderServiceImpl implements ExportOrderService {
             break;
         }
       }
-      // remoteRow.setEan13(localRow.getProduct().getEan13());
       remoteRow.setProductReference(localRow.getProduct().getCode());
       if (localRow.getProduct().getGrossMass() != null) {
         try {
@@ -450,7 +449,9 @@ public class ExportOrderServiceImpl implements ExportOrderService {
               unitConversionService.convert(
                   localRow.getProduct().getMassUnit(),
                   appConfig.getPrestaShopWeightUnit(),
-                  localRow.getProduct().getGrossMass()));
+                  localRow.getProduct().getGrossMass(),
+                  localRow.getProduct().getGrossMass().scale(),
+                  localRow.getProduct()));
         } catch (AxelorException e) {
           log.error("Exception while converting product weight");
         }

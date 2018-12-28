@@ -165,7 +165,7 @@ public class ExportProductServiceImpl implements ExportProductService {
               String.format(
                   "[ERROR] Product has variants, which are not handled right now, skipping%n"));
           continue;
-        } else if (localProduct.getIsPack() == Boolean.TRUE) {
+        } else if (localProduct.getProductTypeSelect() == ProductRepository.PRODUCT_TYPE_PACK) {
           // FIXME fairly easy to fix through product_bundle association + set type to pack
           logBuffer.write(
               String.format(
@@ -305,17 +305,20 @@ public class ExportProductServiceImpl implements ExportProductService {
                 convert(
                     appConfig.getPrestaShopLengthUnit(),
                     localProduct.getLengthUnit(),
-                    localProduct.getWidth()));
+                    localProduct.getWidth(),
+                    localProduct));
             remoteProduct.setHeight(
                 convert(
                     appConfig.getPrestaShopLengthUnit(),
                     localProduct.getLengthUnit(),
-                    localProduct.getHeight()));
+                    localProduct.getHeight(),
+                    localProduct));
             remoteProduct.setDepth(
                 convert(
                     appConfig.getPrestaShopLengthUnit(),
                     localProduct.getLengthUnit(),
-                    localProduct.getLength()));
+                    localProduct.getLength(),
+                    localProduct));
           } else {
             // assume homogeneous units
             remoteProduct.setWidth(localProduct.getWidth());
@@ -326,10 +329,14 @@ public class ExportProductServiceImpl implements ExportProductService {
               localProduct.getGrossMass() == null
                   ? localProduct.getNetMass()
                   : localProduct.getGrossMass();
-          if (localProduct.getMassUnit() != null) {
+          if (localProduct.getMassUnit() != null && weight != null) {
             remoteProduct.setWeight(
                 unitConversionService.convert(
-                    appConfig.getPrestaShopWeightUnit(), localProduct.getMassUnit(), weight));
+                    appConfig.getPrestaShopWeightUnit(),
+                    localProduct.getMassUnit(),
+                    weight,
+                    weight.scale(),
+                    localProduct));
           } else {
             remoteProduct.setWeight(weight);
           }
@@ -338,7 +345,6 @@ public class ExportProductServiceImpl implements ExportProductService {
           remoteProduct.getDescription().setTranslation(language, localProduct.getDescription());
           remoteProduct.setTaxRulesGroupId(
               1); // FIXME Need to have a mapping and use getAccountManagementList
-          // remoteProduct.setEan13(localProduct.getEan13());
           if (localProduct.getSalesUnit() != null) {
             remoteProduct.setUnity(localProduct.getSalesUnit().getLabelToPrinting());
           } else if (localProduct.getUnit() != null) {
@@ -354,6 +360,7 @@ public class ExportProductServiceImpl implements ExportProductService {
             // webservices is a joke). Trade-off is that we shuffle categories on each update…
             remoteProduct.setPositionInCategory(0);
           }
+          remoteProduct.setLowStockAlert(true);
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           productsById.put(remoteProduct.getId(), remoteProduct);
 
@@ -507,10 +514,10 @@ public class ExportProductServiceImpl implements ExportProductService {
             new FileInputStream(MetaFiles.getPath(localProduct.getPicture()).toFile())) {
           PrestashopImage image = ws.addImage(PrestashopResourceType.PRODUCTS, remoteProduct, is);
           remoteProduct.setDefaultImageId(image.getId());
+          ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           localProduct.setPrestaShopImageId(localProduct.getPicture().getId());
           localProduct.setPrestaShopImageVersion(localProduct.getPicture().getVersion());
           localProduct.setPrestaShopVersion(localProduct.getVersion() + 1);
-          ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           logBuffer.write(String.format(" [SUCCESS]%n"));
         }
         ++done;
@@ -526,8 +533,9 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   // Null-safe version of UnitConversionService::Convert (feel free to integrate to base method).
-  private BigDecimal convert(Unit from, Unit to, BigDecimal value) throws AxelorException {
+  private BigDecimal convert(Unit from, Unit to, BigDecimal value, Product product)
+      throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value);
+    return unitConversionService.convert(from, to, value, value.scale(), product);
   }
 }

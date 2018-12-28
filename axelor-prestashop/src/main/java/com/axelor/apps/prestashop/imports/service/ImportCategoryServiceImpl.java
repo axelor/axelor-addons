@@ -113,7 +113,9 @@ public class ImportCategoryServiceImpl implements ImportCategoryService {
           ++errors;
           continue;
         }
-        localCategory = new ProductCategory();
+        if (localCategory == null) {
+          localCategory = new ProductCategory();
+        }
         localCategory.setPrestaShopId(remoteCategory.getId());
       }
 

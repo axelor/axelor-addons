@@ -27,6 +27,7 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.prestashop.entities.Associations.AvailableStocksAssociationsEntry;
 import com.axelor.apps.prestashop.entities.PrestashopProduct;
 import com.axelor.apps.prestashop.entities.PrestashopProductCategory;
@@ -46,6 +47,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Collections;
@@ -176,7 +178,6 @@ public class ImportProductServiceImpl implements ImportProductService {
           localProduct.setProductCategory(category);
           localProduct.setName(remoteProduct.getName().getTranslation(language));
           localProduct.setDescription(remoteProduct.getDescription().getTranslation(language));
-          // localProduct.setEan13(StringUtils.defaultIfBlank(remoteProduct.getEan13(), null));
           localProduct.setCode(
               StringUtils.defaultIfBlank(
                   remoteProduct.getReference(),
@@ -223,7 +224,8 @@ public class ImportProductServiceImpl implements ImportProductService {
               convert(
                   appConfig.getPrestaShopWeightUnit(),
                   localProduct.getMassUnit(),
-                  remoteProduct.getWeight()));
+                  remoteProduct.getWeight(),
+                  localProduct));
 
           if (localProduct.getLengthUnit() == null)
             localProduct.setLengthUnit(appConfig.getPrestaShopLengthUnit());
@@ -231,17 +233,20 @@ public class ImportProductServiceImpl implements ImportProductService {
               convert(
                   appConfig.getPrestaShopLengthUnit(),
                   localProduct.getLengthUnit(),
-                  remoteProduct.getWidth()));
+                  remoteProduct.getWidth(),
+                  localProduct));
           localProduct.setHeight(
               convert(
                   appConfig.getPrestaShopLengthUnit(),
                   localProduct.getLengthUnit(),
-                  remoteProduct.getHeight()));
+                  remoteProduct.getHeight(),
+                  localProduct));
           localProduct.setLength(
               convert(
                   appConfig.getPrestaShopLengthUnit(),
                   localProduct.getLengthUnit(),
-                  remoteProduct.getDepth()));
+                  remoteProduct.getDepth(),
+                  localProduct));
 
           if (remoteProduct.getDefaultImageId() != null && remoteProduct.getDefaultImageId() != 0) {
             try {
@@ -300,8 +305,11 @@ public class ImportProductServiceImpl implements ImportProductService {
   }
 
   /** @see ExportProductServiceImpl#convert */
-  private BigDecimal convert(Unit from, Unit to, BigDecimal value) throws AxelorException {
+  private BigDecimal convert(Unit from, Unit to, BigDecimal value, Product product)
+      throws AxelorException {
     if (value == null) return null;
-    return unitConversionService.convert(from, to, value);
+    return unitConversionService
+        .convert(from, to, value, AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, product)
+        .setScale(AppBaseService.DEFAULT_NB_DECIMAL_DIGITS, RoundingMode.HALF_EVEN);
   }
 }

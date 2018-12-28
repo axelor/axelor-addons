@@ -15,7 +15,7 @@
 	   	<panel name="main" >
 	   		<field name="actionSelect" onChange="action-prestashop-button-visiblity"/>
 	    	<field name="code" onChange="action-base-batch-condition-check-unique-code"/>
-	    	<field name="company" widget="SuggestBox" form-view="company-form" grid-view="company-grid"/>
+	    	<field name="company" widget="SuggestBox" form-view="company-form" grid-view="company-grid" required="true"/>
 	  </panel>
 	  <panel-tabs>
 	    <panel name="information" title="Information" >

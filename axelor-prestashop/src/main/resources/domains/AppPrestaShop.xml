@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<domain-models xmlns="http://axelor.com/xml/ns/domain-models" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+<domain-models xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://axelor.com/xml/ns/domain-models" xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
 	<module name="base" package="com.axelor.apps.base.db"/>
 
 	<entity name="AppPrestashop" lang="java" cachable="true" extends="App">
@@ -30,6 +30,7 @@
 		<one-to-one name="defaultPaymentCondition" ref="com.axelor.apps.account.db.PaymentCondition" title="Default payment condition" help="Used on import if no local payment condition with the same name as the PrestaShop one exists"/>
 		<one-to-one name="defaultPaymentMode" ref="com.axelor.apps.account.db.PaymentMode" title="Default payment mode" help="Used on import if no payment mode matches the remote one cannot be found"/>
 		<one-to-one name="defaultShippingCostsProduct" ref="com.axelor.apps.base.db.Product" title="Default product for deliveries fees" help="Used on import if carrier cannot be mapped to a local shipping cost product"/>
+		<one-to-one name="discountProduct" ref="com.axelor.apps.base.db.Product" title="Product used to apply discount to the whole order, not per product"/>
 		<one-to-one name="defaultTax" ref="com.axelor.apps.account.db.Tax" title="Default tax rate" help="Used when tax rate cannot be determined"/>
 	</entity>
 
