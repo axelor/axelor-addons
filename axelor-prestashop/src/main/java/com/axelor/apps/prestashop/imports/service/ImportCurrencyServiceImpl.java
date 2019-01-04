@@ -89,11 +89,12 @@ public class ImportCurrencyServiceImpl implements ImportCurrencyService {
           logBuffer.write("no ID and code not found, creating");
           localCurrency = new Currency();
           localCurrency.setCode(remoteCurrency.getCode());
-          localCurrency.setPrestaShopId(remoteCurrency.getId());
         } else {
           logBuffer.write(
               String.format("found locally using its code %s", localCurrency.getCode()));
         }
+        // update PrestaShop ID of new and existing ABS currency
+        localCurrency.setPrestaShopId(remoteCurrency.getId());
       } else {
         if (localCurrency.getCode().equals(remoteCurrency.getCode()) == false) {
           log.error(

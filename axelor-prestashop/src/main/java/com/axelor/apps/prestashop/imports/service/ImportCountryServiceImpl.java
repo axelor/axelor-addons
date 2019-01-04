@@ -73,11 +73,12 @@ public class ImportCountryServiceImpl implements ImportCountryService {
           logBuffer.write("not found by ID and code not found, creating");
           localCountry = new Country();
           localCountry.setAlpha2Code(remoteCountry.getIsoCode());
-          localCountry.setPrestaShopId(remoteCountry.getId());
         } else {
           logBuffer.write(
               String.format("found locally using its code %s", localCountry.getAlpha2Code()));
         }
+        // update PrestaShop ID of existing ABS country
+        localCountry.setPrestaShopId(remoteCountry.getId());
       } else {
         if (localCountry.getAlpha2Code().equals(remoteCountry.getIsoCode()) == false) {
           log.error(
