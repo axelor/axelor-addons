@@ -120,8 +120,8 @@ public class ImportAddressServiceImpl implements ImportAddressService {
           partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
           partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
           partnerAddress.setIsDefaultAddr(Boolean.TRUE);
-          customer.addPartnerAddressListItem(partnerAddress);
         }
+        customer.addPartnerAddressListItem(partnerAddress);
       }
 
       if (localAddress == null
