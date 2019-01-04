@@ -40,6 +40,7 @@ import java.io.Writer;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -178,6 +179,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
           localCustomer.setEmailAddress(email);
         }
 
+        localCustomer.setPartnerAddressList(new ArrayList<>()); // avoid NPE during save
         partnerRepo.save(localCustomer);
 
         if (remoteCustomer.getAllowedOutstandingAmount() != null
