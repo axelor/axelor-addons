@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 public class PrestashopCustomer extends PrestashopIdentifiableEntity {
   public static final int GENDER_MALE = 1;
   public static final int GENDER_FEMALE = 2;
+  public static final int GENDER_NEUTRAL = 3; // company
 
   private static final List<String> READONLY_ELEMENTS = Arrays.asList("last_passwd_gen");
 
@@ -42,17 +43,21 @@ public class PrestashopCustomer extends PrestashopIdentifiableEntity {
   private Integer languageId;
   private LocalDateTime newsletterSubscriptionDate;
   private String newsletterRegistrationIP;
-  private String
-      secureKey; // Prestashop innovation: this is readonly field that'll be set to null if missing…
-  // yes… really… no… nothing more to say
+
+  // Prestashop innovation: this is readonly field that'll be set to null if missing… yes… really…
+  // no… nothing more to say
+  private String secureKey;
+
   private boolean deleted;
   private String password; // clear text on add, hashed on update
   private String lastname;
   private String firstname;
   private String email;
-  private Integer
-      genderId; // default is 1 for men, 2 for women. This can be changed by user but we cannot
-  // fetch them
+
+  // Default is 1 for men, 2 for women, 3 for neutral (company).
+  // This can be changed by user but we cannot fetch them
+  private Integer genderId;
+
   private LocalDate birthday;
   private boolean newsletter;
   private boolean optin;
