@@ -35,11 +35,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.TransformerException;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.tika.io.IOUtils;
-import wslite.json.JSONException;
 
 @Singleton
 public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
@@ -74,8 +71,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
 
   public void importAxelorBase(
       AppPrestashop appConfig, ZonedDateTime endDate, final Writer logWriter)
-      throws IOException, PrestaShopWebserviceException, TransformerException, JAXBException,
-          JSONException {
+      throws IOException, PrestaShopWebserviceException {
     currencyService.importCurrency(appConfig, endDate, logWriter);
     countryService.importCountry(appConfig, endDate, logWriter);
     customerService.importCustomer(appConfig, endDate, logWriter);
@@ -87,8 +83,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
   /** Import Axelor modules (Base, SaleOrder) */
   @Override
   public void importFromPrestaShop(AppPrestashop appConfig, ZonedDateTime endDate, Batch batch)
-      throws IOException, PrestaShopWebserviceException, TransformerException, JAXBException,
-          JSONException {
+      throws IOException, PrestaShopWebserviceException {
     StringBuilderWriter logWriter = new StringBuilderWriter(1024);
     try {
       importAxelorBase(appConfig, endDate, logWriter);
