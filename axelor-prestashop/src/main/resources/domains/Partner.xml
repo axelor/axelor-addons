@@ -8,6 +8,8 @@
 		<integer name="prestaShopVersion" nullable="true"/>
 		<integer name="emailAddressPrestaShopVersion" nullable="true"/>
 
+		<datetime name="prestaShopUpdateDateTime" nullable="true"/>
+
 		<unique-constraint columns="prestaShopId"/>
 
 		<finder-method name="findByPrestaShopId" using="prestaShopId"/>
