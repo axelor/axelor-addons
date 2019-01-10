@@ -166,7 +166,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
     for (PrestashopOrder remoteOrder : remoteOrders) {
       logWriter.write(
           String.format(
-              "Importing order #%d (%s)", remoteOrder.getId(), remoteOrder.getReference()));
+              "Importing order #%d (%s) ", remoteOrder.getId(), remoteOrder.getReference()));
 
       final Partner customer = partnerRepo.findByPrestaShopId(remoteOrder.getCustomerId());
       if (customer == null) {
@@ -243,6 +243,13 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         localOrder.setPrestaShopId(remoteOrder.getId());
         localOrder.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
         localOrder.setPrintingSettings(localOrder.getCompany().getPrintingSettings());
+      }
+
+      if (localOrder.getPrestaShopUpdateDateTime() != null
+          && remoteOrder.getUpdateDate() != null
+          && localOrder.getPrestaShopUpdateDateTime().compareTo(remoteOrder.getUpdateDate()) >= 0) {
+        logWriter.write(String.format("already up-to-date, skipping [WARNING]%n"));
+        continue;
       }
 
       if (localOrder.getId() == null || appConfig.getPrestaShopMasterForOrders()) {
@@ -365,6 +372,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           }
           // Nothing to deleted as we've a new order
         }
+        localOrder.setPrestaShopUpdateDateTime(remoteOrder.getUpdateDate());
         saleOrderRepo.save(localOrder);
         localOrder = saleOrderRepo.find(localOrder.getId());
       } else {

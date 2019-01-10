@@ -169,6 +169,14 @@ public class ImportProductServiceImpl implements ImportProductService {
           }
         }
 
+        if (localProduct.getPrestaShopUpdateDateTime() != null
+            && remoteProduct.getUpdateDate() != null
+            && localProduct.getPrestaShopUpdateDateTime().compareTo(remoteProduct.getUpdateDate())
+                >= 0) {
+          logWriter.write(String.format("already up-to-date, skipping [WARNING]%n"));
+          continue;
+        }
+
         if (localProduct.getId() == null
             || appConfig.getPrestaShopMasterForProducts() == Boolean.TRUE) {
           localProduct.setProductTypeSelect(
@@ -280,6 +288,7 @@ public class ImportProductServiceImpl implements ImportProductService {
               localProduct.setPicture(null);
             }
           }
+          localProduct.setPrestaShopUpdateDateTime(remoteProduct.getUpdateDate());
           productRepo.save(localProduct);
         } else {
           logWriter.write(
