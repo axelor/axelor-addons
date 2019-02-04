@@ -584,7 +584,11 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           localLine.setDiscountTypeSelect(PriceListLineRepository.AMOUNT_TYPE_NONE);
         }
         localLine.setPriceDiscounted(saleOrderLineService.computeDiscount(localLine, false));
-        computedTotal = computedTotal.add(remoteLine.getUnitPriceTaxExcluded());
+        computedTotal =
+            computedTotal.add(
+                remoteLine
+                    .getUnitPriceTaxExcluded()
+                    .multiply(BigDecimal.valueOf(remoteLine.getProductQuantity())));
 
         // Sets exTaxTotal, inTaxTotal, companyInTaxTotal, companyExTaxTotal
         // We just prey for rounding & tax rates to be consistent between PS & ABS since
@@ -624,6 +628,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           == false) {
         return false;
       }
+      computedTotal = computedTotal.add(remoteOrder.getTotalShippingTaxExcluded());
     }
 
     BigDecimal footerDiscountAmount = computedTotal.subtract(remoteOrder.getTotalPaidTaxExcluded());
