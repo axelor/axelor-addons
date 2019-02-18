@@ -20,6 +20,8 @@ package com.axelor.apps.cmms.module;
 import com.axelor.app.AxelorModule;
 import com.axelor.apps.cmms.db.repo.EquipementMaintenanceRepo;
 import com.axelor.apps.cmms.db.repo.EquipementMaintenanceRepository;
+import com.axelor.apps.cmms.db.repo.MaintenanceRequestRepo;
+import com.axelor.apps.cmms.db.repo.MaintenanceRequestRepository;
 import com.axelor.apps.cmms.service.MaintenanceRequestService;
 import com.axelor.apps.cmms.service.MaintenanceRequestServiceImpl;
 
@@ -30,6 +32,7 @@ public class CmmsModule extends AxelorModule {
 		
 		bind(EquipementMaintenanceRepository.class).to(EquipementMaintenanceRepo.class);
 		bind(MaintenanceRequestService.class).to(MaintenanceRequestServiceImpl.class);
+		bind(MaintenanceRequestRepository.class).to(MaintenanceRequestRepo.class);
 	
 	}
 	
