@@ -77,13 +77,8 @@
     	<field name="equipementMaintenance.name" />
  	</calendar>
  	
- 	<calendar name="maintenance-request-calendar-per-maintenance-category" title="Maintenance Request" mode="month" colorBy="equipementMaintenance.maintenanceCategory" editable="false"
-    	eventStart="requestDate" eventStop="doneOn"  eventLength="1"  model="com.axelor.apps.cmms.db.MaintenanceRequest">
-    	<field name="equipementMaintenance.name" />
- 	</calendar>
- 	
- 	<calendar name="maintenance-request-calendar-per-machine" title="Maintenance Request" mode="month" colorBy="equipementMaintenance.machine" editable="false"
-    	eventStart="requestDate" eventStop="doneOn"  eventLength="1"  model="com.axelor.apps.cmms.db.MaintenanceRequest">
+ 	<calendar name="maintenance-request-calendar-per-machine" title="Maintenance Request" mode="month" colorBy="statusSelect" editable="false"
+    	eventStart="startDate" eventStop="endDate"  eventLength="1"  model="com.axelor.apps.cmms.db.MaintenanceRequest">
     	<field name="equipementMaintenance.name" />
  	</calendar>
     

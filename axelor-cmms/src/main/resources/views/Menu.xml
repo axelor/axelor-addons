@@ -41,15 +41,6 @@
 		<context name="_todayDate" expr="eval:__config__.app.getTodayDate()"/>
 	</action-view>
 	
-	<menuitem name="cmms-root-maintenance-request-calendar" parent="cmms-root" 
-		title="Request calendar" action="cmms.root.maintenance.requests.calendar" order="20"/>
-	
-	<action-view name="cmms.root.maintenance.requests.calendar" title="Request calendar"
-		model="com.axelor.apps.cmms.db.MaintenanceRequest" >
-		<view type="calendar" name="maintenance-request-calendar-per-maintenance-category" />
-		<context name="_todayDate" expr="eval:__config__.app.getTodayDate()"/>
-	</action-view>
-	
 	<menuitem name="cmms-root-machine-unavailable" parent="cmms-root" 
 		title="Machines unavailable" action="cmms.root.machine.unavailable" order="25"/>
 	
