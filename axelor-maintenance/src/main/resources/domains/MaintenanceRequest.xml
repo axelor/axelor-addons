@@ -19,7 +19,8 @@
 		<string name="mtnComments" title="Maintenance comments" />
 		<date name="startDate" title="Event start date"/>
 		<date name="endDate" title="Event end date"/>
-		
+		<many-to-one name="machine" title="Machine" ref="com.axelor.apps.production.db.Machine"/>
+
 		<extra-code>
 			<![CDATA[
 				public static final int STATUS_PLANNED = 0;
