@@ -68,7 +68,7 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
     final List<Object> params = new ArrayList<>(2);
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
       filter.append(
-          " AND EXISTS(Select 1 From Product where productCategory = self and sellable = true)");
+          " AND EXISTS(Select 1 From Product where productCategory = self and sellable = true and productSynchronizedInPrestashop = true)");
     }
     q.filter(filter.toString(), params.toArray());
     q.order("-parentProductCategory.id");

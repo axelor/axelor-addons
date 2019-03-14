@@ -124,7 +124,7 @@ public class ExportProductServiceImpl implements ExportProductService {
         new StringBuilder(
             "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
-      filter.append(" AND (self.sellable = true)");
+      filter.append(" AND (self.sellable = true and self.productSynchronizedInPrestashop = true)");
     }
 
     final PrestashopProduct defaultProduct = ws.fetchDefault(PrestashopResourceType.PRODUCTS);

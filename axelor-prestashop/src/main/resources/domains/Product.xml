@@ -9,6 +9,7 @@
 		<!-- LOCAL id of the picture stored on PS, to detect changes -->
 		<long name="prestaShopImageId" nullable="true"/>
 		<integer name="prestaShopImageVersion" nullable="true"/>
+		<boolean name="productSynchronizedInPrestashop" title="Product Synchronized in Prestashop" default="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 
