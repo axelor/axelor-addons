@@ -166,6 +166,7 @@ public class ImportProductServiceImpl implements ImportProductService {
             localProduct = new Product();
             localProduct.setPrestaShopId(remoteProduct.getId());
             localProduct.setSellable(Boolean.TRUE);
+            localProduct.setProductSynchronizedInPrestashop(Boolean.TRUE);
           }
         }
 
