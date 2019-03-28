@@ -502,13 +502,16 @@ public class ImportOrderServiceImpl implements ImportOrderService {
             try {
               List<Long> stockMoveIds = deliveryService.createStocksMovesFromSaleOrder(localOrder);
 
-              for (Long stockMoveId : stockMoveIds) {
-                StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
-                stockMoveService.realize(delivery, true);
-                for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
-                  if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
-                      line.getProduct().getProductTypeSelect())) {
-                    line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+              // Will be null if only services are present on order
+              if (stockMoveIds != null) {
+                for (Long stockMoveId : stockMoveIds) {
+                  StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
+                  stockMoveService.realize(delivery, true);
+                  for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
+                    if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
+                        line.getProduct().getProductTypeSelect())) {
+                      line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+                    }
                   }
                 }
               }
