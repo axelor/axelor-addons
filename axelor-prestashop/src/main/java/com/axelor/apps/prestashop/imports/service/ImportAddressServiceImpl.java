@@ -124,8 +124,7 @@ public class ImportAddressServiceImpl implements ImportAddressService {
         }
       }
 
-      if (localAddress == null
-          || IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localAddress.getImportOrigin())) {
+      if (IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localAddress.getImportOrigin())) {
         localAddress.setAddressL4(remoteAddress.getAddress1());
         localAddress.setAddressL5(remoteAddress.getAddress2());
         City city = cityRepo.findByName(remoteAddress.getCity());
