@@ -117,6 +117,14 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
         }
       }
 
+      if (localCustomer.getPrestaShopUpdateDateTime() != null
+          && remoteCustomer.getUpdateDate() != null
+          && localCustomer.getPrestaShopUpdateDateTime().compareTo(remoteCustomer.getUpdateDate())
+              >= 0) {
+        logBuffer.write(String.format("already up-to-date, skipping [WARNING]%n"));
+        continue;
+      }
+
       if (localCustomer.getId() == null || appConfig.getPrestaShopMasterForCustomers()) {
         if (StringUtils.isNotBlank(remoteCustomer.getCompany())) {
           localCustomer.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_COMPANY);
@@ -179,7 +187,11 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
           localCustomer.setEmailAddress(email);
         }
 
-        localCustomer.setPartnerAddressList(new ArrayList<>()); // avoid NPE during save
+        // avoid NPE during save
+        if (localCustomer.getPartnerAddressList() == null) {
+          localCustomer.setPartnerAddressList(new ArrayList<>());
+        }
+        localCustomer.setPrestaShopUpdateDateTime(remoteCustomer.getUpdateDate());
         partnerRepo.save(localCustomer);
 
         if (remoteCustomer.getAllowedOutstandingAmount() != null

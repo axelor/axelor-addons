@@ -10,6 +10,8 @@
 		<long name="prestaShopImageId" nullable="true"/>
 		<integer name="prestaShopImageVersion" nullable="true"/>
 
+		<datetime name="prestaShopUpdateDateTime" nullable="true"/>
+
 		<unique-constraint columns="prestaShopId"/>
 
 		<finder-method name="findByPrestaShopId" using="prestaShopId"/>
