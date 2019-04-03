@@ -164,372 +164,387 @@ public class ImportOrderServiceImpl implements ImportOrderService {
     final List<PrestashopOrder> remoteOrders = ws.fetchAll(PrestashopResourceType.ORDERS);
 
     for (PrestashopOrder remoteOrder : remoteOrders) {
-      logWriter.write(
-          String.format(
-              "Importing order #%d (%s) ", remoteOrder.getId(), remoteOrder.getReference()));
-
-      final Partner customer = partnerRepo.findByPrestaShopId(remoteOrder.getCustomerId());
-      if (customer == null) {
-        logWriter.write(
-            String.format(" [WARNING] order belongs to a not yet synced customer, skpping%n"));
-        ++errors;
-        continue;
-      }
-      final Currency localCurrency = currencyRepo.findByPrestaShopId(remoteOrder.getCurrencyId());
-      if (localCurrency == null) {
-        logWriter.write(
-            String.format(" [WARNING] order refers to a not yet synced currency, skpping%n"));
-        ++errors;
-        continue;
-      }
-
-      final PrestashopOrderStatusCacheEntry localStatus =
-          statusRepo.findByPrestaShopId(remoteOrder.getCurrentState());
-      if (localStatus == null) {
-        logWriter.write(String.format(" [WARNING] order status is unknown locally, skipping%n"));
-        ++errors;
-        continue;
-      }
-
-      final Address localDeliveryAddress =
-          addressRepo.findByPrestaShopId(remoteOrder.getDeliveryAddressId());
-      if (localDeliveryAddress == null) {
+      try {
         logWriter.write(
             String.format(
-                " [WARNING] order refers to a not yet synced delivery address, skpping%n"));
-        ++errors;
-        continue;
-      }
+                "Importing order #%d (%s) ", remoteOrder.getId(), remoteOrder.getReference()));
 
-      final Address localInvoicingAddress =
-          addressRepo.findByPrestaShopId(remoteOrder.getInvoiceAddressId());
-      if (localInvoicingAddress == null) {
-        logWriter.write(
-            String.format(
-                " [WARNING] order refers to a not yet synced invoicing address, skpping%n"));
-        ++errors;
-        continue;
-      }
+        final Partner customer = partnerRepo.findByPrestaShopId(remoteOrder.getCustomerId());
+        if (customer == null) {
+          logWriter.write(
+              String.format(" [WARNING] order belongs to a not yet synced customer, skpping%n"));
+          ++errors;
+          continue;
+        }
+        final Currency localCurrency = currencyRepo.findByPrestaShopId(remoteOrder.getCurrencyId());
+        if (localCurrency == null) {
+          logWriter.write(
+              String.format(" [WARNING] order refers to a not yet synced currency, skpping%n"));
+          ++errors;
+          continue;
+        }
 
-      SaleOrder localOrder = saleOrderRepo.findByPrestaShopId(remoteOrder.getId());
-      if (localOrder == null) {
-        try {
-          localOrder =
-              saleOrderCreateService.createSaleOrder(
-                  null,
-                  AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany(),
-                  null,
-                  localCurrency,
-                  null,
-                  null,
-                  remoteOrder.getReference(),
-                  remoteOrder.getAddDate().toLocalDate(),
-                  null,
-                  customer,
-                  null);
-        } catch (AxelorException ae) {
-          TraceBackService.trace(
-              ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
+        final PrestashopOrderStatusCacheEntry localStatus =
+            statusRepo.findByPrestaShopId(remoteOrder.getCurrentState());
+        if (localStatus == null) {
+          logWriter.write(String.format(" [WARNING] order status is unknown locally, skipping%n"));
+          ++errors;
+          continue;
+        }
+
+        final Address localDeliveryAddress =
+            addressRepo.findByPrestaShopId(remoteOrder.getDeliveryAddressId());
+        if (localDeliveryAddress == null) {
           logWriter.write(
               String.format(
-                  " [ERROR] An error occured while creating sale order %s: %s%n",
-                  remoteOrder.getReference(), ae.getLocalizedMessage()));
-          log.error(
+                  " [WARNING] order refers to a not yet synced delivery address, skpping%n"));
+          ++errors;
+          continue;
+        }
+
+        final Address localInvoicingAddress =
+            addressRepo.findByPrestaShopId(remoteOrder.getInvoiceAddressId());
+        if (localInvoicingAddress == null) {
+          logWriter.write(
               String.format(
-                  "An error occured while creating sale order %s: %s",
-                  remoteOrder.getReference(), ae.getLocalizedMessage()));
-          continue;
-        }
-        localOrder.setPrestaShopId(remoteOrder.getId());
-        localOrder.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
-        localOrder.setPrintingSettings(localOrder.getCompany().getPrintingSettings());
-      }
-
-      if (localOrder.getPrestaShopUpdateDateTime() != null
-          && remoteOrder.getUpdateDate() != null
-          && localOrder.getPrestaShopUpdateDateTime().compareTo(remoteOrder.getUpdateDate()) >= 0) {
-        logWriter.write(String.format("already up-to-date, skipping [WARNING]%n"));
-        continue;
-      }
-
-      if (localOrder.getId() == null || appConfig.getPrestaShopMasterForOrders()) {
-        // Let' populate base data
-        localOrder.setDeliveryAddress(localDeliveryAddress);
-        localOrder.setDeliveryAddressStr(addressService.computeAddressStr(localDeliveryAddress));
-        localOrder.setMainInvoicingAddress(localInvoicingAddress);
-        localOrder.setMainInvoicingAddressStr(
-            addressService.computeAddressStr(localInvoicingAddress));
-
-        boolean deliveryAddressFound = false;
-        boolean invoicingAddressFound = false;
-        for (ListIterator<PartnerAddress> it = customer.getPartnerAddressList().listIterator();
-            deliveryAddressFound == false && invoicingAddressFound && it.hasNext(); ) {
-          PartnerAddress partnerAddress = it.next();
-          if (partnerAddress.getAddress().getId() == localDeliveryAddress.getId()) {
-            partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
-            deliveryAddressFound = true;
-          }
-          if (partnerAddress.getAddress().getId() == localInvoicingAddress.getId()) {
-            partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
-            invoicingAddressFound = true;
-          }
-        }
-        if (deliveryAddressFound == false) {
-          PartnerAddress partnerAddress = new PartnerAddress();
-          partnerAddress.setPartner(customer);
-          partnerAddress.setAddress(localDeliveryAddress);
-          partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
-          customer.addPartnerAddressListItem(partnerAddress);
-          if (localDeliveryAddress.equals(localInvoicingAddress)) {
-            partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
-          }
-        }
-        if (invoicingAddressFound == false
-            && localInvoicingAddress.equals(localDeliveryAddress) == false) {
-          PartnerAddress partnerAddress = new PartnerAddress();
-          partnerAddress.setPartner(customer);
-          partnerAddress.setAddress(localDeliveryAddress);
-          partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
-          customer.addPartnerAddressListItem(partnerAddress);
-        }
-
-        PaymentCondition localPaymentCondition =
-            paymentConditionRepo.findByName(remoteOrder.getPayment());
-        if (localPaymentCondition == null) {
-          localPaymentCondition = paymentConditionRepo.findByCode(remoteOrder.getPayment());
-          if (localPaymentCondition == null)
-            localPaymentCondition = appConfig.getDefaultPaymentCondition();
-        }
-        localOrder.setPaymentCondition(localPaymentCondition);
-
-        // Maybe we should compute this from lines…
-        localOrder.setExTaxTotal(
-            remoteOrder.getTotalPaidTaxExcluded().setScale(2, RoundingMode.HALF_UP));
-        localOrder.setInTaxTotal(
-            remoteOrder.getTotalPaidTaxIncluded().setScale(2, RoundingMode.HALF_UP));
-        localOrder.setTaxTotal(
-            remoteOrder
-                .getTotalDiscountsTaxIncluded()
-                .subtract(remoteOrder.getTotalDiscountsTaxExcluded())
-                .setScale(2, RoundingMode.HALF_UP));
-        if (localOrder.getTaxTotal().compareTo(BigDecimal.ZERO) < 0)
-          localOrder.setTaxTotal(BigDecimal.ZERO);
-        localOrder.setCreationDate(remoteOrder.getAddDate().toLocalDate());
-        localOrder.setOrderDate(remoteOrder.getAddDate().toLocalDate());
-        localOrder.setExternalReference(remoteOrder.getReference());
-        localOrder.setCompanyBankDetails(
-            accountingSituationService.getCompanySalesBankDetails(
-                AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany(),
-                localOrder.getClientPartner()));
-
-        // FIXME handle mapping between payment modes and modules (remoteOrder.getModule())
-        localOrder.setPaymentMode(appConfig.getDefaultPaymentMode());
-        localOrder.setCompany(AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany());
-        localOrder.setCurrency(localCurrency);
-
-        if (importLines(appConfig, ws, remoteOrder, localOrder, logWriter) == false) {
+                  " [WARNING] order refers to a not yet synced invoicing address, skpping%n"));
+          ++errors;
           continue;
         }
 
-        // Now handle status, this is rather complicated since PrestaShop status also handle
-        // invoicing, payment and delivery
-        if (localOrder.getStatusSelect() == SaleOrderRepository.STATUS_DRAFT_QUOTATION) {
+        SaleOrder localOrder = saleOrderRepo.findByPrestaShopId(remoteOrder.getId());
+        if (localOrder == null) {
           try {
-            // Note that in case of taxes mismatch, this will probably blow everything up
-            saleOrderComputeService.computeSaleOrder(localOrder);
+            localOrder =
+                saleOrderCreateService.createSaleOrder(
+                    null,
+                    AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany(),
+                    null,
+                    localCurrency,
+                    null,
+                    null,
+                    remoteOrder.getReference(),
+                    remoteOrder.getAddDate().toLocalDate(),
+                    null,
+                    customer,
+                    null);
           } catch (AxelorException ae) {
             TraceBackService.trace(
                 ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
             logWriter.write(
                 String.format(
-                    " [ERROR] An error occured while computing sale order elements: %s%n",
-                    ae.getLocalizedMessage()));
+                    " [ERROR] An error occured while creating sale order %s: %s%n",
+                    remoteOrder.getReference(), ae.getLocalizedMessage()));
             log.error(
                 String.format(
-                    "An error occured while computing sale order #%d elements (PS #%d)",
-                    localOrder.getId(), remoteOrder.getId()),
-                ae);
+                    "An error occured while creating sale order %s: %s",
+                    remoteOrder.getReference(), ae.getLocalizedMessage()));
             continue;
           }
-
-          // Consider this as finalized, draft would be a cart without order, unhandled right now
-          localOrder.setManualUnblock(Boolean.TRUE);
-          try {
-            saleOrderWorkflowService.finalizeQuotation(localOrder);
-          } catch (AxelorException ae) {
-            TraceBackService.trace(
-                ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
-            logWriter.write(
-                String.format(
-                    " [ERROR] An error occured while finalizing sale order: %s%n",
-                    ae.getLocalizedMessage()));
-            log.error(
-                String.format(
-                    "An error occured while finalizing sale order #%d (PS #%d)",
-                    localOrder.getId(), remoteOrder.getId()),
-                ae);
-            continue;
-          }
-          // Nothing to deleted as we've a new order
+          localOrder.setPrestaShopId(remoteOrder.getId());
+          localOrder.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
+          localOrder.setPrintingSettings(localOrder.getCompany().getPrintingSettings());
         }
-        localOrder.setPrestaShopUpdateDateTime(remoteOrder.getUpdateDate());
-        saleOrderRepo.save(localOrder);
-        localOrder = saleOrderRepo.find(localOrder.getId());
-      } else {
-        if (IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localOrder.getImportOrigin())
-            == false) {
-          // Avoid round trips
-          logWriter.write(
-              String.format(
-                  " - PrestaShop isn't master for orders and local order hasn't been imported from it, skipping [SUCCESS]%n"));
+
+        if (localOrder.getPrestaShopUpdateDateTime() != null
+            && remoteOrder.getUpdateDate() != null
+            && localOrder.getPrestaShopUpdateDateTime().compareTo(remoteOrder.getUpdateDate())
+                >= 0) {
+          logWriter.write(String.format("already up-to-date, skipping [WARNING]%n"));
           continue;
-        } else {
-          // OK so order exists, we've to see if we need to update something
-          if (remoteOrder.getTotalPaidTaxIncluded().compareTo(localOrder.getInTaxTotal()) != 0) {
-            logWriter.write(
-                String.format(
-                    " - Remote and local order total differs (%f vs %f)",
-                    remoteOrder.getTotalPaidTaxIncluded(), localOrder.getInTaxTotal()));
-            if ((localOrder.getStatusSelect() != SaleOrderRepository.STATUS_DRAFT_QUOTATION
-                    && localOrder.getStatusSelect()
-                        != SaleOrderRepository.STATUS_FINALIZED_QUOTATION)
-                || localOrder.getDeliveryState() != SaleOrderRepository.DELIVERY_STATE_DELIVERED
-                || (localOrder.getAmountInvoiced() == null
-                    || BigDecimal.ZERO.compareTo(localOrder.getAmountInvoiced()) != 0)) {
-              final String additionalComment =
-                  I18n.get(
-                      "<p>WARNING: Order has been modified on PrestaShop but could not be updated locally.</p>");
-              if (localOrder.getInternalNote() == null
-                  || localOrder.getInternalNote().indexOf(additionalComment) < 0) {
-                localOrder.setInternalNote(
-                    (localOrder.getInternalNote() == null ? "" : localOrder.getInternalNote())
-                        + additionalComment);
-              }
-              logWriter.write(
-                  String.format(
-                      " - Order status does not allow updates anymore, skipping (status: %d, delivery status: %d, amount invoiced: %f [ERROR]%n",
-                      localOrder.getStatusSelect(),
-                      localOrder.getDeliveryState(),
-                      localOrder.getAmountInvoiced()));
-              continue;
-            } else {
-              // TODO Maybe we should do this more smoothly
-              localOrder.clearSaleOrderLineList();
-              if (importLines(appConfig, ws, remoteOrder, localOrder, logWriter) == false) {
-                continue;
-              }
+        }
+
+        if (localOrder.getId() == null || appConfig.getPrestaShopMasterForOrders()) {
+          // Let' populate base data
+          localOrder.setDeliveryAddress(localDeliveryAddress);
+          localOrder.setDeliveryAddressStr(addressService.computeAddressStr(localDeliveryAddress));
+          localOrder.setMainInvoicingAddress(localInvoicingAddress);
+          localOrder.setMainInvoicingAddressStr(
+              addressService.computeAddressStr(localInvoicingAddress));
+
+          boolean deliveryAddressFound = false;
+          boolean invoicingAddressFound = false;
+          for (ListIterator<PartnerAddress> it = customer.getPartnerAddressList().listIterator();
+              deliveryAddressFound == false && invoicingAddressFound && it.hasNext(); ) {
+            PartnerAddress partnerAddress = it.next();
+            if (partnerAddress.getAddress().getId() == localDeliveryAddress.getId()) {
+              partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
+              deliveryAddressFound = true;
+            }
+            if (partnerAddress.getAddress().getId() == localInvoicingAddress.getId()) {
+              partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
+              invoicingAddressFound = true;
             }
           }
-        }
-      }
+          if (deliveryAddressFound == false) {
+            PartnerAddress partnerAddress = new PartnerAddress();
+            partnerAddress.setPartner(customer);
+            partnerAddress.setAddress(localDeliveryAddress);
+            partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
+            customer.addPartnerAddressListItem(partnerAddress);
+            if (localDeliveryAddress.equals(localInvoicingAddress)) {
+              partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
+            }
+          }
+          if (invoicingAddressFound == false
+              && localInvoicingAddress.equals(localDeliveryAddress) == false) {
+            PartnerAddress partnerAddress = new PartnerAddress();
+            partnerAddress.setPartner(customer);
+            partnerAddress.setAddress(localDeliveryAddress);
+            partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
+            customer.addPartnerAddressListItem(partnerAddress);
+          }
 
-      if ((localStatus.getPaid()
-              || localStatus.getDelivered()
-              || localStatus.getInvoiced()
-              || localStatus.getShipped())
-          && localOrder.getStatusSelect() == SaleOrderRepository.STATUS_FINALIZED_QUOTATION) {
-        // Order has been paid or invoiced, it means it's confirmed
-        localOrder.setManualUnblock(Boolean.TRUE);
-        try {
-          saleOrderWorkflowService.confirmSaleOrder(localOrder);
-        } catch (AxelorException ae) {
-          TraceBackService.trace(
-              ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
-          logWriter.write(
-              String.format(
-                  " [ERROR] An error occured while confirming sale order: %s%n",
-                  ae.getLocalizedMessage()));
-          log.error(
-              String.format(
-                  "An error occured while finalizing or confirming sale order #%d (PS #%d)",
-                  localOrder.getId(), remoteOrder.getId()),
-              ae);
-          continue;
-        }
-      }
+          PaymentCondition localPaymentCondition =
+              paymentConditionRepo.findByName(remoteOrder.getPayment());
+          if (localPaymentCondition == null) {
+            localPaymentCondition = paymentConditionRepo.findByCode(remoteOrder.getPayment());
+            if (localPaymentCondition == null)
+              localPaymentCondition = appConfig.getDefaultPaymentCondition();
+          }
+          localOrder.setPaymentCondition(localPaymentCondition);
 
-      // If we end up here, we've a local sale order with lines matching the remote one
-      // Let's see if we've more to to
-      if (localStatus.getInvoiced()) {
-        if (BigDecimal.ZERO.compareTo(localOrder.getAmountInvoiced()) == 0) {
-          try {
-            Invoice invoice =
-                saleOrderInvoiceService.generateInvoice(
-                    localOrder, SaleOrderRepository.INVOICE_ALL, null, false, null);
-            invoice.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
-            invoice.setPrintingSettings(localOrder.getPrintingSettings());
-            invoiceService.ventilate(invoice);
-          } catch (AxelorException ae) {
-            TraceBackService.trace(
-                ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
-            logWriter.write(
-                String.format(
-                    " [ERROR] An error occured while generating invoice for sale order: %s%n",
-                    ae.getLocalizedMessage()));
-            log.error(
-                String.format(
-                    "An error occured while generating invoice for sale order #%d (PS #%d)",
-                    localOrder.getId(), remoteOrder.getId()),
-                ae);
+          // Maybe we should compute this from lines…
+          localOrder.setExTaxTotal(
+              remoteOrder.getTotalPaidTaxExcluded().setScale(2, RoundingMode.HALF_UP));
+          localOrder.setInTaxTotal(
+              remoteOrder.getTotalPaidTaxIncluded().setScale(2, RoundingMode.HALF_UP));
+          localOrder.setTaxTotal(
+              remoteOrder
+                  .getTotalDiscountsTaxIncluded()
+                  .subtract(remoteOrder.getTotalDiscountsTaxExcluded())
+                  .setScale(2, RoundingMode.HALF_UP));
+          if (localOrder.getTaxTotal().compareTo(BigDecimal.ZERO) < 0)
+            localOrder.setTaxTotal(BigDecimal.ZERO);
+          localOrder.setCreationDate(remoteOrder.getAddDate().toLocalDate());
+          localOrder.setOrderDate(remoteOrder.getAddDate().toLocalDate());
+          localOrder.setExternalReference(remoteOrder.getReference());
+          localOrder.setCompanyBankDetails(
+              accountingSituationService.getCompanySalesBankDetails(
+                  AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany(),
+                  localOrder.getClientPartner()));
+
+          // FIXME handle mapping between payment modes and modules (remoteOrder.getModule())
+          localOrder.setPaymentMode(appConfig.getDefaultPaymentMode());
+          localOrder.setCompany(AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany());
+          localOrder.setCurrency(localCurrency);
+
+          if (importLines(appConfig, ws, remoteOrder, localOrder, logWriter) == false) {
             continue;
           }
-        }
-      }
 
-      // Currently, all statuses with paid mean invoiced too, but to cover all cases
-      // we should register an advance payment in case of paid but not invoiced
-      if (localStatus.getPaid()) {
-        List<Invoice> invoices = saleOrderInvoiceService.getInvoices(localOrder);
-        if (invoices.size() != 1) {
-          logWriter.write(
-              String.format(
-                  " [WARNING] Found %d invoice(s) for this order, cannot record payment (exactly one invoice needed), skipping payment creation%n",
-                  invoices.size()));
-        } else {
-          Invoice invoice = invoices.get(0);
-          if (BigDecimal.ZERO.compareTo(invoice.getAmountPaid()) == 0) {
-            invoicePaymentCreateService.createInvoicePayment(
-                invoice, invoice.getCompanyBankDetails());
+          // Now handle status, this is rather complicated since PrestaShop status also handle
+          // invoicing, payment and delivery
+          if (localOrder.getStatusSelect() == SaleOrderRepository.STATUS_DRAFT_QUOTATION) {
+            try {
+              // Note that in case of taxes mismatch, this will probably blow everything up
+              saleOrderComputeService.computeSaleOrder(localOrder);
+            } catch (AxelorException ae) {
+              TraceBackService.trace(
+                  ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
+              logWriter.write(
+                  String.format(
+                      " [ERROR] An error occured while computing sale order elements: %s%n",
+                      ae.getLocalizedMessage()));
+              log.error(
+                  String.format(
+                      "An error occured while computing sale order #%d elements (PS #%d)",
+                      localOrder.getId(), remoteOrder.getId()),
+                  ae);
+              continue;
+            }
+
+            // Consider this as finalized, draft would be a cart without order, unhandled right now
+            localOrder.setManualUnblock(Boolean.TRUE);
+            try {
+              saleOrderWorkflowService.finalizeQuotation(localOrder);
+            } catch (AxelorException ae) {
+              TraceBackService.trace(
+                  ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
+              logWriter.write(
+                  String.format(
+                      " [ERROR] An error occured while finalizing sale order: %s%n",
+                      ae.getLocalizedMessage()));
+              log.error(
+                  String.format(
+                      "An error occured while finalizing sale order #%d (PS #%d)",
+                      localOrder.getId(), remoteOrder.getId()),
+                  ae);
+              continue;
+            }
+            // Nothing to deleted as we've a new order
           }
-        }
-      }
-
-      if (localStatus.getShipped()) {
-        if (localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
-          localOrder.setDeliveryDate(remoteOrder.getDeliveryDate().toLocalDate());
-          try {
-            List<Long> stockMoveIds = deliveryService.createStocksMovesFromSaleOrder(localOrder);
-
-            for (Long stockMoveId : stockMoveIds) {
-              StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
-              stockMoveService.realize(delivery, true);
-              for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
-                if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
-                    line.getProduct().getProductTypeSelect())) {
-                  line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+          localOrder.setPrestaShopUpdateDateTime(remoteOrder.getUpdateDate());
+          saleOrderRepo.save(localOrder);
+          localOrder = saleOrderRepo.find(localOrder.getId());
+        } else {
+          if (IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localOrder.getImportOrigin())
+              == false) {
+            // Avoid round trips
+            logWriter.write(
+                String.format(
+                    " - PrestaShop isn't master for orders and local order hasn't been imported from it, skipping [SUCCESS]%n"));
+            continue;
+          } else {
+            // OK so order exists, we've to see if we need to update something
+            if (remoteOrder.getTotalPaidTaxIncluded().compareTo(localOrder.getInTaxTotal()) != 0) {
+              logWriter.write(
+                  String.format(
+                      " - Remote and local order total differs (%f vs %f)",
+                      remoteOrder.getTotalPaidTaxIncluded(), localOrder.getInTaxTotal()));
+              if ((localOrder.getStatusSelect() != SaleOrderRepository.STATUS_DRAFT_QUOTATION
+                      && localOrder.getStatusSelect()
+                          != SaleOrderRepository.STATUS_FINALIZED_QUOTATION)
+                  || localOrder.getDeliveryState() != SaleOrderRepository.DELIVERY_STATE_DELIVERED
+                  || (localOrder.getAmountInvoiced() == null
+                      || BigDecimal.ZERO.compareTo(localOrder.getAmountInvoiced()) != 0)) {
+                final String additionalComment =
+                    I18n.get(
+                        "<p>WARNING: Order has been modified on PrestaShop but could not be updated locally.</p>");
+                if (localOrder.getInternalNote() == null
+                    || localOrder.getInternalNote().indexOf(additionalComment) < 0) {
+                  localOrder.setInternalNote(
+                      (localOrder.getInternalNote() == null ? "" : localOrder.getInternalNote())
+                          + additionalComment);
+                }
+                logWriter.write(
+                    String.format(
+                        " - Order status does not allow updates anymore, skipping (status: %d, delivery status: %d, amount invoiced: %f [ERROR]%n",
+                        localOrder.getStatusSelect(),
+                        localOrder.getDeliveryState(),
+                        localOrder.getAmountInvoiced()));
+                continue;
+              } else {
+                // TODO Maybe we should do this more smoothly
+                localOrder.clearSaleOrderLineList();
+                if (importLines(appConfig, ws, remoteOrder, localOrder, logWriter) == false) {
+                  continue;
                 }
               }
             }
-            localOrder.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+          }
+        }
+
+        if ((localStatus.getPaid()
+                || localStatus.getDelivered()
+                || localStatus.getInvoiced()
+                || localStatus.getShipped())
+            && localOrder.getStatusSelect() == SaleOrderRepository.STATUS_FINALIZED_QUOTATION) {
+          // Order has been paid or invoiced, it means it's confirmed
+          localOrder.setManualUnblock(Boolean.TRUE);
+          try {
+            saleOrderWorkflowService.confirmSaleOrder(localOrder);
           } catch (AxelorException ae) {
             TraceBackService.trace(
                 ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
             logWriter.write(
                 String.format(
-                    " [ERROR] An error occured while generating delivery for sale order: %s%n",
+                    " [ERROR] An error occured while confirming sale order: %s%n",
                     ae.getLocalizedMessage()));
             log.error(
                 String.format(
-                    "An error occured while generating delivery for sale order #%d (PS #%d)",
+                    "An error occured while finalizing or confirming sale order #%d (PS #%d)",
                     localOrder.getId(), remoteOrder.getId()),
                 ae);
             continue;
           }
         }
-      }
 
-      logWriter.write(String.format(" [SUCCESS]%n"));
-      ++done;
+        // If we end up here, we've a local sale order with lines matching the remote one
+        // Let's see if we've more to to
+        if (localStatus.getInvoiced()) {
+          if (BigDecimal.ZERO.compareTo(localOrder.getAmountInvoiced()) == 0) {
+            try {
+              Invoice invoice =
+                  saleOrderInvoiceService.generateInvoice(
+                      localOrder, SaleOrderRepository.INVOICE_ALL, null, false, null);
+              invoice.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
+              invoice.setPrintingSettings(localOrder.getPrintingSettings());
+              invoiceService.ventilate(invoice);
+            } catch (AxelorException ae) {
+              TraceBackService.trace(
+                  ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
+              logWriter.write(
+                  String.format(
+                      " [ERROR] An error occured while generating invoice for sale order: %s%n",
+                      ae.getLocalizedMessage()));
+              log.error(
+                  String.format(
+                      "An error occured while generating invoice for sale order #%d (PS #%d)",
+                      localOrder.getId(), remoteOrder.getId()),
+                  ae);
+              continue;
+            }
+          }
+        }
+
+        // Currently, all statuses with paid mean invoiced too, but to cover all cases
+        // we should register an advance payment in case of paid but not invoiced
+        if (localStatus.getPaid()) {
+          List<Invoice> invoices = saleOrderInvoiceService.getInvoices(localOrder);
+          if (invoices.size() != 1) {
+            logWriter.write(
+                String.format(
+                    " [WARNING] Found %d invoice(s) for this order, cannot record payment (exactly one invoice needed), skipping payment creation%n",
+                    invoices.size()));
+          } else {
+            Invoice invoice = invoices.get(0);
+            if (BigDecimal.ZERO.compareTo(invoice.getAmountPaid()) == 0) {
+              invoicePaymentCreateService.createInvoicePayment(
+                  invoice, invoice.getCompanyBankDetails());
+            }
+          }
+        }
+
+        if (localStatus.getShipped()) {
+          if (localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
+            localOrder.setDeliveryDate(remoteOrder.getDeliveryDate().toLocalDate());
+            try {
+              List<Long> stockMoveIds = deliveryService.createStocksMovesFromSaleOrder(localOrder);
+
+              for (Long stockMoveId : stockMoveIds) {
+                StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
+                stockMoveService.realize(delivery, true);
+                for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
+                  if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
+                      line.getProduct().getProductTypeSelect())) {
+                    line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+                  }
+                }
+              }
+              localOrder.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+            } catch (AxelorException ae) {
+              TraceBackService.trace(
+                  ae, I18n.get("Prestashop order import"), AbstractBatch.getCurrentBatchId());
+              logWriter.write(
+                  String.format(
+                      " [ERROR] An error occured while generating delivery for sale order: %s%n",
+                      ae.getLocalizedMessage()));
+              log.error(
+                  String.format(
+                      "An error occured while generating delivery for sale order #%d (PS #%d)",
+                      localOrder.getId(), remoteOrder.getId()),
+                  ae);
+              continue;
+            }
+          }
+        }
+
+        logWriter.write(String.format(" [SUCCESS]%n"));
+        ++done;
+      } catch (PrestaShopWebserviceException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop orders import"), AbstractBatch.getCurrentBatchId());
+        logWriter.write(
+            String.format(
+                " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));
+        log.error(
+            String.format(
+                "Exception while synchronizing order %s (%s)",
+                remoteOrder.getId(), remoteOrder.getReference()),
+            e);
+        ++errors;
+      }
     }
 
     logWriter.write(

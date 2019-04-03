@@ -20,10 +20,12 @@ package com.axelor.apps.prestashop.exports.service;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.entities.PrestashopCustomer;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -189,6 +191,8 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
         logBuffer.write(String.format(" [SUCCESS]%n"));
         ++done;
       } catch (PrestaShopWebserviceException | IOException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop customers export"), AbstractBatch.getCurrentBatchId());
         logBuffer.write(
             String.format(
                 " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));

@@ -27,6 +27,7 @@ import com.axelor.apps.prestashop.exports.service.ExportCustomerService;
 import com.axelor.apps.prestashop.exports.service.ExportOrderService;
 import com.axelor.apps.prestashop.exports.service.ExportProductService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -77,14 +78,15 @@ public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
 
   /** Export Axelor modules (Base, SaleOrder) */
   @Override
-  public void export(AppPrestashop appConfig, Batch batch)
-      throws PrestaShopWebserviceException, IOException {
+  public void export(AppPrestashop appConfig, Batch batch) throws IOException {
     StringBuilderWriter logWriter = new StringBuilderWriter(1024);
     try {
       exportAxelorBase(appConfig, logWriter);
 
       orderService.exportOrder(appConfig, logWriter);
       logWriter.write(String.format("%n==== END OF LOG ====%n"));
+    } catch (PrestaShopWebserviceException e) {
+      TraceBackService.trace(e);
     } finally {
       IOUtils.closeQuietly(logWriter);
       MetaFile exporMetaFile =

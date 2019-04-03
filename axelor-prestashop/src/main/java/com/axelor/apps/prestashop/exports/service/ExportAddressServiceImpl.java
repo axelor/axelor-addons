@@ -23,11 +23,13 @@ import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerAddress;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.PartnerService;
+import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.db.IPrestaShopBatch;
 import com.axelor.apps.prestashop.entities.PrestashopAddress;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -254,6 +256,8 @@ public class ExportAddressServiceImpl implements ExportAddressService {
 
   private void handlePSException(
       PrestaShopWebserviceException e, Writer logBuffer, Address localAddress) throws IOException {
+    TraceBackService.trace(
+        e, I18n.get("Prestashop addresses export"), AbstractBatch.getCurrentBatchId());
     logBuffer.write(
         String.format(
             " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));

@@ -27,6 +27,7 @@ import com.axelor.apps.prestashop.imports.service.ImportCustomerService;
 import com.axelor.apps.prestashop.imports.service.ImportOrderService;
 import com.axelor.apps.prestashop.imports.service.ImportProductService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -83,12 +84,14 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
   /** Import Axelor modules (Base, SaleOrder) */
   @Override
   public void importFromPrestaShop(AppPrestashop appConfig, ZonedDateTime endDate, Batch batch)
-      throws IOException, PrestaShopWebserviceException {
+      throws IOException {
     StringBuilderWriter logWriter = new StringBuilderWriter(1024);
     try {
       importAxelorBase(appConfig, endDate, logWriter);
       orderService.importOrder(appConfig, endDate, logWriter);
       logWriter.write(String.format("%n==== END OF LOG ====%n"));
+    } catch (PrestaShopWebserviceException e) {
+      TraceBackService.trace(e);
     } finally {
       IOUtils.closeQuietly(logWriter);
       MetaFile importMetaFile =

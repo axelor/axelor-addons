@@ -22,6 +22,7 @@ import com.axelor.apps.prestashop.app.AppPrestaShopService;
 import com.axelor.apps.prestashop.imports.service.ImportMetaDataService;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
@@ -51,7 +52,7 @@ public class AppPrestaShopController {
    * @throws TransformerException
    */
   public void testConnection(ActionRequest request, ActionResponse response)
-      throws PrestaShopWebserviceException, TransformerException {
+      throws TransformerException {
     AppPrestashop appConfig = request.getContext().asType(AppPrestashop.class);
     final List<String> errors = new LinkedList<>();
     final List<String> warnings = new LinkedList<>();
@@ -77,6 +78,7 @@ public class AppPrestaShopController {
       metadataService.importLanguages(ws);
       metadataService.importOrderStatuses(appConfig.getTextsLanguage(), ws);
     } catch (PrestaShopWebserviceException e) {
+      TraceBackService.trace(e);
       response.setError(
           String.format(
               I18n.get("Error while fetching metadata, please perform a connection check: %s"),

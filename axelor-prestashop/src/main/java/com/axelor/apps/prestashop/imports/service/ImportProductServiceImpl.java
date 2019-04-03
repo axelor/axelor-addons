@@ -36,6 +36,8 @@ import com.axelor.apps.prestashop.exports.service.ExportProductServiceImpl;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.axelor.exception.AxelorException;
+import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaFiles;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
@@ -296,7 +298,9 @@ public class ImportProductServiceImpl implements ImportProductService {
         }
         logWriter.write(String.format(" [SUCCESS]%n"));
         ++done;
-      } catch (AxelorException e) {
+      } catch (PrestaShopWebserviceException | AxelorException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop products import"), AbstractBatch.getCurrentBatchId());
         logWriter.write(
             String.format(
                 " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));
