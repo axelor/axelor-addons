@@ -23,6 +23,7 @@ import com.axelor.apps.prestashop.entities.xlink.ApiContainer;
 import com.axelor.apps.prestashop.entities.xlink.XlinkEntry;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestashopHttpException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.google.common.collect.Sets;
 import java.util.HashSet;
@@ -146,6 +147,7 @@ public class AppPrestaShopServiceImpl implements AppPrestaShopService {
 
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof PrestashopHttpException) {
+        TraceBackService.trace(e);
         errors.add(
             String.format(
                 I18n.get("An HTTP error occured while checking access rights: %s"),
