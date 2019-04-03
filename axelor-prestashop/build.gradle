@@ -4,12 +4,6 @@ apply {
 	version = "5.0.0-SNAPSHOT"
 }
 
-spotless {
-	java {
-		googleJavaFormat()
-	}
-}
-
 axelor {
 	title "Axelor :: PrestaShop"
 	description "Axelor PrestaShop Module"
