@@ -103,11 +103,7 @@ public class PrestashopProduct extends PrestashopIdentifiableEntity {
   private Associations associations = new Associations();
   private List<Element> additionalProperties = new LinkedList<>();
   private boolean lowStockAlert = false;
-
-  public boolean isLowStockAlert() {
-    return lowStockAlert;
-  }
-
+  
   @XmlElement(name = "id_manufacturer")
   public Integer getManufacturerId() {
     return manufacturerId;
@@ -673,7 +669,7 @@ public class PrestashopProduct extends PrestashopIdentifiableEntity {
   }
 
   @XmlElement(name = "low_stock_alert")
-  public boolean getLowStockAlert() {
+  public boolean isLowStockAlert() {
     return this.lowStockAlert;
   }
 
