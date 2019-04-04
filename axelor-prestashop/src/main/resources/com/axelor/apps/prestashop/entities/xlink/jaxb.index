@@ -17,3 +17,6 @@ XlinkEntry$OrderStatusesXlink
 XlinkEntry$OrdersXlink
 XlinkEntry$ProductsXlink
 XlinkEntry$StockAvailablesXlink
+XlinkEntry$TaxRuleGroupsXlink
+XlinkEntry$TaxRulesXlink
+XlinkEntry$TaxesXlink

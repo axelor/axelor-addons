@@ -26,6 +26,7 @@ import com.axelor.apps.prestashop.imports.service.ImportCurrencyService;
 import com.axelor.apps.prestashop.imports.service.ImportCustomerService;
 import com.axelor.apps.prestashop.imports.service.ImportOrderService;
 import com.axelor.apps.prestashop.imports.service.ImportProductService;
+import com.axelor.apps.prestashop.imports.service.ImportTaxService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
@@ -45,6 +46,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
   private ImportCountryService countryService;
   private ImportCustomerService customerService;
   private ImportAddressService addressService;
+  private ImportTaxService taxService;
   private ImportCategoryService categoryService;
   private ImportProductService productService;
   private ImportOrderService orderService;
@@ -56,6 +58,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
       ImportCountryService countryService,
       ImportCustomerService customerService,
       ImportAddressService addressService,
+      ImportTaxService taxService,
       ImportCategoryService categoryService,
       ImportProductService productService,
       ImportOrderService orderService) {
@@ -64,6 +67,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
     this.countryService = countryService;
     this.customerService = customerService;
     this.addressService = addressService;
+    this.taxService = taxService;
     this.categoryService = categoryService;
     this.productService = productService;
     this.orderService = orderService;
@@ -76,6 +80,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
     countryService.importCountry(appConfig, endDate, logWriter);
     customerService.importCustomer(appConfig, endDate, logWriter);
     addressService.importAddress(appConfig, endDate, logWriter);
+    taxService.importTax(appConfig, endDate, logWriter);
     categoryService.importCategory(appConfig, endDate, logWriter);
     productService.importProduct(appConfig, endDate, logWriter);
   }

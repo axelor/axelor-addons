@@ -26,6 +26,7 @@ import com.axelor.apps.prestashop.exports.service.ExportCurrencyService;
 import com.axelor.apps.prestashop.exports.service.ExportCustomerService;
 import com.axelor.apps.prestashop.exports.service.ExportOrderService;
 import com.axelor.apps.prestashop.exports.service.ExportProductService;
+import com.axelor.apps.prestashop.exports.service.ExportTaxService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
@@ -50,6 +51,8 @@ public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
 
   @Inject private ExportAddressService addressService;
 
+  @Inject private ExportTaxService taxService;
+
   @Inject private ExportCategoryService categoryService;
 
   @Inject private ExportProductService productService;
@@ -71,6 +74,7 @@ public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
     countryService.exportCountry(appConfig, logWriter);
     customerService.exportCustomer(appConfig, logWriter);
     addressService.exportAddress(appConfig, logWriter);
+    taxService.exportTax(appConfig, logWriter);
     categoryService.exportCategory(appConfig, logWriter);
     productService.exportProduct(appConfig, logWriter);
   }

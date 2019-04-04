@@ -81,4 +81,13 @@ public abstract class ListContainer<T extends PrestashopContainerEntity>
 
   @XmlRootElement(name = "products")
   public static class ProductsContainer extends ListContainer<PrestashopProduct> {}
+
+  @XmlRootElement(name = "tax_rule_groups")
+  public static class TaxRuleGroupsContainer extends ListContainer<PrestashopTaxRuleGroup> {}
+
+  @XmlRootElement(name = "tax_rules")
+  public static class TaxRulesContainer extends ListContainer<PrestashopTaxRule> {}
+
+  @XmlRootElement(name = "taxes")
+  public static class TaxesContainer extends ListContainer<PrestashopTax> {}
 }

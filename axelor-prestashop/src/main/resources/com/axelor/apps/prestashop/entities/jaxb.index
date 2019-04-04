@@ -13,6 +13,9 @@ ListContainer$OrderStatusesContainer
 ListContainer$OrdersContainer
 ListContainer$ProductCategoriesContainer
 ListContainer$ProductsContainer
+ListContainer$TaxRuleGroupsContainer
+ListContainer$TaxRulesContainer
+ListContainer$TaxesContainer
 Prestashop
 PrestashopAddress
 PrestashopAvailableStock
@@ -32,3 +35,6 @@ PrestashopOrderRowDetails
 PrestashopOrderStatus
 PrestashopProductCategory
 PrestashopProduct
+PrestashopTaxRuleGroup
+PrestashopTaxRule
+PrestashopTax

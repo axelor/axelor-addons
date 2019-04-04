@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
+import com.axelor.apps.account.db.AccountManagement;
+import com.axelor.apps.account.db.Tax;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.Unit;
@@ -58,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -343,8 +346,23 @@ public class ExportProductServiceImpl implements ExportProductService {
 
           remoteProduct.getName().setTranslation(language, localProduct.getName());
           remoteProduct.getDescription().setTranslation(language, localProduct.getDescription());
+
+          Tax tax = null;
+          if (CollectionUtils.isEmpty(localProduct.getAccountManagementList())) {
+            if (localProduct.getProductFamily() != null
+                && !CollectionUtils.isEmpty(
+                    localProduct.getProductFamily().getAccountManagementList())) {
+              AccountManagement accountManagement =
+                  localProduct.getProductFamily().getAccountManagementList().get(0);
+              tax = accountManagement.getSaleTax();
+            }
+          } else {
+            AccountManagement accountManagement = localProduct.getAccountManagementList().get(0);
+            tax = accountManagement.getSaleTax();
+          }
           remoteProduct.setTaxRulesGroupId(
-              1); // FIXME Need to have a mapping and use getAccountManagementList
+              tax != null ? tax.getPrestaShopId() : appConfig.getDefaultTax().getPrestaShopId());
+
           if (localProduct.getSalesUnit() != null) {
             remoteProduct.setUnity(localProduct.getSalesUnit().getLabelToPrinting());
           } else if (localProduct.getUnit() != null) {

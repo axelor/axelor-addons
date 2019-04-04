@@ -7,6 +7,7 @@
 			<field name="prestaShopKey" required="true"/>
 			<button name="btnTest" title="Test" onClick="com.axelor.apps.prestashop.web.AppPrestaShopController:testConnection"/>
 			<spacer/>
+			<field name="prestaShopCountry" required="true"/>
 			<field name="prestaShopCurrency" required="true"/>
 			<field name="prestaShopLengthUnit" required="true"/>
 			<field name="prestaShopWeightUnit" required="true"/>
@@ -33,6 +34,8 @@
 			<field name="defaultShippingCostsProduct" required="true"/>
 			<field name="discountProduct" required="true"/>
 			<field name="defaultTax" required="true"/>
+			<field name="defaultSaleAccountForProduct" domain="self.accountType.technicalTypeSelect = 'income'" required="true"/>
+			<field name="defaultSaleAccountForTax" domain="self.accountType.technicalTypeSelect = 'tax'" required="true"/>
 		</panel>
 
 		<panel title="Reference data">
@@ -40,6 +43,7 @@
 			<field name="prestaShopMasterForCurrencies" widget="boolean-switch"/>
 			<field name="prestaShopMasterForCountries" widget="boolean-switch"/>
 			<field name="prestaShopMasterForCustomers" widget="boolean-switch"/>
+			<field name="prestaShopMasterForTaxes" widget="boolean-switch"/>
 			<field name="prestaShopMasterForCategories" widget="boolean-switch"/>
 			<field name="prestaShopMasterForProducts" widget="boolean-switch"/>
 			<field name="prestaShopMasterForOrders" widget="boolean-switch"/>

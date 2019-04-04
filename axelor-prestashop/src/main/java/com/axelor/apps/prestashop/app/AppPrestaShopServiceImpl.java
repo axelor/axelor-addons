@@ -53,7 +53,10 @@ public class AppPrestaShopServiceImpl implements AppPrestaShopService {
           PrestashopResourceType.ORDER_STATUSES,
           PrestashopResourceType.ORDERS,
           PrestashopResourceType.PRODUCTS,
-          PrestashopResourceType.STOCK_AVAILABLES);
+          PrestashopResourceType.STOCK_AVAILABLES,
+          PrestashopResourceType.TAX_RULE_GROUPS,
+          PrestashopResourceType.TAX_RULES,
+          PrestashopResourceType.TAXES);
 
   private static final Set<PrestashopResourceType> READONLY_XLINKS =
       Sets.newHashSet(PrestashopResourceType.LANGUAGES, PrestashopResourceType.ORDER_STATUSES);

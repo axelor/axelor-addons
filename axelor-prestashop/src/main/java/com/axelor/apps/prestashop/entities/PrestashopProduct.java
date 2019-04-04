@@ -103,7 +103,7 @@ public class PrestashopProduct extends PrestashopIdentifiableEntity {
   private Associations associations = new Associations();
   private List<Element> additionalProperties = new LinkedList<>();
   private boolean lowStockAlert = false;
-  
+
   @XmlElement(name = "id_manufacturer")
   public Integer getManufacturerId() {
     return manufacturerId;

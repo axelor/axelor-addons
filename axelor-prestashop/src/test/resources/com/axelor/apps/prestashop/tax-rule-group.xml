@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prestashop xmlns:xlink="http://www.w3.org/1999/xlink">
+	<tax_rule_group>
+		<id><![CDATA[1]]></id>
+		<name><![CDATA[ IN Standard Rate (12.5%) ]]></name>
+		<active><![CDATA[1]]></active>
+		<deleted><![CDATA[0]]></deleted>
+		<date_add><![CDATA[2019-03-28 12:08:58]]></date_add>
+		<date_upd><![CDATA[2019-04-03 16:48:14]]></date_upd>
+	</tax_rule_group>
+</prestashop>

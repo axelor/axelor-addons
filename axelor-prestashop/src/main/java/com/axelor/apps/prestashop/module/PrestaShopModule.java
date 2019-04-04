@@ -36,6 +36,8 @@ import com.axelor.apps.prestashop.exports.service.ExportOrderService;
 import com.axelor.apps.prestashop.exports.service.ExportOrderServiceImpl;
 import com.axelor.apps.prestashop.exports.service.ExportProductService;
 import com.axelor.apps.prestashop.exports.service.ExportProductServiceImpl;
+import com.axelor.apps.prestashop.exports.service.ExportTaxService;
+import com.axelor.apps.prestashop.exports.service.ExportTaxServiceImpl;
 import com.axelor.apps.prestashop.imports.PrestaShopServiceImport;
 import com.axelor.apps.prestashop.imports.PrestaShopServiceImportImpl;
 import com.axelor.apps.prestashop.imports.service.ImportAddressService;
@@ -54,6 +56,8 @@ import com.axelor.apps.prestashop.imports.service.ImportOrderService;
 import com.axelor.apps.prestashop.imports.service.ImportOrderServiceImpl;
 import com.axelor.apps.prestashop.imports.service.ImportProductService;
 import com.axelor.apps.prestashop.imports.service.ImportProductServiceImpl;
+import com.axelor.apps.prestashop.imports.service.ImportTaxService;
+import com.axelor.apps.prestashop.imports.service.ImportTaxServiceImpl;
 
 public class PrestaShopModule extends AxelorModule {
 
@@ -66,6 +70,7 @@ public class PrestaShopModule extends AxelorModule {
     bind(ExportCountryService.class).to(ExportCountryServiceImpl.class);
     bind(ExportCustomerService.class).to(ExportCustomerServiceImpl.class);
     bind(ExportAddressService.class).to(ExportAddressServiceImpl.class);
+    bind(ExportTaxService.class).to(ExportTaxServiceImpl.class);
     bind(ExportCategoryService.class).to(ExportCategoryServiceImpl.class);
     bind(ExportProductService.class).to(ExportProductServiceImpl.class);
     bind(ExportOrderService.class).to(ExportOrderServiceImpl.class);
@@ -74,6 +79,7 @@ public class PrestaShopModule extends AxelorModule {
     bind(ImportCountryService.class).to(ImportCountryServiceImpl.class);
     bind(ImportCustomerService.class).to(ImportCustomerServiceImpl.class);
     bind(ImportAddressService.class).to(ImportAddressServiceImpl.class);
+    bind(ImportTaxService.class).to(ImportTaxServiceImpl.class);
     bind(ImportCategoryService.class).to(ImportCategoryServiceImpl.class);
     bind(ImportProductService.class).to(ImportProductServiceImpl.class);
     bind(ImportOrderService.class).to(ImportOrderServiceImpl.class);
