@@ -142,48 +142,51 @@ public class ExportAddressServiceImpl implements ExportAddressService {
       // export contacts address
       if (customer.getContactPartnerSet() != null) {
         for (Partner partner : customer.getContactPartnerSet()) {
-          Address localAddress = partner.getMainAddress();
+          if (partner.getMainAddress() != null) {
+            Address localAddress = partner.getMainAddress();
+            System.err.println(partner.getFullName() + ":-" + localAddress);
 
-          logBuffer.write(
-              String.format(
-                  "Exporting contact #%d, address : %s – ",
-                  partner.getId(), localAddress.getFullName()));
+            logBuffer.write(
+                String.format(
+                    "Exporting contact #%d, address : %s – ",
+                    partner.getId(), localAddress.getFullName()));
 
-          PrestashopAddress remoteAddress = new PrestashopAddress();
+            PrestashopAddress remoteAddress = new PrestashopAddress();
 
-          if (localAddress.getPrestaShopId() != null) {
-            /* localAddress already exported before */
-            logBuffer.write(String.format("prestashop id=%d - ", localAddress.getPrestaShopId()));
-            remoteAddress = remoteAddressesById.get(localAddress.getPrestaShopId());
+            if (localAddress.getPrestaShopId() != null) {
+              /* localAddress already exported before */
+              logBuffer.write(String.format("prestashop id=%d - ", localAddress.getPrestaShopId()));
+              remoteAddress = remoteAddressesById.get(localAddress.getPrestaShopId());
 
-            if (remoteAddress == null) {
-              logBuffer.write(String.format("Not found remotely [ERROR]%n"));
-              log.error(
-                  "Unable to fetch remote address #{} ({}), something is probably very wrong, skipping",
-                  localAddress.getPrestaShopId(),
-                  localAddress.getFullName());
-              ++errors;
-              continue;
+              if (remoteAddress == null) {
+                logBuffer.write(String.format("Not found remotely [ERROR]%n"));
+                log.error(
+                    "Unable to fetch remote address #{} ({}), something is probably very wrong, skipping",
+                    localAddress.getPrestaShopId(),
+                    localAddress.getFullName());
+                ++errors;
+                continue;
+              }
+            } else {
+              /* localAddress not yet exported */
+              remoteAddress.setAlias(partner.getFullName());
+              remoteAddress.setFirstname(partner.getFirstName());
+              remoteAddress.setLastname(partner.getName());
+
+              try {
+                fillRemoteAddress(logBuffer, remoteAddress, customer, localAddress);
+              } catch (NullPointerException e) {
+                continue;
+              }
             }
-          } else {
-            /* localAddress not yet exported */
-            remoteAddress.setAlias(partner.getFullName());
-            remoteAddress.setFirstname(partner.getFirstName());
-            remoteAddress.setLastname(partner.getName());
 
             try {
-              fillRemoteAddress(logBuffer, remoteAddress, customer, localAddress);
-            } catch (NullPointerException e) {
-              continue;
+              saveRemoteAddress(localAddress, remoteAddress, ws, logBuffer);
+              ++done;
+            } catch (PrestaShopWebserviceException e) {
+              handlePSException(e, logBuffer, localAddress);
+              ++errors;
             }
-          }
-
-          try {
-            saveRemoteAddress(localAddress, remoteAddress, ws, logBuffer);
-            ++done;
-          } catch (PrestaShopWebserviceException e) {
-            handlePSException(e, logBuffer, localAddress);
-            ++errors;
           }
         }
       }
