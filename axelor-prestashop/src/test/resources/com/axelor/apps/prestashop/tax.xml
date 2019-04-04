@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prestashop xmlns:xlink="http://www.w3.org/1999/xlink">
+	<tax>
+		<id><![CDATA[1]]></id>
+		<name>
+			<language id="2" xlink:href="http://192.168.1.23/api/languages/2"><![CDATA[VAT IN 12.5%]]></language>
+		</name>
+		<rate><![CDATA[12.5]]></rate>
+		<active><![CDATA[1]]></active>
+		<deleted><![CDATA[0]]></deleted>
+	</tax>
+</prestashop>

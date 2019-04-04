@@ -138,6 +138,7 @@ public class ExportCountryServiceImpl implements ExportCountryService {
           }
           remoteCountry.setCallPrefix(phonePrefix);
           remoteCountry.getName().setTranslation(language, localCountry.getName());
+          remoteCountry.setActive(true);
 
           remoteCountry = ws.save(PrestashopResourceType.COUNTRIES, remoteCountry);
           localCountry.setPrestaShopId(remoteCountry.getId());

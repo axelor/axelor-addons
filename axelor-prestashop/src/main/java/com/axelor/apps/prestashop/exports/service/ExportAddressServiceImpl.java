@@ -144,7 +144,6 @@ public class ExportAddressServiceImpl implements ExportAddressService {
         for (Partner partner : customer.getContactPartnerSet()) {
           if (partner.getMainAddress() != null) {
             Address localAddress = partner.getMainAddress();
-            System.err.println(partner.getFullName() + ":-" + localAddress);
 
             logBuffer.write(
                 String.format(

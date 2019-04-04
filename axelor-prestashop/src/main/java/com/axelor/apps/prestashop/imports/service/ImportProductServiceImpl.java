@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
+import com.axelor.apps.account.db.AccountManagement;
+import com.axelor.apps.account.db.repo.TaxRepository;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Product;
@@ -35,6 +37,7 @@ import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.exports.service.ExportProductServiceImpl;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.auth.AuthUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.meta.MetaFiles;
 import com.google.common.base.Objects;
@@ -52,6 +55,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -62,6 +66,7 @@ public class ImportProductServiceImpl implements ImportProductService {
   private Logger log = LoggerFactory.getLogger(getClass());
 
   private MetaFiles metaFiles;
+  private TaxRepository taxRepo;
   private ProductCategoryRepository productCategoryRepo;
   private ProductRepository productRepo;
   private CurrencyService currencyService;
@@ -70,11 +75,13 @@ public class ImportProductServiceImpl implements ImportProductService {
   @Inject
   public ImportProductServiceImpl(
       MetaFiles metaFiles,
+      TaxRepository taxRepo,
       ProductCategoryRepository productCategoryRepo,
       ProductRepository productRepo,
       CurrencyService currencyService,
       UnitConversionService unitConversionService) {
     this.metaFiles = metaFiles;
+    this.taxRepo = taxRepo;
     this.productCategoryRepo = productCategoryRepo;
     this.productRepo = productRepo;
     this.currencyService = currencyService;
@@ -288,6 +295,21 @@ public class ImportProductServiceImpl implements ImportProductService {
               localProduct.setPicture(null);
             }
           }
+
+          AccountManagement accountManagement;
+          if (localProduct.getId() != null
+              && !CollectionUtils.isEmpty(localProduct.getAccountManagementList())) {
+            accountManagement = localProduct.getAccountManagementList().get(0);
+          } else {
+            accountManagement = new AccountManagement();
+          }
+          accountManagement.setCompany(AuthUtils.getUser().getActiveCompany());
+          accountManagement.setTypeSelect(1);
+          accountManagement.setSaleAccount(appConfig.getDefaultSaleAccountForProduct());
+          accountManagement.setSaleTax(
+              taxRepo.findByPrestaShopId(remoteProduct.getTaxRulesGroupId()));
+          localProduct.addAccountManagementListItem(accountManagement);
+
           localProduct.setPrestaShopUpdateDateTime(remoteProduct.getUpdateDate());
           productRepo.save(localProduct);
         } else {

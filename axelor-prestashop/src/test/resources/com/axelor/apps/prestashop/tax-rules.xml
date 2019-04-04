@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prestashop xmlns:xlink="http://www.w3.org/1999/xlink">
+	<tax_rules>
+		<tax_rule>
+			<id><![CDATA[1]]></id>
+			<id_tax_rules_group><![CDATA[1]]></id_tax_rules_group>
+			<id_state><![CDATA[0]]></id_state>
+			<id_country xlink:href="http://192.168.1.23/api/countries/110"><![CDATA[110]]></id_country>
+			<zipcode_from><![CDATA[0]]></zipcode_from>
+			<zipcode_to><![CDATA[0]]></zipcode_to>
+			<id_tax><![CDATA[1]]></id_tax>
+			<behavior><![CDATA[0]]></behavior>
+			<description />
+		</tax_rule>
+		<tax_rule>
+			<id><![CDATA[2]]></id>
+			<id_tax_rules_group><![CDATA[2]]></id_tax_rules_group>
+			<id_state><![CDATA[0]]></id_state>
+			<id_country xlink:href="http://192.168.1.23/api/countries/110"><![CDATA[110]]></id_country>
+			<zipcode_from><![CDATA[0]]></zipcode_from>
+			<zipcode_to><![CDATA[0]]></zipcode_to>
+			<id_tax><![CDATA[2]]></id_tax>
+			<behavior><![CDATA[0]]></behavior>
+			<description />
+		</tax_rule>
+		<tax_rule>
+			<id><![CDATA[3]]></id>
+			<id_tax_rules_group><![CDATA[3]]></id_tax_rules_group>
+			<id_state><![CDATA[0]]></id_state>
+			<id_country xlink:href="http://192.168.1.23/api/countries/110"><![CDATA[110]]></id_country>
+			<zipcode_from><![CDATA[0]]></zipcode_from>
+			<zipcode_to><![CDATA[0]]></zipcode_to>
+			<id_tax><![CDATA[3]]></id_tax>
+			<behavior><![CDATA[0]]></behavior>
+			<description />
+		</tax_rule>
+	</tax_rules>
+</prestashop>

@@ -95,5 +95,23 @@
 			<schema xlink:href="http://192.168.1.23/api/stock_availables?schema=blank" type="blank"/>
 			<schema xlink:href="http://192.168.1.23/api/stock_availables?schema=synopsis" type="synopsis"/>
 		</stock_availables>
+		<tax_rule_groups xlink:href="http://192.168.1.23/api/tax_rule_groups" get="true" put="true" post="false" delete="false" head="true">
+			<description xlink:href="http://192.168.1.23/api/tax_rule_groups" get="true" put="true" post="false" delete="false" head="true">
+				Tax rule groups</description>
+			<schema xlink:href="http://192.168.1.23/api/tax_rule_groups?schema=blank" type="blank"/>
+			<schema xlink:href="http://192.168.1.23/api/tax_rule_groups?schema=synopsis" type="synopsis"/>
+		</tax_rule_groups>
+		<tax_rules xlink:href="http://192.168.1.23/api/tax_rules" get="true" put="true" post="false" delete="false" head="true">
+			<description xlink:href="http://192.168.1.23/api/tax_rules" get="true" put="true" post="false" delete="false" head="true">
+				Tax rules</description>
+			<schema xlink:href="http://192.168.1.23/api/tax_rules?schema=blank" type="blank"/>
+			<schema xlink:href="http://192.168.1.23/api/tax_rules?schema=synopsis" type="synopsis"/>
+		</tax_rules>
+		<taxes xlink:href="http://192.168.1.23/api/taxes" get="true" put="true" post="false" delete="false" head="true">
+			<description xlink:href="http://192.168.1.23/api/taxes" get="true" put="true" post="false" delete="false" head="true">
+				Taxes</description>
+			<schema xlink:href="http://192.168.1.23/api/taxes?schema=blank" type="blank"/>
+			<schema xlink:href="http://192.168.1.23/api/taxes?schema=synopsis" type="synopsis"/>
+		</taxes>
 	</api>
 </prestashop>

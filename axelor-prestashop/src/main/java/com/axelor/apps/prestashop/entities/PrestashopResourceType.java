@@ -39,7 +39,10 @@ public enum PrestashopResourceType {
   PRODUCT_CATEGORIES("categories"),
   PRODUCTS("products"),
   // No typo… really
-  STOCK_AVAILABLES("stock_availables");
+  STOCK_AVAILABLES("stock_availables"),
+  TAX_RULE_GROUPS("tax_rule_groups"),
+  TAX_RULES("tax_rules"),
+  TAXES("taxes");
 
   final String label;
 
