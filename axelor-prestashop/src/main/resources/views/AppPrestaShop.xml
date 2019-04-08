@@ -3,7 +3,7 @@
 
 	<form name="app-prestashop-config-form" title="App prestashop" model="com.axelor.apps.base.db.AppPrestashop" canDelete="false" canNew="false" width="large">
 		<panel title="Connection">
-			<field name="prestaShopUrl" pattern="^http(?:s)?://.*[^/]$" placeholder="https://my.shop.com" required="true"/>
+			<field name="prestaShopUrl" pattern="^http(?:s)?://.*$" placeholder="https://my.shop.com" required="true"/>
 			<field name="prestaShopKey" required="true"/>
 			<button name="btnTest" title="Test" onClick="com.axelor.apps.prestashop.web.AppPrestaShopController:testConnection"/>
 			<spacer/>
