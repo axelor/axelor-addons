@@ -3,7 +3,7 @@
 	<module name="base" package="com.axelor.apps.base.db"/>
 
 	<entity name="AppPrestashop" lang="java" cachable="true" extends="App">
-		<string name="prestaShopUrl" title="PrestaShop base URL (no trailing slash)"/>
+		<string name="prestaShopUrl" title="PrestaShop base URL"/>
 		<string name="prestaShopKey" title="PrestaShop webservices key"/>
 		<many-to-one name="prestaShopCountry" ref="com.axelor.apps.base.db.Country" title="PrestaShop's default country"/>
 		<many-to-one name="prestaShopCurrency" ref="com.axelor.apps.base.db.Currency" title="PrestaShop's default currency"/>
