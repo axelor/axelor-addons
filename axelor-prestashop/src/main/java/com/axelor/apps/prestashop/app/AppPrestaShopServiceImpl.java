@@ -91,31 +91,30 @@ public class AppPrestaShopServiceImpl implements AppPrestaShopService {
           (HashSet<PrestashopResourceType>) REQUIRED_XLINKS.clone();
       for (XlinkEntry entry : api.getXlinkEntries()) {
         if (requiredEntries.remove(entry.getEntryType())) {
-          if (entry.isRead() == false) {
+          if (!entry.isRead()) {
             errors.add(
                 String.format(
                     I18n.get(
                         "GET permission is missing for entity %s, related entities cannot be read"),
                     entry.getEntryType().getLabel()));
           }
-          if (entry.isCreate() == false
+          if (!entry.isCreate()
               && entry.getEntryType() != PrestashopResourceType.STOCK_AVAILABLES
-              && READONLY_XLINKS.contains(entry.getEntryType()) == false) {
+              && !READONLY_XLINKS.contains(entry.getEntryType())) {
             warnings.add(
                 String.format(
                     I18n.get(
                         "POST permission is missing for entity %s, related entities won't be created"),
                     entry.getEntryType().getLabel()));
           }
-          if (entry.isUpdate() == false
-              && READONLY_XLINKS.contains(entry.getEntryType()) == false) {
+          if (!entry.isUpdate() && !READONLY_XLINKS.contains(entry.getEntryType())) {
             warnings.add(
                 String.format(
                     I18n.get(
                         "PUT permission is missing for entity %s, related entities won't be updated"),
                     entry.getEntryType().getLabel()));
           }
-          if (entry.isDelete() == false && DELETABLE_XLINKS.contains(entry.getEntryType())) {
+          if (!entry.isDelete() && DELETABLE_XLINKS.contains(entry.getEntryType())) {
             warnings.add(
                 String.format(
                     I18n.get(

@@ -22,6 +22,7 @@ import com.axelor.apps.prestashop.batch.PrestaShopBatchService;
 import com.axelor.apps.prestashop.db.PrestaShopBatch;
 import com.axelor.apps.prestashop.db.repo.PrestaShopBatchRepository;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.AxelorException;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Inject;
@@ -48,9 +49,10 @@ public class PrestaShopController {
    * @throws PrestaShopWebserviceException
    * @throws ParseException
    * @throws TransformerException
+   * @throws AxelorException
    */
   public void importPrestShop(ActionRequest request, ActionResponse response)
-      throws PrestaShopWebserviceException, ParseException, TransformerException {
+      throws PrestaShopWebserviceException, ParseException, TransformerException, AxelorException {
 
     PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
     Batch batch =
@@ -73,10 +75,12 @@ public class PrestaShopController {
    * @throws IOException
    * @throws SAXException
    * @throws ParserConfigurationException
+   * @throws AxelorException
    */
   public void exportPrestShop(ActionRequest request, ActionResponse response)
       throws PrestaShopWebserviceException, TransformerException, NumberFormatException,
-          MalformedURLException, IOException, SAXException, ParserConfigurationException {
+          MalformedURLException, IOException, SAXException, ParserConfigurationException,
+          AxelorException {
 
     PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
 

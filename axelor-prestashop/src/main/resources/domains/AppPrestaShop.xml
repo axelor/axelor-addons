@@ -10,6 +10,7 @@
 		<many-to-one name="prestaShopWeightUnit" ref="com.axelor.apps.base.db.Unit" title="PrestaShop's weight unit"/>
 		<many-to-one name="prestaShopLengthUnit" ref="com.axelor.apps.base.db.Unit" title="PrestaShop's length unit"/>
 		<many-to-one name="textsLanguage" ref="com.axelor.apps.base.db.Language" title="Axelor texts languages (for descriptions of products, name of countries, aso.)"/>
+		<boolean name="isValid" title="Valid" default="false"/>
 
 		<integer name="exportPriceScale" title="Number of digits after decimal point for sales price" min="0" max="9" default="2"/>
 		<boolean name="exportNonSoldProducts" title="Export products not flagged as sellable" default="true" help="If checked, all products, event those not marked as non-sellable, will be exported"/>

@@ -57,15 +57,20 @@ public class AppPrestaShopController {
     final List<String> errors = new LinkedList<>();
     final List<String> warnings = new LinkedList<>();
     final List<String> info = new LinkedList<>();
+
+    response.setValue("isValid", false);
+
     service.checkAccess(appConfig, errors, warnings, info);
 
-    if (errors.isEmpty() == false) {
+    if (!errors.isEmpty()) {
       response.setError(StringUtils.join(errors, "<br/>"));
-    } else if (warnings.isEmpty() == false) {
+    } else if (!warnings.isEmpty()) {
       response.setAlert(StringUtils.join(warnings, "<br/>"));
-    } else if (info.isEmpty() == false) {
+    } else if (!info.isEmpty()) {
+      response.setValue("isValid", true);
       response.setFlash(StringUtils.join(info, "<br/>"));
     } else {
+      response.setValue("isValid", true);
       response.setFlash(I18n.get("Connection successful"));
     }
   }
