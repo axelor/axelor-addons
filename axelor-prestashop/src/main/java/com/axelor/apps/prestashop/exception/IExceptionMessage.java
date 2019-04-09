@@ -31,4 +31,7 @@ public interface IExceptionMessage {
       "Unknown action %s for prestashop batch %s" /*)*/;
 
   public static final String PRESTASHOP_BATCH_2 = /*$$(*/ "Batch %s unknown" /*)*/;
+
+  public static final String PRESTASHOP_CONNECTION_VALIDATION_ERROR = /*$$(*/
+      "Please configure PrestaShop app" /*)*/;
 }
