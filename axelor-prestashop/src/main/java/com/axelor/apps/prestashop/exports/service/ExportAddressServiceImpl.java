@@ -207,6 +207,7 @@ public class ExportAddressServiceImpl implements ExportAddressService {
     remoteAddress.setCompany(customer.getName());
     remoteAddress.setAddress1(localAddress.getAddressL4());
     remoteAddress.setAddress2(localAddress.getAddressL5());
+    remoteAddress.setPhone(customer.getFixedPhone());
 
     if (localAddress.getCity() == null) {
       if (StringUtils.isEmpty(localAddress.getAddressL6())) {
