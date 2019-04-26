@@ -122,6 +122,20 @@ public class ImportAddressServiceImpl implements ImportAddressService {
           partnerAddress.setIsDefaultAddr(Boolean.TRUE);
         }
         customer.addPartnerAddressListItem(partnerAddress);
+
+        String remoteAddressPhone = remoteAddress.getPhone();
+
+        if (customer.getFixedPhone() == null) {
+          customer.setFixedPhone(remoteAddressPhone);
+        } else if (remoteAddressPhone != null) {
+          String description = customer.getDescription();
+
+          if (description == null) {
+            customer.setDescription(remoteAddressPhone);
+          } else if (!description.contains(remoteAddressPhone)) {
+            customer.setDescription(description.concat(", " + remoteAddressPhone));
+          }
+        }
       }
 
       if (IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localAddress.getImportOrigin())) {
