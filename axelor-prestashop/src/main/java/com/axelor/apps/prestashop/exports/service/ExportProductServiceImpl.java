@@ -37,12 +37,11 @@ import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.entities.PrestashopTranslatableString;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.apps.stock.db.repo.StockLocationRepository;
-import com.axelor.apps.stock.db.repo.StockMoveRepository;
-import com.axelor.db.JPA;
+import com.axelor.apps.stock.service.StockLocationService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
@@ -419,32 +418,15 @@ public class ExportProductServiceImpl implements ExportProductService {
     int done = 0;
     logBuffer.write(String.format("%n===== STOCKS =====%n"));
 
-    @SuppressWarnings("unchecked")
-    final List<Object[]> stocks =
-        JPA.em()
-            .createQuery(
-                "SELECT product, "
-                    + "("
-                    + "SELECT COALESCE(SUM(CASE WHEN fromLocation.typeSelect = :virtualLocation THEN line.realQty ELSE -line.realQty END), 0) "
-                    + "FROM StockMoveLine line "
-                    + "JOIN line.stockMove move "
-                    + "JOIN move.fromStockLocation fromLocation "
-                    + "JOIN move.toStockLocation toLocation "
-                    + "WHERE line.product = product "
-                    + "AND move.statusSelect != :canceledStatus "
-                    + "AND (fromLocation.typeSelect != :virtualLocation OR toLocation.typeSelect != :virtualLocation) "
-                    + "AND (fromLocation.typeSelect = :virtualLocation OR toLocation.typeSelect = :virtualLocation) "
-                    + ")"
-                    + "FROM Product product "
-                    + "WHERE product.prestaShopId is not null "
-                    + "GROUP BY product")
-            .setParameter("canceledStatus", StockMoveRepository.STATUS_CANCELED)
-            .setParameter("virtualLocation", StockLocationRepository.TYPE_VIRTUAL)
-            .getResultList();
-    for (Object[] row : stocks) {
+    List<Product> localProductList =
+        productRepo.all().filter("self.prestaShopId IS NOT NULL").fetch();
+
+    StockLocationService stockLocationService = Beans.get(StockLocationService.class);
+
+    for (Product localProduct : localProductList) {
       try {
-        final Product localProduct = (Product) row[0];
-        final int currentStock = ((BigDecimal) row[1]).intValue();
+        final int currentStock =
+            stockLocationService.getRealQty(localProduct.getId(), null).intValue();
         logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
         PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
         if (remoteProduct == null) {
@@ -480,7 +462,7 @@ public class ExportProductServiceImpl implements ExportProductService {
           }
         }
         ++done;
-      } catch (PrestaShopWebserviceException e) {
+      } catch (PrestaShopWebserviceException | AxelorException e) {
         logBuffer.write(String.format(" [ERROR] exception occured: %s%n", e.getMessage()));
         TraceBackService.trace(
             e, I18n.get("Prestashop stocks export"), AbstractBatch.getCurrentBatchId());
