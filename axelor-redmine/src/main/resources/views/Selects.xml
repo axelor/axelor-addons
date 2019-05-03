@@ -7,7 +7,9 @@
 	<!-- Nomenclature : * name : "interfaceName" + "fieldName" + ".select" -->
 	
 	<selection name="redmine.batch.action.select">
-		<option value="1">Import</option>
+		<option value="1">Import Issue</option>
+		<option value="2">Import</option>
+		<option value="3">Export</option>
 	</selection>
 	
 	<selection name="redmine.redmine.batch.status.select">

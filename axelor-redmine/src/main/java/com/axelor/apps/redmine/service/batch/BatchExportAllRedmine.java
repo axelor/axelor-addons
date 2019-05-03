@@ -18,22 +18,20 @@
 package com.axelor.apps.redmine.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.redmine.message.IMessage;
+import com.axelor.apps.redmine.exports.service.ExportService;
 import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.exception.AxelorException;
-import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineException;
 
-public class BatchImportRedmine extends AbstractBatch {
+public class BatchExportAllRedmine extends AbstractBatch {
 
   @Inject private RedmineService redmineService;
 
   @Override
   protected void process() {
     try {
-      redmineService.importRedmineIssues(
-          batch, ticket -> incrementDone(), error -> incrementAnomaly());
+      redmineService.exportRedmine(batch, ticket -> incrementDone(), error -> incrementAnomaly());
     } catch (AxelorException | RedmineException e) {
       throw new RuntimeException(e);
     }
@@ -48,16 +46,7 @@ public class BatchImportRedmine extends AbstractBatch {
 
   @Override
   protected void stop() {
-    String comment = I18n.get(IMessage.BATCH_ISSUE_IMPORT_1) + "\n";
-    comment +=
-        String.format("\t* %s %s \n", batch.getDone(), I18n.get(IMessage.BATCH_ISSUE_IMPORT_2));
-    comment +=
-        String.format(
-            "\t %s",
-            batch.getAnomaly(),
-            I18n.get(com.axelor.apps.base.exceptions.IExceptionMessage.ALARM_ENGINE_BATCH_4));
-
     super.stop();
-    addComment(comment);
+    addComment(ExportService.result);
   }
 }

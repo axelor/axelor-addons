@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="project" package="com.axelor.apps.project.db" />
+
+	<entity name="Tracker">
+
+		<integer name="redmineId" title="Redmine Id" />
+		<string name="name" title="Name" unique="true" />
+		<many-to-many name="projectSet" ref="com.axelor.apps.project.db.Project"
+			title="Projects" />
+
+		<finder-method name="findByRedmineId" using="redmineId" />
+
+	</entity>
+
+</domain-models>

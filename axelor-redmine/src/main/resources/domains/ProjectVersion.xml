@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="business-support" package="com.axelor.apps.businesssupport.db" />
+
+	<entity name="ProjectVersion">
+
+		<integer name="redmineId" title="Redmine Id" />
+
+		<finder-method name="findByRedmineId" using="redmineId" />
+
+	</entity>
+
+</domain-models>
