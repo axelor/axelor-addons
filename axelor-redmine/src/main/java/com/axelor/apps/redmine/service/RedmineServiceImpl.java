@@ -20,197 +20,263 @@ package com.axelor.apps.redmine.service;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.UserBaseRepository;
-import com.axelor.apps.helpdesk.db.Ticket;
-import com.axelor.apps.helpdesk.db.TicketType;
-import com.axelor.apps.helpdesk.db.repo.TicketRepository;
-import com.axelor.apps.helpdesk.db.repo.TicketTypeRepository;
+import com.axelor.apps.base.db.repo.AppRedmineRepository;
+import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
+import com.axelor.apps.redmine.exports.RedmineExportService;
+import com.axelor.apps.redmine.imports.RedmineImportService;
+import com.axelor.apps.redmine.imports.service.ImportIssueService;
 import com.axelor.apps.redmine.message.IMessage;
+import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
+import com.axelor.inject.Beans;
+import com.axelor.team.db.TeamTask;
+import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
-import com.taskadapter.redmineapi.IssueManager;
+import com.taskadapter.redmineapi.NotFoundException;
 import com.taskadapter.redmineapi.Params;
+import com.taskadapter.redmineapi.RedmineAuthenticationException;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.RedmineManagerFactory;
-import com.taskadapter.redmineapi.bean.CustomField;
-import com.taskadapter.redmineapi.bean.CustomFieldDefinition;
+import com.taskadapter.redmineapi.RedmineTransportException;
 import com.taskadapter.redmineapi.bean.Issue;
-import com.taskadapter.redmineapi.bean.Tracker;
 
-@Singleton
 public class RedmineServiceImpl implements RedmineService {
 
-	@Inject
-	private ProjectRepository projectRepo;
+  @Inject private AppRedmineRepository appRedmineRepo;
+  @Inject private ProjectRepository projectRepo;
+  @Inject private TeamTaskRepository teamTaskRepo;
+  @Inject protected RedmineImportService importService;
+  @Inject protected RedmineExportService exportService;
+  @Inject protected ImportIssueService importIssueService;
 
-	@Inject
-	private TicketRepository ticketRepo;
+  private static final Integer FETCH_LIMIT = 100;
 
-	@Inject
-	private TicketTypeRepository ticketTypeRepo;
+  private static final String LIMIT = "limit";
+  private static final String OFFSET = "offset";
+  private static final String FILTER_BY_PROJECT = "project_id";
+  private static final String FILTER_BY_STATUS = "status_id";
+  private static final String FILTER_BY_PRIORITY = "priority_id";
+  private static final String FILTER_BY_START_DATE = "start_date";
 
-	@Inject
-	private UserBaseRepository userRepo;
+  private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-	private RedmineManager mgr;
+  @Override
+  @Transactional
+  public void importRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
+      throws AxelorException, RedmineException {
+    final RedmineManager redmineManager = getRedmineManager();
+    if (redmineManager == null) {
+      return;
+    }
 
-	private CustomFieldDefinition cdf;
+    LocalDateTime lastImportDateTime = getLastOperationDate(batch.getRedmineBatch());
+    Date lastImportDate = null;
+    if (lastImportDateTime != null) {
+      lastImportDate = Date.from(lastImportDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+    importService.importRedmine(batch, lastImportDate, redmineManager, onSuccess, onError);
+  }
 
-	private IssueManager imgr;
+  @Override
+  @Transactional
+  public void exportRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
+      throws AxelorException, RedmineException {
 
-	private Map<Integer, Project> commonProjects;
+    final RedmineManager redmineManager = getRedmineManager();
+    if (redmineManager == null) {
+      return;
+    }
+    LocalDateTime lastExportDate = getLastOperationDate(batch.getRedmineBatch());
+    exportService.exportRedmine(batch, lastExportDate, redmineManager, onSuccess, onError);
+  }
 
-	private Params params;
+  @Override
+  @Transactional
+  public void importRedmineIssues(
+      Batch batch, Consumer<TeamTask> onSuccess, Consumer<Throwable> onError)
+      throws AxelorException, RedmineException {
 
-	private final static String CUSTOM_FIELD1_NAME = "isImported";
-	private final static String CUSTOM_FIELD1_TYPE = "issue";
-	private final static String CUSTOM_FIELD1_FORMAT = "bool";
+    final RedmineManager redmineManager = getRedmineManager();
+    if (redmineManager == null) {
+      return;
+    }
 
-	private final static String FILTER_BY_PROJECT = "project_id";
-	private final static String FILTER_BY_STATUS = "status_id";
-	private final static String FILTER_BY_PRIORITY = "priority_id";
-	private final static String FILTER_BY_TICKET_TYPE = "tracker_id";
-	private final static String FILTER_BY_START_DATE = "start_date";
-	private final static String FILTER_BY_CUSTOM_FIELD1 = "cf_";
+    Set<Project> projects = batch.getRedmineBatch().getProjectSet();
+    if (projects.size() > 0) {
+      projects =
+          projects
+              .stream()
+              .filter(project -> project.getCode() != null)
+              .collect(Collectors.toSet());
+    } else {
+      projects =
+          projectRepo
+              .all()
+              .filter("self.code is not null")
+              .fetchStream()
+              .collect(Collectors.toSet());
+    }
 
-	private static final Logger LOG =  LoggerFactory.getLogger( MethodHandles.lookup().lookupClass() );
+    Map<Integer, Project> commonProjects = obtainCommonProjects(projects, redmineManager);
 
-	@Override
-	public void checkRedmineCredentials(String uri, String apiAccessKey) throws AxelorException {
+    if (commonProjects.size() > 0) {
+      Integer totalFetchCount = 0;
 
-		this.mgr = RedmineManagerFactory.createWithApiKey(uri, apiAccessKey);
+      LocalDateTime lastImportDateTime = getLastOperationDate(batch.getRedmineBatch());
+      Date lastImportDate = null;
+      if (lastImportDateTime != null) {
+        lastImportDate = Date.from(lastImportDateTime.atZone(ZoneId.systemDefault()).toInstant());
+      }
+      List<Issue> issueList;
+      do {
+        Params params = applyFilters(batch.getRedmineBatch(), redmineManager, commonProjects);
+        params.add(OFFSET, totalFetchCount.toString());
+        issueList = redmineManager.getIssueManager().getIssues(params).getResults();
+        if (issueList != null && issueList.size() > 0) {
+          totalFetchCount += issueList.size();
+          for (Issue issue : issueList) {
+            try {
+              TeamTask teamTask =
+                  importIssueService.getTeamTask(
+                      issue, lastImportDate, batch.getRedmineBatch().getUpdateAlreadyImported());
+              teamTaskRepo.save(teamTask);
+              onSuccess.accept(teamTask);
+            } catch (Exception e) {
+              onError.accept(e);
+            }
+          }
+        }
+      } while (issueList.size() > 0);
+    }
+  }
 
-		try {
-			List<CustomFieldDefinition> customFieldDef = mgr.getCustomFieldManager().getCustomFieldDefinitions();
-			cdf = customFieldDef.stream().filter(df -> df.getName().contains(CUSTOM_FIELD1_NAME))
-					.filter(df -> df.getCustomizedType().equalsIgnoreCase(CUSTOM_FIELD1_TYPE))
-					.filter(df -> df.getFieldFormat().equalsIgnoreCase(CUSTOM_FIELD1_FORMAT))
-					.filter(df -> df.isFilter()).findFirst().orElseThrow(
-							() -> new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_CONFIGURATION));
+  protected LocalDateTime getLastOperationDate(RedmineBatch redmineBatch) {
+    Stream<Batch> stream =
+        Beans.get(BatchRepository.class)
+            .all()
+            .filter(
+                "self.redmineBatch IS NOT NULL AND self.endDate IS NOT NULL AND self.redmineBatch.actionSelect = ? AND self.done > 0",
+                redmineBatch.getActionSelect())
+            .fetchStream();
+    if (stream != null) {
+      Optional<Batch> lastRedmineBatch = stream.max(Comparator.comparing(Batch::getEndDate));
+      if (lastRedmineBatch.isPresent()) {
+        return lastRedmineBatch.get().getUpdatedOn();
+      }
+    }
+    return null;
+  }
 
-		} catch (RedmineException e) {
-			throw new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_2);
-		}
-	}
+  public RedmineManager getRedmineManager() throws AxelorException {
+    AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
-	private void obtainCommonProjects(Set<Project> projects) {
+    if (!StringUtils.isBlank(appRedmine.getUri())
+        && !StringUtils.isBlank(appRedmine.getApiAccessKey())) {
+      RedmineManager redmineManager =
+          RedmineManagerFactory.createWithApiKey(appRedmine.getUri(), appRedmine.getApiAccessKey());
+      try {
+        redmineManager.getUserManager().getCurrentUser();
+      } catch (RedmineTransportException | NotFoundException e) {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_NO_VALUE, IMessage.REDMINE_TRANSPORT);
+      } catch (RedmineAuthenticationException e) {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_NO_VALUE, IMessage.REDMINE_AUTHENTICATION_2);
+      } catch (RedmineException e) {
+        throw new AxelorException(TraceBackRepository.CATEGORY_NO_VALUE, e.getLocalizedMessage());
+      }
 
-		projects.stream().forEach(project -> {
-			com.taskadapter.redmineapi.bean.Project redmineProject;
+      return redmineManager;
+    } else {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_NO_VALUE, IMessage.REDMINE_AUTHENTICATION_1);
+    }
+  }
 
-			try {
-				redmineProject = mgr.getProjectManager().getProjectByKey(project.getCode().toLowerCase());
-				params.add("f[]", FILTER_BY_PROJECT).add("op[" + FILTER_BY_PROJECT + "]", "=")
-						.add("v[" + FILTER_BY_PROJECT + "][]", redmineProject.getId().toString());
-				commonProjects.put(redmineProject.getId(), project);
+  private Map<Integer, Project> obtainCommonProjects(
+      Set<Project> projects, RedmineManager redmineManager) {
 
-			} catch (RedmineException e) {
-				LOG.trace("Project with code : "+project.getCode()+" not found");
-			}
-		});
-	}
+    Map<Integer, Project> commonProjects = new HashMap<>();
 
-	private void applyFilters(RedmineBatch redmineBatch) throws RedmineException {
+    projects
+        .stream()
+        .forEach(
+            project -> {
+              com.taskadapter.redmineapi.bean.Project redmineProject;
 
-		if (!redmineBatch.getIsResetImported()) {
-			params.add("f[]", FILTER_BY_CUSTOM_FIELD1 + cdf.getId())
-					.add("op[" + FILTER_BY_CUSTOM_FIELD1 + cdf.getId() + "]", "!")
-					.add("v[" + FILTER_BY_CUSTOM_FIELD1 + cdf.getId() + "][]", "1");
-		}
-		if (redmineBatch.getStatusSelect() != 0) {
-			params.add("f[]", FILTER_BY_STATUS).add("op[" + FILTER_BY_STATUS + "]", "=")
-					.add("v[" + FILTER_BY_STATUS + "][]", redmineBatch.getStatusSelect().toString());
-		}
-		if (redmineBatch.getPrioritySelect() != 0) {
-			params.add("f[]", FILTER_BY_PRIORITY).add("op[" + FILTER_BY_PRIORITY + "]", "=")
-					.add("v[" + FILTER_BY_PRIORITY + "][]", redmineBatch.getPrioritySelect().toString());
-		}
-		if (redmineBatch.getTicketType() != null) {
-			Optional<Tracker> tracker = mgr.getIssueManager().getTrackers().stream()
-					.filter(t -> t.getName().equals(redmineBatch.getTicketType().getName())).findFirst();
-			if(tracker.isPresent()) {
-				params.add("v[" + FILTER_BY_TICKET_TYPE + "][]", tracker.get().getId().toString())
-						.add("f[]", FILTER_BY_TICKET_TYPE).add("op[" + FILTER_BY_TICKET_TYPE + "]", "=");
-			}
-		}
-		if (redmineBatch.getStartDate() != null) {
-			params.add("f[]", FILTER_BY_START_DATE).add("op[" + FILTER_BY_START_DATE + "]", "=")
-					.add("v[" + FILTER_BY_START_DATE + "][]", redmineBatch.getStartDate().toString());
-		}
-	}
+              try {
+                redmineProject =
+                    redmineManager
+                        .getProjectManager()
+                        .getProjectByKey(project.getCode().toLowerCase());
+                commonProjects.put(redmineProject.getId(), project);
+              } catch (RedmineException e) {
+                LOG.trace("Project with code : " + project.getCode() + " not found");
+              }
+            });
+    return commonProjects;
+  }
 
-	@Override
-	public List<Issue> getIssues(Batch batch) throws RedmineException {
+  private Params applyFilters(
+      RedmineBatch redmineBatch,
+      RedmineManager redmineManager,
+      Map<Integer, Project> commonProjects)
+      throws RedmineException {
 
-		commonProjects = new HashMap<>();
-		params = new Params();
+    Params params = new Params();
 
-		Set<Project> projects = batch.getRedmineBatch().getProjectSet();
-		if (projects.isEmpty())
-			projects = projectRepo.all().filter("self.code is not null").fetchSteam().collect(Collectors.toSet());
-
-		obtainCommonProjects(projects);
-
-		if (commonProjects.size() > 0) {
-			applyFilters(batch.getRedmineBatch());
-
-			List<Issue> issues = null;
-			imgr = mgr.getIssueManager();
-			issues = imgr.getIssues(params).getResults();
-			if (issues != null && issues.size() > 0)
-				return issues;
-		}
-		return null;
-	}
-
-	@Override
-	@Transactional
-	public void createTicketFromIssue(Issue issue) throws RedmineException {
-
-		Project absProject = commonProjects.get(issue.getProjectId());
-
-		Ticket ticket = new Ticket();
-		ticket.setRedmineId(issue.getId());
-		ticket.setSubject(issue.getSubject());
-		ticket.setProject(absProject);
-		ticket.setDescription(issue.getDescription());
-		ticket.setPrioritySelect(issue.getPriorityId());
-		ticket.setProgressSelect(issue.getDoneRatio());
-		ticket.setStartDateT(LocalDateTime.ofInstant(issue.getStartDate().toInstant(), ZoneId.systemDefault()));
-
-		TicketType ticketType = ticketTypeRepo.findByName(issue.getTracker().getName());
-		if (ticketType == null) {
-			TicketType newTicketType = new TicketType();
-			newTicketType.setName(issue.getTracker().getName());
-			ticketType = newTicketType;
-		}
-		ticket.setTicketType(ticketType);
-
-		ticket.setAssignedToUser(userRepo.findByName(issue.getAssigneeName()));
-		ticketRepo.save(ticket);
-
-		CustomField customField = issue.getCustomFieldByName(cdf.getName());
-		if (customField != null) {
-			customField.setValue("1");
-			imgr.update(issue);
-		}
-	}
+    for (Integer projectId : commonProjects.keySet()) {
+      params
+          .add("f[]", FILTER_BY_PROJECT)
+          .add("op[" + FILTER_BY_PROJECT + "]", "=")
+          .add("v[" + FILTER_BY_PROJECT + "][]", projectId.toString());
+    }
+    if (!redmineBatch.getUpdateAlreadyImported()) {
+      /*params.add("f[]", FILTER_BY_CUSTOM_FIELD1 + cdf.getId())
+      .add("op[" + FILTER_BY_CUSTOM_FIELD1 + cdf.getId() + "]", "!")
+      .add("v[" + FILTER_BY_CUSTOM_FIELD1 + cdf.getId() + "][]", "1");*/
+    }
+    if (redmineBatch.getStatusSelect() != 0) {
+      params
+          .add("f[]", FILTER_BY_STATUS)
+          .add("op[" + FILTER_BY_STATUS + "]", "=")
+          .add("v[" + FILTER_BY_STATUS + "][]", redmineBatch.getStatusSelect().toString());
+    }
+    if (redmineBatch.getPrioritySelect() != 0) {
+      params
+          .add("f[]", FILTER_BY_PRIORITY)
+          .add("op[" + FILTER_BY_PRIORITY + "]", "=")
+          .add("v[" + FILTER_BY_PRIORITY + "][]", redmineBatch.getPrioritySelect().toString());
+    }
+    if (redmineBatch.getStartDate() != null) {
+      params
+          .add("f[]", FILTER_BY_START_DATE)
+          .add("op[" + FILTER_BY_START_DATE + "]", "=")
+          .add("v[" + FILTER_BY_START_DATE + "][]", redmineBatch.getStartDate().toString());
+    }
+    params.add(LIMIT, FETCH_LIMIT.toString());
+    return params;
+  }
 }

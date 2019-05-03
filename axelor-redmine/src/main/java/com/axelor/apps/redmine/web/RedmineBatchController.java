@@ -17,48 +17,47 @@
  */
 package com.axelor.apps.redmine.web;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.message.IMessage;
-import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.apps.redmine.service.batch.RedmineBatchService;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Inject;
-import com.mysql.jdbc.StringUtils;
 
 public class RedmineBatchController {
 
-	@Inject
-	private AppRedmineRepository appRedmineRepo;
+  @Inject private RedmineBatchRepository redmineBatchRepo;
 
-	@Inject
-	private RedmineBatchRepository redmineBatchRepo;
+  @Inject private RedmineBatchService redmineBatchService;
 
-	@Inject
-	private RedmineBatchService redmineBatchService;
+  public void actionImport(ActionRequest request, ActionResponse response) {
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
 
-	@Inject
-	private RedmineService redmineService;
+    // checking redmine credentials using Api access key
+    Batch batch = redmineBatchService.importIssues(redmineBatchRepo.find(redmineBatch.getId()));
+    if (batch != null) {
+      response.setFlash(batch.getComments());
+    }
+    response.setReload(true);
+  }
 
-	public void actionImport(ActionRequest request, ActionResponse response) throws AxelorException {
-		AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+  public void actionImportAll(ActionRequest request, ActionResponse response) {
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
+    Batch batch = redmineBatchService.importAll(redmineBatchRepo.find(redmineBatch.getId()));
+    if (batch != null) {
+      response.setFlash(IMessage.BATCH_IMPORT_1);
+    }
+    response.setReload(true);
+  }
 
-		if(!StringUtils.isNullOrEmpty(appRedmine.getUri()) && !StringUtils.isNullOrEmpty(appRedmine.getApiAccessKey())) {
-			// checking redmine credentials using Api access key
-			redmineService.checkRedmineCredentials(appRedmine.getUri(), appRedmine.getApiAccessKey());
-
-			Batch batch = redmineBatchService.importIssues(redmineBatchRepo.find(request.getContext().asType(RedmineBatch.class).getId()));
-			if (batch != null)
-				response.setFlash(batch.getComments());
-			response.setReload(true);
-		} else {
-			throw new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_1);
-		}
-	}
+  public void actionExportAll(ActionRequest request, ActionResponse response) {
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
+    Batch batch = redmineBatchService.exportAll(redmineBatchRepo.find(redmineBatch.getId()));
+    if (batch != null) {
+      response.setFlash(IMessage.BATCH_EXPORT_1);
+    }
+    response.setReload(true);
+  }
 }

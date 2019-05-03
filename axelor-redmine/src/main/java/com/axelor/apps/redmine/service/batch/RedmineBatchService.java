@@ -30,34 +30,50 @@ import com.axelor.inject.Beans;
 
 public class RedmineBatchService extends AbstractBatchService {
 
-	@Override
-	protected Class<? extends Model> getModelClass() {
-		return RedmineBatch.class;
-	}
+  @Override
+  protected Class<? extends Model> getModelClass() {
+    return RedmineBatch.class;
+  }
 
-	@Override
-	public Batch run(Model batchModel) throws AxelorException {
-		Batch batch;
-		RedmineBatch redmineBatch = (RedmineBatch) batchModel;
+  @Override
+  public Batch run(Model batchModel) throws AxelorException {
+    Batch batch;
+    RedmineBatch redmineBatch = (RedmineBatch) batchModel;
 
-		switch (redmineBatch.getActionSelect()) {
+    switch (redmineBatch.getActionSelect()) {
+      case RedmineBatchRepository.ACTION_IMPORT_ISSUE:
+        batch = importIssues(redmineBatch);
+        break;
+      case RedmineBatchRepository.ACTION_IMPORT:
+        batch = importAll(redmineBatch);
+        break;
+      case RedmineBatchRepository.ACTION_EXPORT:
+        batch = exportAll(redmineBatch);
+        break;
 
-		case RedmineBatchRepository.ACTION_IMPORT:
-			batch = importIssues(redmineBatch);
-			break;
+      default:
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_INCONSISTENCY,
+            I18n.get(IExceptionMessage.BASE_BATCH_1),
+            redmineBatch.getActionSelect(),
+            redmineBatch.getCode());
+    }
 
-		default:
-			throw new AxelorException(TraceBackRepository.CATEGORY_INCONSISTENCY, I18n.get(IExceptionMessage.BASE_BATCH_1),
-					redmineBatch.getActionSelect(), redmineBatch.getCode());
-		}
+    return batch;
+  }
 
-		return batch;
-	}
+  /*
+   * Calling BatchImportRedmine.class to import the issues from Redmine
+   */
+  public Batch importIssues(RedmineBatch redmineBatch) {
+    return Beans.get(BatchImportRedmine.class).run(redmineBatch);
+  }
 
-	/*
-	 * Calling BatchImportRedmine.class to import the issues from Redmine
-	 */
-	public Batch importIssues(RedmineBatch redmineBatch) {
-		return Beans.get(BatchImportRedmine.class).run(redmineBatch);
-	}
+  public Batch importAll(RedmineBatch redmineBatch) {
+    return Beans.get(BatchImportAllRedmine.class).run(redmineBatch);
+  }
+
+  public Batch exportAll(RedmineBatch redmineBatch) {
+    return Beans.get(BatchExportAllRedmine.class).run(redmineBatch);
+  }
 }

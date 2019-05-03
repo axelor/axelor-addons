@@ -19,15 +19,16 @@
   	<!-- FILTERS -->
   	<many-to-many name="projectSet" ref="com.axelor.apps.project.db.Project" title="Project"/>
 	<integer name="statusSelect" selection="redmine.redmine.batch.status.select" title="Status"/>
-	<many-to-one name="ticketType" ref="com.axelor.apps.helpdesk.db.TicketType" title="Ticket Type"/>
 	<date name="startDate" title="Start Date"/>
 	<integer name="prioritySelect" title="Priority" selection="redmine.redmine.batch.priority.select"/>
-	<boolean name="isResetImported" title="Reset Import"/>
+	<boolean name="updateAlreadyImported" title="Update already imported"/>
 	
   	<extra-code><![CDATA[
 	
 	   	// ACTION TYPE
-		public static final int ACTION_IMPORT = 1;
+		public static final int ACTION_IMPORT_ISSUE = 1;
+		public static final int ACTION_IMPORT = 2;
+		public static final int ACTION_EXPORT = 3;
 	]]></extra-code>
   
   </entity>
