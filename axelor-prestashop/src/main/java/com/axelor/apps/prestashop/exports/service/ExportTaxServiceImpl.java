@@ -148,9 +148,9 @@ public class ExportTaxServiceImpl implements ExportTaxService {
           }
           remoteTax.setRate(
               localTax.getActiveTaxLine() != null
-                  ? localTax.getActiveTaxLine().getValue()
+                  ? localTax.getActiveTaxLine().getValue().multiply(new BigDecimal(100))
                   : !CollectionUtils.isEmpty(localTax.getTaxLineList())
-                      ? localTax.getTaxLineList().get(0).getValue()
+                      ? localTax.getTaxLineList().get(0).getValue().multiply(new BigDecimal(100))
                       : BigDecimal.ZERO);
           if (localTax.getActiveTaxLine() != null) {
             remoteTax.setActive(true);
