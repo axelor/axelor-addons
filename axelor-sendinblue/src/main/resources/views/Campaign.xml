@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<form name="campaign-form" id="campaign-sendinblue-form" title="Campaign" model="com.axelor.apps.marketing.db.Campaign" width="large"
+		onNew="action-campaign-attrs-on-new-on-load" onLoad="action-campaign-attrs-on-new-on-load">
+		<menubar>
+			<menu title="Tools" icon="fa-wrench" showTitle="true">
+				<item title="Launch emailing" action="save,action-campaign-validate-send-email,action-campaign-method-send-email" showIf="emailing"/>
+			</menu>
+		</menubar>
+		<panel name="mainPanel" >
+			<field name="stageSelect" widget="NavSelect" colSpan="12" showTitle="false" readonly="true"/>
+			<field name="name" showTitle="false" colSpan="12">
+				<viewer depends="name"><![CDATA[
+					<h3>
+						<span style="margin: 5px 0 !important; display: inline-table; line-height: initial;">{{record.name}}</span>
+					</h3>
+				]]></viewer>
+				<editor>
+					<field name="name" showTitle="true" />
+				</editor>
+			</field>
+			<spacer name="nameSpacer"/>
+			<panel name="informationPanel" title="Informations" colSpan="12">
+				<field name="campaignType" canEdit="false" colSpan="4"/>
+				<field name="eventStartDateT" colSpan="4"/>
+				<field name="eventEndDateT" colSpan="4"/>
+				<spacer name="campaignTypeSpacer"/>
+				<field name="emailing" colSpan="4" widget="boolean-switch" />
+				<field name="manageAnEventPerTarget" colSpan="4" widget="boolean-switch"/>
+				<field name="manageAttendees" colSpan="4" widget="boolean-switch"/>
+			</panel>
+		</panel>
+		<panel-tabs name="mainPanelTab">
+			<panel title="Target List" name="targetListPanel">
+				<field name="isAllowEditingOfTargets" colSpan="3" widget="boolean-switch" onChange="action-campaign-attrs-is-allow-editing-of-targets-on-change"/>
+				<panel-related name="targetModelSetPanel" field="targetModelSet" colSpan="12"/>
+				<button name="generateTargetsBtn" title="Generate Targets" onClick="save,action-campaign-generate-targets,save" colSpan="3"/>
+				<button name="inviteSelectedTargetBtn" title="Invite selected targets" showIf="manageAttendees &amp;&amp; isAllowEditingOfTargets" onClick="save,action-campaign-method-invite-selected-targets" colSpan="4"/>
+				<button name="inviteAllTargetsBtn" title="Invite all targets" showIf="manageAttendees &amp;&amp; isAllowEditingOfTargets" colSpan="4" onClick="save,action-campaign-method-invite-all-targets"/>
+				<panel-related name="partnerSetPanel" field="partnerSet" colSpan="12" showIf="isAllowEditingOfTargets" grid-view="partner-campaign-grid" form-view="partner-form" canEdit="false"/>
+				<panel-related name="leadSetPanel" field="leadSet" colSpan="12" showIf="isAllowEditingOfTargets" grid-view="lead-campaign-grid" form-view="lead-form" canEdit="false"/>
+			</panel>
+			<panel name="emailingTemplatePanel" title="Templates" showIf="emailing" colSpan="12">
+				<field name="partnerTemplate" domain="self.metaModel.name = 'Partner' AND self.mediaTypeSelect IN (4)" showIf="emailing"/>
+				<field name="leadTemplate" domain="self.metaModel.name = 'Lead' AND self.mediaTypeSelect IN (4)" showIf="emailing"/>
+				<field name="partnerReminderTemplate" domain="self.metaModel.name = 'Partner' AND self.mediaTypeSelect IN (4)"/>
+				<field name="leadReminderTemplate" domain="self.metaModel.name = 'Lead' AND self.mediaTypeSelect IN (4)"/>
+				<field name="emailAccount" showIf="emailing"/>
+			</panel>
+			<panel name="emailingReportingPanel" title="Reporting"  showIf="emailing" colSpan="12">
+				<panel-dashlet name="generatedEmailsPanel" action="dashlet.generated.emails" height="350" colSpan="12"/>
+				<panel-dashlet name="sendinBlueCampaignStatPanel" action="dashlet.sendinblue.campaign.stat" height="350" title="Campaign Statistics" colSpan="12" 
+					showIf="id" if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()"/>
+			</panel>
+			<panel name="eventsPanel" title="Events" showIf="manageAnEventPerTarget" colSpan="12">
+				<field name="generateEventPerPartnerOrLead" widget="inline-checkbox" colSpan="12"/>
+				<field name="team" onChange="action-campaign-attrs-team-value-fill" hideIf="generateEventPerPartnerOrLead" />
+				<field name="eventUser" hideIf="generateEventPerPartnerOrLead" onChange="action-campaign-record-set-team" onSelect="action-campaign-attrs-eventuser-domain" />
+				<field name="subject" requiredIf="manageAnEventPerTarget"/>
+				<field name="eventTypeSelect" domain="self.value IN ('0','1','2','3')"  placeholder="Event Type" required="true" />
+				<field name="eventStartDateTime" requiredIf="manageAnEventPerTarget"/>
+				<field name="duration" widget="duration" x-big="true" />
+				<button name="generateEventsBtn" title="Generate Events" colSpan="3" onClick="action-campaign-alert-event-user,save,action-campaign-method-generate-events" readonlyIf="duration == 0"/>
+			</panel>
+			<panel name="targetsToContactPanel" title="Targets to contact" showIf="manageAnEventPerTarget">
+				<button name="openPlannedEventsBtn" title="Open planned events" colSpan="3" onClick="dashlet.target.to.contact.planned"/>
+				<panel-dashlet name="plannedEventsPanel" action="dashlet.target.to.contact.planned" height="350" colSpan="12"/>
+				<panel-dashlet name="realiazedEventsPanel" action="dashlet.target.to.contact.realized.cancel" height="350" colSpan="12"/>
+			</panel>
+			<panel name="resultsPanel" title="Results">
+				<field name="report" widget="html" colSpan="12" />
+				<panel name="invitedPanel" title="Invited" showIf="manageAttendees" colSpan="12">
+					<panel-related name="invitedLeadSetPanel" field="invitedLeadSet" colSpan="12" grid-view="lead-campaign-grid" form-view="lead-form" canNew="false" canEdit="false" canSelect="false"/>
+					<panel-related name="invitedPartnerSetPanel" field="invitedPartnerSet" colSpan="12" grid-view="partner-campaign-grid" form-view="partner-form" canNew="false" canEdit="false" canSelect="false"/>
+					<button name="participateBtn" title="Participate" colSpan="3" onClick="save,action-campaign-method-participate-targets"/>
+					<button name="notParticipatingBtn" title="Not participating" colSpan="3" onClick="save,action-campaign-method-not-participate-targets"/>
+					<button name="sendReminderEmailBtn" title="Send a reminder" colSpan="4" onClick="save,action-campaign-validate-send-reminder-email,action-campaign-method-send-reminder-email,save" showIf="emailing"/>
+				</panel>
+				<panel name="enrolledPanel" title="Enrolled" showIf="manageAttendees" colSpan="12">
+					<panel-related name="leadsPanel" field="leads" colSpan="12" grid-view="lead-campaign-grid" form-view="lead-form" canNew="false" canEdit="false" canSelect="false"/>
+					<panel-related name="partnersPanel" field="partners" colSpan="12" grid-view="partner-campaign-grid" form-view="partner-form" canNew="false" canEdit="false" canSelect="false"/>
+				</panel>
+				<panel name="notParticipatingPanel" title="Not participating" showIf="manageAttendees" colSpan="12">
+					<panel-related name="notParticipatingLeadSetPanel" field="notParticipatingLeadSet" colSpan="12" grid-view="lead-campaign-grid" form-view="lead-form" canNew="false" canEdit="false" canSelect="false"/>
+					<panel-related name="notParticipatingPartnerSetPanel" field="notParticipatingPartnerSet" colSpan="12" grid-view="partner-campaign-grid" form-view="partner-form" canNew="false" canEdit="false" canSelect="false"/>
+				</panel>
+				<panel name="emailingReportPanel" title="Emailing report" colSpan="12">
+					<field name="emailLog" widget="binary-link" showIf="emailing"/>
+				</panel>
+			</panel>
+			<panel-related name="campaignReminderListPanel" field="campaignReminderList" colSpan="12" showTitle="false" form-view="campaign-reminder-form" grid-view="campaign-reminder-grid"/>
+			<panel name="presencePanel" title="Presence" showIf="manageAttendees &amp;&amp; stageSelect &gt;= 2">
+				<panel-related name="presentLeadSetPanel" field="presentLeadSet" colSpan="12" grid-view="lead-campaign-grid" form-view="lead-form"/>
+				<panel-related name="presentPartnerSetPanel" field="presentPartnerSet" colSpan="12" grid-view="partner-campaign-grid" form-view="partner-form"/>
+			</panel>
+		</panel-tabs>
+		<panel name="actionsPanel" sidebar="true">
+			<button name="planBtn" showIf="stageSelect == 0" title="Plan" onClick="save,action-campaign-record-plan,save,action-campaign-attrs-on-new-on-load"/>
+			<button name="startBtn" showIf="stageSelect == 1 || stageSelect == 3" title="Start" onClick="save,action-campaign-record-start,save,action-campaign-attrs-on-new-on-load"/>
+			<button name="suspendBtn" showIf="stageSelect == 2" title="Suspend" onClick="save,action-campaign-record-suspend,save,action-campaign-attrs-on-new-on-load"/>
+			<button name="endedBtn" showIf="stageSelect == 2" title="End" onClick="save,action-campaign-record-ended,save,action-campaign-attrs-on-new-on-load"/>
+			<button name="cancelBtn" showIf="stageSelect != 0" title="Cancel" onClick="save,action-campaign-record-cancel,save,action-campaign-attrs-on-new-on-load" css="btn-danger" icon="fa-times" />
+		</panel>
+	</form>
+
+</object-views>

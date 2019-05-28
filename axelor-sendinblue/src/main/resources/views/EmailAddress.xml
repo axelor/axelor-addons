@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<form name="email-address-form" id="email-address-sendinblue-form"
+		title="Email address" model="com.axelor.apps.message.db.EmailAddress"
+		width="large">
+		<panel-include view="email-address-form" from="axelor-message" />
+		<panel-dashlet action="dashlet.sendinblue.contact.stat"
+			name="sendinBlueContactStatPanel" height="350"
+			title="SendinBlue Campaign Reporting" colSpan="12" showIf="id"
+			if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()" />
+		<panel-dashlet action="dashlet.sendinblue.chart.contact.stat"
+			name="sendinBlueChartContactStatPanel" height="350" title="SendinBlue Reporting"
+			colSpan="12" showIf="id"
+			if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()" />
+	</form>
+
+	<form name="email-address-simple-form" id="email-address-simple-sendinblue-form"
+		title="Email address" model="com.axelor.apps.message.db.EmailAddress">
+		<panel-include view="email-address-simple-form" from="axelor-message" />
+		<panel-dashlet action="dashlet.sendinblue.contact.stat"
+			name="sendinBlueContactStatPanel" height="350"
+			title="SendinBlue Campaign Reporting" colSpan="12" showIf="id"
+			if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()" />
+		<panel-dashlet action="dashlet.sendinblue.chart.contact.stat"
+			name="sendinBlueChartContactStatPanel" height="350" title="SendinBlue Reporting"
+			colSpan="12" showIf="id"
+			if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()" />
+	</form>
+
+</object-views>
