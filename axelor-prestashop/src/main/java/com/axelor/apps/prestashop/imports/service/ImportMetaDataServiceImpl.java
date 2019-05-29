@@ -71,22 +71,23 @@ public class ImportMetaDataServiceImpl implements ImportMetaDataService {
     }
 
     for (PrestashopOrderStatus remoteStatus : remoteStatuses) {
-      if (statusesById.remove(remoteStatus.getId()) == null) {
-        PrestashopOrderStatusCacheEntry entry = new PrestashopOrderStatusCacheEntry();
+      PrestashopOrderStatusCacheEntry entry;
+      if ((entry = statusesById.remove(remoteStatus.getId())) == null) {
+        entry = new PrestashopOrderStatusCacheEntry();
         entry.setPrestaShopId(remoteStatus.getId());
-        entry.setName(
-            remoteStatus
-                .getName()
-                .getTranslation(
-                    prestashopLanguage.getPrestaShopId() == null
-                        ? 1
-                        : prestashopLanguage.getPrestaShopId())); // TODO Handle language correctly
-        entry.setDelivered(remoteStatus.getDelivered());
-        entry.setInvoiced(remoteStatus.getInvoiced());
-        entry.setShipped(remoteStatus.getShipped());
-        entry.setPaid(remoteStatus.getPaid());
-        orderStatusRepository.save(entry);
       }
+      entry.setName(
+          remoteStatus
+              .getName()
+              .getTranslation(
+                  prestashopLanguage.getPrestaShopId() == null
+                      ? 1
+                      : prestashopLanguage.getPrestaShopId())); // TODO Handle language correctly
+      entry.setDelivered(remoteStatus.getDelivered());
+      entry.setInvoiced(remoteStatus.getInvoiced());
+      entry.setShipped(remoteStatus.getShipped());
+      entry.setPaid(remoteStatus.getPaid());
+      orderStatusRepository.save(entry);
     }
   }
 }
