@@ -156,8 +156,8 @@ public class ExportProjectServiceImpl extends ExportService implements ExportPro
       Project project,
       com.taskadapter.redmineapi.bean.Project redmineProject,
       LocalDateTime lastExportDateTime) {
-    redmineProject.setName(project.getCode());
-    redmineProject.setIdentifier(project.getName().toLowerCase().trim().replace(" ", ""));
+    redmineProject.setName(project.getName());
+    redmineProject.setIdentifier(project.getCode().toLowerCase().trim().replace(" ", ""));
     redmineProject.setDescription(getTextileFromHTML(project.getDescription()));
     redmineProject.setInheritMembers(project.getExtendsMembersFromParent());
     assignParentProject(project, redmineProject, lastExportDateTime);
