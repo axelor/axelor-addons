@@ -26,9 +26,8 @@
   	<extra-code><![CDATA[
 	
 	   	// ACTION TYPE
-		public static final int ACTION_IMPORT_ISSUE = 1;
-		public static final int ACTION_IMPORT = 2;
-		public static final int ACTION_EXPORT = 3;
+		public static final int ACTION_IMPORT = 1;
+		public static final int ACTION_EXPORT = 2;
 	]]></extra-code>
   
   </entity>

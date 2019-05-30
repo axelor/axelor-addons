@@ -41,9 +41,6 @@ public class RedmineBatchService extends AbstractBatchService {
     RedmineBatch redmineBatch = (RedmineBatch) batchModel;
 
     switch (redmineBatch.getActionSelect()) {
-      case RedmineBatchRepository.ACTION_IMPORT_ISSUE:
-        batch = importIssues(redmineBatch);
-        break;
       case RedmineBatchRepository.ACTION_IMPORT:
         batch = importAll(redmineBatch);
         break;
@@ -60,13 +57,6 @@ public class RedmineBatchService extends AbstractBatchService {
     }
 
     return batch;
-  }
-
-  /*
-   * Calling BatchImportRedmine.class to import the issues from Redmine
-   */
-  public Batch importIssues(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportRedmine.class).run(redmineBatch);
   }
 
   public Batch importAll(RedmineBatch redmineBatch) {

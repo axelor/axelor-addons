@@ -32,17 +32,6 @@ public class RedmineBatchController {
 
   @Inject private RedmineBatchService redmineBatchService;
 
-  public void actionImport(ActionRequest request, ActionResponse response) {
-    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
-
-    // checking redmine credentials using Api access key
-    Batch batch = redmineBatchService.importIssues(redmineBatchRepo.find(redmineBatch.getId()));
-    if (batch != null) {
-      response.setFlash(batch.getComments());
-    }
-    response.setReload(true);
-  }
-
   public void actionImportAll(ActionRequest request, ActionResponse response) {
     RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
     Batch batch = redmineBatchService.importAll(redmineBatchRepo.find(redmineBatch.getId()));
