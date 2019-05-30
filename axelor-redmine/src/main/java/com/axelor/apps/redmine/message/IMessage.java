@@ -22,8 +22,6 @@ public interface IMessage {
 	/**
 	 * Importing Issues
 	 */
-	static final String BATCH_ISSUE_IMPORT_1 = /*$$(*/ "Issues imported report :" /*)*/;
-	static final String BATCH_ISSUE_IMPORT_2 = /*$$(*/ "Issue(s) imported" /*)*/;
 
 	static final String BATCH_IMPORT_1 = /*$$(*/ "Import completed" /*)*/;
 	static final String BATCH_EXPORT_1 = /*$$(*/ "Export completed" /*)*/;

@@ -17,21 +17,14 @@
 		  <field name="code" x-bind="{{code|unaccent|uppercase}}" onChange="action-base-batch-condition-check-unique-code"/>
 		  <field name="company" canEdit="false" widget="SuggestBox" form-view="company-form" grid-view="company-grid"/>
 		</panel>
-		<panel  showIf="actionSelect == 1 || actionSelect == 2">
+		<panel  showIf="actionSelect == 1">
 			<field name="updateAlreadyImported" />
-		</panel>
-		<panel title="Filters" showIf="actionSelect == 1">
-		    <field name="projectSet" title="Project" widget="TagSelect"/>
-		    <field name="statusSelect" title="Status"/>
-		    <field name="prioritySelect" title="Priority"/>
-		    <field name="startDate" title="Start Date"/>
 		</panel>
 		<panel-tabs>
 		  <panel name="actionPanel" title="Actions">
 		  	<panel colSpan="3">
-		  		<button name="importBatch"  title="Import Issues" onClick="save,action-redmine-batch-group-on-import-issues" colSpan="12" showIf="actionSelect == 1"/>
-		  		<button name="importBtn" title="Import" onClick="save,action-redmine-batch-method-action-import-all" colSpan="12" showIf="actionSelect == 2"/>
-		  		<button name="ExportBtn" title="Export" onClick="save,action-redmine-batch-method-action-export-all" colSpan="12" showIf="actionSelect == 3"/>
+				<button name="importBtn" title="Import" onClick="save,action-redmine-batch-method-action-import-all" colSpan="12" showIf="actionSelect == 1"/>
+				<button name="ExportBtn" title="Export" onClick="save,action-redmine-batch-method-action-export-all" colSpan="12" showIf="actionSelect == 2"/>
 		  	</panel>
 		  </panel>
 		  <panel name="information" title="Information" >
@@ -44,11 +37,7 @@
 	</form>
 
  	<!-- ACTIONS -->
-    <action-group name="action-redmine-batch-group-on-import-issues">
-    	<action name="action-redmine-batch-validate-reset-import" if="updateAlreadyImported"/>
-    	<action name="action-redmine-batch-method-action-import"/>
-    </action-group>
-    
+
     <!-- ACTION RECORD -->
     <action-record name="action-redmine-batch-record-on-new" model="com.axelor.apps.redmine.db.RedmineBatch">
 		<field name="createdOn" expr="eval:__config__.app.getTodayDate()"/>
@@ -58,11 +47,6 @@
 	</action-record>
 
 	<!-- ACTION METHOD -->
-	<action-method name="action-redmine-batch-method-action-import">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="actionImport" />
-	</action-method>
-
 	<action-method name="action-redmine-batch-method-action-import-all">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
 			method="actionImportAll" />
@@ -72,10 +56,5 @@
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
 			method="actionExportAll" />
 	</action-method>
-
-	<!-- ACTION VALIDATE -->
-	<action-validate name="action-redmine-batch-validate-reset-import">
-		<alert message="Do you really want to import all issues?" />
-	</action-validate>
 	
 </object-views>

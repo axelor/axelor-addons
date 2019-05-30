@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.exception.AxelorException;
-import com.axelor.team.db.TeamTask;
 import com.taskadapter.redmineapi.RedmineException;
 
 public interface RedmineService {
@@ -30,9 +29,5 @@ public interface RedmineService {
       throws AxelorException, RedmineException;
 
   public void exportRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
-      throws AxelorException, RedmineException;
-
-  public void importRedmineIssues(
-      Batch batch, Consumer<TeamTask> onSuccess, Consumer<Throwable> onError)
       throws AxelorException, RedmineException;
 }
