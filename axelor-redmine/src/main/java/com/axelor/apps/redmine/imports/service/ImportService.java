@@ -34,6 +34,8 @@ import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.auth.db.AuditableModel;
+import com.axelor.auth.db.User;
+import com.axelor.common.StringUtils;
 import com.axelor.db.JPA;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.dms.db.repo.DMSFileRepository;
@@ -70,19 +72,18 @@ public class ImportService {
   protected void setLocalDate(AuditableModel obj, Date objDate, String methodName) {
     try {
       Method createdOnMethod = AuditableModel.class.getDeclaredMethod(methodName, LocalDate.class);
-      try {
-        createdOnMethod.setAccessible(true);
-        createdOnMethod.invoke(
-            obj, objDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+      invokeMethod(
+          createdOnMethod, obj, objDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+    } catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
+      TraceBackService.trace(e);
+    }
+  }
 
-      } finally {
-        createdOnMethod.setAccessible(false);
-      }
-    } catch (NoSuchMethodException
-        | SecurityException
-        | IllegalAccessException
-        | IllegalArgumentException
-        | InvocationTargetException e) {
+  protected void setCreatedUser(AuditableModel obj, User objUser, String methodName) {
+    try {
+      Method createdByMethod = AuditableModel.class.getDeclaredMethod(methodName, User.class);
+      invokeMethod(createdByMethod, obj, objUser);
+    } catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
       TraceBackService.trace(e);
     }
   }
@@ -91,20 +92,23 @@ public class ImportService {
     try {
       Method createdOnMethod =
           AuditableModel.class.getDeclaredMethod(methodName, LocalDateTime.class);
-      try {
-        createdOnMethod.setAccessible(true);
-        createdOnMethod.invoke(
-            obj, objDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
-
-      } finally {
-        createdOnMethod.setAccessible(false);
-      }
-    } catch (NoSuchMethodException
-        | SecurityException
-        | IllegalAccessException
-        | IllegalArgumentException
-        | InvocationTargetException e) {
+      invokeMethod(
+          createdOnMethod,
+          obj,
+          objDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+    } catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
       TraceBackService.trace(e);
+    }
+  }
+
+  protected void invokeMethod(Method method, AuditableModel obj, Object value) {
+    try {
+      method.setAccessible(true);
+      method.invoke(obj, value);
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      TraceBackService.trace(e);
+    } finally {
+      method.setAccessible(false);
     }
   }
 
@@ -162,14 +166,17 @@ public class ImportService {
   }
 
   protected String getHtmlFromTextile(String textile) {
-    MarkupParser parser = new MarkupParser(new TextileDialect());
-    StringWriter sw = new StringWriter();
-    HtmlDocumentBuilder builder = new HtmlDocumentBuilder(sw);
-    boolean isDocument = false;
-    builder.setEmitAsDocument(isDocument);
-    parser.setBuilder(builder);
-    parser.parse(textile);
-    return sw.toString();
+    if (!StringUtils.isBlank(textile)) {
+      MarkupParser parser = new MarkupParser(new TextileDialect());
+      StringWriter sw = new StringWriter();
+      HtmlDocumentBuilder builder = new HtmlDocumentBuilder(sw);
+      boolean isDocument = false;
+      builder.setEmitAsDocument(isDocument);
+      parser.setBuilder(builder);
+      parser.parse(textile);
+      return sw.toString();
+    }
+    return "";
   }
 
   public ResponseBody getResponseBody(String url) {

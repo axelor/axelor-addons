@@ -18,6 +18,7 @@
 package com.axelor.apps.redmine.imports.service;
 
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -35,7 +36,9 @@ import org.slf4j.LoggerFactory;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.UserBaseRepository;
+import com.axelor.apps.businesssupport.db.ProjectAnnouncement;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
+import com.axelor.apps.businesssupport.db.repo.ProjectAnnouncementRepository;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.Wiki;
@@ -54,6 +57,7 @@ import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.WikiManager;
 import com.taskadapter.redmineapi.bean.Attachment;
 import com.taskadapter.redmineapi.bean.Membership;
+import com.taskadapter.redmineapi.bean.News;
 import com.taskadapter.redmineapi.bean.Tracker;
 import com.taskadapter.redmineapi.bean.Version;
 import com.taskadapter.redmineapi.bean.WikiPage;
@@ -67,6 +71,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
   @Inject DMSFileRepository dmsFileRepo;
   @Inject TrackerRepository trackerRepo;
   @Inject ProjectVersionRepository projectVersionRepo;
+  @Inject ProjectAnnouncementRepository projectAnnouncementRepo;
 
   Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -103,6 +108,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
               importProjectVersion(redmineProject, project, lastImportDateTime);
               importProjectWiki(redmineProject, project, lastImportDateTime);
               importProjectAttachments(redmineProject.getId(), lastImportDateTime, project);
+              importProjectNews(redmineProject, project);
             }
           } catch (PersistenceException e) {
             onError.accept(e);
@@ -178,9 +184,9 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
       Project project,
       com.taskadapter.redmineapi.bean.Project redmineProject,
       Date lastImportDateTime) {
-    project.setCode(redmineProject.getName());
+    project.setCode(redmineProject.getIdentifier());
     project.setDescription(getHtmlFromTextile(redmineProject.getDescription()));
-    project.setName(redmineProject.getIdentifier());
+    project.setName(redmineProject.getName());
     project.setFullName(redmineProject.getName());
     project.setExtendsMembersFromParent(redmineProject.getInheritMembers());
 
@@ -390,5 +396,47 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
     } catch (Exception e) {
       TraceBackService.trace(e, null, batch.getId());
     }
+  }
+
+  private void importProjectNews(
+      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+    if (project != null) {
+      try {
+        String projectKey = redmineProject.getIdentifier();
+        ProjectManager pm = redmineManager.getProjectManager();
+        List<News> redmineNews = pm.getNews(projectKey);
+        if (redmineNews != null && !redmineNews.isEmpty()) {
+          for (News news : redmineNews) {
+            ProjectAnnouncement announcement = getAnnouncement(news, projectKey);
+            announcement.setProject(project);
+            projectAnnouncementRepo.save(announcement);
+          }
+        }
+      } catch (RedmineException e) {
+        TraceBackService.trace(e, "", batch.getId());
+      }
+    }
+  }
+
+  private ProjectAnnouncement getAnnouncement(News news, String projectKey) {
+    ProjectAnnouncement announcement = projectAnnouncementRepo.findByRedmineId(news.getId());
+    if (announcement == null) {
+      announcement = new ProjectAnnouncement();
+      announcement.setRedmineId(news.getId());
+    }
+    announcement.setTitle(news.getTitle());
+    announcement.setDate(
+        news.getCreatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+    announcement.setContent(
+        getHtmlFromTextile(news.getLink()) + "<br />" + getHtmlFromTextile(news.getDescription()));
+    com.taskadapter.redmineapi.bean.User newsUser = news.getUser();
+    if (newsUser != null) {
+      User user = userRepo.findByRedmineId(newsUser.getId());
+      if (user != null) {
+        setCreatedUser(announcement, user, "setCreatedBy");
+      }
+    }
+    setLocalDateTime(announcement, news.getCreatedOn(), "setCreatedOn");
+    return announcement;
   }
 }
