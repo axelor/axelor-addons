@@ -83,7 +83,7 @@ public class ExportTimeEntryServiceImpl extends ExportService implements ExportT
         exportRedmineTimeEntry(projectPlanningTime);
       }
     }
-    String resultStr = String.format("ProjectPlanning : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("ABS ProjectPlanning -> Redmine TimeEntry : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
@@ -133,7 +133,7 @@ public class ExportTimeEntryServiceImpl extends ExportService implements ExportT
     setActivity(projectPlanningTime, redmineTimeEntry);
     setIssue(projectPlanningTime, redmineTimeEntry);
 
-    redmineTimeEntry.setComment(projectPlanningTime.getDescription());
+    redmineTimeEntry.setComment(getTextileFromHTML(projectPlanningTime.getDescription()));
     redmineTimeEntry.setHours(projectPlanningTime.getRealHours().floatValue());
     redmineTimeEntry.setSpentOn(
         Date.from(projectPlanningTime.getDate().atStartOfDay(ZoneId.systemDefault()).toInstant()));

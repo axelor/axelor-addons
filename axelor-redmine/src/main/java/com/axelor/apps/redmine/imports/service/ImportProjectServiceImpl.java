@@ -127,7 +127,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
       fail++;
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Project : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("Redmine Project -> ABS Project : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

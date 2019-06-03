@@ -110,7 +110,7 @@ public class ExportProjectServiceImpl extends ExportService implements ExportPro
     exportProjectWikis(lastExportDateTime);
     exportProjectVersion(lastExportDateTime);
     exportProjectCategories(lastExportDateTime);
-    String resultStr = String.format("Project : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("ABS Project -> Redmine Project : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

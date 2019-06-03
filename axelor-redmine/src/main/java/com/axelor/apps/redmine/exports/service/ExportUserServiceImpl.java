@@ -74,7 +74,7 @@ public class ExportUserServiceImpl extends ExportService implements ExportUserSe
     for (User user : userList) {
       exportRedmineUser(user);
     }
-    String resultStr = String.format("User : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("ABS User -> Redmine User : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

@@ -127,7 +127,7 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Issue : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("Redmine Issue -> ABS TeamTask : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
@@ -381,7 +381,7 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     }
 
     projectPlanningTime.setTask(teamTask);
-    projectPlanningTime.setDescription(redmineTimeEntry.getComment());
+    projectPlanningTime.setDescription(getHtmlFromTextile(redmineTimeEntry.getComment()));
     projectPlanningTime.setRealHours(BigDecimal.valueOf(redmineTimeEntry.getHours()));
     projectPlanningTime.setTypeSelect(2);
 

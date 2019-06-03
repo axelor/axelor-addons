@@ -6,7 +6,8 @@
 	<form name="team-task-form" id="redmine-team-task-form" title="Task" model="com.axelor.team.db.TeamTask" width="large">
 		<panel-include view="team-task-form" from="axelor-project"/>
 		<panel>
-			<field name="tracker" colSpan="12"/>
+			<field name="tracker" title="Tracker"/>
+			<field name="redmineId" title="Redmine reference"/>
 		</panel>
 	</form>
 

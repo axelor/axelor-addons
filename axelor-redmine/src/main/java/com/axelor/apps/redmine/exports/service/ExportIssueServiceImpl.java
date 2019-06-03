@@ -118,7 +118,7 @@ public class ExportIssueServiceImpl extends ExportService implements ExportIssue
         exportRedmineIssue(teamTask);
       }
     }
-    String resultStr = String.format("TeamTask : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("ABS TeamTask -> Redmine Issue : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

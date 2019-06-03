@@ -84,7 +84,7 @@ public class ImportActivityServiceImpl extends ImportService implements ImportAc
       fail++;
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Activity : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("Redmine Activity -> ABS Product (Service) : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
