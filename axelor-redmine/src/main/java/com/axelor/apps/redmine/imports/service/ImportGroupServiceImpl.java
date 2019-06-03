@@ -63,6 +63,10 @@ public class ImportGroupServiceImpl extends ImportService implements ImportGroup
           try {
             if (role != null) {
               roleRepo.save(role);
+              JPA.em().getTransaction().commit();
+              if (!JPA.em().getTransaction().isActive()) {
+                JPA.em().getTransaction().begin();
+              }
               onSuccess.accept(role);
               success++;
             }
@@ -83,20 +87,19 @@ public class ImportGroupServiceImpl extends ImportService implements ImportGroup
       fail++;
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Group : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("Redmine Group -> ABS Role : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
   }
 
   protected Role getRole(com.taskadapter.redmineapi.bean.Group redmineGroup) {
-    Role existRole =
-        roleRepo
-            .all()
-            .filter(
-                "self.name = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
-                redmineGroup.getName())
-            .fetchOne();
+    Role existRole = roleRepo.all()
+        .filter(
+            "self.name = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
+            redmineGroup.getName())
+        .fetchOne();
     if (existRole != null) {
       existRole.setRedmineId(redmineGroup.getId());
       return existRole;

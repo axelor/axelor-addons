@@ -65,7 +65,7 @@ public class ExportGroupServiceImpl extends ExportService implements ExportGroup
     for (Role role : roles) {
       exportRedmineGroup(role);
     }
-    String resultStr = String.format("Role : Success: %d Fail: %d", success, fail);
+    String resultStr = String.format("ABS Role -> Redmine Group : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

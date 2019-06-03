@@ -46,8 +46,10 @@ import com.taskadapter.redmineapi.bean.Group;
 
 public class ImportUserServiceImpl extends ImportService implements ImportUserService {
 
-  @Inject UserBaseRepository userRepo;
-  @Inject RoleRepository roleRepo;
+  @Inject
+  UserBaseRepository userRepo;
+  @Inject
+  RoleRepository roleRepo;
 
   Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -93,10 +95,11 @@ public class ImportUserServiceImpl extends ImportService implements ImportUserSe
           }
         }
       }
-    } catch (RedmineException e) { // | AxelorException e) {
+    } catch (RedmineException e) {
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("User : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("Redmine User -> ABS User : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
@@ -104,13 +107,11 @@ public class ImportUserServiceImpl extends ImportService implements ImportUserSe
 
   protected User getUser(User user, com.taskadapter.redmineapi.bean.User redmineUser) {
     if (user == null) {
-      User existUser =
-          userRepo
-              .all()
-              .filter(
-                  "self.code = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
-                  redmineUser.getLogin())
-              .fetchOne();
+      User existUser = userRepo.all()
+          .filter(
+              "self.code = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
+              redmineUser.getLogin())
+          .fetchOne();
       if (existUser != null) {
         existUser.setRedmineId(redmineUser.getId());
         return existUser;
