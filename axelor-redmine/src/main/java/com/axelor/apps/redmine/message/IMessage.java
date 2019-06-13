@@ -19,12 +19,14 @@ package com.axelor.apps.redmine.message;
 
 public interface IMessage {
 
-	/**
-	 * Importing Issues
-	 */
-	static final String BATCH_ISSUE_IMPORT_1 = /*$$(*/ "Issues imported report :" /*)*/;
-	static final String BATCH_ISSUE_IMPORT_2 = /*$$(*/ "Issue(s) imported" /*)*/;
-	static final String REDMINE_AUTHENTICATION_1 = /*$$(*/ "URI and API Access Key should not be empty" /*)*/;
-	static final String REDMINE_AUTHENTICATION_2 = /*$$(*/ "Please check your authentication details" /*)*/;
-	static final String REDMINE_CONFIGURATION = /*$$(*/ "Redmine is not properly configured. Please check the configuration on README file." /*)*/;
+  /** Importing Issues */
+  static final String BATCH_ISSUE_IMPORT_1 = /*$$(*/ "Issues imported report :" /*)*/;
+
+  static final String BATCH_ISSUE_IMPORT_2 = /*$$(*/ "Issue(s) imported" /*)*/;
+  static final String REDMINE_AUTHENTICATION_1 = /*$$(*/
+      "URI and API Access Key should not be empty" /*)*/;
+  static final String REDMINE_AUTHENTICATION_2 = /*$$(*/
+      "Please check your authentication details" /*)*/;
+  static final String REDMINE_CONFIGURATION = /*$$(*/
+      "Redmine is not properly configured. Please check the configuration on README file." /*)*/;
 }

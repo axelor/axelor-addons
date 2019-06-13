@@ -34,31 +34,30 @@ import com.mysql.jdbc.StringUtils;
 
 public class RedmineBatchController {
 
-	@Inject
-	private AppRedmineRepository appRedmineRepo;
+  @Inject private AppRedmineRepository appRedmineRepo;
 
-	@Inject
-	private RedmineBatchRepository redmineBatchRepo;
+  @Inject private RedmineBatchRepository redmineBatchRepo;
 
-	@Inject
-	private RedmineBatchService redmineBatchService;
+  @Inject private RedmineBatchService redmineBatchService;
 
-	@Inject
-	private RedmineService redmineService;
+  @Inject private RedmineService redmineService;
 
-	public void actionImport(ActionRequest request, ActionResponse response) throws AxelorException {
-		AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+  public void actionImport(ActionRequest request, ActionResponse response) throws AxelorException {
+    AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
-		if(!StringUtils.isNullOrEmpty(appRedmine.getUri()) && !StringUtils.isNullOrEmpty(appRedmine.getApiAccessKey())) {
-			// checking redmine credentials using Api access key
-			redmineService.checkRedmineCredentials(appRedmine.getUri(), appRedmine.getApiAccessKey());
+    if (!StringUtils.isNullOrEmpty(appRedmine.getUri())
+        && !StringUtils.isNullOrEmpty(appRedmine.getApiAccessKey())) {
+      // checking redmine credentials using Api access key
+      redmineService.checkRedmineCredentials(appRedmine.getUri(), appRedmine.getApiAccessKey());
 
-			Batch batch = redmineBatchService.importIssues(redmineBatchRepo.find(request.getContext().asType(RedmineBatch.class).getId()));
-			if (batch != null)
-				response.setFlash(batch.getComments());
-			response.setReload(true);
-		} else {
-			throw new AxelorException(TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_1);
-		}
-	}
+      Batch batch =
+          redmineBatchService.importIssues(
+              redmineBatchRepo.find(request.getContext().asType(RedmineBatch.class).getId()));
+      if (batch != null) response.setFlash(batch.getComments());
+      response.setReload(true);
+    } else {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IMessage.REDMINE_AUTHENTICATION_1);
+    }
+  }
 }
