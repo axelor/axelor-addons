@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
-import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -108,6 +107,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
               importProjectVersion(redmineProject, project, lastImportDateTime);
               importProjectWiki(redmineProject, project, lastImportDateTime);
               importProjectAttachments(redmineProject.getId(), lastImportDateTime, project);
+              project.setDescription(getHtmlFromTextile(redmineProject.getDescription(), project));
               importProjectNews(redmineProject, project);
             }
           } catch (PersistenceException e) {
@@ -127,7 +127,8 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
       fail++;
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Redmine Project -> ABS Project : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("Redmine Project -> ABS Project : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
@@ -185,7 +186,6 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
       com.taskadapter.redmineapi.bean.Project redmineProject,
       Date lastImportDateTime) {
     project.setCode(redmineProject.getIdentifier());
-    project.setDescription(getHtmlFromTextile(redmineProject.getDescription()));
     project.setName(redmineProject.getName());
     project.setFullName(redmineProject.getName());
     project.setExtendsMembersFromParent(redmineProject.getInheritMembers());
@@ -270,7 +270,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
   }
 
   @Transactional
-  private void importProjectVersion(
+  public void importProjectVersion(
       com.taskadapter.redmineapi.bean.Project redmineProject,
       Project project,
       Date lastImportDateTime) {
@@ -288,7 +288,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
           projectVersion = new ProjectVersion();
         }
         projectVersion.setTitle(redmineVersion.getName());
-        projectVersion.setContent(getHtmlFromTextile(redmineVersion.getDescription()));
+        projectVersion.setContent(getHtmlFromTextile(redmineVersion.getDescription(), null));
         projectVersion.setProject(project);
         projectVersion.setRedmineId(redmineVersion.getId());
         projectVersionRepo.save(projectVersion);
@@ -328,6 +328,7 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
                   if (redmineWikiAttachments != null && !redmineWikiAttachments.isEmpty()) {
                     importAttachments(wiki, redmineWikiAttachments, lastImportDateTime);
                   }
+                  wiki.setContent(getHtmlFromTextile(redmineWikiPageDetail.getText(), wiki));
                 }
               }
             } catch (RedmineException e) {
@@ -363,7 +364,6 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
 
       wiki.setRedmineTitle(wikiTitle);
       wiki.setTitle(wikiTitle);
-      wiki.setContent(getHtmlFromTextile(redmineWikiPageDetail.getText()));
     }
     return wiki;
   }
@@ -373,26 +373,23 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
     List<Attachment> projectAttachments = new ArrayList<>();
     try {
       String jsonData = getResponseBody("/projects/" + redmineProjectId + "/files.json").string();
-      JSONObject Jobject = new JSONObject(jsonData);
-      JSONArray Jarray = Jobject.getJSONArray("files");
-      for (int i = 0; i < Jarray.length(); i++) {
-        JSONObject fileObj = (JSONObject) Jarray.get(i);
-
-        String created_on = fileObj.getString("created_on");
-        Date createdOn = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(created_on);
-        if (lastImportDateTime != null
-            && createdOn != null
-            && createdOn.before(lastImportDateTime)) {
-          continue;
-        }
-
-        Integer id = fileObj.getInt("id");
-        Attachment projectFile = redmineManager.getAttachmentManager().getAttachmentById(id);
-        if (projectFile != null) {
-          projectAttachments.add(projectFile);
-        }
+      JSONObject Jobject = null;
+      try {
+        Jobject = new JSONObject(jsonData);
+      } catch (Exception e) {
       }
-      importAttachments(project, projectAttachments, lastImportDateTime);
+      if (Jobject != null) {
+        JSONArray Jarray = Jobject.getJSONArray("files");
+        for (int i = 0; i < Jarray.length(); i++) {
+          JSONObject fileObj = (JSONObject) Jarray.get(i);
+          Integer id = fileObj.getInt("id");
+          Attachment projectFile = redmineManager.getAttachmentManager().getAttachmentById(id);
+          if (projectFile != null) {
+            projectAttachments.add(projectFile);
+          }
+        }
+        importAttachments(project, projectAttachments, lastImportDateTime);
+      }
     } catch (Exception e) {
       TraceBackService.trace(e, null, batch.getId());
     }
@@ -428,7 +425,9 @@ public class ImportProjectServiceImpl extends ImportService implements ImportPro
     announcement.setDate(
         news.getCreatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
     announcement.setContent(
-        getHtmlFromTextile(news.getLink()) + "<br />" + getHtmlFromTextile(news.getDescription()));
+        getHtmlFromTextile(news.getLink(), null)
+            + "<br />"
+            + getHtmlFromTextile(news.getDescription(), null));
     com.taskadapter.redmineapi.bean.User newsUser = news.getUser();
     if (newsUser != null) {
       User user = userRepo.findByRedmineId(newsUser.getId());

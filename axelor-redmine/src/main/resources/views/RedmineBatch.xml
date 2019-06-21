@@ -18,7 +18,7 @@
 		  <field name="company" canEdit="false" widget="SuggestBox" form-view="company-form" grid-view="company-grid"/>
 		</panel>
 		<panel  showIf="actionSelect == 1">
-			<field name="updateAlreadyImported" />
+			<field name="updateAlreadyImported" title="Reimport all"/>
 		</panel>
 		<panel-tabs>
 		  <panel name="actionPanel" title="Actions">

@@ -3,26 +3,16 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
 
-
-	<!-- Nomenclature : * name : "interfaceName" + "fieldName" + ".select" -->
-	
 	<selection name="redmine.batch.action.select">
 		<option value="1">Import</option>
 		<option value="2">Export</option>
 	</selection>
 	
-	<selection name="redmine.redmine.batch.status.select">
-		<option value="1">New</option>
-		<option value="2">In progress</option>
-		<option value="3">Resolved</option>
-		<option value="4">Closed</option>
-	</selection>
-	
-	<selection name="redmine.redmine.batch.priority.select">
-		<option value="1">Low</option>
-		<option value="2">Normal</option>
-		<option value="3">High</option>
-		<option value="4">Urgent</option>
+	<selection name="team.task.status" id="redmine.team.task.status">
+		<option value="resolved">Resolved</option>
+		<option value="feedback">Feedback</option>
+		<option value="tested">Tested</option>
+		<option value="deployment">Deployment</option>
 	</selection>
 	
 </object-views>
