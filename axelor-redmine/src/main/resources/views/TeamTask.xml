@@ -3,11 +3,13 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
 
-	<form name="team-task-form" id="redmine-team-task-form" title="Task" model="com.axelor.team.db.TeamTask" width="large">
-		<panel-include view="team-task-form" from="axelor-project"/>
+	<form name="team-task-form" id="redmine-team-task-form" title="Task"
+		model="com.axelor.team.db.TeamTask" width="large"
+		onNew="action-team-task-group-onnew" onLoad="action-team-task-group-timer-process">
+		<panel-include view="team-task-form" from="axelor-project" />
 		<panel>
-			<field name="tracker" title="Tracker"/>
-			<field name="redmineId" title="Redmine reference"/>
+			<field name="tracker" title="Tracker" />
+			<field name="redmineId" title="Redmine reference" readonly="true" widget="string"/>
 		</panel>
 	</form>
 

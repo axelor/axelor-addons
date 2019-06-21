@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -24,8 +25,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
-
-import javax.persistence.PersistenceException;
 
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.slf4j.Logger;
@@ -45,6 +44,7 @@ import com.axelor.apps.project.db.repo.ProjectPlanningTimeRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.TrackerRepository;
 import com.axelor.apps.redmine.service.RedmineServiceImpl;
+import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.StringUtils;
@@ -89,7 +89,7 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
   @Inject TrackerRepository trackerRepo;
   @Inject ProjectVersionRepository projectVersionRepo;
 
-  private static final Integer FETCH_LIMIT = 5;
+  private static final Integer FETCH_LIMIT = 1000;
   private static Integer TOTAL_FETCH_COUNT = 0;
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -127,7 +127,8 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Redmine Issue -> ABS TeamTask : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("Redmine Issue -> ABS TeamTask : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
@@ -160,7 +161,6 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     return teamTask;
   }
 
-  @Transactional
   private void importRedmineIssue(
       Issue redmineIssue,
       Date lastImportDateTime,
@@ -169,16 +169,7 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     TeamTask teamTask = getTeamTask(redmineIssue, lastImportDateTime, isReset);
     if (teamTask != null) {
       try {
-        teamTaskRepo.save(teamTask);
-        manageTeamTask(teamTask, redmineIssue, lastImportDateTime);
-
-        onSuccess.accept(teamTask);
-        success++;
-      } catch (PersistenceException e) {
-        onError.accept(e);
-        fail++;
-        JPA.em().getTransaction().rollback();
-        JPA.em().getTransaction().begin();
+        saveObject(teamTask, redmineIssue, lastImportDateTime, onSuccess, onError);
       } catch (Exception e) {
         onError.accept(e);
         fail++;
@@ -188,7 +179,29 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
   }
 
   @Transactional
-  private void manageTeamTask(TeamTask teamTask, Issue redmineIssue, Date lastImportDateTime) {
+  public void saveObject(
+      TeamTask teamTask,
+      Issue redmineIssue,
+      Date lastImportDateTime,
+      Consumer<Object> onSuccess,
+      Consumer<Throwable> onError) {
+    boolean isSaved = false;
+    try {
+      teamTaskRepo.save(teamTask);
+      isSaved = true;
+      onSuccess.accept(teamTask);
+      success++;
+    } catch (Exception e) {
+      JPA.em().getTransaction().rollback();
+      JPA.em().getTransaction().begin();
+    }
+    if (isSaved) {
+      manageTeamTask(teamTask, redmineIssue, lastImportDateTime);
+    }
+  }
+
+  @Transactional
+  public void manageTeamTask(TeamTask teamTask, Issue redmineIssue, Date lastImportDateTime) {
     try {
       Collection<Attachment> attachments =
           redmineManager
@@ -199,10 +212,17 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     } catch (RedmineException e) {
       TraceBackService.trace(e, "", batch.getId());
     }
+    teamTask.setDescription(getHtmlFromTextile(redmineIssue.getDescription(), teamTask));
+    User createdBy = userRepo.findByRedmineId(redmineIssue.getAuthorId());
+    if (createdBy == null) {
+      createdBy = userRepo.findByName(redmineIssue.getAuthorName());
+    }
+    setCreatedBy(teamTask, createdBy);
     importIssueWatchers(teamTask, redmineIssue);
     importIssueJournals(teamTask, redmineIssue, lastImportDateTime);
     JPA.em().getTransaction().commit();
     JPA.em().getTransaction().begin();
+
     MailMessage mailMessage =
         mailMessageRepo
             .all()
@@ -212,7 +232,25 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
             .fetchOne();
     if (mailMessage != null) {
       setLocalDateTime(mailMessage, redmineIssue.getCreatedOn(), "setCreatedOn");
+      setCreatedBy(mailMessage, createdBy);
       mailMessageRepo.save(mailMessage);
+    }
+
+    mailMessageRepo
+        .all()
+        .filter(
+            "self.relatedId = ?1 AND self.relatedModel = ?2 AND self.body LIKE '%Task updated%' AND self.id = (SELECT MAX(id) FROM MailMessage mailMessage WHERE mailMessage.relatedId = ?1 AND mailMessage.relatedModel = ?2 AND self.body LIKE '%Task updated%')",
+            teamTask.getId(), teamTask.getClass().getName())
+        .remove();
+  }
+
+  private void setCreatedBy(AuditableModel obj, User redmineUser) {
+    try {
+      Method setCreatedByMethod =
+          AuditableModel.class.getDeclaredMethod("setCreatedBy", User.class);
+      invokeMethod(setCreatedByMethod, obj, redmineUser);
+    } catch (NoSuchMethodException | SecurityException e) {
+      TraceBackService.trace(e);
     }
   }
 
@@ -220,10 +258,9 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     Project project = projectRepo.findByRedmineId(redmineIssue.getProjectId());
     teamTask.setProject(project);
     teamTask.setTypeSelect(TeamTaskRepository.TYPE_TASK);
-    teamTask.setDescription(getHtmlFromTextile(redmineIssue.getDescription()));
     teamTask.setName(redmineIssue.getSubject());
     teamTask.setProgressSelect(redmineIssue.getDoneRatio());
-    teamTask.setStatus(redmineIssue.getStatusName().toLowerCase());
+    teamTask.setStatus(redmineIssue.getStatusName().trim().toLowerCase().replace(" ", "-"));
     teamTask.setPriority(redmineIssue.getPriorityText().toLowerCase());
     teamTask.setFullName(redmineIssue.getSubject());
 
@@ -381,7 +418,7 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     }
 
     projectPlanningTime.setTask(teamTask);
-    projectPlanningTime.setDescription(getHtmlFromTextile(redmineTimeEntry.getComment()));
+    projectPlanningTime.setDescription(redmineTimeEntry.getComment());
     projectPlanningTime.setRealHours(BigDecimal.valueOf(redmineTimeEntry.getHours()));
     projectPlanningTime.setTypeSelect(2);
 
@@ -461,7 +498,8 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     }
   }
 
-  private void importIssueJournals(TeamTask teamTask, Issue redmineIssue, Date lastImportDateTime) {
+  @Transactional
+  public void importIssueJournals(TeamTask teamTask, Issue redmineIssue, Date lastImportDateTime) {
     try {
       Issue issueWithJournal =
           redmineManager.getIssueManager().getIssueById(redmineIssue.getId(), Include.journals);
@@ -487,19 +525,21 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     String body = "";
     MailMessage mailMessage =
         mailMessageRepo.all().filter("self.redmineId = ?", redmineJournal.getId()).fetchOne();
-    if (mailMessage != null) {
+    if (mailMessage != null && mailMessage.getRelatedId().compareTo(teamTask.getId()) == 0) {
       body = mailMessage.getBody();
-      String note = redmineJournal.getNotes();
+      String note = getHtmlFromTextile(redmineJournal.getNotes(), teamTask).replaceAll("\"", "'");
       if (!StringUtils.isBlank(body)) {
         if (!StringUtils.isBlank(note)) {
-          note = getHtmlFromTextile(note);
-          body = body.replaceAll(",\"content\":\".*\",", ",\"content\":\"" + note + "\",");
+          try {
+            body = body.replaceAll(",\"content\":\".*\",", ",\"content\":\"" + note + "\",");
+          } catch (Exception e) {
+          }
         } else {
           body = body.replaceAll(",\"content\":\".*\",", ",\"content\":\"\",");
         }
       }
     } else {
-      body = getJournalDetails(redmineJournal);
+      body = getJournalDetails(redmineJournal, teamTask);
       if (!StringUtils.isBlank(body)) {
         mailMessage = new MailMessage();
         mailMessage.setRelatedId(teamTask.getId());
@@ -508,6 +548,8 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
         mailMessage.setSubject("Task Updated");
         mailMessage.setRedmineId(redmineJournal.getId());
         setLocalDateTime(mailMessage, redmineJournal.getCreatedOn(), "setCreatedOn");
+        User createdBy = userRepo.findByRedmineId(redmineJournal.getUser().getId());
+        setCreatedBy(mailMessage, createdBy);
         if (redmineJournal.getUser() != null) {
           User user = userRepo.findByRedmineId(redmineJournal.getUser().getId());
           mailMessage.setAuthor(user);
@@ -520,13 +562,13 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     return mailMessage;
   }
 
-  private String getJournalDetails(Journal redmineJournal) {
+  private String getJournalDetails(Journal redmineJournal, TeamTask teamTask) {
     StringBuilder strBuilder = new StringBuilder();
     StringBuilder trackStrBuilder = new StringBuilder();
     strBuilder.append("{\"title\":\"Task Updated\",\"tracks\":[");
     List<JournalDetail> journalDetails = redmineJournal.getDetails();
     if (journalDetails != null && !journalDetails.isEmpty()) {
-      getTrack(journalDetails, trackStrBuilder);
+      getTrack(journalDetails, trackStrBuilder, teamTask);
       if (trackStrBuilder.length() > 0) {
         trackStrBuilder.deleteCharAt(trackStrBuilder.length() - 1);
         strBuilder.append(trackStrBuilder);
@@ -535,7 +577,7 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     strBuilder.append("],\"content\":\"");
     String note = redmineJournal.getNotes();
     if (!StringUtils.isBlank(note)) {
-      strBuilder.append(getHtmlFromTextile(note));
+      strBuilder.append(getHtmlFromTextile(note, teamTask).replaceAll("\"", "'"));
     }
     strBuilder.append("\",\"tags\":[]}");
     if (StringUtils.isBlank(trackStrBuilder.toString())
@@ -545,7 +587,8 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
     return strBuilder.toString();
   }
 
-  private void getTrack(List<JournalDetail> journalDetails, StringBuilder trackStrBuilder) {
+  private void getTrack(
+      List<JournalDetail> journalDetails, StringBuilder trackStrBuilder, TeamTask teamTask) {
     for (JournalDetail journalDetail : journalDetails) {
       if (journalDetail.getProperty().equals("attr")) {
         String[] fieldNames = getFieldName(journalDetail.getName());
@@ -556,11 +599,15 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
                 + fieldNames[1]
                 + "\",\"oldValue\":\"");
         if (!StringUtils.isBlank(journalDetail.getOldValue())) {
-          trackStrBuilder.append(journalDetail.getOldValue());
+          String oldValue =
+              getJournalHTML(journalDetail.getOldValue(), teamTask).replaceAll("\"", "'");
+          trackStrBuilder.append(oldValue);
         }
         trackStrBuilder.append("\",\"value\":\"");
         if (!StringUtils.isBlank(journalDetail.getNewValue())) {
-          trackStrBuilder.append(journalDetail.getNewValue());
+          String newValue =
+              getJournalHTML(journalDetail.getNewValue(), teamTask).replaceAll("\"", "'");
+          trackStrBuilder.append(newValue);
         }
         trackStrBuilder.append("\"},");
       }
@@ -600,5 +647,15 @@ public class ImportIssueServiceImpl extends ImportService implements ImportIssue
       default:
         return new String[] {name, name};
     }
+  }
+
+  private String getJournalHTML(String content, AuditableModel obj) {
+    content = getHtmlFromTextile(content, obj);
+    int startindex = content.indexOf("<p>") + ("<p>").length();
+    int endindex = content.lastIndexOf("</p>");
+    if (startindex > -1 && endindex > -1 && startindex < endindex && endindex < content.length()) {
+      content = content.substring(startindex, endindex);
+    }
+    return content;
   }
 }

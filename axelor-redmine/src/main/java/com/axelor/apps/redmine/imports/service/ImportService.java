@@ -29,6 +29,10 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.hibernate.Hibernate;
 
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
@@ -41,6 +45,7 @@ import com.axelor.dms.db.DMSFile;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
+import com.axelor.meta.db.MetaFile;
 import com.google.common.io.ByteSource;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -61,6 +66,12 @@ public class ImportService {
   @Inject AppRedmineRepository appRedmineRepo;
 
   @Inject private MetaFiles metaFiles;
+
+  protected static final Pattern PATTERN = Pattern.compile("src=\"(.*?)\"");
+  protected static final Pattern TAG_PATTERN = Pattern.compile("(<)([^>]*)(>)");
+
+  protected static final String IMG_URL =
+      "ws/rest/com.axelor.meta.db.MetaFile/%s/content/download?v=%s&amp;image=true";
 
   public static String result = "";
   protected static int success = 0, fail = 0;
@@ -113,15 +124,10 @@ public class ImportService {
   }
 
   @Transactional
-  protected void importAttachments(
+  public void importAttachments(
       AuditableModel obj, Collection<Attachment> redmineAttachments, Date lastImportDateTime) {
-
     if (redmineAttachments != null && !redmineAttachments.isEmpty()) {
       for (Attachment redmineAttachment : redmineAttachments) {
-        if (lastImportDateTime != null
-            && redmineAttachment.getCreatedOn().before(lastImportDateTime)) {
-          continue;
-        }
         DMSFile attachmentFile =
             dmsFileRepo.all().filter("self.redmineId = ?", redmineAttachment.getId()).fetchOne();
         if (attachmentFile == null) {
@@ -138,7 +144,13 @@ public class ImportService {
     try {
       InputStream is;
       try {
-        is = new URL(redmineAttachment.getContentURL()).openStream();
+        if (redmineAttachment.getContentType().contains("image/")) {
+          byte[] imageArr =
+              redmineManager.getAttachmentManager().downloadAttachmentContent(redmineAttachment);
+          is = ByteSource.wrap(imageArr).openStream();
+        } else {
+          is = new URL(redmineAttachment.getContentURL()).openStream();
+        }
       } catch (Exception e) {
         byte[] imageArr =
             redmineManager.getAttachmentManager().downloadAttachmentContent(redmineAttachment);
@@ -152,7 +164,8 @@ public class ImportService {
   }
 
   @Transactional
-  private void attachExistingFile(DMSFile attachmentFile, AuditableModel obj) {
+  public void attachExistingFile(DMSFile attachmentFile, AuditableModel obj) {
+    obj = (AuditableModel) Hibernate.unproxy(obj);
     AuditableModel attachObj = JPA.find(obj.getClass(), attachmentFile.getRelatedId());
     if (attachObj == null) {
       List<DMSFile> attachmentFiles =
@@ -165,8 +178,17 @@ public class ImportService {
     }
   }
 
-  protected String getHtmlFromTextile(String textile) {
+  protected String getHtmlFromTextile(String textile, AuditableModel obj) {
     if (!StringUtils.isBlank(textile)) {
+      Matcher matcher = TAG_PATTERN.matcher(textile);
+      while (matcher.find()) {
+        if (!matcher.group(2).startsWith("pre") && !matcher.group(2).startsWith("/pre")) {
+          String input = "<" + matcher.group(2) + ">";
+          String output = "&lt;" + matcher.group(2) + "&gt;";
+          textile = textile.replace(input, output);
+        }
+      }
+
       MarkupParser parser = new MarkupParser(new TextileDialect());
       StringWriter sw = new StringWriter();
       HtmlDocumentBuilder builder = new HtmlDocumentBuilder(sw);
@@ -174,9 +196,47 @@ public class ImportService {
       builder.setEmitAsDocument(isDocument);
       parser.setBuilder(builder);
       parser.parse(textile);
-      return sw.toString();
+      String content = sw.toString().replaceAll("&amp;", "&");
+      content =
+          replaceImagePath(content, obj).replaceAll("(\r\n|\n)", "<br />").replaceAll("\\s", " ");
+      return content;
     }
     return "";
+  }
+
+  protected String replaceImagePath(String content, AuditableModel obj) {
+    if (!StringUtils.isBlank(content) && obj != null && obj.getId() != null) {
+      Matcher matcher = PATTERN.matcher(content);
+      while (matcher.find()) {
+        if (matcher.groupCount() > 0) {
+          String path = "";
+          String fileName = matcher.group(1);
+
+          int index = matcher.group(1).lastIndexOf("/");
+          if (index > -1) {
+            path = matcher.group(1).substring(0, index);
+            fileName = matcher.group(1).substring(index + 1);
+          }
+          DMSFile attachmentFile =
+              dmsFileRepo
+                  .all()
+                  .filter(
+                      "self.fileName = ? AND self.relatedId = ? AND self.relatedModel = ?",
+                      fileName,
+                      obj.getId(),
+                      obj.getClass().getName())
+                  .fetchOne();
+          if (attachmentFile != null) {
+            MetaFile metaFile = attachmentFile.getMetaFile();
+            String newPath = String.format(IMG_URL, metaFile.getId(), metaFile.getVersion());
+            if (!StringUtils.isBlank(newPath)) {
+              content = content.replace(path + fileName, newPath);
+            }
+          }
+        }
+      }
+    }
+    return content;
   }
 
   public ResponseBody getResponseBody(String url) {

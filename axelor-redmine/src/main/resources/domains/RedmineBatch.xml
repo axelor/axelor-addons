@@ -6,30 +6,24 @@
   <module name="redmine" package="com.axelor.apps.redmine.db"/>
 
   <entity name="RedmineBatch" lang="java">
-  	
+
   	<!-- HEADER -->
   	<string name="code" title="Code" namecolumn="true" unique="true"/>
     <integer name="actionSelect" title="Action" required="true" selection="redmine.batch.action.select"/>
     <many-to-one name="company" ref="com.axelor.apps.base.db.Company" title="Company" />
-    
+
     <!-- OTHER INFORMATION -->
     <string name="description" title="Description" large="true" />
     <one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch" mappedBy="redmineBatch" title="Batchs" />
-  
-  	<!-- FILTERS -->
-  	<many-to-many name="projectSet" ref="com.axelor.apps.project.db.Project" title="Project"/>
-	<integer name="statusSelect" selection="redmine.redmine.batch.status.select" title="Status"/>
-	<date name="startDate" title="Start Date"/>
-	<integer name="prioritySelect" title="Priority" selection="redmine.redmine.batch.priority.select"/>
-	<boolean name="updateAlreadyImported" title="Update already imported"/>
-	
+
+	<boolean name="updateAlreadyImported" title="Reimport all"/>
+
   	<extra-code><![CDATA[
-	
 	   	// ACTION TYPE
 		public static final int ACTION_IMPORT = 1;
 		public static final int ACTION_EXPORT = 2;
 	]]></extra-code>
-  
+
   </entity>
 
 </domain-models>
