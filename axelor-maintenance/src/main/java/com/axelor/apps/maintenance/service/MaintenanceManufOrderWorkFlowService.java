@@ -53,7 +53,7 @@ public class MaintenanceManufOrderWorkFlowService extends ManufOrderWorkflowServ
   @Transactional
   @Override
   public ManufOrder plan(ManufOrder manufOrder) throws AxelorException {
-    if (manufOrder.getType() != 2) {
+    if (manufOrder.getType() != ManufOrderRepository.TYPE_MAINTENANCE) {
       return super.plan(manufOrder);
     }
 
