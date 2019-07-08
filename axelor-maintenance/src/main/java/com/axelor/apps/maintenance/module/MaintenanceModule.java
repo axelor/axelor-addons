@@ -27,8 +27,8 @@ import com.axelor.apps.maintenance.service.MaintenanceManufOrderWorkFlowService;
 import com.axelor.apps.maintenance.service.MaintenanceRequestService;
 import com.axelor.apps.maintenance.service.MaintenanceRequestServiceImpl;
 import com.axelor.apps.maintenance.service.ManufOrderPlanMaintenanceServiceImpl;
+import com.axelor.apps.optaplanner.service.ManufOrderPlanServiceImpl;
 import com.axelor.apps.production.service.BillOfMaterialServiceImpl;
-import com.axelor.apps.production.service.ManufOrderPlanServiceImpl;
 import com.axelor.apps.production.service.manuforder.ManufOrderWorkflowService;
 
 public class MaintenanceModule extends AxelorModule {
