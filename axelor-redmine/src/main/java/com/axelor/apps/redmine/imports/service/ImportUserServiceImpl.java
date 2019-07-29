@@ -17,18 +17,6 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-
-import javax.persistence.PersistenceException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.UserBaseRepository;
 import com.axelor.auth.db.Role;
@@ -43,13 +31,20 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.UserManager;
 import com.taskadapter.redmineapi.bean.Group;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
+import javax.persistence.PersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImportUserServiceImpl extends ImportService implements ImportUserService {
 
-  @Inject
-  UserBaseRepository userRepo;
-  @Inject
-  RoleRepository roleRepo;
+  @Inject UserBaseRepository userRepo;
+  @Inject RoleRepository roleRepo;
 
   Logger LOG = LoggerFactory.getLogger(getClass());
 
@@ -107,11 +102,13 @@ public class ImportUserServiceImpl extends ImportService implements ImportUserSe
 
   protected User getUser(User user, com.taskadapter.redmineapi.bean.User redmineUser) {
     if (user == null) {
-      User existUser = userRepo.all()
-          .filter(
-              "self.code = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
-              redmineUser.getLogin())
-          .fetchOne();
+      User existUser =
+          userRepo
+              .all()
+              .filter(
+                  "self.code = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
+                  redmineUser.getLogin())
+              .fetchOne();
       if (existUser != null) {
         existUser.setRedmineId(redmineUser.getId());
         return existUser;

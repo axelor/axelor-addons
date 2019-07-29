@@ -17,16 +17,6 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.project.db.Project;
@@ -42,6 +32,14 @@ import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.TimeEntryManager;
 import com.taskadapter.redmineapi.bean.TimeEntry;
 import com.taskadapter.redmineapi.bean.TimeEntryActivity;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportTimeEntryServiceImpl extends ExportService implements ExportTimeEntryService {
 
@@ -83,7 +81,9 @@ public class ExportTimeEntryServiceImpl extends ExportService implements ExportT
         exportRedmineTimeEntry(projectPlanningTime);
       }
     }
-    String resultStr = String.format("ABS ProjectPlanning -> Redmine TimeEntry : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format(
+            "ABS ProjectPlanning -> Redmine TimeEntry : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

@@ -17,11 +17,10 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import java.time.LocalDateTime;
-import java.util.function.Consumer;
-
 import com.axelor.apps.base.db.Batch;
 import com.taskadapter.redmineapi.RedmineManager;
+import java.time.LocalDateTime;
+import java.util.function.Consumer;
 
 public interface ExportTimeEntryService {
   void exportTimeEntry(

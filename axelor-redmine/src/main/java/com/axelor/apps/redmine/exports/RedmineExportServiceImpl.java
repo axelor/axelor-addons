@@ -17,9 +17,6 @@
  */
 package com.axelor.apps.redmine.exports;
 
-import java.time.LocalDateTime;
-import java.util.function.Consumer;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.redmine.exports.service.ExportGroupService;
 import com.axelor.apps.redmine.exports.service.ExportIssueService;
@@ -29,6 +26,8 @@ import com.axelor.apps.redmine.exports.service.ExportTimeEntryService;
 import com.axelor.apps.redmine.exports.service.ExportUserService;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineManager;
+import java.time.LocalDateTime;
+import java.util.function.Consumer;
 
 public class RedmineExportServiceImpl implements RedmineExportService {
 

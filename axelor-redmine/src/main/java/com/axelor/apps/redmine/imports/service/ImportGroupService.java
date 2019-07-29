@@ -17,10 +17,9 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
-import java.util.function.Consumer;
-
 import com.axelor.apps.base.db.Batch;
 import com.taskadapter.redmineapi.RedmineManager;
+import java.util.function.Consumer;
 
 public interface ImportGroupService {
 

@@ -17,13 +17,6 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.auth.db.Role;
 import com.axelor.auth.db.repo.RoleRepository;
@@ -34,8 +27,12 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.UserManager;
 import com.taskadapter.redmineapi.bean.Group;
-
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportGroupServiceImpl extends ExportService implements ExportGroupService {
 
@@ -65,7 +62,8 @@ public class ExportGroupServiceImpl extends ExportService implements ExportGroup
     for (Role role : roles) {
       exportRedmineGroup(role);
     }
-    String resultStr = String.format("ABS Role -> Redmine Group : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("ABS Role -> Redmine Group : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

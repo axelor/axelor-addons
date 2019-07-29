@@ -17,9 +17,6 @@
  */
 package com.axelor.apps.redmine.imports;
 
-import java.util.Date;
-import java.util.function.Consumer;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.imports.service.ImportActivityService;
@@ -30,6 +27,8 @@ import com.axelor.apps.redmine.imports.service.ImportService;
 import com.axelor.apps.redmine.imports.service.ImportUserService;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineManager;
+import java.util.Date;
+import java.util.function.Consumer;
 
 public class RedmineImportServiceImpl implements RedmineImportService {
 

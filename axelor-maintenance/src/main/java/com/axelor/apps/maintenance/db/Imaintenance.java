@@ -18,10 +18,7 @@
 package com.axelor.apps.maintenance.db;
 
 public interface Imaintenance {
-	
-	/**
-	 * Sequence select value
-	 */
 
-	public static final String SEQ_MAINTENANCE = "maintenance";
+  /** Sequence select value */
+  public static final String SEQ_MAINTENANCE = "maintenance";
 }

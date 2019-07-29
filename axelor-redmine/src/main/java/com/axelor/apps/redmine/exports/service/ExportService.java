@@ -17,16 +17,14 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
+import com.axelor.apps.base.db.Batch;
+import com.taskadapter.redmineapi.RedmineManager;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.function.Consumer;
-
 import javax.swing.text.Document;
 import javax.swing.text.EditorKit;
 import javax.swing.text.html.HTMLEditorKit;
-
-import com.axelor.apps.base.db.Batch;
-import com.taskadapter.redmineapi.RedmineManager;
 
 public class ExportService {
 

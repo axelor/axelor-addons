@@ -17,26 +17,25 @@
  */
 package com.axelor.apps.maintenance.db.repo;
 
-import java.time.LocalDate;
-
 import com.axelor.apps.maintenance.db.MaintenanceRequest;
+import java.time.LocalDate;
 
 public class MaintenanceRequestRepo extends MaintenanceRequestRepository {
 
-	@Override
-	public MaintenanceRequest save(MaintenanceRequest entity) {
+  @Override
+  public MaintenanceRequest save(MaintenanceRequest entity) {
 
-		LocalDate doneOn = entity.getDoneOn();
-		LocalDate expectedDate = entity.getExpectedDate();
+    LocalDate doneOn = entity.getDoneOn();
+    LocalDate expectedDate = entity.getExpectedDate();
 
-		if (entity.getActionSelect() == ACTION_CORRECTIVE) {
-			entity.setEndDate(doneOn != null ? doneOn.plusDays(1) : expectedDate.plusDays(1));
-			entity.setStartDate(entity.getRequestDate());
-		} else {
-			entity.setStartDate(doneOn != null ? doneOn : expectedDate);
-			entity.setEndDate(entity.getStartDate());
-		}
+    if (entity.getActionSelect() == ACTION_CORRECTIVE) {
+      entity.setEndDate(doneOn != null ? doneOn.plusDays(1) : expectedDate.plusDays(1));
+      entity.setStartDate(entity.getRequestDate());
+    } else {
+      entity.setStartDate(doneOn != null ? doneOn : expectedDate);
+      entity.setEndDate(entity.getStartDate());
+    }
 
-		return super.save(entity);
-	}
+    return super.save(entity);
+  }
 }

@@ -17,14 +17,6 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import javax.persistence.PersistenceException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.repo.ProductRepository;
@@ -36,6 +28,11 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.TimeEntryManager;
 import com.taskadapter.redmineapi.bean.TimeEntryActivity;
+import java.util.List;
+import java.util.function.Consumer;
+import javax.persistence.PersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImportActivityServiceImpl extends ImportService implements ImportActivityService {
 
@@ -84,7 +81,9 @@ public class ImportActivityServiceImpl extends ImportService implements ImportAc
       fail++;
       TraceBackService.trace(e, "", batch.getId());
     }
-    String resultStr = String.format("Redmine Activity -> ABS Product (Service) : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format(
+            "Redmine Activity -> ABS Product (Service) : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

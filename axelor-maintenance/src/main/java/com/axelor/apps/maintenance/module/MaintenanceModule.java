@@ -27,13 +27,11 @@ import com.axelor.apps.maintenance.service.MaintenanceRequestServiceImpl;
 
 public class MaintenanceModule extends AxelorModule {
 
-	@Override
-	protected void configure() {
-		
-		bind(EquipementMaintenanceRepository.class).to(EquipementMaintenanceRepo.class);
-		bind(MaintenanceRequestService.class).to(MaintenanceRequestServiceImpl.class);
-		bind(MaintenanceRequestRepository.class).to(MaintenanceRequestRepo.class);
-	
-	}
-	
+  @Override
+  protected void configure() {
+
+    bind(EquipementMaintenanceRepository.class).to(EquipementMaintenanceRepo.class);
+    bind(MaintenanceRequestService.class).to(MaintenanceRequestServiceImpl.class);
+    bind(MaintenanceRequestRepository.class).to(MaintenanceRequestRepo.class);
+  }
 }

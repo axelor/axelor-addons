@@ -17,11 +17,10 @@
  */
 package com.axelor.apps.redmine.service;
 
-import java.util.function.Consumer;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.exception.AxelorException;
 import com.taskadapter.redmineapi.RedmineException;
+import java.util.function.Consumer;
 
 public interface RedmineService {
 

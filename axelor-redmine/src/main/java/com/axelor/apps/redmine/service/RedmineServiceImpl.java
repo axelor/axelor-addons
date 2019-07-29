@@ -17,14 +17,6 @@
  */
 package com.axelor.apps.redmine.service;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -46,6 +38,13 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.RedmineManagerFactory;
 import com.taskadapter.redmineapi.RedmineTransportException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 public class RedmineServiceImpl implements RedmineService {
 

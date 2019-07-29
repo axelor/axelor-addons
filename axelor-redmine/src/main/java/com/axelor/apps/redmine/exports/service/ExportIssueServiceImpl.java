@@ -17,22 +17,6 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.project.db.ProjectCategory;
 import com.axelor.apps.redmine.imports.service.ImportIssueService;
@@ -67,7 +51,20 @@ import com.taskadapter.redmineapi.bean.Project;
 import com.taskadapter.redmineapi.bean.Tracker;
 import com.taskadapter.redmineapi.bean.User;
 import com.taskadapter.redmineapi.bean.Watcher;
-
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import wslite.json.JSONArray;
 import wslite.json.JSONObject;
 
@@ -118,7 +115,8 @@ public class ExportIssueServiceImpl extends ExportService implements ExportIssue
         exportRedmineIssue(teamTask);
       }
     }
-    String resultStr = String.format("ABS TeamTask -> Redmine Issue : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("ABS TeamTask -> Redmine Issue : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

@@ -17,17 +17,6 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.UserBaseRepository;
 import com.axelor.apps.redmine.imports.service.ImportService;
@@ -41,6 +30,15 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.UserManager;
 import com.taskadapter.redmineapi.bean.Group;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportUserServiceImpl extends ExportService implements ExportUserService {
 
@@ -74,7 +72,8 @@ public class ExportUserServiceImpl extends ExportService implements ExportUserSe
     for (User user : userList) {
       exportRedmineUser(user);
     }
-    String resultStr = String.format("ABS User -> Redmine User : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("ABS User -> Redmine User : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;

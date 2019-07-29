@@ -47,23 +47,22 @@ import com.axelor.apps.redmine.service.RedmineServiceImpl;
 
 public class RedmineModule extends AxelorModule {
 
-	@Override
-	protected void configure() {
-		bind(RedmineService.class).to(RedmineServiceImpl.class);
+  @Override
+  protected void configure() {
+    bind(RedmineService.class).to(RedmineServiceImpl.class);
 
-		bind(RedmineExportService.class).to(RedmineExportServiceImpl.class);
-		bind(ExportGroupService.class).to(ExportGroupServiceImpl.class);
-		bind(ExportUserService.class).to(ExportUserServiceImpl.class);
-		bind(ExportProjectService.class).to(ExportProjectServiceImpl.class);
-		bind(ExportIssueService.class).to(ExportIssueServiceImpl.class);
-		bind(ExportTimeEntryService.class).to(ExportTimeEntryServiceImpl.class);
+    bind(RedmineExportService.class).to(RedmineExportServiceImpl.class);
+    bind(ExportGroupService.class).to(ExportGroupServiceImpl.class);
+    bind(ExportUserService.class).to(ExportUserServiceImpl.class);
+    bind(ExportProjectService.class).to(ExportProjectServiceImpl.class);
+    bind(ExportIssueService.class).to(ExportIssueServiceImpl.class);
+    bind(ExportTimeEntryService.class).to(ExportTimeEntryServiceImpl.class);
 
-		bind(RedmineImportService.class).to(RedmineImportServiceImpl.class);
-		bind(ImportGroupService.class).to(ImportGroupServiceImpl.class);
-		bind(ImportUserService.class).to(ImportUserServiceImpl.class);
-		bind(ImportProjectService.class).to(ImportProjectServiceImpl.class);
-		bind(ImportIssueService.class).to(ImportIssueServiceImpl.class);
-		bind(ImportActivityService.class).to(ImportActivityServiceImpl.class);
-	}
-
+    bind(RedmineImportService.class).to(RedmineImportServiceImpl.class);
+    bind(ImportGroupService.class).to(ImportGroupServiceImpl.class);
+    bind(ImportUserService.class).to(ImportUserServiceImpl.class);
+    bind(ImportProjectService.class).to(ImportProjectServiceImpl.class);
+    bind(ImportIssueService.class).to(ImportIssueServiceImpl.class);
+    bind(ImportActivityService.class).to(ImportActivityServiceImpl.class);
+  }
 }

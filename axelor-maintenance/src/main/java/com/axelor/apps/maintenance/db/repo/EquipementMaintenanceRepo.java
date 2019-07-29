@@ -20,21 +20,19 @@ package com.axelor.apps.maintenance.db.repo;
 import com.axelor.apps.base.service.administration.SequenceService;
 import com.axelor.apps.maintenance.db.EquipementMaintenance;
 import com.axelor.apps.maintenance.db.Imaintenance;
-import com.axelor.apps.maintenance.db.repo.EquipementMaintenanceRepository;
 import com.google.inject.Inject;
 
 public class EquipementMaintenanceRepo extends EquipementMaintenanceRepository {
-	
-	@Inject
-	private SequenceService sequenceService;
-	
-	@Override
-	public EquipementMaintenance save(EquipementMaintenance entity) {
-		
-		if (entity.getCode() == null) {
-			entity.setCode(sequenceService.getSequenceNumber(Imaintenance.SEQ_MAINTENANCE));
-		}
-		
-		return super.save(entity);
-	}
+
+  @Inject private SequenceService sequenceService;
+
+  @Override
+  public EquipementMaintenance save(EquipementMaintenance entity) {
+
+    if (entity.getCode() == null) {
+      entity.setCode(sequenceService.getSequenceNumber(Imaintenance.SEQ_MAINTENANCE));
+    }
+
+    return super.save(entity);
+  }
 }

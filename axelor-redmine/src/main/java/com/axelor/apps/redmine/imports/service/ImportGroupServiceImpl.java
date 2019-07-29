@@ -17,14 +17,6 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import javax.persistence.PersistenceException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.Batch;
 import com.axelor.auth.db.Role;
 import com.axelor.auth.db.repo.RoleRepository;
@@ -35,6 +27,11 @@ import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.UserManager;
+import java.util.List;
+import java.util.function.Consumer;
+import javax.persistence.PersistenceException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ImportGroupServiceImpl extends ImportService implements ImportGroupService {
 
@@ -95,11 +92,13 @@ public class ImportGroupServiceImpl extends ImportService implements ImportGroup
   }
 
   protected Role getRole(com.taskadapter.redmineapi.bean.Group redmineGroup) {
-    Role existRole = roleRepo.all()
-        .filter(
-            "self.name = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
-            redmineGroup.getName())
-        .fetchOne();
+    Role existRole =
+        roleRepo
+            .all()
+            .filter(
+                "self.name = ? AND (self.redmineId IS NULL OR self.redmineId = 0)",
+                redmineGroup.getName())
+            .fetchOne();
     if (existRole != null) {
       existRole.setRedmineId(redmineGroup.getId());
       return existRole;

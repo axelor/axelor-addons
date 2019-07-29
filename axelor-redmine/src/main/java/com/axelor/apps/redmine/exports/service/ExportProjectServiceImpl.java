@@ -17,19 +17,6 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -65,12 +52,22 @@ import com.taskadapter.redmineapi.bean.Membership;
 import com.taskadapter.redmineapi.bean.Role;
 import com.taskadapter.redmineapi.bean.Version;
 import com.taskadapter.redmineapi.bean.WikiPageDetail;
-
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Request.Builder;
 import okhttp3.RequestBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ExportProjectServiceImpl extends ExportService implements ExportProjectService {
 
@@ -110,7 +107,8 @@ public class ExportProjectServiceImpl extends ExportService implements ExportPro
     exportProjectWikis(lastExportDateTime);
     exportProjectVersion(lastExportDateTime);
     exportProjectCategories(lastExportDateTime);
-    String resultStr = String.format("ABS Project -> Redmine Project : Success: %d Fail: %d", success, fail);
+    String resultStr =
+        String.format("ABS Project -> Redmine Project : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
     LOG.debug(resultStr);
     success = fail = 0;
