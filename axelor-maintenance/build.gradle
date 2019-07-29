@@ -8,7 +8,7 @@ axelor {
 	title "Axelor :: Maintenance"
 	description "Computerized Maintenance Management System"
 
-	removable true
+	removable false
 }
 
 dependencies {
