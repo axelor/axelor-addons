@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<grid name="sendinblue-export-grid" title="SendinBlue Exports"
+		model="com.axelor.apps.sendinblue.db.ExportSendinBlue">
+		<field name="exportDateT" title="Export datetime" />
+		<field name="exportUser" title="User" />
+		<field name="isExportLatest" title="Export latest" />
+		<field name="isNoUpdate" title="No update" />
+	</grid>
+
+	<form name="sendinblue-export-form" title="SendinBlue Export"
+		model="com.axelor.apps.sendinblue.db.ExportSendinBlue"  width="large" onNew="action-export-sendinblue-record-set-default-onnew">
+		<panel name="mainPanel">
+			<panel colSpan="12" name="configPanel">
+				<field name="isExportLatest" title="Export latest" widget="boolean-switch" colSpan="3" />
+				<field name="isNoUpdate" title="No update" widget="boolean-switch" colSpan="3" />
+			</panel>
+			<panel colSpan="12" name="btnPanel">
+				<button name="exportBtn" title="Export" onClick="action-sendinblue-method-export,save" colSpan="3" />
+			</panel>
+			<field name="exportDateT" title="Export datetime" colSpan="3"  readonly="true"/>
+			<field name="exportUser" title="User" form-view="user-form" grid-view="user-grid" colSpan="3" />
+			<field name="exportLog" title="Export log" colSpan="12" readonly="true"/>
+		</panel>
+	</form>
+
+	<action-method name="action-sendinblue-method-export">
+		<call class="com.axelor.apps.sendinblue.web.ExportSendinBlueController"
+			method="exportSendinBlue" />
+	</action-method>
+
+	<action-record name="action-export-sendinblue-record-set-default-onnew" model="com.axelor.apps.sendinblue.db.ExportSendinBlue">
+		<field name="exportDateT" expr="eval: __config__.app.getTodayDate()" if="__config__.app.getTodayDate()"/>
+		<field name="exportDateT" expr="eval: __datetime__" if="!__config__.app.getTodayDate()"/>
+		<field name="exportUser" expr="eval: __user__"/>
+	</action-record>
+
+</object-views>

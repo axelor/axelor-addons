@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<grid name="sendin-blue-contact-stat-grid" title="SendinBlue contact statistics"
+		model="com.axelor.apps.sendinblue.db.SendinBlueContactStat" groupBy="sendinBlueCampaign.campaign.name">
+		<field name="sendinBlueCampaign.campaign.name" title="Campaign" />
+		<field name="sendinBlueCampaign.campaignType" title="Campaign type" />
+		<field name="eventType" title="Event" />
+		<field name="eventDateTime" title="DateTime" />
+		<field name="eventCount" title="Count" />
+		<field name="url" title="Url" />
+		<field name="ip" title="IP" />
+	</grid>
+
+	<form name="sendin-blue-contact-stat-form" title="SendinBlue contact statistic"
+		model="com.axelor.apps.sendinblue.db.SendinBlueContactStat">
+		<panel name="mainPanel" readonly="true">
+			<field name="emailAddress" title="Email" />
+			<field name="sendinBlueCampaign.campaign" title="Campaign" />
+			<field name="sendinBlueCampaign.campaignType" title="Campaign type" />
+			<field name="eventType" title="Event" />
+			<field name="eventDateTime" title="DateTime" />
+			<field name="eventCount" title="Count" />
+			<field name="url" title="Url" />
+			<field name="ip" title="IP" />
+		</panel>
+	</form>
+
+	<action-view name="dashlet.sendinblue.contact.stat" title="SendinBlue campaign statistics"
+		model="com.axelor.apps.sendinblue.db.SendinBlueContactStat">
+		<view type="grid" name="sendin-blue-contact-stat-grid" />
+		<view type="form" name="sendin-blue-contact-stat-form" />
+		<domain>self.emailAddress = :emailAddress</domain>
+	</action-view>
+
+	<action-view name="dashlet.sendinblue.chart.contact.stat"
+		title="SendinBlue email statistics" model="com.axelor.apps.sendinblue.db.SendinBlueContactStat">
+		<view type="chart" name="chart.sendinblue.contact.stat" />
+		<context name="emailAddressId" expr="eval: emailAddress?.id" />
+	</action-view>
+
+	<chart name="chart.sendinblue.contact.stat" title="SendinBlue email statistics"
+		onInit="action.sendinblue.chart.set.dates">
+		<search-fields>
+			<field type="datetime" name="fromDate" title="From DateTime"
+				widget="required" x-required="true" />
+			<field type="datetime" name="toDate" title="To DateTime"
+				widget="required" x-required="true" />
+		</search-fields>
+		<dataset type="jpql">
+		<![CDATA[
+			SELECT
+				SUM(eventCount) AS total,
+				eventType AS eventType
+			FROM
+				SendinBlueContactStat self
+			WHERE
+				self.emailAddress.id = :emailAddressId AND 
+				DATE(eventDateTime) BETWEEN DATE(:fromDate) AND DATE(:toDate)
+			GROUP BY
+				eventType
+	    ]]>
+	    </dataset>
+		<category key="eventType" type="text" />
+		<series key="total" type="bar" />
+	</chart>
+
+</object-views>

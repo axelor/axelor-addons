@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.1.xsd">
+
+	<module name="sendinblue" package="com.axelor.apps.sendinblue.db" />
+
+	<entity name="ExportSendinBlue" lang="java">
+
+		<datetime name="exportDateT" title="Export datetime"/>
+		<many-to-one name="exportUser" ref="com.axelor.auth.db.User" title="User"/>
+		<string name="exportLog" title="Export log" large="true" />
+		<boolean name="isExportLatest" title="Export latest" />
+		<boolean name="isNoUpdate" title="No update" />
+
+	</entity>
+
+</domain-models>
