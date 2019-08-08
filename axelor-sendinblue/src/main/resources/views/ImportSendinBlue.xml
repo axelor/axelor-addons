@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<grid name="sendinblue-import-grid" title="SendinBlue Imports"
+		model="com.axelor.apps.sendinblue.db.ImportSendinBlue">
+		<field name="importtDateT" title="Import datetime" />
+		<field name="importUser" title="User" />
+		<field name="isImportLatest" title="Import latest" />
+		<field name="isNoUpdate" title="No update" />
+	</grid>
+
+	<form name="sendinblue-import-form" title="SendinBlue Import"
+		model="com.axelor.apps.sendinblue.db.ImportSendinBlue" width="large" onNew="action-import-sendinblue-record-set-default-onnew">
+		<panel name="mainPanel">
+			<panel colSpan="12" name="configPanel">
+				<field name="isImportLatest" title="Import latest" widget="boolean-switch" colSpan="3" />
+				<field name="isNoUpdate" title="No update" widget="boolean-switch" colSpan="3" />
+			</panel>
+			<panel colSpan="12" name="btnPanel">
+				<button name="importBtn" title="Import" onClick="action-sendinblue-method-import,save" colSpan="3" />
+			</panel>
+			<field name="importtDateT" title="Import datetime" colSpan="3"  readonly="true"/>
+			<field name="importUser" title="User" form-view="user-form" grid-view="user-grid" colSpan="3" />
+			<field name="importLog" title="Import log" colSpan="12"  readonly="true"/>
+		</panel>
+	</form>
+
+	<action-method name="action-sendinblue-method-import">
+		<call class="com.axelor.apps.sendinblue.web.ImportSendinBlueController"
+			method="importSendinBlue" />
+	</action-method>
+
+	<action-record name="action-import-sendinblue-record-set-default-onnew" model="com.axelor.apps.sendinblue.db.ImportSendinBlue">
+		<field name="importtDateT" expr="eval: __config__.app.getTodayDate()" if="__config__.app.getTodayDate()"/>
+		<field name="importtDateT" expr="eval: __datetime__" if="!__config__.app.getTodayDate()"/>
+		<field name="importUser" expr="eval: __user__"/>
+	</action-record>
+
+</object-views>
