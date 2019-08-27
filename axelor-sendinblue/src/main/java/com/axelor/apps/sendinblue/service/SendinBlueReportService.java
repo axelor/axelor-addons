@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppSendinblue;
+import com.axelor.apps.base.db.AppMarketing;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.marketing.db.SendinBlueCampaign;
 import com.axelor.apps.marketing.db.repo.SendinBlueCampaignRepository;
@@ -87,28 +87,25 @@ public class SendinBlueReportService {
       totalContactStatImported;
 
   public void importReport(
-      AppSendinblue appSendinblue,
+      AppMarketing appMarketing,
       ImportSendinBlue importSendinBlue,
       LocalDateTime lastImportDateTime,
       StringBuilder logWriter)
       throws AxelorException {
     totalEventImported =
         totalCampaignReportImported = totalCampaignStatImported = totalContactStatImported = 0;
-    if (appSendinblue.getIsEventImport()) {
+    if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
       importEvents();
       logWriter.append(String.format("%nTotal Events Imported : %s", totalEventImported));
-    }
-    if (appSendinblue.getIsReportImport()) {
+
       importCampaignReport();
       logWriter.append(
           String.format("%nTotal Campaign Reports Imported : %s", totalCampaignReportImported));
-    }
-    if (appSendinblue.getIsCampaignStatImport()) {
+
       importCampaignStat();
       logWriter.append(
           String.format("%nTotal Campaign Statistics Imported : %s", totalCampaignStatImported));
-    }
-    if (appSendinblue.getIsContactStatImport()) {
+
       importContactStat();
       logWriter.append(
           String.format("%nTotal Contact Statistics Imported : %s%n", totalContactStatImported));
@@ -400,7 +397,7 @@ public class SendinBlueReportService {
     List<EmailAddress> emailAddresses =
         Beans.get(EmailAddressRepository.class)
             .all()
-            //.filter("self.partner IS NOT NULL OR self.lead IS NOT NULL")
+            // .filter("self.partner IS NOT NULL OR self.lead IS NOT NULL")
             .fetch();
     sendinBlueContactStatList = sendinBlueContactStatRepo.all().fetch();
     if (emailAddresses != null) {

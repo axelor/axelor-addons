@@ -54,4 +54,13 @@ public class AppSendinBlueController {
     appSendinBlueService.exportFields(appSendinblue);
     LOG.debug("Contact Fields Export Completed");
   }
+
+  public void deleteSendinBlueAggregatedStatistics(ActionRequest request, ActionResponse response) {
+    Long total = appSendinBlueService.deleteSendinBlueAggregatedStatistics();
+    if (total > 0) {
+      response.setFlash(I18n.get(ITranslation.AGGREGATE_STATISTICS_MESSAGE));
+    } else {
+      response.setFlash(I18n.get(ITranslation.AGGREGATE_STATISTICS_ERROR));
+    }
+  }
 }

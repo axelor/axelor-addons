@@ -44,4 +44,8 @@ public interface ITranslation {
 
   public static final String IS_LEAD_LABEL = /*$$(*/ "isLead"; /*)*/
   public static final String NAME_PREFIX_LABEL = /*$$(*/ "Name"; /*)*/
+  public static final String AGGREGATE_STATISTICS_MESSAGE = /*$$(*/
+      "Aggregate Statistics deleted successfully"; /*)*/
+  public static final String AGGREGATE_STATISTICS_ERROR = /*$$(*/
+      "No Aggregate Statistics exist"; /*)*/
 }

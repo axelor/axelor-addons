@@ -26,4 +26,6 @@ public interface AppSendinBlueService {
   ApiKeyAuth getApiKeyAuth() throws AxelorException;
 
   void exportFields(AppSendinblue appSendinblue) throws AxelorException;
+
+  public Long deleteSendinBlueAggregatedStatistics();
 }

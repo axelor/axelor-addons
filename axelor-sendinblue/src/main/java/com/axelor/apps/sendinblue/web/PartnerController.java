@@ -15,23 +15,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.sendinblue.service;
+package com.axelor.apps.sendinblue.web;
 
-import com.axelor.apps.base.db.AppMarketing;
-import com.axelor.apps.base.db.AppSendinblue;
-import com.axelor.apps.sendinblue.db.ImportSendinBlue;
-import com.axelor.exception.AxelorException;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
+import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.sendinblue.service.SendinBlueContactService;
+import com.axelor.rpc.ActionRequest;
+import com.axelor.rpc.ActionResponse;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
-public interface ImportSendinBlueService {
+@Singleton
+public class PartnerController {
 
-  String importSendinBlue(
-      AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue, AppMarketing appMarketing)
-      throws AxelorException;
+  @Inject private SendinBlueContactService sendinBlueContactService;
 
-  List<Map<String, Object>> getReport(LocalDate fromDate, LocalDate toDate);
-
-  List<Map<String, Object>> getTagReport(List<Long> ids);
+  public void deleteSendinBlueContactStatistics(ActionRequest request, ActionResponse response) {
+    Partner partner = request.getContext().asType(Partner.class);
+    sendinBlueContactService.deleteSendinBlueContactPartnerStatistics(partner);
+    response.setReload(true);
+  }
 }
