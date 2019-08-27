@@ -29,9 +29,13 @@
 							action="dashlet.sendinblue.campaign.stat" height="350"
 							title="Campaign Statistics" colSpan="12" showIf="id"
 							if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()" />
+						<button name="deleteSendinBlueCamapignStatistics" title="Delete SendinBlue Camapign Statistics" onClick="action-campaign-method-delete-sendinBlueCampaigStatistics"/>
 					</panel>
 		    </replace>
     	</extend>
 	</form>
+	<action-method name="action-campaign-method-delete-sendinBlueCampaigStatistics">
+		<call class="com.axelor.apps.sendinblue.web.CampaignController" method="deleteSendinBlueCampignStatistics"/>
+	</action-method>
 
 </object-views>

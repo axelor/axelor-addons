@@ -27,6 +27,7 @@ import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
+import com.axelor.apps.sendinblue.db.repo.SendinBlueContactStatRepository;
 import com.axelor.apps.tool.service.TranslationService;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.common.StringUtils;
@@ -85,6 +86,7 @@ public class SendinBlueContactService {
   @Inject TranslationService translationService;
   @Inject UserService userService;
   @Inject SendinBlueFieldService sendinBlueFieldService;
+  @Inject SendinBlueContactStatRepository sendinBlueContactStatRepository;
 
   protected static final Integer DATA_FETCH_LIMIT = 100;
   protected static final List<String> metaModels =
@@ -215,8 +217,7 @@ public class SendinBlueContactService {
   protected Long createList(String metaModelName, ContactsApi apiInstance, Long folderId) {
     try {
       GetFolderLists lists =
-          apiInstance.getFolderLists(
-              folderId, Long.parseLong(DATA_FETCH_LIMIT.toString()), 0L);
+          apiInstance.getFolderLists(folderId, Long.parseLong(DATA_FETCH_LIMIT.toString()), 0L);
       List<Object> listList = lists.getLists();
       for (Object object : listList) {
         @SuppressWarnings("unchecked")
@@ -441,7 +442,7 @@ public class SendinBlueContactService {
           for (Object contact : result.getContacts()) {
             @SuppressWarnings("unchecked")
             LinkedTreeMap<String, Object> conObj = (LinkedTreeMap<String, Object>) contact;
-            // --- 
+            // ---
             createEmailAddress(conObj);
             /*if (conObj.containsKey("attributes")) {
               createEmailAddress(conObj);
@@ -474,19 +475,19 @@ public class SendinBlueContactService {
     }
     // ---
     if (conObj.containsKey("attributes")) {
-    @SuppressWarnings("unchecked")
-    LinkedTreeMap<String, Object> attributes =
-        (LinkedTreeMap<String, Object>) conObj.get("attributes");
-    if (attributes.containsKey("NAME")) {
-      name = attributes.get("NAME").toString();
-    }
-    setLead(attributes, name, emailAddress, id, lead);
-    setPartner(attributes, name, emailAddress, id, partner);
-    
+      @SuppressWarnings("unchecked")
+      LinkedTreeMap<String, Object> attributes =
+          (LinkedTreeMap<String, Object>) conObj.get("attributes");
+      if (attributes.containsKey("NAME")) {
+        name = attributes.get("NAME").toString();
+      }
+      setLead(attributes, name, emailAddress, id, lead);
+      setPartner(attributes, name, emailAddress, id, partner);
+
       emailAddressRepo.save(emailAddress);
       totalImportRecord++;
     }
-    
+
     /*@SuppressWarnings("unchecked")
     LinkedTreeMap<String, Object> attributes =
         (LinkedTreeMap<String, Object>) conObj.get("attributes");
@@ -575,6 +576,26 @@ public class SendinBlueContactService {
           TraceBackService.trace(e);
         }
       }
+    }
+  }
+
+  @Transactional
+  public void deleteSendinBlueContactLeadStatistics(Lead lead) {
+    if (lead.getEmailAddress() != null && lead.getEmailAddress().getId() != null) {
+      sendinBlueContactStatRepository
+          .all()
+          .filter("self.emailAddress = ?", lead.getEmailAddress().getId())
+          .remove();
+    }
+  }
+
+  @Transactional
+  public void deleteSendinBlueContactPartnerStatistics(Partner partner) {
+    if (partner.getEmailAddress() != null && partner.getEmailAddress().getId() != null) {
+      sendinBlueContactStatRepository
+          .all()
+          .filter("self.emailAddress = ?", partner.getEmailAddress().getId())
+          .remove();
     }
   }
 }

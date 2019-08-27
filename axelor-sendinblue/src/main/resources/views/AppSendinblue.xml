@@ -16,9 +16,9 @@
 		<panel-tabs>
 			<panel name="fieldPanel" title="Export field">
 				<field name="partnerFieldSet" colSpan="12" form-view="meta-field-form"
-					grid-view="meta-field-grid" domain="self.metaModel.name = 'Partner'" />
+					grid-view="meta-field-grid" domain="self.metaModel.name = 'Partner' AND ((self.relationship != 'ManyToMany' AND self.relationship != 'OneToMany') OR self.relationship = null)" />
 				<field name="leadFieldSet" colSpan="12" form-view="meta-field-form"
-					grid-view="meta-field-grid" domain="self.metaModel.name = 'Lead'" />
+					grid-view="meta-field-grid" domain="self.metaModel.name = 'Lead' AND ((self.relationship != 'ManyToMany' AND self.relationship != 'OneToMany') OR self.relationship = null)" />
 				<button name="exportFieldBtn" title="Export fields"
 					onClick="save,action-sendinblue-method-add-contact-fields" />
 			</panel>
@@ -51,4 +51,7 @@
 			method="addContactFields" />
 	</action-method>
 
+	<action-method name="action-sendinblue-method-delete-sendinblueAggregatedStatistics">
+		<call class="com.axelor.apps.sendinblue.web.AppSendinBlueController" method="deleteSendinBlueAggregatedStatistics"/>
+	</action-method>
 </object-views>

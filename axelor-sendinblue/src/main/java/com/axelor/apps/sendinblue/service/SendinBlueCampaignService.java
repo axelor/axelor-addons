@@ -33,6 +33,7 @@ import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.TemplateRepository;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
+import com.axelor.apps.sendinblue.db.repo.SendinBlueCampaignStatRepository;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.apps.tool.service.TranslationService;
 import com.axelor.auth.AuthService;
@@ -606,5 +607,13 @@ public class SendinBlueCampaignService {
     }
     marketingCampaign.setPartnerSet(partnerSet);
     marketingCampaign.setLeadSet(leadSet);
+  }
+
+  @Transactional
+  public void deleteSendinBlueCampignStatistics(Campaign campaign) {
+    Beans.get(SendinBlueCampaignStatRepository.class)
+        .all()
+        .filter("self.sendinBlueCampaign.campaign = ?", campaign.getId())
+        .remove();
   }
 }

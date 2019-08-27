@@ -5,18 +5,18 @@
 
 	<dashboard title="Dashboard" name="sendinblue.dashboard.report">
 		<dashlet action="dashlet.sendinblue.dashboard.total.report"
-			height="350" canSearch="true" colSpan="12" title="Report" />
+			height="350" canSearch="true" colSpan="12" title="Event Report" />
 		<dashlet action="dashlet.sendinblue.dashboard.tag.report"
-			height="500" canSearch="true" colSpan="12" title="Report" />
+			height="500" canSearch="true" colSpan="12" title="Event Tag Report" />
 	</dashboard>
 
 	<action-view name="dashlet.sendinblue.dashboard.total.report"
-		title="Report" model="com.axelor.apps.sendinblue.db.SendinBlueReport">
+		title="Event Report" model="com.axelor.apps.sendinblue.db.SendinBlueReport">
 		<view type="chart" name="chart.sendinblue.report.total.report" />
 	</action-view>
 
 	<action-view name="dashlet.sendinblue.dashboard.tag.report"
-		title="Report" model="com.axelor.apps.sendinblue.db.SendinBlueEvent">
+		title="Event Tag Report" model="com.axelor.apps.sendinblue.db.SendinBlueEvent">
 		<view type="chart" name="chart.sendinblue.event.tag" />
 	</action-view>
 

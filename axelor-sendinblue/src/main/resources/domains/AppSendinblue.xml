@@ -21,10 +21,6 @@
 		<boolean name="isContactImport" title="Import contact" />
 		<boolean name="isTemplateImport" title="Import template" />
 		<boolean name="isCampaignImport" title="Import campaign" />
-		<boolean name="isEventImport" title="Import event" />
-		<boolean name="isReportImport" title="Import report" />
-		<boolean name="isContactStatImport" title="Import contact statistics" />
-		<boolean name="isCampaignStatImport" title="Import campaign statistics" />
 
 	</entity>
 

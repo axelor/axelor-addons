@@ -20,6 +20,8 @@ package com.axelor.apps.sendinblue.service;
 import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.base.db.repo.AppSendinblueRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueCampaignStatRepository;
+import com.axelor.apps.sendinblue.db.repo.SendinBlueEventRepository;
+import com.axelor.apps.sendinblue.db.repo.SendinBlueReportRepository;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
@@ -27,6 +29,7 @@ import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import sendinblue.ApiClient;
 import sendinblue.ApiException;
 import sendinblue.Configuration;
@@ -77,5 +80,12 @@ public class AppSendinBlueServiceImpl implements AppSendinBlueService {
 
   public void exportFields(AppSendinblue appSendinblue) throws AxelorException {
     sendinBlueFieldService.exportFields(appSendinblue);
+  }
+
+  @Transactional
+  public Long deleteSendinBlueAggregatedStatistics() {
+    Long total = Beans.get(SendinBlueReportRepository.class).all().remove();
+    total += Beans.get(SendinBlueEventRepository.class).all().remove();
+    return total;
   }
 }

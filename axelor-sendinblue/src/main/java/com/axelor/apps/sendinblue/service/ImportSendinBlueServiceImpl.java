@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.sendinblue.service;
 
+import com.axelor.apps.base.db.AppMarketing;
 import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.ImportSendinBlueRepository;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang.StringUtils;
 
 public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
 
@@ -43,7 +45,8 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
   @Inject SendinBlueCampaignService sendinBlueCampaignService;
 
   @Override
-  public String importSendinBlue(AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue)
+  public String importSendinBlue(
+      AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue, AppMarketing appMarketing)
       throws AxelorException {
     LocalDateTime lastImportDateTime = null;
     Optional<ImportSendinBlue> lastImport =
@@ -64,12 +67,9 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
     if (appSendinblue.getIsCampaignImport()) {
       sendinBlueCampaignService.importCampaign(importSendinBlue, lastImportDateTime, logWriter);
     }
-    if (appSendinblue.getIsEventImport()
-        || appSendinblue.getIsReportImport()
-        || appSendinblue.getIsCampaignStatImport()
-        || appSendinblue.getIsContactStatImport()) {
+    if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
       sendinBlueReportService.importReport(
-          appSendinblue, importSendinBlue, lastImportDateTime, logWriter);
+          appMarketing, importSendinBlue, lastImportDateTime, logWriter);
     }
     return logWriter.toString();
   }
@@ -118,7 +118,7 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
       for (int i = 0; i < eventType.size(); i++) {
         Map<String, Object> dataMap = new HashMap<>();
         dataMap.put("total", (Long) result[i]);
-        dataMap.put("eventType", eventType.get(i));
+        dataMap.put("eventType", StringUtils.capitalize(eventType.get(i)));
         dataList.add(dataMap);
       }
     }
@@ -139,7 +139,7 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
     for (Map<String, Object> map : result) {
       Map<String, Object> dataMap = new HashMap<>();
       dataMap.put("total", map.get("1"));
-      dataMap.put("event", map.get("0"));
+      dataMap.put("event", StringUtils.capitalize((String) map.get("0")));
       dataList.add(dataMap);
     }
     return dataList;

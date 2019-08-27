@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.sendinblue.web;
 
+import com.axelor.apps.base.db.AppMarketing;
 import com.axelor.apps.base.db.AppSendinblue;
+import com.axelor.apps.base.db.repo.AppMarketingRepository;
 import com.axelor.apps.base.db.repo.AppSendinblueRepository;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.service.AppSendinBlueService;
@@ -51,14 +53,13 @@ public class ImportSendinBlueController {
     appSendinBlueService.getApiKeyAuth();
     ImportSendinBlue importSendinBlue = request.getContext().asType(ImportSendinBlue.class);
     AppSendinblue appSendinblue = Beans.get(AppSendinblueRepository.class).all().fetchOne();
+    AppMarketing appMarketing = Beans.get(AppMarketingRepository.class).all().fetchOne();
     if (appSendinblue.getIsContactImport()
         || appSendinblue.getIsTemplateImport()
         || appSendinblue.getIsCampaignImport()
-        || appSendinblue.getIsEventImport()
-        || appSendinblue.getIsReportImport()
-        || appSendinblue.getIsCampaignStatImport()
-        || appSendinblue.getIsContactStatImport()) {
-      String log = importSendinBlueService.importSendinBlue(appSendinblue, importSendinBlue);
+        || appMarketing.getManageSendinBlueApiEmailingReporting()) {
+      String log =
+          importSendinBlueService.importSendinBlue(appSendinblue, importSendinBlue, appMarketing);
       response.setValue("importLog", log.trim());
       LOG.debug("Import Completed");
     } else {
