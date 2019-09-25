@@ -18,15 +18,15 @@
 package com.axelor.apps.redmine.service;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.exception.AxelorException;
-import com.taskadapter.redmineapi.RedmineException;
 import java.util.function.Consumer;
 
 public interface RedmineService {
 
-  public void importRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
-      throws AxelorException, RedmineException;
+  //  public void importRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable>
+  // onError);
+  //
+  //  public void exportRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable>
+  // onError);
 
-  public void exportRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
-      throws AxelorException, RedmineException;
+  public void redmineSync(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError);
 }

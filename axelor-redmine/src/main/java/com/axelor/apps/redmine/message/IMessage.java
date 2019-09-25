@@ -19,15 +19,29 @@ package com.axelor.apps.redmine.message;
 
 public interface IMessage {
 
-  /** Importing Issues */
-  static final String BATCH_IMPORT_1 = /*$$(*/ "Import completed" /*)*/;
-
-  static final String BATCH_EXPORT_1 = /*$$(*/ "Export completed" /*)*/;
+  static final String BATCH_SYNC_SUCCESS = /*$$(*/ "Redmine sync completed" /*)*/;
 
   static final String REDMINE_AUTHENTICATION_1 = /*$$(*/
       "URI and API Access Key should not be empty" /*)*/;
+
   static final String REDMINE_AUTHENTICATION_2 = /*$$(*/
       "Please check your authentication details" /*)*/;
+
   static final String REDMINE_TRANSPORT = /*$$(*/
       "Error connecting redmine server. Please check the configuration" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_ABS_FIELD_NOT_EXIST = /*$$(*/
+      "No such field found on ABS" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_REDMINE_FIELD_NOT_EXIST = /*$$(*/
+      "No such field found on Redmine" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_RECORD_NOT_FOUND = /*$$(*/
+      "No record found with linked Redmine Id" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_ASSIGNEE_IS_NOT_VALID = /*$$(*/
+      "Assignee have no membership for associated project" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_ISSUE_PROJECT_NOT_FOUND = /*$$(*/
+      "Associated project is not synced or not found" /*)*/;
 }
