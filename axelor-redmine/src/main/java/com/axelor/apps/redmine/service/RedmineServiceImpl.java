@@ -20,16 +20,12 @@ package com.axelor.apps.redmine.service;
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.BatchRepository;
-import com.axelor.apps.redmine.db.RedmineBatch;
-import com.axelor.apps.redmine.exports.RedmineExportService;
-import com.axelor.apps.redmine.imports.RedmineImportService;
-import com.axelor.apps.redmine.imports.service.ImportIssueService;
 import com.axelor.apps.redmine.message.IMessage;
+import com.axelor.apps.redmine.sync.process.RedmineSyncProcessService;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.inject.Beans;
+import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.NotFoundException;
@@ -38,66 +34,28 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.RedmineManagerFactory;
 import com.taskadapter.redmineapi.RedmineTransportException;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class RedmineServiceImpl implements RedmineService {
 
   @Inject private AppRedmineRepository appRedmineRepo;
-  @Inject protected RedmineImportService importService;
-  @Inject protected RedmineExportService exportService;
-  @Inject protected ImportIssueService importIssueService;
+  @Inject protected RedmineSyncProcessService redmineSyncProcessService;
 
   @Override
   @Transactional
-  public void importRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
-      throws AxelorException, RedmineException {
-    final RedmineManager redmineManager = getRedmineManager();
-    if (redmineManager == null) {
-      return;
-    }
+  public void redmineSync(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
-    LocalDateTime lastImportDateTime = getLastOperationDate(batch.getRedmineBatch());
-    Date lastImportDate = null;
-    if (lastImportDateTime != null) {
-      lastImportDate = Date.from(lastImportDateTime.atZone(ZoneId.systemDefault()).toInstant());
-    }
-    importService.importRedmine(batch, lastImportDate, redmineManager, onSuccess, onError);
-  }
+    try {
+      RedmineManager redmineManager = getRedmineManager();
 
-  @Override
-  @Transactional
-  public void exportRedmine(Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError)
-      throws AxelorException, RedmineException {
-
-    final RedmineManager redmineManager = getRedmineManager();
-    if (redmineManager == null) {
-      return;
-    }
-    LocalDateTime lastExportDate = getLastOperationDate(batch.getRedmineBatch());
-    exportService.exportRedmine(batch, lastExportDate, redmineManager, onSuccess, onError);
-  }
-
-  protected LocalDateTime getLastOperationDate(RedmineBatch redmineBatch) {
-    Stream<Batch> stream =
-        Beans.get(BatchRepository.class)
-            .all()
-            .filter(
-                "self.redmineBatch IS NOT NULL AND self.endDate IS NOT NULL AND self.redmineBatch.actionSelect = ? AND self.done > 0",
-                redmineBatch.getActionSelect())
-            .fetchStream();
-    if (stream != null) {
-      Optional<Batch> lastRedmineBatch = stream.max(Comparator.comparing(Batch::getEndDate));
-      if (lastRedmineBatch.isPresent()) {
-        return lastRedmineBatch.get().getUpdatedOn();
+      if (redmineManager == null) {
+        return;
       }
+
+      redmineSyncProcessService.redmineSyncProcess(batch, redmineManager, onSuccess, onError);
+    } catch (Exception e) {
+      TraceBackService.trace(e, "", batch.getId());
     }
-    return null;
   }
 
   public RedmineManager getRedmineManager() throws AxelorException {
@@ -107,6 +65,7 @@ public class RedmineServiceImpl implements RedmineService {
         && !StringUtils.isBlank(appRedmine.getApiAccessKey())) {
       RedmineManager redmineManager =
           RedmineManagerFactory.createWithApiKey(appRedmine.getUri(), appRedmine.getApiAccessKey());
+
       try {
         redmineManager.getUserManager().getCurrentUser();
       } catch (RedmineTransportException | NotFoundException e) {

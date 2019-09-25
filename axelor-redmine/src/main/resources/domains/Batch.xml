@@ -1,14 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
 
-  <module name="base" package="com.axelor.apps.base.db"/>
+	<module name="base" package="com.axelor.apps.base.db" />
 
-  <entity name="Batch" lang="java" sequential="true">
-  	
-  	<many-to-one name="redmineBatch" ref="com.axelor.apps.redmine.db.RedmineBatch" />
-  
-  </entity>
+	<entity name="Batch" lang="java" sequential="true">
+
+		<many-to-one name="redmineBatch"
+			ref="com.axelor.apps.redmine.db.RedmineBatch" />
+
+		<many-to-many name="updatedTasksInOs" ref="com.axelor.team.db.TeamTask"
+			mappedBy="osbatchSet" />
+		<many-to-many name="updatedIssuesInRedmine" ref="com.axelor.team.db.TeamTask"
+			mappedBy="redminebatchSet" />
+		<many-to-many name="createdProjectsInOs" ref="com.axelor.apps.project.db.Project"
+			mappedBy="batchSet" />
+		<many-to-many name="createdTimesheetLinesInOs" ref="com.axelor.apps.hr.db.TimesheetLine"
+			mappedBy="batchSet" />
+		<many-to-many name="createdTrackersInOs"
+			ref="com.axelor.apps.project.db.ProjectCategory" mappedBy="batchSet" />
+
+	</entity>
 
 </domain-models>

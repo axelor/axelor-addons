@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="redmine" package="com.axelor.apps.redmine.db" />
+
+	<entity name="DynamicFieldsSync" lang="java">
+
+		<string name="fieldNameInAbs" />
+		<string name="fieldNameInRedmine" />
+		<string name="defaultAbsValue" />
+		<boolean name="isCustomRedmineField" />
+		<boolean name="isSelectField" />
+		<string name="typeSelectInAbs" selection="redmine.dynamic.fields.sync.type.select.in.abs" />
+		<string name="relatedFieldInAbsToRedmineSelect" />
+		<string name="fieldMappingDirection"
+			selection="redmine.dynamic.fields.sync.type.field.mapping.direction"
+			default="both" />
+		<one-to-many name="valuesMappingList"
+			ref="com.axelor.apps.redmine.db.ValuesMapping" mappedBy="dynamicFieldsSync" />
+		<many-to-one name="openSuitRedmineSync"
+			ref="com.axelor.apps.redmine.db.OpenSuitRedmineSync" />
+
+		<extra-code>
+			<![CDATA[
+				public static final String TYPE_IN_ABS_M2O = "m2o";
+				public static final String TYPE_IN_ABS_SELECT = "select";
+				
+				public static final String MAPPING_DIRECTION_REDMINE_TO_OS = "redminetoos";
+				public static final String MAPPING_DIRECTION_OS_TO_REDMINE = "ostoredmine";
+				public static final String MAPPING_DIRECTION_BOTH = "both";
+			]]>
+		</extra-code>
+
+	</entity>
+
+</domain-models>

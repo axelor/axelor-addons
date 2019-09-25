@@ -3,58 +3,59 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
 
-	<grid name="redmine-batch-grid" title="Redmine batches" model="com.axelor.apps.redmine.db.RedmineBatch">
-		<field name="actionSelect" />
+	<grid name="redmine-batch-grid" title="Redmine batches"
+		model="com.axelor.apps.redmine.db.RedmineBatch">
 		<field name="code" x-bind="{{code|unaccent|uppercase}}" />
-		<field name="company" form-view="company-form" grid-view="company-grid"/>
-		<field name="createdOn"/>
-		<field name="createdBy" form-view="user-form" grid-view="user-grid"/>
+		<field name="batchUser" form-view="user-form" grid-view="user-grid" />
+		<field name="createdOn" />
+		<field name="createdBy" form-view="user-form" grid-view="user-grid" />
 	</grid>
- 
-	<form onNew="action-redmine-batch-record-on-new" name="redmine-batch-form" title="Redmine Batch" model="com.axelor.apps.redmine.db.RedmineBatch" width="large" >
-		<panel name="main" >
-		  <field name="actionSelect"/>
-		  <field name="code" x-bind="{{code|unaccent|uppercase}}" onChange="action-base-batch-condition-check-unique-code"/>
-		  <field name="company" canEdit="false" widget="SuggestBox" form-view="company-form" grid-view="company-grid"/>
-		</panel>
-		<panel  showIf="actionSelect == 1">
-			<field name="updateAlreadyImported" title="Reimport all"/>
+
+	<form onNew="action-redmine-batch-record-on-new" name="redmine-batch-form"
+		title="Redmine Batch" model="com.axelor.apps.redmine.db.RedmineBatch"
+		width="large">
+		<panel name="main">
+			<field name="code" x-bind="{{code|unaccent|uppercase}}"
+				onChange="action-base-batch-condition-check-unique-code" />
+			<field name="batchUser" canEdit="false" widget="SuggestBox"
+				form-view="user-form" grid-view="user-grid" />
 		</panel>
 		<panel-tabs>
-		  <panel name="actionPanel" title="Actions">
-		  	<panel colSpan="3">
-				<button name="importBtn" title="Import" onClick="save,action-redmine-batch-method-action-import-all" colSpan="12" showIf="actionSelect == 1"/>
-				<button name="ExportBtn" title="Export" onClick="save,action-redmine-batch-method-action-export-all" colSpan="12" showIf="actionSelect == 2"/>
-		  	</panel>
-		  </panel>
-		  <panel name="information" title="Information" >
-		    <field name="createdOn" title="Created on"/>
-		    <field name="createdBy" title="Created by" form-view="user-form" grid-view="user-grid"/>
-		    <field name="description" colSpan="12" />
-		    <panel-related field="batchList" colSpan="12" form-view="redmine-base-batch-form" grid-view="batch-grid" readonly="true"/>
-		  </panel>
+			<panel name="actionPanel" title="Actions">
+				<panel colSpan="3">
+					<button name="redmineSyncBtn" title="Redmine Sync"
+						onClick="save,action-redmine-batch-method-sync-process"
+						colSpan="12" />
+				</panel>
+			</panel>
+			<panel name="information" title="Information">
+				<field name="createdOn" title="Created on" />
+				<field name="createdBy" title="Created by" form-view="user-form"
+					grid-view="user-grid" />
+				<field name="description" colSpan="12" />
+				<panel-related field="batchList" colSpan="12"
+					form-view="redmine-base-batch-form" grid-view="batch-grid"
+					readonly="true" />
+			</panel>
 		</panel-tabs>
 	</form>
 
- 	<!-- ACTIONS -->
+	<!-- ACTIONS -->
 
-    <!-- ACTION RECORD -->
-    <action-record name="action-redmine-batch-record-on-new" model="com.axelor.apps.redmine.db.RedmineBatch">
-		<field name="createdOn" expr="eval:__config__.app.getTodayDate()"/>
-		<field name="createdBy" expr="eval:__user__"/>
-		<field name="company"  expr="eval:__user__.activeCompany" if="__user__.activeCompany != null"/>
-    	<field name="company"  expr="eval:__repo__(Company).all().fetchOne()" if="__user__.activeCompany == null &amp;&amp; __repo__(Company).all().fetch().size == 1"/>
+	<!-- ACTION RECORD -->
+
+	<action-record name="action-redmine-batch-record-on-new"
+		model="com.axelor.apps.redmine.db.RedmineBatch">
+		<field name="createdOn" expr="eval:__config__.app.getTodayDate()" />
+		<field name="createdBy" expr="eval:__user__" />
+		<field name="batchUser" expr="eval:__user__" />
 	</action-record>
 
 	<!-- ACTION METHOD -->
-	<action-method name="action-redmine-batch-method-action-import-all">
+
+	<action-method name="action-redmine-batch-method-sync-process">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="actionImportAll" />
+			method="redmineSyncProcess" />
 	</action-method>
 
-	<action-method name="action-redmine-batch-method-action-export-all">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="actionExportAll" />
-	</action-method>
-	
 </object-views>

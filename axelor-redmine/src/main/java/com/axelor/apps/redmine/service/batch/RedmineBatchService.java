@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2018 Axelor (<http://axelor.com>).
+ * Copyright (C) 2019 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -18,14 +18,10 @@
 package com.axelor.apps.redmine.service.batch;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.exceptions.IExceptionMessage;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.redmine.db.RedmineBatch;
-import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.db.Model;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 
 public class RedmineBatchService extends AbstractBatchService {
@@ -40,30 +36,12 @@ public class RedmineBatchService extends AbstractBatchService {
     Batch batch;
     RedmineBatch redmineBatch = (RedmineBatch) batchModel;
 
-    switch (redmineBatch.getActionSelect()) {
-      case RedmineBatchRepository.ACTION_IMPORT:
-        batch = importAll(redmineBatch);
-        break;
-      case RedmineBatchRepository.ACTION_EXPORT:
-        batch = exportAll(redmineBatch);
-        break;
-
-      default:
-        throw new AxelorException(
-            TraceBackRepository.CATEGORY_INCONSISTENCY,
-            I18n.get(IExceptionMessage.BASE_BATCH_1),
-            redmineBatch.getActionSelect(),
-            redmineBatch.getCode());
-    }
+    batch = redmineSyncProcess(redmineBatch);
 
     return batch;
   }
 
-  public Batch importAll(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmine.class).run(redmineBatch);
-  }
-
-  public Batch exportAll(RedmineBatch redmineBatch) {
-    return Beans.get(BatchExportAllRedmine.class).run(redmineBatch);
+  public Batch redmineSyncProcess(RedmineBatch redmineBatch) {
+    return Beans.get(BatchSyncAllRedmine.class).run(redmineBatch);
   }
 }

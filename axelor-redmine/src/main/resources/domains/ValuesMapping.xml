@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="redmine" package="com.axelor.apps.redmine.db" />
+
+	<entity name="ValuesMapping" lang="java">
+
+		<string name="selectValueInRedmine" />
+		<string name="selectValueInAbs" />
+		<many-to-one name="dynamicFieldsSync" ref="com.axelor.apps.redmine.db.DynamicFieldsSync"/>
+
+	</entity>
+
+</domain-models>

@@ -1,29 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
 
-  <module name="redmine" package="com.axelor.apps.redmine.db"/>
+	<module name="redmine" package="com.axelor.apps.redmine.db" />
 
-  <entity name="RedmineBatch" lang="java">
+	<entity name="RedmineBatch" lang="java">
 
-  	<!-- HEADER -->
-  	<string name="code" title="Code" namecolumn="true" unique="true"/>
-    <integer name="actionSelect" title="Action" required="true" selection="redmine.batch.action.select"/>
-    <many-to-one name="company" ref="com.axelor.apps.base.db.Company" title="Company" />
+		<string name="code" title="Code" namecolumn="true" unique="true" />
+		<many-to-one name="batchUser" ref="com.axelor.auth.db.User"
+			title="User" />
+		<string name="description" title="Description" large="true" />
+		<one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch"
+			mappedBy="redmineBatch" title="Batchs" />
 
-    <!-- OTHER INFORMATION -->
-    <string name="description" title="Description" large="true" />
-    <one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch" mappedBy="redmineBatch" title="Batchs" />
-
-	<boolean name="updateAlreadyImported" title="Reimport all"/>
-
-  	<extra-code><![CDATA[
-	   	// ACTION TYPE
-		public static final int ACTION_IMPORT = 1;
-		public static final int ACTION_EXPORT = 2;
-	]]></extra-code>
-
-  </entity>
+	</entity>
 
 </domain-models>

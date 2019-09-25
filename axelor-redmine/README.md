@@ -1,7 +1,7 @@
 Overview
 ------
-This module adds feature that helps to import issues from the Redmine's REST API.
-All the issues from the Redmine Projects are imported to the ABS with just one button click in batches.
+This module adds feature that helps to sync issues, projects, time entries, versions, trackers from the Redmine's REST API.
+All the issues from the Redmine Projects are synced to the ABS with just one button click in batches.
 
   
 Dependencies

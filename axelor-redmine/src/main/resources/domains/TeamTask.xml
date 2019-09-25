@@ -8,8 +8,8 @@
 	<entity name="TeamTask">
 
 		<integer name="redmineId" title="Redmine Id" />
-		<many-to-one name="tracker" ref="com.axelor.apps.project.db.Tracker"
-			title="Tracker" />
+		<many-to-many name="osbatchSet" ref="com.axelor.apps.base.db.Batch"/>
+		<many-to-many name="redminebatchSet" ref="com.axelor.apps.base.db.Batch"/>
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 

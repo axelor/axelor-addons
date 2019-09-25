@@ -8,9 +8,8 @@
 	<entity name="Project">
 
 		<integer name="redmineId" title="Redmine Id" />
-		<many-to-many name="trackerSet" ref="com.axelor.apps.project.db.Tracker"
-			title="Trackers" />
-		<string name="code" title="Code" unique="true" required="true"/>
+		<string name="code" title="Code" unique="true" required="true" />
+		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch"/>
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 
