@@ -123,6 +123,10 @@ public class RedmineImportService {
   public static final String METAMODEL_TEAM_TASK = "TeamTask";
   public static final String METAMODEL_TIMESHEET_LINE = "TimesheetLine";
 
+  // This number can theoretically be different for different Redmine versions
+  // see http://www.redmine.org/projects/redmine/repository/entry/trunk/app/models/project.rb
+  public static final Integer REDMINE_PROJECT_STATUS_CLOSED = 5;
+
   protected void setCreatedUser(AuditableModel obj, User objUser, String methodName) {
 
     try {

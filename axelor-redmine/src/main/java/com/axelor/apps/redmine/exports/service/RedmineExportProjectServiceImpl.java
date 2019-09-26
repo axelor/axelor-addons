@@ -240,10 +240,15 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
               findRedmineUserByEmail(partner.getEmailAddress().getAddress());
 
           if (redmineUser != null) {
-            Membership membership =
-                new Membership(redmineManager.getTransport(), redmineProject, redmineUser.getId())
-                    .addRoles(roles);
-            membership.create();
+            List<Membership> memberships =
+                redmineProjectManager.getProjectMembers(redmineProject.getId());
+
+            if (!memberships.stream().anyMatch(m -> m.getUserId() == redmineUser.getId())) {
+              Membership membership =
+                  new Membership(redmineManager.getTransport(), redmineProject, redmineUser.getId())
+                      .addRoles(roles);
+              membership.create();
+            }
           }
         }
       }
