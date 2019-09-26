@@ -36,6 +36,7 @@ import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.db.IPrestaShopBatch;
 import com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry;
 import com.axelor.apps.prestashop.db.repo.PrestashopOrderStatusCacheEntryRepository;
@@ -87,6 +88,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
   private ProductRepository productRepository;
   private SaleOrderRepository saleOrderRepo;
 
+  private AppBaseService appBaseService;
   private AccountingSituationService accountingSituationService;
   private AddressService addressService;
   private InvoicePaymentCreateService invoicePaymentCreateService;
@@ -101,6 +103,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
   @Inject
   public ImportOrderServiceImpl(
+      AppBaseService appBaseService,
       AddressRepository addressRepo,
       CurrencyRepository currencyRepo,
       PartnerRepository partnerRepo,
@@ -119,6 +122,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       SaleOrderStockService deliveryService,
       SaleOrderWorkflowService saleOrderWorkflowService,
       StockMoveService stockMoveService) {
+    this.appBaseService = appBaseService;
     this.addressRepo = addressRepo;
     this.currencyRepo = currencyRepo;
     this.partnerRepo = partnerRepo;
@@ -498,17 +502,23 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
         if (localStatus.getShipped()) {
           if (localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
-            localOrder.setDeliveryDate(remoteOrder.getDeliveryDate().toLocalDate());
+            localOrder.setDeliveryDate(
+                    remoteOrder.getDeliveryDate() == null ?
+                            appBaseService.getTodayDate() :
+                            remoteOrder.getDeliveryDate().toLocalDate());
             try {
               List<Long> stockMoveIds = deliveryService.createStocksMovesFromSaleOrder(localOrder);
 
-              for (Long stockMoveId : stockMoveIds) {
-                StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
-                stockMoveService.realize(delivery, true);
-                for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
-                  if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
-                      line.getProduct().getProductTypeSelect())) {
-                    line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+              // Will be null if only services are present on order
+              if (stockMoveIds != null) {
+                for (Long stockMoveId : stockMoveIds) {
+                  StockMove delivery = Beans.get(StockMoveRepository.class).find(stockMoveId);
+                  stockMoveService.realize(delivery, true);
+                  for (SaleOrderLine line : localOrder.getSaleOrderLineList()) {
+                    if (ProductRepository.PRODUCT_TYPE_SERVICE.equals(
+                        line.getProduct().getProductTypeSelect())) {
+                      line.setDeliveryState(SaleOrderRepository.DELIVERY_STATE_DELIVERED);
+                    }
                   }
                 }
               }
