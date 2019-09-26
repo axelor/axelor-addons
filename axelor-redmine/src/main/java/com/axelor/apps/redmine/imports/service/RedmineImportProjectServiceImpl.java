@@ -205,6 +205,12 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       project.addProjectCategorySetItem(projectCategoryRepo.findByRedmineId(tracker.getId()));
     }
 
+    // Special fix rule for set project status
+
+    if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
+      project.setStatusSelect(ProjectRepository.STATE_FINISHED);
+    }
+
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
     setLocalDateTime(project, redmineProject.getUpdatedOn(), "setUpdatedOn");
 
