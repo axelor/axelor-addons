@@ -51,7 +51,6 @@ import com.taskadapter.redmineapi.bean.Journal;
 import com.taskadapter.redmineapi.bean.JournalDetail;
 import com.taskadapter.redmineapi.bean.Watcher;
 import java.lang.reflect.Method;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
@@ -211,7 +210,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setName(redmineIssue.getSubject());
       teamTask.setDescription(redmineIssue.getDescription());
       teamTask.setProject(projectRepo.findByRedmineId(redmineIssue.getProjectId()));
-      teamTask.setTaskDate(LocalDate.now());
+      teamTask.setTaskDate(
+          redmineIssue.getCreatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
       if (redmineIssue.getAssigneeId() != null) {
         teamTask.setAssignedTo(
