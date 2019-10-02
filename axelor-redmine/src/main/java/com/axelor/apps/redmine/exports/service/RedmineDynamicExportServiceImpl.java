@@ -163,8 +163,11 @@ public class RedmineDynamicExportServiceImpl implements RedmineDynamicExportServ
           && relatedFieldInAbsToRedmineSelect != null) {
         Object osFieldObj = ObjectTool.getObject(osObj, fieldNameInAbs);
 
-        redmineCustomFieldsMap.put(
-            fieldNameInRedmine, ObjectTool.getObject(osFieldObj, relatedFieldInAbsToRedmineSelect));
+        if (osFieldObj != null) {
+          redmineCustomFieldsMap.put(
+              fieldNameInRedmine,
+              ObjectTool.getObject(osFieldObj, relatedFieldInAbsToRedmineSelect));
+        }
       }
 
       // CUSTOM FIELD BINDING : ABS SELECT -> REDMINE SELECT
@@ -213,9 +216,12 @@ public class RedmineDynamicExportServiceImpl implements RedmineDynamicExportServ
               && typeSelectInAbs.equals(DynamicFieldsSyncRepository.TYPE_IN_ABS_M2O)
               && relatedFieldInAbsToRedmineSelect != null) {
             Object osFieldObj = ObjectTool.getObject(osObj, fieldNameInAbs);
-            redmineCustomFieldsMap.put(
-                fieldNameInRedmine,
-                ObjectTool.getObject(osFieldObj, relatedFieldInAbsToRedmineSelect));
+
+            if (osFieldObj != null) {
+              redmineCustomFieldsMap.put(
+                  fieldNameInRedmine,
+                  ObjectTool.getObject(osFieldObj, relatedFieldInAbsToRedmineSelect));
+            }
           }
 
           // IF CUSTOM FIELD TYPE IS STRING | BOOL | DATE | FLOAT | INT | TEXT | LINK
@@ -311,6 +317,6 @@ public class RedmineDynamicExportServiceImpl implements RedmineDynamicExportServ
       String object, String fieldNameInAbs, String fieldNameInRedmine, String message) {
 
     errorObjList.add(
-        new Object[] {object, DYNAMIC_EXPORT, null, fieldNameInAbs, fieldNameInRedmine, message});
+        new Object[] {object, DYNAMIC_EXPORT, "", fieldNameInAbs, fieldNameInRedmine, message});
   }
 }
