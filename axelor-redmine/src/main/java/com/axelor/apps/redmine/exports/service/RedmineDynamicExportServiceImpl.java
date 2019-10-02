@@ -204,11 +204,23 @@ public class RedmineDynamicExportServiceImpl implements RedmineDynamicExportServ
 
         if (customFieldDefinition != null) {
 
-          // IF CUSTOM FIELD TYPE IS STRING | BOOL | DATE | FLOAT | INT | TEXT | LINK
-
           String customFieldFormat = customFieldDefinition.getFieldFormat();
 
-          if (customFieldFormat.matches(CUSTOM_FIELD_FORMATS_SIMPLE)) {
+          // SPECIAL CASE FOR ABS M2O -> STRING CUSTOM FIELD
+
+          if (customFieldFormat.equals("string")
+              && typeSelectInAbs != null
+              && typeSelectInAbs.equals(DynamicFieldsSyncRepository.TYPE_IN_ABS_M2O)
+              && relatedFieldInAbsToRedmineSelect != null) {
+            Object osFieldObj = ObjectTool.getObject(osObj, fieldNameInAbs);
+            redmineCustomFieldsMap.put(
+                fieldNameInRedmine,
+                ObjectTool.getObject(osFieldObj, relatedFieldInAbsToRedmineSelect));
+          }
+
+          // IF CUSTOM FIELD TYPE IS STRING | BOOL | DATE | FLOAT | INT | TEXT | LINK
+
+          else if (customFieldFormat.matches(CUSTOM_FIELD_FORMATS_SIMPLE)) {
             Object value = osMap.get(fieldNameInAbs);
 
             if (customFieldFormat.equals("bool") && value != null) {
