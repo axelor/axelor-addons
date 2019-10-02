@@ -253,17 +253,47 @@ public class RedmineDynamicImportServiceImpl implements RedmineDynamicImportServ
 
         if (customFieldDefinition != null) {
 
-          // IF CUSTOM FIELD TYPE IS STRING | BOOL | DATE | FLOAT | INT | TEXT | LINK
-
           String customFieldValueInRedmine =
               (String) redmineCustomFieldsMap.get(fieldNameInRedmine);
           String customFieldFormat = customFieldDefinition.getFieldFormat();
 
-          if (customFieldValueInRedmine != null && customFieldFormat.equals("bool")) {
-            customFieldValueInRedmine = customFieldValueInRedmine.equals("1") ? "true" : "false";
+          // SPECIAL CASE FOR STRING CUSTOM FIELD -> ABS M2O
+
+          if (customFieldFormat.equals("string")
+              && typeSelectInAbs != null
+              && typeSelectInAbs.equals(DynamicFieldsSyncRepository.TYPE_IN_ABS_M2O)
+              && relatedFieldInAbsToRedmineSelect != null) {
+            Class<?> objClass = null;
+            try {
+              objClass = Class.forName(metaField.getPackageName() + "." + metaField.getTypeName());
+            } catch (ClassNotFoundException e) {
+              TraceBackService.trace(e);
+            }
+
+            Model item =
+                Query.of((Class<Model>) objClass)
+                    .filter("self." + relatedFieldInAbsToRedmineSelect + " = :param")
+                    .bind("param", redmineCustomFieldsMap.get(fieldNameInRedmine))
+                    .fetchOne();
+
+            if (item == null && defaultAbsValue != null) {
+              item =
+                  Query.of((Class<Model>) objClass)
+                      .filter("self.id = :param")
+                      .bind("param", defaultAbsValue)
+                      .fetchOne();
+            }
+
+            osMap.put(fieldNameInAbs, item != null ? objClass.cast(item) : null);
           }
 
-          if (customFieldFormat.matches(CUSTOM_FIELD_FORMATS_SIMPLE)) {
+          // IF CUSTOM FIELD TYPE IS STRING | BOOL | DATE | FLOAT | INT | TEXT | LINK
+
+          else if (customFieldFormat.matches(CUSTOM_FIELD_FORMATS_SIMPLE)) {
+
+            if (customFieldValueInRedmine != null && customFieldFormat.equals("bool")) {
+              customFieldValueInRedmine = customFieldValueInRedmine.equals("1") ? "true" : "false";
+            }
 
             osMap.put(
                 fieldNameInAbs,
