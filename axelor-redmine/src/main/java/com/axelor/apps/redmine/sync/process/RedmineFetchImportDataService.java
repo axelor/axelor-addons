@@ -27,7 +27,6 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Project;
-
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -124,7 +123,8 @@ public class RedmineFetchImportDataService {
 
       try {
         ProjectManager redmineProjectManager = redmineManager.getProjectManager();
-        List<com.taskadapter.redmineapi.bean.Project> importProjectList = (List<Project>) importDataMap.get("importProjectList");
+        List<com.taskadapter.redmineapi.bean.Project> importProjectList =
+            (List<Project>) importDataMap.get("importProjectList");
 
         if (importProjectList != null && !importProjectList.isEmpty()) {
           List<com.taskadapter.redmineapi.bean.Version> tempVersionList;
