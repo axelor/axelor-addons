@@ -29,7 +29,6 @@ import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
@@ -103,22 +102,33 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_SPENT_TIME);
 
-      this.batch = batch;
-      this.redmineManager = redmineManager;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineTimeEntryManager = redmineManager.getTimeEntryManager();
-      this.redmineUserManager = redmineManager.getUserManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_TIMESHEET_LINE);
-      this.lastBatchUpdatedOn = lastBatchUpdatedOn;
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncTimesheet.getDynamicFieldsSyncList();
 
-      Comparator<TimeEntry> compareByDate =
-          (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
-      Collections.sort(redmineTimeEntryList, compareByDate);
+      if (validateDynamicFieldsSycList(
+          dynamicFieldsSyncList,
+          METAMODEL_TIMESHEET_LINE,
+          Mapper.toMap(new TimesheetLine()),
+          Mapper.toMap(new com.taskadapter.redmineapi.bean.TimeEntry(null)))) {
 
-      for (TimeEntry redmineTimeEntry : redmineTimeEntryList) {
-        createOpenSuiteTimesheetLine(redmineTimeEntry, openSuiteRedmineSyncTimesheet);
+        this.batch = batch;
+        this.redmineManager = redmineManager;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineTimeEntryManager = redmineManager.getTimeEntryManager();
+        this.redmineUserManager = redmineManager.getUserManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_TIMESHEET_LINE);
+        this.lastBatchUpdatedOn = lastBatchUpdatedOn;
+
+        Comparator<TimeEntry> compareByDate =
+            (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
+        Collections.sort(redmineTimeEntryList, compareByDate);
+
+        String syncTypeSelect = openSuiteRedmineSyncTimesheet.getRedmineToOpenSuiteSyncSelect();
+
+        for (TimeEntry redmineTimeEntry : redmineTimeEntryList) {
+          createOpenSuiteTimesheetLine(redmineTimeEntry, syncTypeSelect);
+        }
       }
     }
 
@@ -130,8 +140,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     success = fail = 0;
   }
 
-  public void createOpenSuiteTimesheetLine(
-      TimeEntry redmineTimeEntry, OpenSuitRedmineSync openSuiteRedmineSyncTimesheet) {
+  public void createOpenSuiteTimesheetLine(TimeEntry redmineTimeEntry, String syncTypeSelect) {
 
     TimesheetLine timesheetLine =
         timesheetLineRepo.findByRedmineId(redmineTimeEntry.getId()) != null
@@ -141,8 +150,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     if (timesheetLine.getId() == null) {
       addInList = true;
     }
-
-    String syncTypeSelect = openSuiteRedmineSyncTimesheet.getRedmineToOpenSuiteSyncSelect();
 
     // Sync type - On create
     if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -182,14 +189,13 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
     timesheetLineMap =
         redmineDynamicImportService.createOpenSuiteDynamic(
-            openSuiteRedmineSyncTimesheet,
+            dynamicFieldsSyncList,
             timesheetLineMap,
             redmineTimeEntryMap,
             redmineTimeEntryCustomFieldsMap,
             metaModel,
             redmineTimeEntry,
-            redmineManager,
-            errorObjList);
+            redmineManager);
 
     timesheetLine = Mapper.toBean(timesheetLine.getClass(), timesheetLineMap);
 
@@ -261,17 +267,17 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
       timesheetLineRepo.save(timesheetLine);
 
-      JPA.em().getTransaction().commit();
-      if (!JPA.em().getTransaction().isActive()) {
-        JPA.em().getTransaction().begin();
-      }
+      //      JPA.em().getTransaction().commit();
+      //      if (!JPA.em().getTransaction().isActive()) {
+      //        JPA.em().getTransaction().begin();
+      //      }
       onSuccess.accept(timesheetLine);
       success++;
     } catch (Exception e) {
       onError.accept(e);
       fail++;
-      JPA.em().getTransaction().rollback();
-      JPA.em().getTransaction().begin();
+      //      JPA.em().getTransaction().rollback();
+      //      JPA.em().getTransaction().begin();
       TraceBackService.trace(e, "", batch.getId());
     }
   }

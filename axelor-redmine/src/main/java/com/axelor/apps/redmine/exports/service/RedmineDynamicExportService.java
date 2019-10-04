@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
+import com.axelor.apps.redmine.db.DynamicFieldsSync;
 import com.axelor.meta.db.MetaModel;
 import com.taskadapter.redmineapi.RedmineManager;
 import java.util.List;
@@ -26,12 +26,11 @@ import java.util.Map;
 public interface RedmineDynamicExportService {
 
   Map<String, Object> createRedmineDynamic(
-      OpenSuitRedmineSync openSuiteRedmineSync,
+      List<DynamicFieldsSync> dynamicFieldsSyncList,
       Map<String, Object> osMap,
       Map<String, Object> redmineMap,
       Map<String, Object> redmineCustomFieldsMap,
       MetaModel metaModel,
       Object redmineObj,
-      RedmineManager redmineManager,
-      List<Object[]> errorObjList);
+      RedmineManager redmineManager);
 }

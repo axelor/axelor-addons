@@ -115,21 +115,32 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_PROJECT);
 
-      this.redmineManager = redmineManager;
-      this.batch = batch;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineProjectManager = redmineManager.getProjectManager();
-      this.redmineUserManager = redmineManager.getUserManager();
-      this.metaModel = metaModelRepository.findByName(METAMODEL_PROJECT);
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncProject.getDynamicFieldsSyncList();
 
-      for (Project project : projectList) {
-        createRedmineProject(project, openSuiteRedmineSyncProject);
+      if (validateDynamicFieldsSyncList(
+          dynamicFieldsSyncList,
+          METAMODEL_PROJECT,
+          Mapper.toMap(new Project()),
+          Mapper.toMap(new com.taskadapter.redmineapi.bean.Project(null)))) {
+
+        this.redmineManager = redmineManager;
+        this.batch = batch;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineProjectManager = redmineManager.getProjectManager();
+        this.redmineUserManager = redmineManager.getUserManager();
+        this.metaModel = metaModelRepository.findByName(METAMODEL_PROJECT);
+
+        String syncTypeSelect = openSuiteRedmineSyncProject.getOpenSuiteToRedmineSyncSelect();
+
+        for (Project project : projectList) {
+          createRedmineProject(project, syncTypeSelect);
+        }
+
+        // Export project wikis
+        exportProjectWikis();
       }
-
-      // Export project wikis
-      exportProjectWikis();
     }
 
     String resultStr =
@@ -139,8 +150,7 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
     success = fail = 0;
   }
 
-  public void createRedmineProject(
-      Project project, OpenSuitRedmineSync openSuiteRedmineSyncProject) {
+  public void createRedmineProject(Project project, String syncTypeSelect) {
 
     try {
       com.taskadapter.redmineapi.bean.Project redmineProject = null;
@@ -156,8 +166,6 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
         redmineProject = redmineProjectManager.getProjectById(project.getRedmineId());
       }
 
-      String syncTypeSelect = openSuiteRedmineSyncProject.getOpenSuiteToRedmineSyncSelect();
-
       // Sync type - On create
       if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
           && (project.getRedmineId() != null && !project.getRedmineId().equals(0))) {
@@ -170,14 +178,13 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
 
       redmineProjectMap =
           redmineDynamicExportService.createRedmineDynamic(
-              openSuiteRedmineSyncProject,
+              dynamicFieldsSyncList,
               projectMap,
               redmineProjectMap,
               redmineProjectCustomFieldsMap,
               metaModel,
               project,
-              redmineManager,
-              errorObjList);
+              redmineManager);
 
       // Fix - JSONObj Error
       redmineProjectMap.remove("projectPublic");
@@ -210,6 +217,8 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
         setErrorLog(
             Project.class.getSimpleName(),
             project.getId().toString(),
+            null,
+            null,
             I18n.get(IMessage.REDMINE_SYNC_ERROR_RECORD_NOT_FOUND));
       }
     }
@@ -303,6 +312,8 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
             setErrorLog(
                 Project.class.getSimpleName(),
                 wikiProject.getId().toString(),
+                null,
+                null,
                 I18n.get(IMessage.REDMINE_SYNC_ERROR_RECORD_NOT_FOUND));
           }
         }

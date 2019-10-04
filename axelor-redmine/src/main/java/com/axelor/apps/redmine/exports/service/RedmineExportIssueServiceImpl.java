@@ -117,19 +117,30 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_ISSUE);
 
-      this.redmineManager = redmineManager;
-      this.batch = batch;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineIssueManager = redmineManager.getIssueManager();
-      this.redmineUserManager = redmineManager.getUserManager();
-      this.redmineProjectManager = redmineManager.getProjectManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_TEAM_TASK);
-      this.lastBatchUpdatedOn = lastBatchUpdatedOn;
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncIssue.getDynamicFieldsSyncList();
 
-      for (TeamTask teamTask : teamTaskList) {
-        createRedmineIssue(teamTask, openSuiteRedmineSyncIssue);
+      if (validateDynamicFieldsSyncList(
+          dynamicFieldsSyncList,
+          METAMODEL_TEAM_TASK,
+          Mapper.toMap(new TeamTask()),
+          Mapper.toMap(new Issue()))) {
+
+        this.redmineManager = redmineManager;
+        this.batch = batch;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineIssueManager = redmineManager.getIssueManager();
+        this.redmineUserManager = redmineManager.getUserManager();
+        this.redmineProjectManager = redmineManager.getProjectManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_TEAM_TASK);
+        this.lastBatchUpdatedOn = lastBatchUpdatedOn;
+
+        String syncTypeSelect = openSuiteRedmineSyncIssue.getOpenSuiteToRedmineSyncSelect();
+
+        for (TeamTask teamTask : teamTaskList) {
+          createRedmineIssue(teamTask, syncTypeSelect);
+        }
       }
     }
 
@@ -140,7 +151,7 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
     success = fail = 0;
   }
 
-  public void createRedmineIssue(TeamTask teamTask, OpenSuitRedmineSync openSuiteRedmineSyncIssue) {
+  public void createRedmineIssue(TeamTask teamTask, String syncTypeSelect) {
 
     try {
       com.taskadapter.redmineapi.bean.Issue redmineIssue = null;
@@ -150,8 +161,6 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
       } else {
         redmineIssue = redmineIssueManager.getIssueById(teamTask.getRedmineId(), Include.journals);
       }
-
-      String syncTypeSelect = openSuiteRedmineSyncIssue.getOpenSuiteToRedmineSyncSelect();
 
       // Sync type - On create
       if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -184,14 +193,13 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
 
       redmineIssueMap =
           redmineDynamicExportService.createRedmineDynamic(
-              openSuiteRedmineSyncIssue,
+              dynamicFieldsSyncList,
               teamTaskMap,
               redmineIssueMap,
               redmineIssueCustomFieldsMap,
               metaModel,
               teamTask,
-              redmineManager,
-              errorObjList);
+              redmineManager);
 
       Mapper redmineIssueMapper = Mapper.of(redmineIssue.getClass());
       Iterator<Entry<String, Object>> redmineIssueMapItr = redmineIssueMap.entrySet().iterator();
@@ -206,6 +214,8 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         setErrorLog(
             TeamTask.class.getSimpleName(),
             teamTask.getId().toString(),
+            null,
+            null,
             I18n.get(IMessage.REDMINE_SYNC_ERROR_ISSUE_PROJECT_NOT_FOUND));
         return;
       }
@@ -277,6 +287,8 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         setErrorLog(
             TeamTask.class.getSimpleName(),
             teamTask.getId().toString(),
+            null,
+            null,
             I18n.get(IMessage.REDMINE_SYNC_ERROR_RECORD_NOT_FOUND));
       }
     }
@@ -323,6 +335,8 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         setErrorLog(
             TeamTask.class.getSimpleName(),
             teamTask.getId().toString(),
+            null,
+            null,
             I18n.get(IMessage.REDMINE_SYNC_ERROR_ASSIGNEE_IS_NOT_VALID));
       }
     }

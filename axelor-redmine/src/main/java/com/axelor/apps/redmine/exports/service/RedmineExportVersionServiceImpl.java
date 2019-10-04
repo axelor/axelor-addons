@@ -78,16 +78,27 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_VERSION);
 
-      this.redmineManager = redmineManager;
-      this.batch = batch;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineProjectManager = redmineManager.getProjectManager();
-      this.metaModel = metaModelRepository.findByName(METAMODEL_PROJECT_VERSION);
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncVersion.getDynamicFieldsSyncList();
 
-      for (ProjectVersion projectVersion : projectVersionList) {
-        createRedmineVersion(projectVersion, openSuiteRedmineSyncVersion);
+      if (validateDynamicFieldsSyncList(
+          dynamicFieldsSyncList,
+          METAMODEL_PROJECT_VERSION,
+          Mapper.toMap(new ProjectVersion()),
+          Mapper.toMap(new Version()))) {
+
+        this.redmineManager = redmineManager;
+        this.batch = batch;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineProjectManager = redmineManager.getProjectManager();
+        this.metaModel = metaModelRepository.findByName(METAMODEL_PROJECT_VERSION);
+
+        String syncTypeSelect = openSuiteRedmineSyncVersion.getOpenSuiteToRedmineSyncSelect();
+
+        for (ProjectVersion projectVersion : projectVersionList) {
+          createRedmineVersion(projectVersion, syncTypeSelect);
+        }
       }
     }
 
@@ -99,8 +110,7 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
     success = fail = 0;
   }
 
-  public void createRedmineVersion(
-      ProjectVersion projectVersion, OpenSuitRedmineSync openSuiteRedmineSyncVersion) {
+  public void createRedmineVersion(ProjectVersion projectVersion, String syncTypeSelect) {
 
     try {
       com.taskadapter.redmineapi.bean.Version redmineVersion = null;
@@ -110,8 +120,6 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
       } else {
         redmineVersion = redmineProjectManager.getVersionById(projectVersion.getRedmineId());
       }
-
-      String syncTypeSelect = openSuiteRedmineSyncVersion.getOpenSuiteToRedmineSyncSelect();
 
       // Sync type - On create
       if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -125,14 +133,13 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
 
       redmineVersionMap =
           redmineDynamicExportService.createRedmineDynamic(
-              openSuiteRedmineSyncVersion,
+              dynamicFieldsSyncList,
               projectVersionMap,
               redmineVersionMap,
               redmineVersionCustomFieldsMap,
               metaModel,
               projectVersion,
-              redmineManager,
-              errorObjList);
+              redmineManager);
 
       Mapper redmineVersionMapper = Mapper.of(redmineVersion.getClass());
       Iterator<Entry<String, Object>> redmineVersionMapItr =
@@ -156,6 +163,8 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
         setErrorLog(
             ProjectVersion.class.getSimpleName(),
             projectVersion.getId().toString(),
+            null,
+            null,
             I18n.get(IMessage.REDMINE_SYNC_ERROR_RECORD_NOT_FOUND));
       }
     }

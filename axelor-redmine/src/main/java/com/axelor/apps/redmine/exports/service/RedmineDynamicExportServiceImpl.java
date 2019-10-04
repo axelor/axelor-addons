@@ -18,13 +18,10 @@
 package com.axelor.apps.redmine.exports.service;
 
 import com.axelor.apps.redmine.db.DynamicFieldsSync;
-import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.ValuesMapping;
 import com.axelor.apps.redmine.db.repo.DynamicFieldsSyncRepository;
-import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.tool.ObjectTool;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.i18n.I18n;
 import com.axelor.meta.db.MetaField;
 import com.axelor.meta.db.MetaModel;
 import com.axelor.meta.db.repo.MetaFieldRepository;
@@ -33,6 +30,9 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.CustomFieldDefinition;
 import com.taskadapter.redmineapi.bean.User;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,98 +54,86 @@ public class RedmineDynamicExportServiceImpl implements RedmineDynamicExportServ
 
   private RedmineManager redmineManager;
 
-  private List<Object[]> errorObjList;
-
   public static final String RELATIONSHIP_M2O = "ManyToOne";
   public static final String MAPPING_DIRECTION = "ostoredmine|both";
   public static final String CUSTOM_FIELD_FORMATS_SIMPLE = "string|bool|date|float|int|text|link";
   public static final String CUSTOM_FIELD_FORMAT_USER = "user";
   public static final String CUSTOM_FIELD_FORMAT_VERSION = "version";
-  public static final String DYNAMIC_EXPORT = "Export";
 
   @Override
   public Map<String, Object> createRedmineDynamic(
-      OpenSuitRedmineSync openSuiteRedmineSync,
+      List<DynamicFieldsSync> dynamicFieldsSyncList,
       Map<String, Object> osMap,
       Map<String, Object> redmineMap,
       Map<String, Object> redmineCustomFieldsMap,
       MetaModel metaModel,
       Object osObj,
-      RedmineManager redmineManager,
-      List<Object[]> errorObjList) {
+      RedmineManager redmineManager) {
 
     this.osMap = osMap;
     this.redmineMap = redmineMap;
     this.redmineCustomFieldsMap = redmineCustomFieldsMap;
     this.osObj = osObj;
     this.redmineManager = redmineManager;
-    this.errorObjList = errorObjList;
 
-    List<DynamicFieldsSync> dynamicFieldsSyncList = openSuiteRedmineSync.getDynamicFieldsSyncList();
+    for (DynamicFieldsSync dynamicFieldsSync : dynamicFieldsSyncList) {
 
-    if (dynamicFieldsSyncList != null && !dynamicFieldsSyncList.isEmpty()) {
+      this.fieldNameInAbs = dynamicFieldsSync.getFieldNameInAbs();
+      this.fieldNameInRedmine = dynamicFieldsSync.getFieldNameInRedmine();
+      this.typeSelectInAbs = dynamicFieldsSync.getTypeSelectInAbs();
+      this.relatedFieldInAbsToRedmineSelect =
+          dynamicFieldsSync.getRelatedFieldInAbsToRedmineSelect();
+      this.valuesMappingList = dynamicFieldsSync.getValuesMappingList();
 
-      for (DynamicFieldsSync dynamicFieldsSync : dynamicFieldsSyncList) {
+      String mappingDirection = dynamicFieldsSync.getFieldMappingDirection();
 
-        this.fieldNameInAbs = dynamicFieldsSync.getFieldNameInAbs();
-        this.fieldNameInRedmine = dynamicFieldsSync.getFieldNameInRedmine();
-        this.typeSelectInAbs = dynamicFieldsSync.getTypeSelectInAbs();
-        this.relatedFieldInAbsToRedmineSelect =
-            dynamicFieldsSync.getRelatedFieldInAbsToRedmineSelect();
-        this.valuesMappingList = dynamicFieldsSync.getValuesMappingList();
+      if (fieldNameInAbs != null
+          && fieldNameInRedmine != null
+          && mappingDirection != null
+          && mappingDirection.matches(MAPPING_DIRECTION)) {
 
-        String mappingDirection = dynamicFieldsSync.getFieldMappingDirection();
+        // No such field found in ABS or Redmine
 
-        if (fieldNameInAbs != null
-            && fieldNameInRedmine != null
-            && mappingDirection != null
-            && mappingDirection.matches(MAPPING_DIRECTION)) {
+        if (!osMap.containsKey(fieldNameInAbs)
+            || (!dynamicFieldsSync.getIsCustomRedmineField()
+                && !redmineMap.containsKey(fieldNameInRedmine))) {
+          continue;
+        }
 
-          // No such field found in ABS
+        MetaField metaField = metaFieldRepo.findByModel(fieldNameInAbs, metaModel);
 
-          if (!osMap.containsKey(fieldNameInAbs)) {
-            setErrorLog(
-                osObj.getClass().getSimpleName(),
-                fieldNameInAbs,
-                fieldNameInRedmine,
-                I18n.get(IMessage.REDMINE_SYNC_ERROR_ABS_FIELD_NOT_EXIST));
-            continue;
+        // CUSTOM FIELD BINDING
+
+        if (dynamicFieldsSync.getIsCustomRedmineField()) {
+          customFieldBinding(dynamicFieldsSync);
+          continue;
+        }
+
+        // SIMPLE FIELD BINDING
+
+        if (metaField.getRelationship() == null) {
+          simpleFieldBinding(dynamicFieldsSync);
+
+          // Temp fix for Date fields
+          if (metaField.getTypeName().equals("LocalDate")) {
+            Object value = redmineMap.get(fieldNameInRedmine);
+
+            if (value != null) {
+              LocalDate localDate = (LocalDate) value;
+              redmineMap.put(
+                  fieldNameInRedmine,
+                  Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+            }
           }
 
-          // No such field found in Redmine
+          continue;
+        }
 
-          if (!dynamicFieldsSync.getIsCustomRedmineField()
-              && !redmineMap.containsKey(fieldNameInRedmine)) {
-            setErrorLog(
-                osObj.getClass().getSimpleName(),
-                fieldNameInAbs,
-                fieldNameInRedmine,
-                I18n.get(IMessage.REDMINE_SYNC_ERROR_REDMINE_FIELD_NOT_EXIST));
-            continue;
-          }
+        // M2O FIELD BINDING
 
-          MetaField metaField = metaFieldRepo.findByModel(fieldNameInAbs, metaModel);
-
-          // CUSTOM FIELD BINDING
-
-          if (dynamicFieldsSync.getIsCustomRedmineField()) {
-            customFieldBinding(dynamicFieldsSync);
-            continue;
-          }
-
-          // SIMPLE FIELD BINDING
-
-          if (metaField.getRelationship() == null) {
-            simpleFieldBinding(dynamicFieldsSync);
-            continue;
-          }
-
-          // M2O FIELD BINDING
-
-          if (metaField.getRelationship().equals(RELATIONSHIP_M2O)) {
-            m2oFieldBinding(dynamicFieldsSync);
-            continue;
-          }
+        if (metaField.getRelationship().equals(RELATIONSHIP_M2O)) {
+          m2oFieldBinding(dynamicFieldsSync);
+          continue;
         }
       }
     }
@@ -311,12 +299,5 @@ public class RedmineDynamicExportServiceImpl implements RedmineDynamicExportServ
             valueMapping != null ? valueMapping.getSelectValueInRedmine() : null);
       }
     }
-  }
-
-  public void setErrorLog(
-      String object, String fieldNameInAbs, String fieldNameInRedmine, String message) {
-
-    errorObjList.add(
-        new Object[] {object, DYNAMIC_EXPORT, "", fieldNameInAbs, fieldNameInRedmine, message});
   }
 }

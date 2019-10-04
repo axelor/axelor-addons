@@ -21,6 +21,9 @@
 		<many-to-many name="createdTrackersInOs"
 			ref="com.axelor.apps.project.db.ProjectCategory" mappedBy="batchSet" />
 
+		<many-to-one name="errorLogFile" title="Error log"
+			ref="com.axelor.meta.db.MetaFile" />
+
 	</entity>
 
 </domain-models>

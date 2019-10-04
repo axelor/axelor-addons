@@ -84,18 +84,29 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineExportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_SPENT_TIME);
 
-      this.redmineManager = redmineManager;
-      this.batch = batch;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineTimeEntryManager = redmineManager.getTimeEntryManager();
-      this.redmineUserManager = redmineManager.getUserManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_TIMESHEET_LINE);
-      this.lastBatchUpdatedOn = lastBatchUpdatedOn;
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncSpentTime.getDynamicFieldsSyncList();
 
-      for (TimesheetLine timesheetLine : timesheetLineList) {
-        createRedmineSpentTime(timesheetLine, openSuiteRedmineSyncSpentTime);
+      if (validateDynamicFieldsSyncList(
+          dynamicFieldsSyncList,
+          METAMODEL_TIMESHEET_LINE,
+          Mapper.toMap(new TimesheetLine()),
+          Mapper.toMap(new com.taskadapter.redmineapi.bean.TimeEntry(null)))) {
+
+        this.redmineManager = redmineManager;
+        this.batch = batch;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineTimeEntryManager = redmineManager.getTimeEntryManager();
+        this.redmineUserManager = redmineManager.getUserManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_TIMESHEET_LINE);
+        this.lastBatchUpdatedOn = lastBatchUpdatedOn;
+
+        String syncTypeSelect = openSuiteRedmineSyncSpentTime.getOpenSuiteToRedmineSyncSelect();
+
+        for (TimesheetLine timesheetLine : timesheetLineList) {
+          createRedmineSpentTime(timesheetLine, syncTypeSelect);
+        }
       }
     }
 
@@ -107,8 +118,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineExportService
     success = fail = 0;
   }
 
-  public void createRedmineSpentTime(
-      TimesheetLine timesheetLine, OpenSuitRedmineSync openSuiteRedmineSyncSpentTime) {
+  public void createRedmineSpentTime(TimesheetLine timesheetLine, String syncTypeSelect) {
 
     try {
       com.taskadapter.redmineapi.bean.TimeEntry redmineTimeEntry = null;
@@ -119,8 +129,6 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineExportService
       } else {
         redmineTimeEntry = redmineTimeEntryManager.getTimeEntry(timesheetLine.getRedmineId());
       }
-
-      String syncTypeSelect = openSuiteRedmineSyncSpentTime.getOpenSuiteToRedmineSyncSelect();
 
       // Sync type - On create
       if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -153,14 +161,13 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineExportService
 
       redmineTimeEntryMap =
           redmineDynamicExportService.createRedmineDynamic(
-              openSuiteRedmineSyncSpentTime,
+              dynamicFieldsSyncList,
               timesheetLineMap,
               redmineTimeEntryMap,
               redmineTimeEntryCustomFieldsMap,
               metaModel,
               timesheetLine,
-              redmineManager,
-              errorObjList);
+              redmineManager);
 
       // Temporary error fix
       redmineTimeEntryMap.remove("valid");
@@ -206,6 +213,8 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineExportService
         setErrorLog(
             TimesheetLine.class.getSimpleName(),
             timesheetLine.getId().toString(),
+            null,
+            null,
             I18n.get(IMessage.REDMINE_SYNC_ERROR_RECORD_NOT_FOUND));
       }
     }

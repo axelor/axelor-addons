@@ -24,13 +24,15 @@
 			<field name="fieldNameInAbs" />
 			<field name="fieldNameInRedmine" />
 			<field name="defaultAbsValue" />
-			<field name="isCustomRedmineField" colSpan="3"
-				onChange="action-dynamic-fields-sync-attrs-type-select-in-abs-selection" />
-			<field name="isSelectField" colSpan="3"
-				onChange="action-dynamic-fields-sync-attrs-type-select-in-abs-selection" />
+			<field name="isCustomRedmineField" colSpan="3" />
+			<field name="isSelectField" colSpan="3" />
 			<field name="fieldMappingDirection" />
 			<field name="typeSelectInAbs" hidden="true"
-				showIf="isSelectField || isCustomRedmineField" />
+				showIf="isCustomRedmineField &amp;&amp; !isSelectField"
+				selection-in="['m2o']" />
+			<field name="typeSelectInAbs" hidden="true"
+				showIf="isSelectField || (isCustomRedmineField &amp;&amp; isSelectField)"
+				selection-in="['m2o','select']" />
 			<field name="relatedFieldInAbsToRedmineSelect" hidden="true"
 				showIf="typeSelectInAbs == 'm2o'" />
 			<panel-related field="valuesMappingList" name="valuesMappingListPanel"
@@ -39,13 +41,5 @@
 		</panel>
 
 	</form>
-
-	<action-attrs
-		name="action-dynamic-fields-sync-attrs-type-select-in-abs-selection">
-		<attribute name="selection-in" for="typeSelectInAbs" expr="eval: ['m2o']"
-			if="!isSelectField" />
-		<attribute name="selection-in" for="typeSelectInAbs" expr="eval: ['m2o','select']"
-			if="isSelectField" />
-	</action-attrs>
 
 </object-views>

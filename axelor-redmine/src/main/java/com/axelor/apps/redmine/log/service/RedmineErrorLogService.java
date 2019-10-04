@@ -22,7 +22,11 @@ import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,7 +41,7 @@ public class RedmineErrorLogService {
   @Inject MetaFiles metaFiles;
 
   public static final String EXCEL_SHEET_NAME = "Error Data";
-  public static final String EXCEL_FILE_NAME = "redmine_error_log";
+  public static final String EXCEL_FILE_NAME = "Redmine_Error_Log_";
   public static final String EXCEL_FILE_EXTENSION = ".xlsx";
 
   public static final String HEADER_COL1 = "Object";
@@ -89,7 +93,11 @@ public class RedmineErrorLogService {
       workbook.write(out);
       out.close();
 
-      errorMetaFile = metaFiles.upload(excelFile);
+      DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+      errorMetaFile =
+          metaFiles.upload(
+              new FileInputStream(excelFile),
+              EXCEL_FILE_NAME + dateFormat.format(new Date()) + EXCEL_FILE_EXTENSION);
     } catch (Exception e) {
       TraceBackService.trace(e);
     }

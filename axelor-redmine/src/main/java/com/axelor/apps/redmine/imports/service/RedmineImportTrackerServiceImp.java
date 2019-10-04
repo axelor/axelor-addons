@@ -25,7 +25,6 @@ import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.meta.MetaFiles;
@@ -33,6 +32,7 @@ import com.axelor.meta.db.repo.MetaModelRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineManager;
+import com.taskadapter.redmineapi.bean.Tracker;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -83,16 +83,27 @@ public class RedmineImportTrackerServiceImp extends RedmineImportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_TRACKER);
 
-      this.batch = batch;
-      this.redmineManager = redmineManager;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineIssueManager = redmineManager.getIssueManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT_CATEGORY);
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncTracker.getDynamicFieldsSyncList();
 
-      for (com.taskadapter.redmineapi.bean.Tracker redmineTracker : redmineTrackerList) {
-        createOpenSuiteTracker(redmineTracker, openSuiteRedmineSyncTracker);
+      if (validateDynamicFieldsSycList(
+          dynamicFieldsSyncList,
+          METAMODEL_PROJECT_CATEGORY,
+          Mapper.toMap(new ProjectCategory()),
+          Mapper.toMap(new Tracker()))) {
+
+        this.batch = batch;
+        this.redmineManager = redmineManager;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineIssueManager = redmineManager.getIssueManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT_CATEGORY);
+
+        String syncTypeSelect = openSuiteRedmineSyncTracker.getRedmineToOpenSuiteSyncSelect();
+
+        for (com.taskadapter.redmineapi.bean.Tracker redmineTracker : redmineTrackerList) {
+          createOpenSuiteTracker(redmineTracker, syncTypeSelect);
+        }
       }
     }
 
@@ -105,8 +116,7 @@ public class RedmineImportTrackerServiceImp extends RedmineImportService
   }
 
   public void createOpenSuiteTracker(
-      com.taskadapter.redmineapi.bean.Tracker redmineTracker,
-      OpenSuitRedmineSync openSuiteRedmineSyncTracker) {
+      com.taskadapter.redmineapi.bean.Tracker redmineTracker, String syncTypeSelect) {
 
     ProjectCategory projectCategory =
         projectCatrgoryRepo.findByRedmineId(redmineTracker.getId()) != null
@@ -116,8 +126,6 @@ public class RedmineImportTrackerServiceImp extends RedmineImportService
     if (projectCategory.getId() == null) {
       addInList = true;
     }
-
-    String syncTypeSelect = openSuiteRedmineSyncTracker.getRedmineToOpenSuiteSyncSelect();
 
     // Sync type - On create
     if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -132,14 +140,13 @@ public class RedmineImportTrackerServiceImp extends RedmineImportService
 
     projectCategoryMap =
         redmineDynamicImportService.createOpenSuiteDynamic(
-            openSuiteRedmineSyncTracker,
+            dynamicFieldsSyncList,
             projectCategoryMap,
             redmineTrackerMap,
             null,
             metaModel,
             redmineTracker,
-            redmineManager,
-            errorObjList);
+            redmineManager);
 
     projectCategory = Mapper.toBean(projectCategory.getClass(), projectCategoryMap);
 
@@ -160,10 +167,10 @@ public class RedmineImportTrackerServiceImp extends RedmineImportService
     }
     projectCatrgoryRepo.save(projectCategory);
 
-    JPA.em().getTransaction().commit();
-    if (!JPA.em().getTransaction().isActive()) {
-      JPA.em().getTransaction().begin();
-    }
+    //    JPA.em().getTransaction().commit();
+    //    if (!JPA.em().getTransaction().isActive()) {
+    //      JPA.em().getTransaction().begin();
+    //    }
     onSuccess.accept(projectCategory);
     success++;
   }
