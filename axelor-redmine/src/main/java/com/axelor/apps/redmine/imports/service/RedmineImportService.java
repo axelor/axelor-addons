@@ -80,21 +80,6 @@ public class RedmineImportService {
   protected BatchRepository batchRepo;
   protected UserRepository userRepo;
 
-  @Inject
-  public RedmineImportService(
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo,
-      MetaFiles metaFiles,
-      BatchRepository batchRepo,
-      UserRepository userRepo) {
-
-    this.dmsFileRepo = dmsFileRepo;
-    this.appRedmineRepo = appRedmineRepo;
-    this.metaFiles = metaFiles;
-    this.batchRepo = batchRepo;
-    this.userRepo = userRepo;
-  }
-
   protected static final Pattern PATTERN = Pattern.compile("src=\"(.*?)\"");
   protected static final Pattern TAG_PATTERN = Pattern.compile("(<)([^>]*)(>)");
 
@@ -132,6 +117,23 @@ public class RedmineImportService {
   // This number can theoretically be different for different Redmine versions
   // see http://www.redmine.org/projects/redmine/repository/entry/trunk/app/models/project.rb
   public static final Integer REDMINE_PROJECT_STATUS_CLOSED = 5;
+
+  private Map<Integer, User> redmineUserMap = new HashMap<>();
+
+  @Inject
+  public RedmineImportService(
+      DMSFileRepository dmsFileRepo,
+      AppRedmineRepository appRedmineRepo,
+      MetaFiles metaFiles,
+      BatchRepository batchRepo,
+      UserRepository userRepo) {
+
+    this.dmsFileRepo = dmsFileRepo;
+    this.appRedmineRepo = appRedmineRepo;
+    this.metaFiles = metaFiles;
+    this.batchRepo = batchRepo;
+    this.userRepo = userRepo;
+  }
 
   protected void setCreatedUser(AuditableModel obj, User objUser, String methodName) {
 
@@ -346,9 +348,28 @@ public class RedmineImportService {
     return redmineCustomFieldsMap;
   }
 
-  public User findAbsUserByEmail(String mail) {
+  public User findOpensuiteUser(
+      Integer redmineUserId, com.taskadapter.redmineapi.bean.User redmineUser)
+      throws RedmineException {
 
+    if (redmineUser != null) {
+      redmineUserId = redmineUser.getId();
+    }
+
+    if (redmineUserId == null) {
+      return null;
+    }
+
+    if (redmineUserMap.containsKey(redmineUserId)) {
+      return redmineUserMap.get(redmineUserId);
+    }
+    if (redmineUser == null) {
+      redmineUser = redmineUserManager.getUserById(redmineUserId);
+    }
+    String mail = redmineUser.getMail();
     User user = userRepo.all().filter("self.partner.emailAddress.address = ?1", mail).fetchOne();
+
+    redmineUserMap.put(redmineUserId, user);
 
     return user;
   }

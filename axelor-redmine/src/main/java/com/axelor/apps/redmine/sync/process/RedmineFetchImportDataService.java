@@ -26,6 +26,8 @@ import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Issue;
+import com.taskadapter.redmineapi.bean.Project;
+
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -41,7 +43,7 @@ public class RedmineFetchImportDataService {
   private RedmineManager redmineManager;
   private HashMap<String, List<?>> importDataMap;
 
-  private static Integer FETCH_LIMIT = 100;
+  private static Integer FETCH_LIMIT = 50;
   private static Integer TOTAL_FETCH_COUNT = 0;
 
   public Map<String, List<?>> fetchImportData(
@@ -122,8 +124,7 @@ public class RedmineFetchImportDataService {
 
       try {
         ProjectManager redmineProjectManager = redmineManager.getProjectManager();
-        List<com.taskadapter.redmineapi.bean.Project> importProjectList =
-            redmineProjectManager.getProjects();
+        List<com.taskadapter.redmineapi.bean.Project> importProjectList = (List<Project>) importDataMap.get("importProjectList");
 
         if (importProjectList != null && !importProjectList.isEmpty()) {
           List<com.taskadapter.redmineapi.bean.Version> tempVersionList;
@@ -202,7 +203,7 @@ public class RedmineFetchImportDataService {
         }
 
         TOTAL_FETCH_COUNT += tempIssueList.size();
-      } while (tempIssueList != null && tempIssueList.size() > 0);
+      } while (tempIssueList != null && tempIssueList.size() > 0 && TOTAL_FETCH_COUNT < 50);
     }
 
     importDataMap.put("importIssueList", importIssueList);
@@ -215,7 +216,6 @@ public class RedmineFetchImportDataService {
     try {
       params.add("limit", FETCH_LIMIT.toString());
       params.add("offset", TOTAL_FETCH_COUNT.toString());
-
       issueList = redmineManager.getIssueManager().getIssues(params).getResults();
     } catch (RedmineException e) {
       TraceBackService.trace(e);

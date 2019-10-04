@@ -32,7 +32,6 @@ import com.axelor.common.StringUtils;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.mail.db.MailFollower;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailFollowerRepository;
 import com.axelor.mail.db.repo.MailMessageRepository;
@@ -48,7 +47,6 @@ import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Journal;
 import com.taskadapter.redmineapi.bean.JournalDetail;
-import com.taskadapter.redmineapi.bean.Watcher;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -56,7 +54,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.hibernate.proxy.HibernateProxyHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +65,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected ProjectRepository projectRepo;
   protected MailFollowerRepository mailFollowerRepo;
   protected RedmineDynamicImportService redmineDynamicImportService;
-  protected UserRepository userRepo;
   protected MailMessageRepository mailMessageRepo;
   protected MetaModelRepository metaModelRepo;
   protected ProjectCategoryRepository projectCategoryRepo;
@@ -142,6 +138,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
         String syncTypeSelect = openSuiteRedmineSyncIssue.getRedmineToOpenSuiteSyncSelect();
 
+        LOG.debug("Total issues to import: {}", redmineIssueList.size());
         for (Issue redmineIssue : redmineIssueList) {
           createOpenSuiteIssue(redmineIssue, syncTypeSelect);
         }
@@ -205,6 +202,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
     // Set special fixed rules
     this.setSpecialFixedRules(teamTask, redmineIssue);
+    LOG.debug("Importing issue: " + redmineIssue.getId());
 
     // Create or update OS object
     this.saveOpenSuiteIssue(teamTask, redmineIssue);
@@ -218,12 +216,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setProject(projectRepo.findByRedmineId(redmineIssue.getProjectId()));
       teamTask.setTaskDate(
           redmineIssue.getCreatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-
-      if (redmineIssue.getAssigneeId() != null) {
-        teamTask.setAssignedTo(
-            findAbsUserByEmail(
-                redmineUserManager.getUserById(redmineIssue.getAssigneeId()).getMail()));
-      }
+      teamTask.setAssignedTo(findOpensuiteUser(redmineIssue.getAssigneeId(), null));
 
       teamTask.setTargetVersion(
           redmineIssue.getTargetVersion() != null
@@ -232,9 +225,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setProjectCategory(
           projectCategoryRepo.findByRedmineId(redmineIssue.getTracker().getId()));
 
-      setCreatedBy(
-          teamTask,
-          findAbsUserByEmail(redmineUserManager.getUserById(redmineIssue.getAuthorId()).getMail()));
+      setCreatedBy(teamTask, findOpensuiteUser(redmineIssue.getAuthorId(), null));
       setLocalDateTime(teamTask, redmineIssue.getCreatedOn(), "setCreatedOn");
       setLocalDateTime(teamTask, redmineIssue.getUpdatedOn(), "setUpdatedOn");
     } catch (Exception e) {
@@ -259,7 +250,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask = teamTaskRepo.find(teamTask.getId());
 
       // Import issue watchers
-      importIssueWatchers(teamTask, redmineIssue);
+      //      importIssueWatchers(teamTask, redmineIssue);
 
       // Import issue comments
       importIssueJournals(teamTask, redmineIssue);
@@ -272,44 +263,36 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     }
   }
 
-  @Transactional
-  public void importIssueWatchers(TeamTask teamTask, Issue redmineIssue) {
-
-    String typeName = HibernateProxyHelper.getClassWithoutInitializingProxy(teamTask).getTypeName();
-
-    try {
-      mailFollowerRepo
-          .all()
-          .filter("self.relatedId = ?1 AND self.relatedModel = ?2", teamTask.getId(), typeName)
-          .delete();
-      Collection<Watcher> watchers =
-          redmineIssueManager.getIssueById(redmineIssue.getId(), Include.watchers).getWatchers();
-
-      if (watchers != null && !watchers.isEmpty()) {
-
-        for (Watcher redmineWatcher : watchers) {
-          User teamTaskFollower = userRepo.findByName(redmineWatcher.getName());
-
-          if (teamTaskFollower != null) {
-            MailFollower mailFollower = new MailFollower();
-            mailFollower.setUser(teamTaskFollower);
-            mailFollower.setRelatedId(teamTask.getId());
-            mailFollower.setRelatedModel(typeName);
-
-            try {
-              mailFollowerRepo.save(mailFollower);
-            } catch (Exception e) {
-              TraceBackService.trace(e, "", batch.getId());
-              onError.accept(e);
-            }
-          }
-        }
-      }
-    } catch (RedmineException e) {
-      TraceBackService.trace(e, "", batch.getId());
-      onError.accept(e);
-    }
-  }
+  //  @Transactional
+  //  public void importIssueWatchers(TeamTask teamTask, Issue redmineIssue) {
+  //
+  //      mailFollowerRepo
+  //          .all()
+  //          .filter("self.relatedId = ?1 AND self.relatedModel = ?2", teamTask.getId(),
+  // TeamTask.class.getName());
+  //
+  //      Collection<Watcher> watchers = redmineIssue.getWatchers();
+  //
+  //      if (watchers != null && !watchers.isEmpty()) {
+  //
+  //        for (Watcher redmineWatcher : watchers) {
+  //          User teamTaskFollower = userRepo.findByName(redmineWatcher.getName());
+  //
+  //          if (teamTaskFollower != null) {
+  //            MailFollower mailFollower = new MailFollower();
+  //            mailFollower.setUser(teamTaskFollower);
+  //            mailFollower.setRelatedId(teamTask.getId());
+  //            mailFollower.setRelatedModel( TeamTask.class.getName());
+  //            try {
+  //              mailFollowerRepo.save(mailFollower);
+  //            } catch (Exception e) {
+  //              TraceBackService.trace(e, "", batch.getId());
+  //              onError.accept(e);
+  //            }
+  //          }
+  //        }
+  //      }
+  //  }
 
   @Transactional
   public void importIssueJournals(TeamTask teamTask, Issue redmineIssue) {
@@ -333,7 +316,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     }
   }
 
-  public MailMessage getMailMessage(Journal redmineJournal, TeamTask teamTask, String Subject) {
+  public MailMessage getMailMessage(Journal redmineJournal, TeamTask teamTask, String Subject)
+      throws RedmineException {
 
     String body = "";
     MailMessage mailMessage =
@@ -368,7 +352,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         setLocalDateTime(mailMessage, redmineJournal.getCreatedOn(), "setCreatedOn");
 
         if (redmineJournal.getUser() != null) {
-          User user = findAbsUserByEmail(redmineJournal.getUser().getMail());
+          User user = findOpensuiteUser(null, redmineJournal.getUser());
           setCreatedBy(mailMessage, user);
           mailMessage.setAuthor(user);
         }
@@ -494,6 +478,10 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   }
 
   public void setCreatedBy(AuditableModel obj, User redmineUser) {
+
+    if (redmineUser == null) {
+      return;
+    }
 
     try {
       Method setCreatedByMethod =

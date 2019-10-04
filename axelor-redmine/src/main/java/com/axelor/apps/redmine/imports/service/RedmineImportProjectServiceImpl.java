@@ -36,6 +36,7 @@ import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.repo.MetaModelRepository;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
@@ -190,9 +191,12 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
           redmineProjectManager.getProjectMembers(redmineProject.getId());
 
       for (Membership membership : redmineProjectMembers) {
+        if (membership.getUserId() == null) {
+          continue;
+        }
         com.taskadapter.redmineapi.bean.User redmineUser =
             redmineUserManager.getUserById(membership.getUserId());
-        User user = findAbsUserByEmail(redmineUser.getMail());
+        User user = findOpensuiteUser(null, redmineUser);
 
         if (user != null) {
           project.addMembersUserSetItem(user);
@@ -245,13 +249,13 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       project = projectRepo.find(project.getId());
 
       // Import project wikis
-      importProjectWiki(redmineProject, project);
+      //      importProjectWiki(redmineProject, project);
 
       // Import project attachments
       importProjectAttachments(redmineProject.getId(), project);
 
       // Import project news
-      importProjectNews(redmineProject, project);
+      //      importProjectNews(redmineProject, project);
     } catch (Exception e) {
       onError.accept(e);
       fail++;
@@ -327,6 +331,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     try {
       jsonData = getResponseBody("/projects/" + redmineProjectId + "/files.json").string();
 
+      if (Strings.isNullOrEmpty(jsonData)) {
+        return;
+      }
       JSONObject Jobject = null;
       Jobject = new JSONObject(jsonData);
 
@@ -353,7 +360,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
   @Transactional
   public void importProjectNews(
-      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+      com.taskadapter.redmineapi.bean.Project redmineProject, Project project)
+      throws RedmineException {
 
     String projectKey = redmineProject.getIdentifier();
     List<News> redmineNews = null;
@@ -376,7 +384,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     }
   }
 
-  public ProjectAnnouncement getAnnouncement(News news, String projectKey) {
+  public ProjectAnnouncement getAnnouncement(News news, String projectKey) throws RedmineException {
 
     ProjectAnnouncement announcement = projectAnnouncementRepo.findByRedmineId(news.getId());
 
@@ -396,7 +404,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     com.taskadapter.redmineapi.bean.User newsUser = news.getUser();
 
     if (newsUser != null) {
-      User user = findAbsUserByEmail(newsUser.getMail());
+      User user = findOpensuiteUser(null, newsUser);
 
       if (user != null) {
         setCreatedUser(announcement, user, "setCreatedBy");

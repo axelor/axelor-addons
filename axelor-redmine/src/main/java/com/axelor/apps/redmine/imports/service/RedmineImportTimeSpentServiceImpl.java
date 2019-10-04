@@ -212,13 +212,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   public void setSpecialFixedRules(TimesheetLine timesheetLine, TimeEntry redmineTimeEntry) {
 
     try {
-      User user = null;
-
-      if (redmineTimeEntry.getUserId() != null) {
-        user =
-            findAbsUserByEmail(
-                redmineUserManager.getUserById(redmineTimeEntry.getUserId()).getMail());
-      }
+      User user = findOpensuiteUser(redmineTimeEntry.getUserId(), null);
 
       if (user != null) {
         timesheetLine.setUser(user);
