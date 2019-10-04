@@ -43,7 +43,7 @@ public class RedmineFetchImportDataService {
   private RedmineManager redmineManager;
   private HashMap<String, List<?>> importDataMap;
 
-  private static Integer FETCH_LIMIT = 50;
+  private static Integer FETCH_LIMIT = 100;
   private static Integer TOTAL_FETCH_COUNT = 0;
 
   public Map<String, List<?>> fetchImportData(
@@ -203,7 +203,7 @@ public class RedmineFetchImportDataService {
         }
 
         TOTAL_FETCH_COUNT += tempIssueList.size();
-      } while (tempIssueList != null && tempIssueList.size() > 0 && TOTAL_FETCH_COUNT < 50);
+      } while (tempIssueList != null && tempIssueList.size() > 0);
     }
 
     importDataMap.put("importIssueList", importIssueList);
