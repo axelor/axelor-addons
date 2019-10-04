@@ -18,7 +18,7 @@
 		model="com.axelor.apps.redmine.db.OpenSuitRedmineSync" width="large">
 
 		<panel name="mainPanel">
-			<field name="syncTypeSelect" onChange="action-open-suite-redmine-sync-attrs-selection-in" />
+			<field name="syncTypeSelect" />
 			<spacer colSpan="6" />
 			<field name="openSuiteToRedmineSyncSelect" />
 			<field name="redmineToOpenSuiteSyncSelect" />
@@ -31,14 +31,5 @@
 		</panel>
 
 	</form>
-
-	<action-attrs name="action-open-suite-redmine-sync-attrs-selection-in">
-		<attribute name="selection-in" for="openSuiteToRedmineSyncSelect"
-			expr="eval: ['none','oncreate']"
-			if="syncTypeSelect == 'project' || syncTypeSelect == 'tracker' || syncTypeSelect == 'version'" />
-		<attribute name="selection-in" for="redmineToOpenSuiteSyncSelect"
-			expr="eval: ['none','oncreate']"
-			if="syncTypeSelect == 'project' || syncTypeSelect == 'tracker' || syncTypeSelect == 'version'" />
-	</action-attrs>
 
 </object-views>

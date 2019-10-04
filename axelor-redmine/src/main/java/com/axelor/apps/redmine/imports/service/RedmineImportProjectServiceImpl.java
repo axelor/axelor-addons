@@ -31,7 +31,6 @@ import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
@@ -113,19 +112,30 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_PROJECT);
 
-      this.batch = batch;
-      this.redmineManager = redmineManager;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineProjectManager = redmineManager.getProjectManager();
-      this.redmineWikiManager = redmineManager.getWikiManager();
-      this.redmineAttachmentManager = redmineManager.getAttachmentManager();
-      this.redmineUserManager = redmineManager.getUserManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT);
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncProject.getDynamicFieldsSyncList();
 
-      for (com.taskadapter.redmineapi.bean.Project redmineProject : redmineProjectList) {
-        createOpenSuiteProject(redmineProject, openSuiteRedmineSyncProject);
+      if (validateDynamicFieldsSycList(
+          dynamicFieldsSyncList,
+          METAMODEL_PROJECT,
+          Mapper.toMap(new Project()),
+          Mapper.toMap(new com.taskadapter.redmineapi.bean.Project(null)))) {
+
+        this.batch = batch;
+        this.redmineManager = redmineManager;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineProjectManager = redmineManager.getProjectManager();
+        this.redmineWikiManager = redmineManager.getWikiManager();
+        this.redmineAttachmentManager = redmineManager.getAttachmentManager();
+        this.redmineUserManager = redmineManager.getUserManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT);
+
+        String syncTypeSelect = openSuiteRedmineSyncProject.getRedmineToOpenSuiteSyncSelect();
+
+        for (com.taskadapter.redmineapi.bean.Project redmineProject : redmineProjectList) {
+          createOpenSuiteProject(redmineProject, syncTypeSelect);
+        }
       }
     }
 
@@ -137,8 +147,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   }
 
   public void createOpenSuiteProject(
-      com.taskadapter.redmineapi.bean.Project redmineProject,
-      OpenSuitRedmineSync openSuiteRedmineSyncProject) {
+      com.taskadapter.redmineapi.bean.Project redmineProject, String syncTypeSelect) {
 
     Project project =
         projectRepo.findByRedmineId(redmineProject.getId()) != null
@@ -148,8 +157,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     if (project.getId() == null) {
       addInList = true;
     }
-
-    String syncTypeSelect = openSuiteRedmineSyncProject.getRedmineToOpenSuiteSyncSelect();
 
     // Sync type - On create
     if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -166,14 +173,13 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     projectMap =
         redmineDynamicImportService.createOpenSuiteDynamic(
-            openSuiteRedmineSyncProject,
+            dynamicFieldsSyncList,
             projectMap,
             redmineProjectMap,
             redmineProjectCustomFieldsMap,
             metaModel,
             redmineProject,
-            redmineManager,
-            errorObjList);
+            redmineManager);
 
     project = Mapper.toBean(project.getClass(), projectMap);
 
@@ -229,10 +235,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       }
       projectRepo.save(project);
 
-      JPA.em().getTransaction().commit();
-      if (!JPA.em().getTransaction().isActive()) {
-        JPA.em().getTransaction().begin();
-      }
+      //      JPA.em().getTransaction().commit();
+      //      if (!JPA.em().getTransaction().isActive()) {
+      //        JPA.em().getTransaction().begin();
+      //      }
       onSuccess.accept(project);
       success++;
 
@@ -249,8 +255,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     } catch (Exception e) {
       onError.accept(e);
       fail++;
-      JPA.em().getTransaction().rollback();
-      JPA.em().getTransaction().begin();
+      //      JPA.em().getTransaction().rollback();
+      //      JPA.em().getTransaction().begin();
       TraceBackService.trace(e, "", batch.getId());
     }
   }

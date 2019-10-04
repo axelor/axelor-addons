@@ -29,7 +29,6 @@ import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.StringUtils;
-import com.axelor.db.JPA;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
@@ -123,18 +122,29 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_ISSUE);
 
-      this.batch = batch;
-      this.redmineManager = redmineManager;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineIssueManager = redmineManager.getIssueManager();
-      this.redmineUserManager = redmineManager.getUserManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_TEAM_TASK);
-      this.lastBatchUpdatedOn = lastBatchUpdatedOn;
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncIssue.getDynamicFieldsSyncList();
 
-      for (Issue redmineIssue : redmineIssueList) {
-        createOpenSuiteIssue(redmineIssue, openSuiteRedmineSyncIssue);
+      if (validateDynamicFieldsSycList(
+          dynamicFieldsSyncList,
+          METAMODEL_TEAM_TASK,
+          Mapper.toMap(new TeamTask()),
+          Mapper.toMap(new Issue()))) {
+
+        this.batch = batch;
+        this.redmineManager = redmineManager;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineIssueManager = redmineManager.getIssueManager();
+        this.redmineUserManager = redmineManager.getUserManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_TEAM_TASK);
+        this.lastBatchUpdatedOn = lastBatchUpdatedOn;
+
+        String syncTypeSelect = openSuiteRedmineSyncIssue.getRedmineToOpenSuiteSyncSelect();
+
+        for (Issue redmineIssue : redmineIssueList) {
+          createOpenSuiteIssue(redmineIssue, syncTypeSelect);
+        }
       }
     }
 
@@ -145,15 +155,12 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     success = fail = 0;
   }
 
-  public void createOpenSuiteIssue(
-      Issue redmineIssue, OpenSuitRedmineSync openSuiteRedmineSyncIssue) {
+  public void createOpenSuiteIssue(Issue redmineIssue, String syncTypeSelect) {
 
     TeamTask teamTask =
         teamTaskRepo.findByRedmineId(redmineIssue.getId()) != null
             ? teamTaskRepo.findByRedmineId(redmineIssue.getId())
             : new TeamTask();
-
-    String syncTypeSelect = openSuiteRedmineSyncIssue.getRedmineToOpenSuiteSyncSelect();
 
     // Sync type - On create
     if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -186,14 +193,13 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
     teamTaskMap =
         redmineDynamicImportService.createOpenSuiteDynamic(
-            openSuiteRedmineSyncIssue,
+            dynamicFieldsSyncList,
             teamTaskMap,
             redmineIssueMap,
             redmineIssueCustomFieldsMap,
             metaModel,
             redmineIssue,
-            redmineManager,
-            errorObjList);
+            redmineManager);
 
     teamTask = Mapper.toBean(teamTask.getClass(), teamTaskMap);
 
@@ -243,10 +249,10 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.addOsbatchSetItem(batch);
       teamTaskRepo.save(teamTask);
 
-      JPA.em().getTransaction().commit();
-      if (!JPA.em().getTransaction().isActive()) {
-        JPA.em().getTransaction().begin();
-      }
+      //      JPA.em().getTransaction().commit();
+      //      if (!JPA.em().getTransaction().isActive()) {
+      //        JPA.em().getTransaction().begin();
+      //      }
       onSuccess.accept(teamTask);
       success++;
 
@@ -260,8 +266,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     } catch (Exception e) {
       onError.accept(e);
       fail++;
-      JPA.em().getTransaction().rollback();
-      JPA.em().getTransaction().begin();
+      //      JPA.em().getTransaction().rollback();
+      //      JPA.em().getTransaction().begin();
       TraceBackService.trace(e, "", batch.getId());
     }
   }

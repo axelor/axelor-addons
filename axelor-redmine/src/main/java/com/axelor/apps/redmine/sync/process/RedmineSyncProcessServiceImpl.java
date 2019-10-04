@@ -211,7 +211,7 @@ public class RedmineSyncProcessServiceImpl implements RedmineSyncProcessService 
       MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
 
       if (errorMetaFile != null) {
-        batch.setMetaFile(errorMetaFile);
+        batch.setErrorLogFile(errorMetaFile);
       }
     }
   }

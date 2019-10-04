@@ -12,19 +12,13 @@
 	</grid>
 
 	<form name="redmine-values-mapping-form" title="Values mapping"
-		model="com.axelor.apps.redmine.db.ValuesMapping" width="large"
-		onNew="redmine-values-mapping-attrs-hide-fields" onLoad="redmine-values-mapping-attrs-hide-fields">
+		model="com.axelor.apps.redmine.db.ValuesMapping" width="large">
 
 		<panel name="mainPanel">
 			<field name="selectValueInRedmine" />
-			<field name="selectValueInAbs" hidden="true" />
+			<field name="selectValueInAbs" />
 		</panel>
 
 	</form>
-
-	<action-attrs name="redmine-values-mapping-attrs-hide-fields">
-		<attribute name="hidden" for="selectValueInAbs" expr="eval: false"
-			if="__parent__?.typeSelectInAbs == 'select'" />
-	</action-attrs>
 
 </object-views>

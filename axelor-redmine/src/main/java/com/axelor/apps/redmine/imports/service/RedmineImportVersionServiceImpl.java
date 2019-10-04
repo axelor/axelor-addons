@@ -25,7 +25,6 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
@@ -85,16 +84,27 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
           openSuiteRedmineSyncRepo.findBySyncTypeSelect(
               OpenSuitRedmineSyncRepository.SYNC_TYPE_VERSION);
 
-      this.batch = batch;
-      this.redmineManager = redmineManager;
-      this.onError = onError;
-      this.onSuccess = onSuccess;
-      this.redmineProjectManager = redmineManager.getProjectManager();
-      this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT_VERSION);
       this.errorObjList = errorObjList;
+      this.dynamicFieldsSyncList = openSuiteRedmineSyncVersion.getDynamicFieldsSyncList();
 
-      for (com.taskadapter.redmineapi.bean.Version redmineVersion : redmineVersionList) {
-        createOpenSuiteProjectVersion(redmineVersion, openSuiteRedmineSyncVersion);
+      if (validateDynamicFieldsSycList(
+          dynamicFieldsSyncList,
+          METAMODEL_PROJECT_VERSION,
+          Mapper.toMap(new ProjectVersion()),
+          Mapper.toMap(new Version()))) {
+
+        this.batch = batch;
+        this.redmineManager = redmineManager;
+        this.onError = onError;
+        this.onSuccess = onSuccess;
+        this.redmineProjectManager = redmineManager.getProjectManager();
+        this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT_VERSION);
+
+        String syncTypeSelect = openSuiteRedmineSyncVersion.getRedmineToOpenSuiteSyncSelect();
+
+        for (com.taskadapter.redmineapi.bean.Version redmineVersion : redmineVersionList) {
+          createOpenSuiteProjectVersion(redmineVersion, syncTypeSelect);
+        }
       }
     }
 
@@ -105,15 +115,12 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
     success = fail = 0;
   }
 
-  public void createOpenSuiteProjectVersion(
-      Version redmineVersion, OpenSuitRedmineSync openSuiteRedmineSyncVersion) {
+  public void createOpenSuiteProjectVersion(Version redmineVersion, String syncTypeSelect) {
 
     ProjectVersion projectVersion =
         projectVersionRepo.findByRedmineId(redmineVersion.getId()) != null
             ? projectVersionRepo.findByRedmineId(redmineVersion.getId())
             : new ProjectVersion();
-
-    String syncTypeSelect = openSuiteRedmineSyncVersion.getRedmineToOpenSuiteSyncSelect();
 
     // Sync type - On create
     if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
@@ -130,14 +137,13 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
 
     projectVersionMap =
         redmineDynamicImportService.createOpenSuiteDynamic(
-            openSuiteRedmineSyncVersion,
+            dynamicFieldsSyncList,
             projectVersionMap,
             redmineVersionMap,
             redmineVersionCustomFieldsMap,
             metaModel,
             redmineVersion,
-            redmineManager,
-            errorObjList);
+            redmineManager);
 
     projectVersion = Mapper.toBean(projectVersion.getClass(), projectVersionMap);
 
@@ -154,17 +160,17 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
     try {
       projectVersionRepo.save(projectVersion);
 
-      JPA.em().getTransaction().commit();
-      if (!JPA.em().getTransaction().isActive()) {
-        JPA.em().getTransaction().begin();
-      }
+      //      JPA.em().getTransaction().commit();
+      //      if (!JPA.em().getTransaction().isActive()) {
+      //        JPA.em().getTransaction().begin();
+      //      }
       onSuccess.accept(projectVersion);
       success++;
     } catch (Exception e) {
       onError.accept(e);
       fail++;
-      JPA.em().getTransaction().rollback();
-      JPA.em().getTransaction().begin();
+      //      JPA.em().getTransaction().rollback();
+      //      JPA.em().getTransaction().begin();
       TraceBackService.trace(e, "", batch.getId());
     }
   }

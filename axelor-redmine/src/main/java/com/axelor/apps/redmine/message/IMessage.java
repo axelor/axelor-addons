@@ -44,4 +44,10 @@ public interface IMessage {
 
   static final String REDMINE_SYNC_ERROR_ISSUE_PROJECT_NOT_FOUND = /*$$(*/
       "Associated project is not synced or not found" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_REQUIRED_FIEDS_BINDINGS_MISSING = /*$$(*/
+      "Required field bindings are missing for sync" /*)*/;
+
+  static final String REDMINE_SYNC_ERROR_DYNAMIC_FIELDS_SYNC_LIST_NOT_FOUND = /*$$(*/
+      "Dynamic fields sync list not configured" /*)*/;
 }

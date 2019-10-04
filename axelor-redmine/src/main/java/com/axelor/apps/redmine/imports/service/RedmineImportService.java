@@ -21,6 +21,8 @@ import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.BatchRepository;
+import com.axelor.apps.redmine.db.DynamicFieldsSync;
+import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
@@ -29,6 +31,7 @@ import com.axelor.db.JPA;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.axelor.meta.db.MetaModel;
@@ -116,12 +119,15 @@ public class RedmineImportService {
 
   protected MetaModel metaModel;
   protected List<Object[]> errorObjList;
+  protected List<DynamicFieldsSync> dynamicFieldsSyncList;
 
   public static final String METAMODEL_PROJECT_CATEGORY = "ProjectCategory";
   public static final String METAMODEL_PROJECT = "Project";
   public static final String METAMODEL_PROJECT_VERSION = "ProjectVersion";
   public static final String METAMODEL_TEAM_TASK = "TeamTask";
   public static final String METAMODEL_TIMESHEET_LINE = "TimesheetLine";
+
+  public static final String DYNAMIC_IMPORT = "Import";
 
   // This number can theoretically be different for different Redmine versions
   // see http://www.redmine.org/projects/redmine/repository/entry/trunk/app/models/project.rb
@@ -345,5 +351,86 @@ public class RedmineImportService {
     User user = userRepo.all().filter("self.partner.emailAddress.address = ?1", mail).fetchOne();
 
     return user;
+  }
+
+  public boolean validateDynamicFieldsSycList(
+      List<DynamicFieldsSync> dynamicFieldsSyncList,
+      String modelName,
+      Map<String, Object> osMap,
+      Map<String, Object> redmineMap) {
+
+    Map<String, Boolean> validationMap = new HashMap<String, Boolean>();
+
+    if (dynamicFieldsSyncList != null && !dynamicFieldsSyncList.isEmpty()) {
+
+      switch (modelName) {
+        case METAMODEL_TEAM_TASK:
+          validationMap.put("name", false);
+          break;
+        case METAMODEL_PROJECT:
+          validationMap.put("name", false);
+          validationMap.put("code", false);
+          break;
+        case METAMODEL_PROJECT_CATEGORY:
+          validationMap.put("name", false);
+          break;
+        case METAMODEL_TIMESHEET_LINE:
+          validationMap.put("date", false);
+          break;
+        default:
+          break;
+      }
+
+      for (DynamicFieldsSync dynamicFieldsSync : dynamicFieldsSyncList) {
+        String fieldNameInAbs = dynamicFieldsSync.getFieldNameInAbs();
+        String fieldNameInRedmine = dynamicFieldsSync.getFieldNameInRedmine();
+
+        if (validationMap.containsKey(fieldNameInAbs)) {
+          validationMap.put(fieldNameInAbs, true);
+        }
+
+        if (!osMap.containsKey(fieldNameInAbs)) {
+          setErrorLog(
+              modelName,
+              fieldNameInAbs,
+              fieldNameInRedmine,
+              I18n.get(IMessage.REDMINE_SYNC_ERROR_ABS_FIELD_NOT_EXIST));
+        }
+
+        if (!dynamicFieldsSync.getIsCustomRedmineField()
+            && !redmineMap.containsKey(fieldNameInRedmine)) {
+          setErrorLog(
+              modelName,
+              fieldNameInAbs,
+              fieldNameInRedmine,
+              I18n.get(IMessage.REDMINE_SYNC_ERROR_REDMINE_FIELD_NOT_EXIST));
+        }
+      }
+
+      if (!validationMap.containsValue(false)) {
+        return true;
+      } else {
+        setErrorLog(
+            modelName,
+            null,
+            null,
+            I18n.get(IMessage.REDMINE_SYNC_ERROR_REQUIRED_FIEDS_BINDINGS_MISSING));
+      }
+    } else {
+      setErrorLog(
+          modelName,
+          null,
+          null,
+          I18n.get(IMessage.REDMINE_SYNC_ERROR_DYNAMIC_FIELDS_SYNC_LIST_NOT_FOUND));
+    }
+
+    return false;
+  }
+
+  public void setErrorLog(
+      String object, String fieldNameInAbs, String fieldNameInRedmine, String message) {
+
+    errorObjList.add(
+        new Object[] {object, DYNAMIC_IMPORT, "", fieldNameInAbs, fieldNameInRedmine, message});
   }
 }
