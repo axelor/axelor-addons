@@ -105,15 +105,12 @@ public class RedmineDynamicImportServiceImpl implements RedmineDynamicImportServ
       String mappingDirection = dynamicFieldsSync.getFieldMappingDirection();
 
       if (fieldNameInAbs != null
-          && fieldNameInRedmine != null
           && mappingDirection != null
           && mappingDirection.matches(MAPPING_DIRECTION)) {
 
-        // No such field found in ABS/Redmine
+        // No such field found in ABS
 
-        if (!osMap.containsKey(fieldNameInAbs)
-            || (!dynamicFieldsSync.getIsCustomRedmineField()
-                && !redmineMap.containsKey(fieldNameInRedmine))) {
+        if (!osMap.containsKey(fieldNameInAbs)) {
           continue;
         }
 
@@ -362,27 +359,30 @@ public class RedmineDynamicImportServiceImpl implements RedmineDynamicImportServ
     }
     Model item = null;
 
-    if (!fieldNameInRedmine.endsWith("Id") && !fieldNameInRedmine.endsWith("Name")) {
-      Object redmineFieldObj = ObjectTool.getObject(redmineObj, fieldNameInRedmine);
+    if (fieldNameInRedmine != null) {
 
-      if (redmineFieldObj != null) {
-        redmineMap.put(fieldNameInRedmine, (int) ObjectTool.getObject(redmineFieldObj, "id"));
+      if (!fieldNameInRedmine.endsWith("Id") && !fieldNameInRedmine.endsWith("Name")) {
+        Object redmineFieldObj = ObjectTool.getObject(redmineObj, fieldNameInRedmine);
 
+        if (redmineFieldObj != null) {
+          redmineMap.put(fieldNameInRedmine, (int) ObjectTool.getObject(redmineFieldObj, "id"));
+
+          item =
+              Query.of((Class<Model>) objClass)
+                  .filter("self.redmineId = :param")
+                  .bind("param", redmineMap.get(fieldNameInRedmine))
+                  .fetchOne();
+        }
+      } else {
         item =
             Query.of((Class<Model>) objClass)
-                .filter("self.redmineId = :param")
+                .filter(
+                    fieldNameInRedmine.endsWith("Id")
+                        ? "self.redmineId = :param"
+                        : "self.name = :param")
                 .bind("param", redmineMap.get(fieldNameInRedmine))
                 .fetchOne();
       }
-    } else {
-      item =
-          Query.of((Class<Model>) objClass)
-              .filter(
-                  fieldNameInRedmine.endsWith("Id")
-                      ? "self.redmineId = :param"
-                      : "self.name = :param")
-              .bind("param", redmineMap.get(fieldNameInRedmine))
-              .fetchOne();
     }
 
     if (item == null && defaultAbsValue != null) {
@@ -404,7 +404,7 @@ public class RedmineDynamicImportServiceImpl implements RedmineDynamicImportServ
       if (!dynamicFieldsSync.getIsSelectField()) {
         osMap.put(
             fieldNameInAbs,
-            redmineMap.get(fieldNameInRedmine) != null
+            fieldNameInRedmine != null && redmineMap.get(fieldNameInRedmine) != null
                 ? redmineMap.get(fieldNameInRedmine)
                 : defaultAbsValue);
       } else if (valuesMappingList != null && !valuesMappingList.isEmpty()) {
@@ -414,6 +414,7 @@ public class RedmineDynamicImportServiceImpl implements RedmineDynamicImportServ
                 .filter(
                     value ->
                         value.getSelectValueInRedmine() != null
+                            && fieldNameInRedmine != null
                             && value
                                 .getSelectValueInRedmine()
                                 .equals(redmineMap.get(fieldNameInRedmine)))
