@@ -136,6 +136,7 @@ public class RedmineSyncProcessServiceImpl implements RedmineSyncProcessService 
 
     redmineExportProjectService.exportProject(
         batch,
+        lastBatchUpdatedOn,
         redmineManager,
         (List<Project>) exportDataMap.get("exportProjectList"),
         onSuccess,
@@ -143,6 +144,7 @@ public class RedmineSyncProcessServiceImpl implements RedmineSyncProcessService 
         errorObjList);
     redmineExportVersionService.exportVersion(
         batch,
+        lastBatchUpdatedOn,
         redmineManager,
         (List<ProjectVersion>) exportDataMap.get("exportVersionList"),
         onSuccess,
@@ -176,6 +178,7 @@ public class RedmineSyncProcessServiceImpl implements RedmineSyncProcessService 
         errorObjList);
     redmineImportProjectService.importProject(
         batch,
+        lastBatchUpdatedOn,
         redmineManager,
         (List<com.taskadapter.redmineapi.bean.Project>) importDataMap.get("importProjectList"),
         onSuccess,
@@ -183,6 +186,7 @@ public class RedmineSyncProcessServiceImpl implements RedmineSyncProcessService 
         errorObjList);
     redmineImportVersionService.importVersion(
         batch,
+        lastBatchUpdatedOn,
         redmineManager,
         (List<Version>) importDataMap.get("importVersionList"),
         onSuccess,

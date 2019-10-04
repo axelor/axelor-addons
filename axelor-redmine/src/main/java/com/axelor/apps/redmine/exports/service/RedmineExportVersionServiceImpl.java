@@ -32,6 +32,8 @@ import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Version;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -63,10 +65,12 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
+  private LocalDateTime lastBatchUpdatedOn;
 
   @Override
   public void exportVersion(
       Batch batch,
+      LocalDateTime lastBatchUpdatedOn,
       RedmineManager redmineManager,
       List<ProjectVersion> projectVersionList,
       Consumer<Object> onSuccess,
@@ -93,6 +97,7 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
         this.onSuccess = onSuccess;
         this.redmineProjectManager = redmineManager.getProjectManager();
         this.metaModel = metaModelRepository.findByName(METAMODEL_PROJECT_VERSION);
+        this.lastBatchUpdatedOn = lastBatchUpdatedOn;
 
         String syncTypeSelect = openSuiteRedmineSyncVersion.getOpenSuiteToRedmineSyncSelect();
 
@@ -125,6 +130,25 @@ public class RedmineExportVersionServiceImpl extends RedmineExportService
       if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
           && (projectVersion.getRedmineId() != null && !projectVersion.getRedmineId().equals(0))) {
         return;
+      }
+
+      // Sync type - On update
+      if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_UPDATE)
+          && redmineVersion.getUpdatedOn() != null
+          && lastBatchUpdatedOn != null) {
+
+        // If updates are made on both sides and redmine side is latest updated then abort export
+        LocalDateTime redmineUpdatedOn =
+            redmineVersion
+                .getUpdatedOn()
+                .toInstant()
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime();
+
+        if (redmineUpdatedOn.isAfter(lastBatchUpdatedOn)
+            && redmineUpdatedOn.isAfter(projectVersion.getUpdatedOn())) {
+          return;
+        }
       }
 
       Map<String, Object> projectVersionMap = Mapper.toMap(projectVersion);

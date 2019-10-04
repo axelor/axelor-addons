@@ -34,6 +34,8 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Version;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -69,10 +71,12 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
+  private LocalDateTime lastBatchUpdatedOn;
 
   @Override
   public void importVersion(
       Batch batch,
+      LocalDateTime lastBatchUpdatedOn,
       RedmineManager redmineManager,
       List<com.taskadapter.redmineapi.bean.Version> redmineVersionList,
       Consumer<Object> onSuccess,
@@ -99,6 +103,7 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
         this.onSuccess = onSuccess;
         this.redmineProjectManager = redmineManager.getProjectManager();
         this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT_VERSION);
+        this.lastBatchUpdatedOn = lastBatchUpdatedOn;
 
         String syncTypeSelect = openSuiteRedmineSyncVersion.getRedmineToOpenSuiteSyncSelect();
 
@@ -126,6 +131,29 @@ public class RedmineImportVersionServiceImpl extends RedmineImportService
     if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_CREATE)
         && projectVersion.getId() != null) {
       return;
+    }
+
+    // Sync type - On update
+    if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_UPDATE)
+        && lastBatchUpdatedOn != null
+        && projectVersion.getId() != null) {
+
+      // If updates are made on both sides and os side is latest updated then abort import
+      LocalDateTime redmineUpdatedOn =
+          redmineVersion
+              .getUpdatedOn()
+              .toInstant()
+              .atZone(ZoneId.systemDefault())
+              .toLocalDateTime();
+
+      if (lastBatchUpdatedOn.isAfter(redmineUpdatedOn)) {
+        return;
+      }
+
+      if (projectVersion.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+          && projectVersion.getUpdatedOn().isAfter(redmineUpdatedOn)) {
+        return;
+      }
     }
 
     projectVersion.setRedmineId(redmineVersion.getId());
