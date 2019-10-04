@@ -408,6 +408,17 @@ public class RedmineDynamicImportServiceImpl implements RedmineDynamicImportServ
                 ? redmineMap.get(fieldNameInRedmine)
                 : defaultAbsValue);
       } else if (valuesMappingList != null && !valuesMappingList.isEmpty()) {
+
+        // Fixed rule for Tracker binding with ABS select fields for Issues
+        if (fieldNameInRedmine.equals("tracker")) {
+          Object redmineFieldObj = ObjectTool.getObject(redmineObj, fieldNameInRedmine);
+
+          if (redmineFieldObj != null) {
+            String trackerName = (String) ObjectTool.getObject(redmineFieldObj, "name");
+            redmineMap.put("tracker", trackerName);
+          }
+        }
+
         ValuesMapping valueMapping =
             valuesMappingList
                 .stream()
