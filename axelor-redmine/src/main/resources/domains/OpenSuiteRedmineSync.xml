@@ -30,7 +30,7 @@
 				
 				public static final String SYNC_NONE = "none";
 				public static final String SYNC_ON_CREATE = "oncreate";
-				public static final String SYNC_ISSUE_RULE = "issuesrule";
+				public static final String SYNC_ON_UPDATE = "onupdate";
 			]]>
 		</extra-code>
 

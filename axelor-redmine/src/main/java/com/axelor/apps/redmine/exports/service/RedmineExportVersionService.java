@@ -20,6 +20,7 @@ package com.axelor.apps.redmine.exports.service;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.taskadapter.redmineapi.RedmineManager;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -27,6 +28,7 @@ public interface RedmineExportVersionService {
 
   void exportVersion(
       Batch batch,
+      LocalDateTime lastBatchUpdatedOn,
       RedmineManager redmineManager,
       List<ProjectVersion> exportVersionList,
       Consumer<Object> onSuccess,

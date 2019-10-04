@@ -168,8 +168,8 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         return;
       }
 
-      // Sync type - Issue rule
-      if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ISSUE_RULE)
+      // Sync type - On update
+      if (syncTypeSelect.equals(OpenSuitRedmineSyncRepository.SYNC_ON_UPDATE)
           && redmineIssue.getUpdatedOn() != null
           && lastBatchUpdatedOn != null) {
 

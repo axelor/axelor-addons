@@ -22,7 +22,7 @@
 		name="redmine.open.suite.redmine.sync.open.suite.redmine.sync.select">
 		<option value="none">None</option>
 		<option value="oncreate">On create</option>
-		<option value="issuesrule">Issues rule</option>
+		<option value="onupdate">On update</option>
 	</selection>
 
 	<selection name="redmine.dynamic.fields.sync.type.select.in.abs">
