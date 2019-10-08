@@ -18,16 +18,11 @@
 package com.axelor.apps.redmine.imports.service;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.project.db.ProjectCategory;
 import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
-import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.dms.db.repo.DMSFileRepository;
-import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.repo.MetaModelRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -49,17 +44,10 @@ public class RedmineImportTrackerServiceImp extends RedmineImportService
 
   @Inject
   public RedmineImportTrackerServiceImp(
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo,
-      MetaFiles metaFiles,
-      BatchRepository batchRepo,
-      UserRepository userRepo,
       OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo,
       ProjectCategoryRepository projectCatrgoryRepo,
       RedmineDynamicImportService redmineDynamicImportService,
       MetaModelRepository metaModelRepo) {
-
-    super(dmsFileRepo, appRedmineRepo, metaFiles, batchRepo, userRepo);
 
     this.openSuiteRedmineSyncRepo = openSuiteRedmineSyncRepo;
     this.projectCatrgoryRepo = projectCatrgoryRepo;

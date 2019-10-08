@@ -18,8 +18,6 @@
 package com.axelor.apps.redmine.imports.service;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
@@ -28,11 +26,8 @@ import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.User;
-import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.repo.MetaModelRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -62,19 +57,12 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
   @Inject
   public RedmineImportTimeSpentServiceImpl(
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo,
-      MetaFiles metaFiles,
-      BatchRepository batchRepo,
-      UserRepository userRepo,
       OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo,
       TimesheetLineRepository timesheetLineRepo,
       RedmineDynamicImportService redmineDynamicImportService,
       MetaModelRepository metaModelRepo,
       TimesheetRepository timesheetRepo,
       TimesheetService timesheetService) {
-
-    super(dmsFileRepo, appRedmineRepo, metaFiles, batchRepo, userRepo);
 
     this.openSuiteRedmineSyncRepo = openSuiteRedmineSyncRepo;
     this.timesheetLineRepo = timesheetLineRepo;

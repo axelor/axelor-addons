@@ -18,46 +18,27 @@
 package com.axelor.apps.redmine.imports.service;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.BatchRepository;
-import com.axelor.apps.businesssupport.db.ProjectAnnouncement;
-import com.axelor.apps.businesssupport.db.repo.ProjectAnnouncementRepository;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.Wiki;
 import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.WikiRepository;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.User;
-import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.repo.MetaModelRepository;
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
-import com.taskadapter.redmineapi.bean.Attachment;
 import com.taskadapter.redmineapi.bean.Membership;
-import com.taskadapter.redmineapi.bean.News;
 import com.taskadapter.redmineapi.bean.Tracker;
-import com.taskadapter.redmineapi.bean.WikiPage;
-import com.taskadapter.redmineapi.bean.WikiPageDetail;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,33 +47,20 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
   protected OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo;
   protected ProjectRepository projectRepo;
-  protected WikiRepository wikiRepo;
-  protected ProjectAnnouncementRepository projectAnnouncementRepo;
   protected RedmineDynamicImportService redmineDynamicImportService;
   protected MetaModelRepository metaModelRepo;
   protected ProjectCategoryRepository projectCategoryRepo;
 
   @Inject
   public RedmineImportProjectServiceImpl(
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo,
-      MetaFiles metaFiles,
-      BatchRepository batchRepo,
-      UserRepository userRepo,
       OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo,
       ProjectRepository projectRepo,
-      WikiRepository wikiRepo,
-      ProjectAnnouncementRepository projectAnnouncementRepo,
       RedmineDynamicImportService redmineDynamicImportService,
       MetaModelRepository metaModelRepo,
       ProjectCategoryRepository projectCategoryRepo) {
 
-    super(dmsFileRepo, appRedmineRepo, metaFiles, batchRepo, userRepo);
-
     this.openSuiteRedmineSyncRepo = openSuiteRedmineSyncRepo;
     this.projectRepo = projectRepo;
-    this.wikiRepo = wikiRepo;
-    this.projectAnnouncementRepo = projectAnnouncementRepo;
     this.redmineDynamicImportService = redmineDynamicImportService;
     this.metaModelRepo = metaModelRepo;
     this.projectCategoryRepo = projectCategoryRepo;
@@ -130,8 +98,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         this.onError = onError;
         this.onSuccess = onSuccess;
         this.redmineProjectManager = redmineManager.getProjectManager();
-        this.redmineWikiManager = redmineManager.getWikiManager();
-        this.redmineAttachmentManager = redmineManager.getAttachmentManager();
         this.redmineUserManager = redmineManager.getUserManager();
         this.metaModel = metaModelRepo.findByName(METAMODEL_PROJECT);
         this.lastBatchUpdatedOn = lastBatchUpdatedOn;
@@ -279,7 +245,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       //      importProjectWiki(redmineProject, project);
 
       // Import project attachments
-      importProjectAttachments(redmineProject.getId(), project);
+      // importProjectAttachments(redmineProject.getId(), project);
 
       // Import project news
       //      importProjectNews(redmineProject, project);
@@ -292,7 +258,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     }
   }
 
-  @Transactional
+  /*  @Transactional
   public void importProjectWiki(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
 
@@ -330,9 +296,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
     }
-  }
+  }*/
 
-  public Wiki getWiki(
+  /*  public Wiki getWiki(
       WikiPageDetail redmineWikiPageDetail,
       String projectKey,
       List<Attachment> redmineWikiAttachments) {
@@ -348,9 +314,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     wiki.setTitle(wikiTitle);
 
     return wiki;
-  }
+  }*/
 
-  public void importProjectAttachments(Integer redmineProjectId, Project project) {
+  /*  public void importProjectAttachments(Integer redmineProjectId, Project project) {
 
     List<Attachment> projectAttachments = new ArrayList<>();
     String jsonData;
@@ -383,9 +349,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
     }
-  }
+  }*/
 
-  @Transactional
+  /*  @Transactional
   public void importProjectNews(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project)
       throws RedmineException {
@@ -409,9 +375,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         projectAnnouncementRepo.save(announcement);
       }
     }
-  }
+  }*/
 
-  public ProjectAnnouncement getAnnouncement(News news, String projectKey) throws RedmineException {
+  /*  public ProjectAnnouncement getAnnouncement(News news, String projectKey) throws RedmineException {
 
     ProjectAnnouncement announcement = projectAnnouncementRepo.findByRedmineId(news.getId());
 
@@ -441,5 +407,5 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     setLocalDateTime(announcement, news.getCreatedOn(), "setCreatedOn");
 
     return announcement;
-  }
+  }*/
 }

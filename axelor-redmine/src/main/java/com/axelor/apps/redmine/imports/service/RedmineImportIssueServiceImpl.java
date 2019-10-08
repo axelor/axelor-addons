@@ -18,8 +18,6 @@
 package com.axelor.apps.redmine.imports.service;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
@@ -27,30 +25,18 @@ import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
-import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.StringUtils;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.mail.db.MailMessage;
-import com.axelor.mail.db.repo.MailFollowerRepository;
-import com.axelor.mail.db.repo.MailMessageRepository;
-import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.repo.MetaModelRepository;
 import com.axelor.team.db.TeamTask;
 import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.taskadapter.redmineapi.Include;
-import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Issue;
-import com.taskadapter.redmineapi.bean.Journal;
-import com.taskadapter.redmineapi.bean.JournalDetail;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -63,38 +49,25 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo;
   protected TeamTaskRepository teamTaskRepo;
   protected ProjectRepository projectRepo;
-  protected MailFollowerRepository mailFollowerRepo;
   protected RedmineDynamicImportService redmineDynamicImportService;
-  protected MailMessageRepository mailMessageRepo;
   protected MetaModelRepository metaModelRepo;
   protected ProjectCategoryRepository projectCategoryRepo;
   protected ProjectVersionRepository projectVersionRepo;
 
   @Inject
   public RedmineImportIssueServiceImpl(
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo,
-      MetaFiles metaFiles,
-      BatchRepository batchRepo,
-      UserRepository userRepo,
       OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo,
       TeamTaskRepository teamTaskRepo,
       ProjectRepository projectRepo,
-      MailFollowerRepository mailFollowerRepo,
       RedmineDynamicImportService redmineDynamicImportService,
-      MailMessageRepository mailMessageRepo,
       MetaModelRepository metaModelRepo,
       ProjectCategoryRepository projectCategoryRepo,
       ProjectVersionRepository projectVersionRepo) {
 
-    super(dmsFileRepo, appRedmineRepo, metaFiles, batchRepo, userRepo);
-
     this.openSuiteRedmineSyncRepo = openSuiteRedmineSyncRepo;
     this.teamTaskRepo = teamTaskRepo;
     this.projectRepo = projectRepo;
-    this.mailFollowerRepo = mailFollowerRepo;
     this.redmineDynamicImportService = redmineDynamicImportService;
-    this.mailMessageRepo = mailMessageRepo;
     this.metaModelRepo = metaModelRepo;
     this.projectCategoryRepo = projectCategoryRepo;
     this.projectVersionRepo = projectVersionRepo;
@@ -253,7 +226,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       //      importIssueWatchers(teamTask, redmineIssue);
 
       // Import issue comments
-      importIssueJournals(teamTask, redmineIssue);
+      // importIssueJournals(teamTask, redmineIssue);
     } catch (Exception e) {
       onError.accept(e);
       fail++;
@@ -294,7 +267,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   //      }
   //  }
 
-  @Transactional
+  /*  @Transactional
   public void importIssueJournals(TeamTask teamTask, Issue redmineIssue) {
 
     try {
@@ -314,9 +287,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
     }
-  }
+  }*/
 
-  public MailMessage getMailMessage(Journal redmineJournal, TeamTask teamTask, String Subject)
+  /*  public MailMessage getMailMessage(Journal redmineJournal, TeamTask teamTask, String Subject)
       throws RedmineException {
 
     String body = "";
@@ -364,9 +337,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     }
 
     return mailMessage;
-  }
+  }*/
 
-  public String getJournalDetails(Journal redmineJournal, TeamTask teamTask) {
+  /*  public String getJournalDetails(Journal redmineJournal, TeamTask teamTask) {
 
     StringBuilder strBuilder = new StringBuilder();
     StringBuilder trackStrBuilder = new StringBuilder();
@@ -395,9 +368,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     }
 
     return strBuilder.toString();
-  }
+  }*/
 
-  public void getTrack(
+  /*  public void getTrack(
       List<JournalDetail> journalDetails, StringBuilder trackStrBuilder, TeamTask teamTask) {
 
     for (JournalDetail journalDetail : journalDetails) {
@@ -426,9 +399,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         trackStrBuilder.append("\"},");
       }
     }
-  }
+  }*/
 
-  public String[] getFieldName(String name) {
+  /*  public String[] getFieldName(String name) {
 
     switch (name) {
       case "project_id":
@@ -462,9 +435,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       default:
         return new String[] {name, name};
     }
-  }
+  }*/
 
-  public String getJournalHTML(String content, AuditableModel obj) {
+  /*  public String getJournalHTML(String content, AuditableModel obj) {
 
     content = getHtmlFromTextile(content, obj);
     int startindex = content.indexOf("<p>") + ("<p>").length();
@@ -475,7 +448,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     }
 
     return content;
-  }
+  }*/
 
   public void setCreatedBy(AuditableModel obj, User redmineUser) {
 

@@ -107,6 +107,7 @@ public class RedmineFetchImportDataService {
     importDataMap.put("importProjectList", importProjectList);
   }
 
+  @SuppressWarnings("unchecked")
   public void fetchImportVersionData() {
 
     List<com.taskadapter.redmineapi.bean.Version> importVersionList =

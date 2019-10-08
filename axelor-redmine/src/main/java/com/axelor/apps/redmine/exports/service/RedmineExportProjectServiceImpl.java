@@ -17,41 +17,25 @@
  */
 package com.axelor.apps.redmine.exports.service;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Partner;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.Wiki;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.WikiRepository;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.auth.db.User;
-import com.axelor.common.StringUtils;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.dms.db.DMSFile;
-import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
-import com.axelor.inject.Beans;
-import com.axelor.meta.MetaFiles;
-import com.axelor.meta.db.MetaAttachment;
-import com.axelor.meta.db.MetaFile;
-import com.axelor.meta.db.repo.MetaAttachmentRepository;
 import com.axelor.meta.db.repo.MetaModelRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
-import com.taskadapter.redmineapi.bean.Attachment;
 import com.taskadapter.redmineapi.bean.Membership;
 import com.taskadapter.redmineapi.bean.Role;
 import com.taskadapter.redmineapi.bean.Tracker;
-import com.taskadapter.redmineapi.bean.WikiPageDetail;
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -63,11 +47,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Consumer;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Request.Builder;
-import okhttp3.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,27 +57,18 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
   protected ProjectRepository projectRepo;
   protected RedmineDynamicExportService redmineDynamicExportService;
   protected MetaModelRepository metaModelRepository;
-  protected WikiRepository wikiRepo;
-  protected DMSFileRepository dmsFileRepo;
-  protected AppRedmineRepository appRedmineRepo;
 
   @Inject
   public RedmineExportProjectServiceImpl(
       OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo,
       ProjectRepository projectRepo,
       RedmineDynamicExportService redmineDynamicExportService,
-      MetaModelRepository metaModelRepository,
-      WikiRepository wikiRepo,
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo) {
+      MetaModelRepository metaModelRepository) {
 
     this.openSuiteRedmineSyncRepo = openSuiteRedmineSyncRepo;
     this.projectRepo = projectRepo;
     this.redmineDynamicExportService = redmineDynamicExportService;
     this.metaModelRepository = metaModelRepository;
-    this.wikiRepo = wikiRepo;
-    this.dmsFileRepo = dmsFileRepo;
-    this.appRedmineRepo = appRedmineRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -144,7 +114,7 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
         }
 
         // Export project wikis
-        exportProjectWikis();
+        // exportProjectWikis();
       }
     }
 
@@ -299,7 +269,7 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
       success++;
 
       // Export project attachments
-      addProjectAttachments(redmineProject, project);
+      // addProjectAttachments(redmineProject, project);
 
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
@@ -308,7 +278,7 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
     }
   }
 
-  public void exportProjectWikis() {
+  /*  public void exportProjectWikis() {
 
     List<Wiki> projectWikis =
         wikiRepo.all().filter("self.redmineTitle IS NULL OR self.redmineTitle = ''").fetch();
@@ -343,9 +313,9 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
         }
       }
     }
-  }
+  }*/
 
-  @Transactional
+  /*  @Transactional
   public void exportProjectWiki(String projectKey, Wiki wiki) {
 
     WikiPageDetail redmineWikiPageDetail = null;
@@ -391,9 +361,9 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
     }
-  }
+  }*/
 
-  public void assignProjectWikiValues(Wiki wiki, WikiPageDetail redmineWikiPageDetail) {
+  /*  public void assignProjectWikiValues(Wiki wiki, WikiPageDetail redmineWikiPageDetail) {
 
     String wikiTitle = wiki.getId().toString();
 
@@ -409,9 +379,9 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
     if (attachments != null && !attachments.isEmpty()) {
       redmineWikiPageDetail.setAttachments(attachments);
     }
-  }
+  }*/
 
-  @Transactional
+  /*  @Transactional
   public List<Attachment> getAttachments(Long objectId, String objectName) {
 
     List<MetaAttachment> attachments =
@@ -460,9 +430,9 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
     }
 
     return null;
-  }
+  }*/
 
-  public void addProjectAttachments(
+  /*  public void addProjectAttachments(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
 
     List<Attachment> projectAttachments =
@@ -479,9 +449,9 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
         attachProjectFile(attachment.getToken(), builder, client);
       }
     }
-  }
+  }*/
 
-  public void attachProjectFile(String attachmentTocken, Builder builder, OkHttpClient client) {
+  /*  public void attachProjectFile(String attachmentTocken, Builder builder, OkHttpClient client) {
 
     try {
       RequestBody requestBody =
@@ -501,5 +471,5 @@ public class RedmineExportProjectServiceImpl extends RedmineExportService
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
     }
-  }
+  }*/
 }
