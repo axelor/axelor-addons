@@ -17,43 +17,25 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.db.DynamicFieldsSync;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.StringUtils;
-import com.axelor.db.JPA;
-import com.axelor.dms.db.DMSFile;
-import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
-import com.axelor.meta.MetaFiles;
-import com.axelor.meta.db.MetaFile;
 import com.axelor.meta.db.MetaModel;
-import com.google.common.io.ByteSource;
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-import com.taskadapter.redmineapi.AttachmentManager;
 import com.taskadapter.redmineapi.IssueManager;
 import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.TimeEntryManager;
 import com.taskadapter.redmineapi.UserManager;
-import com.taskadapter.redmineapi.WikiManager;
-import com.taskadapter.redmineapi.bean.Attachment;
 import com.taskadapter.redmineapi.bean.CustomField;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
@@ -62,29 +44,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import net.java.textilej.parser.MarkupParser;
-import net.java.textilej.parser.builder.HtmlDocumentBuilder;
-import net.java.textilej.parser.markup.textile.TextileDialect;
-import okhttp3.OkHttpClient;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
-import org.hibernate.Hibernate;
 
 public class RedmineImportService {
 
-  protected DMSFileRepository dmsFileRepo;
-  protected AppRedmineRepository appRedmineRepo;
-  protected MetaFiles metaFiles;
-  protected BatchRepository batchRepo;
-  protected UserRepository userRepo;
-
-  protected static final Pattern PATTERN = Pattern.compile("src=\"(.*?)\"");
-  protected static final Pattern TAG_PATTERN = Pattern.compile("(<)([^>]*)(>)");
-
-  protected static final String IMG_URL =
-      "ws/rest/com.axelor.meta.db.MetaFile/%s/content/download?v=%s&amp;image=true";
+  //  protected static final Pattern PATTERN = Pattern.compile("src=\"(.*?)\"");
+  //  protected static final Pattern TAG_PATTERN = Pattern.compile("(<)([^>]*)(>)");
+  //
+  //  protected static final String IMG_URL =
+  //      "ws/rest/com.axelor.meta.db.MetaFile/%s/content/download?v=%s&amp;image=true";
 
   public static String result = "";
   protected static int success = 0, fail = 0;
@@ -98,8 +65,6 @@ public class RedmineImportService {
   protected IssueManager redmineIssueManager;
   protected UserManager redmineUserManager;
   protected ProjectManager redmineProjectManager;
-  protected WikiManager redmineWikiManager;
-  protected AttachmentManager redmineAttachmentManager;
   protected TimeEntryManager redmineTimeEntryManager;
 
   protected MetaModel metaModel;
@@ -120,20 +85,7 @@ public class RedmineImportService {
 
   private Map<Integer, User> redmineUserMap = new HashMap<>();
 
-  @Inject
-  public RedmineImportService(
-      DMSFileRepository dmsFileRepo,
-      AppRedmineRepository appRedmineRepo,
-      MetaFiles metaFiles,
-      BatchRepository batchRepo,
-      UserRepository userRepo) {
-
-    this.dmsFileRepo = dmsFileRepo;
-    this.appRedmineRepo = appRedmineRepo;
-    this.metaFiles = metaFiles;
-    this.batchRepo = batchRepo;
-    this.userRepo = userRepo;
-  }
+  @Inject UserRepository userRepo;
 
   protected void setCreatedUser(AuditableModel obj, User objUser, String methodName) {
 
@@ -171,7 +123,7 @@ public class RedmineImportService {
     }
   }
 
-  @Transactional
+  /*  @Transactional
   public void importAttachments(
       AuditableModel obj, Collection<Attachment> redmineAttachments, Date lastImportDateTime) {
 
@@ -189,9 +141,9 @@ public class RedmineImportService {
       }
       JPA.manage(obj);
     }
-  }
+  }*/
 
-  private void downloadNewAttachment(Attachment redmineAttachment, AuditableModel obj) {
+  /*  private void downloadNewAttachment(Attachment redmineAttachment, AuditableModel obj) {
 
     try {
       InputStream is;
@@ -215,9 +167,9 @@ public class RedmineImportService {
     } catch (IOException | RedmineException e) {
       TraceBackService.trace(e);
     }
-  }
+  }*/
 
-  @Transactional
+  /*  @Transactional
   public void attachExistingFile(DMSFile attachmentFile, AuditableModel obj) {
 
     obj = (AuditableModel) Hibernate.unproxy(obj);
@@ -233,9 +185,9 @@ public class RedmineImportService {
         metaFiles.attach(attachmentFile.getMetaFile(), obj);
       }
     }
-  }
+  }*/
 
-  public String getHtmlFromTextile(String textile, AuditableModel obj) {
+  /*  public String getHtmlFromTextile(String textile, AuditableModel obj) {
 
     if (!StringUtils.isBlank(textile)) {
       Matcher matcher = TAG_PATTERN.matcher(textile);
@@ -264,9 +216,9 @@ public class RedmineImportService {
     }
 
     return "";
-  }
+  }*/
 
-  protected String replaceImagePath(String content, AuditableModel obj) {
+  /*  protected String replaceImagePath(String content, AuditableModel obj) {
 
     if (!StringUtils.isBlank(content) && obj != null && obj.getId() != null) {
       Matcher matcher = PATTERN.matcher(content);
@@ -307,9 +259,9 @@ public class RedmineImportService {
     }
 
     return content;
-  }
+  }*/
 
-  public ResponseBody getResponseBody(String url) {
+  /*  public ResponseBody getResponseBody(String url) {
 
     AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
     url = appRedmine.getUri() + url;
@@ -330,7 +282,7 @@ public class RedmineImportService {
     }
 
     return null;
-  }
+  }*/
 
   public Map<String, Object> setRedmineCustomFieldsMap(Collection<CustomField> customFieldSet) {
 

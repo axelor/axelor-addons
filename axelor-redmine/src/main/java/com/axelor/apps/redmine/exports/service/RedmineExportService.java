@@ -30,6 +30,8 @@ import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.TimeEntryManager;
 import com.taskadapter.redmineapi.UserManager;
 import com.taskadapter.redmineapi.bean.CustomField;
+import com.taskadapter.redmineapi.bean.IssuePriority;
+import com.taskadapter.redmineapi.bean.IssueStatus;
 import com.taskadapter.redmineapi.bean.Project;
 import com.taskadapter.redmineapi.bean.Tracker;
 import com.taskadapter.redmineapi.bean.User;
@@ -58,6 +60,9 @@ public class RedmineExportService {
   protected IssueManager redmineIssueManager;
   protected ProjectManager redmineProjectManager;
   protected TimeEntryManager redmineTimeEntryManager;
+
+  protected List<IssuePriority> redmineIssuePriorities;
+  protected List<IssueStatus> redmineIssueStatuses;
 
   protected MetaModel metaModel;
   protected List<Object[]> errorObjList;

@@ -23,21 +23,9 @@ import com.axelor.apps.project.db.ProjectCategory;
 import com.axelor.apps.redmine.db.OpenSuitRedmineSync;
 import com.axelor.apps.redmine.db.repo.OpenSuitRedmineSyncRepository;
 import com.axelor.apps.redmine.message.IMessage;
-import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.StringUtils;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.dms.db.DMSFile;
-import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
-import com.axelor.inject.Beans;
-import com.axelor.mail.db.MailMessage;
-import com.axelor.mail.db.repo.MailFollowerRepository;
-import com.axelor.mail.db.repo.MailMessageRepository;
-import com.axelor.meta.MetaFiles;
-import com.axelor.meta.db.MetaAttachment;
-import com.axelor.meta.db.MetaFile;
-import com.axelor.meta.db.repo.MetaAttachmentRepository;
 import com.axelor.meta.db.repo.MetaModelRepository;
 import com.axelor.team.db.TeamTask;
 import com.axelor.team.db.repo.TeamTaskRepository;
@@ -49,28 +37,17 @@ import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.IssuePriority;
 import com.taskadapter.redmineapi.bean.IssueStatus;
-import com.taskadapter.redmineapi.bean.Journal;
-import com.taskadapter.redmineapi.bean.JournalDetail;
 import com.taskadapter.redmineapi.bean.User;
-import com.taskadapter.redmineapi.bean.Watcher;
-import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import wslite.json.JSONArray;
-import wslite.json.JSONObject;
 
 public class RedmineExportIssueServiceImpl extends RedmineExportService
     implements RedmineExportIssueService {
@@ -79,24 +56,18 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
   protected TeamTaskRepository teamTaskRepo;
   protected RedmineDynamicExportService redmineDynamicExportService;
   protected MetaModelRepository metaModelRepo;
-  protected UserRepository userRepo;
-  protected DMSFileRepository dmsFileRepo;
 
   @Inject
   public RedmineExportIssueServiceImpl(
       OpenSuitRedmineSyncRepository openSuiteRedmineSyncRepo,
       TeamTaskRepository teamTaskRepo,
       RedmineDynamicExportService redmineDynamicExportService,
-      MetaModelRepository metaModelRepo,
-      UserRepository userRepo,
-      DMSFileRepository dmsFileRepo) {
+      MetaModelRepository metaModelRepo) {
 
     this.openSuiteRedmineSyncRepo = openSuiteRedmineSyncRepo;
     this.teamTaskRepo = teamTaskRepo;
     this.redmineDynamicExportService = redmineDynamicExportService;
     this.metaModelRepo = metaModelRepo;
-    this.userRepo = userRepo;
-    this.dmsFileRepo = dmsFileRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -135,6 +106,13 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         this.redmineProjectManager = redmineManager.getProjectManager();
         this.metaModel = metaModelRepo.findByName(METAMODEL_TEAM_TASK);
         this.lastBatchUpdatedOn = lastBatchUpdatedOn;
+
+        try {
+          this.redmineIssuePriorities = redmineIssueManager.getIssuePriorities();
+          this.redmineIssueStatuses = redmineIssueManager.getStatuses();
+        } catch (RedmineException e) {
+          TraceBackService.trace(e, "", batch.getId());
+        }
 
         String syncTypeSelect = openSuiteRedmineSyncIssue.getOpenSuiteToRedmineSyncSelect();
 
@@ -239,8 +217,7 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
       // Special rule for priority (problem with directly set redmine priorityText)
       String priorityText = redmineIssue.getPriorityText();
       IssuePriority issuePriority =
-          redmineIssueManager
-              .getIssuePriorities()
+          redmineIssuePriorities
               .stream()
               .filter(priority -> priority.getName().equals(priorityText))
               .findAny()
@@ -250,8 +227,7 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
       // Special rule for status (problem with directly set redmine statusName)
       String statusName = redmineIssue.getStatusName();
       IssueStatus issueStatus =
-          redmineIssueManager
-              .getStatuses()
+          redmineIssueStatuses
               .stream()
               .filter(status -> status.getName().equals(statusName))
               .findAny()
@@ -319,13 +295,13 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
       success++;
 
       // Export issue watchers
-      addIssueWatchers(teamTask, redmineIssue);
+      // addIssueWatchers(teamTask, redmineIssue);
 
       // Export issue attachments
-      addIssueAttachments(teamTask, redmineIssue);
+      // addIssueAttachments(teamTask, redmineIssue);
 
       // Export issue journals
-      addIssueJournals(teamTask, redmineIssue);
+      // addIssueJournals(teamTask, redmineIssue);
     } catch (RedmineException e) {
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
@@ -342,7 +318,7 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
     }
   }
 
-  public void addIssueWatchers(TeamTask teamTask, Issue redmineIssue) {
+  /*  public void addIssueWatchers(TeamTask teamTask, Issue redmineIssue) {
 
     Collection<Watcher> redmineIssueWatchers = redmineIssue.getWatchers();
     List<Map<String, Object>> mailFollowers =
@@ -392,9 +368,9 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         }
       }
     }
-  }
+  }*/
 
-  @Transactional
+  /*  @Transactional
   public void addIssueAttachments(TeamTask teamTask, Issue redmineIssue) {
 
     List<MetaAttachment> attachments =
@@ -437,9 +413,9 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         onError.accept(e);
       }
     }
-  }
+  }*/
 
-  public void addIssueJournals(TeamTask teamTask, Issue redmineIssue) {
+  /*  public void addIssueJournals(TeamTask teamTask, Issue redmineIssue) {
 
     List<MailMessage> mailMessages = Beans.get(MailMessageRepository.class).findAll(teamTask, 0, 0);
     Collection<Journal> journals = new HashSet<>();
@@ -461,9 +437,9 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
         onError.accept(e);
       }
     }
-  }
+  }*/
 
-  public void addIssueJournal(MailMessage mailMessage, Collection<Journal> journals) {
+  /*  public void addIssueJournal(MailMessage mailMessage, Collection<Journal> journals) {
 
     try {
       JSONObject jsonMailMessage = new JSONObject(mailMessage.getBody());
@@ -496,9 +472,9 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
       TraceBackService.trace(e, "", batch.getId());
       onError.accept(e);
     }
-  }
+  }*/
 
-  public Journal getRedmineJournal(MailMessage mailMessage) {
+  /*  public Journal getRedmineJournal(MailMessage mailMessage) {
 
     Journal redmineJournal = null;
 
@@ -514,9 +490,9 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
     }
 
     return redmineJournal;
-  }
+  }*/
 
-  public Collection<JournalDetail> getJournalDetails(JSONArray trackArr) {
+  /*  public Collection<JournalDetail> getJournalDetails(JSONArray trackArr) {
 
     Collection<JournalDetail> journalDetails = new HashSet<>();
 
@@ -541,9 +517,9 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
     }
 
     return journalDetails;
-  }
+  }*/
 
-  public String getJournalDetailName(String name) {
+  /*  public String getJournalDetailName(String name) {
 
     switch (name) {
       case "project":
@@ -573,5 +549,5 @@ public class RedmineExportIssueServiceImpl extends RedmineExportService
       default:
         return name;
     }
-  }
+  }*/
 }
