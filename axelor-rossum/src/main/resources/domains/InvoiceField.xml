@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+  
+  <module package="com.axelor.apps.rossum.db" name="rossum"/>
+    
+  <entity name="InvoiceField">
+    <many-to-one name="invoiceOcrTemplate" ref="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Template"/>
+    <string name="templateField" title="Template Field" readonly="true"/>
+    <string name="templateValue" title="Template Value" readonly="true"/>
+    <string name="defaultValue" title="Default Value"/>
+    <boolean name="isbindWithTemplateField" title="Bind with Template Field"/>
+    <many-to-one name="metaField" title="Invoice Field" ref="com.axelor.meta.db.MetaField"/>  
+    <many-to-one name="parentInvoiceField" title="Parent Invoice Field" ref="com.axelor.apps.rossum.db.InvoiceField"/>
+    <one-to-many name="subMetaFieldList" title="Sub fields" ref="InvoiceField" mappedBy="parentInvoiceField"/>
+  </entity>
+  
+</domain-models>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+  
+  <menuitem title="Rossum" name="rossum-root" icon="fa-file-text" icon-background="blue" if="__config__.app.isApp('rossum')" order="-68"/>
+  
+  <menuitem title="Invoice ocr" name="rossum-root-invoice-ocr" parent="rossum-root" action="rossum.root.invoice.ocr"/>
+  <action-view name="rossum.root.invoice.ocr" title="Invoice Ocr" model="com.axelor.apps.rossum.db.InvoiceOcr">
+    <view type="grid" name="invoice-ocr-grid"/>
+    <view type="form" name="invoice-ocr-form"/>
+  </action-view>
+
+  <menuitem title="Config" name="rossum-root-config" parent="rossum-root"/>
+  
+  <menuitem title="Invoice Ocr Template" name="rossum-root-config-invoice-ocr-template" parent="rossum-root-config" action="rossum.root.config.invoice.ocr.template"/>
+  <action-view name="rossum.root.config.invoice.ocr.template" title="Invoice Ocr Template" model="com.axelor.apps.rossum.db.InvoiceOcrTemplate">
+    <view type="grid" name="invoice-ocr-template-grid"/>
+    <view type="form" name="invoice-ocr-template-form"/>
+  </action-view>
+
+</object-views>
