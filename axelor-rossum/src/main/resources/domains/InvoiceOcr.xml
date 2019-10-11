@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+  
+  <module name="rossum" package="com.axelor.apps.rossum.db"/>
+  
+  <entity name="InvoiceOcr" lang="java" cachable="true">
+    <many-to-one name="invoiceFile" ref="com.axelor.meta.db.MetaFile" title="Invoice File" help="Please upload file with max. 16 pages"/>
+    <string name="rawData" title="Raw Data" large="true"/>
+    <integer name="timeout" title="Timeout (Sec.)" default="60" help="Please enter seconds in multiple of 5"/>
+    <many-to-one name="invoiceTemplate" ref="com.axelor.apps.rossum.db.InvoiceOcrTemplate"/>
+  </entity>
+  
+</domain-models>
