@@ -68,6 +68,7 @@ import sibModel.CreateEmailCampaignRecipients;
 import sibModel.CreateEmailCampaignSender;
 import sibModel.CreateModel;
 import sibModel.CreateSender;
+import sibModel.GetContacts;
 import sibModel.GetEmailCampaign;
 import sibModel.GetEmailCampaigns;
 import sibModel.GetSendersList;
@@ -591,18 +592,42 @@ public class SendinBlueCampaignService {
         (LinkedTreeMap<String, Object>) campaignObj.get("recipients");
     @SuppressWarnings("unchecked")
     List<Double> lists = (List<Double>) recipients.get("lists");
+    long recipientsId;
     Partner partner;
     Lead lead;
     Set<Partner> partnerSet = new HashSet<>();
     Set<Lead> leadSet = new HashSet<>();
+    ContactsApi apiInstance = new ContactsApi();
     for (Double listId : lists) {
-      partner = partnerRepo.findBySendinBlueId(listId.longValue());
-      if (partner != null) {
-        partnerSet.add(partner);
-      }
-      lead = leadRepo.findBySendinBlueId(listId.longValue());
-      if (lead != null) {
-        leadSet.add(lead);
+      recipientsId = (new Double(listId)).longValue();
+      try {
+        long offset = 0L;
+        int total = 0;
+        do {
+          GetContacts result =
+              apiInstance.getContactsFromList(recipientsId, null, (long) DATA_FETCH_LIMIT, offset);
+          if (result != null && !result.getContacts().isEmpty()) {
+            total = result.getContacts().size();
+            offset += total;
+            for (Object contact : result.getContacts()) {
+              @SuppressWarnings("unchecked")
+              LinkedTreeMap<String, Object> contactObj = (LinkedTreeMap<String, Object>) contact;
+              Double contactId = (double) contactObj.get("id");
+              partner = partnerRepo.findBySendinBlueId(contactId.longValue());
+              if (partner != null) {
+                partnerSet.add(partner);
+              }
+              lead = leadRepo.findBySendinBlueId(contactId.longValue());
+              if (lead != null) {
+                leadSet.add(lead);
+              }
+            }
+          } else {
+            total = 0;
+          }
+        } while (total > 0);
+      } catch (ApiException e) {
+        TraceBackService.trace(e);
       }
     }
     marketingCampaign.setPartnerSet(partnerSet);
