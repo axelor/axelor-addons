@@ -104,7 +104,7 @@ public class SendinBlueContactService {
 
   protected String userLanguage;
   protected ArrayList<Long> partnerRecipients, leadRecipients;
-  private long totalExportRecord, totalImportRecord;
+  private long totalExportRecord, totalImportRecord, totalContactRecords, totalLeadRecords;
 
   public void exportContact(
       AppSendinblue appSendinblue,
@@ -419,6 +419,8 @@ public class SendinBlueContactService {
       ImportSendinBlue importSendinBlue, LocalDateTime lastImportDateTime, StringBuilder logWriter)
       throws AxelorException {
     totalImportRecord = 0;
+    totalContactRecords = 0;
+    totalLeadRecords = 0;
     ContactsApi apiInstance = new ContactsApi();
     OffsetDateTime modifiedSince = null;
     if (lastImportDateTime != null
@@ -455,7 +457,8 @@ public class SendinBlueContactService {
     } catch (ApiException e) {
       TraceBackService.trace(e);
     }
-    logWriter.append(String.format("%nTotal Contacts Imported : %s", totalImportRecord));
+    logWriter.append(String.format("%nTotal Contacts Imported : %s", totalContactRecords));
+    logWriter.append(String.format("%nTotal Contacts Leads : %s", totalLeadRecords));
   }
 
   private void createEmailAddress(LinkedTreeMap<String, Object> conObj) {
@@ -526,6 +529,7 @@ public class SendinBlueContactService {
       partner.setEmailAddress(emailAddress);
       partner.setName(name);
       emailAddress.setPartner(partner);
+      totalContactRecords++;
     }
   }
 
@@ -549,6 +553,7 @@ public class SendinBlueContactService {
       lead.setName(name);
       lead.setStatusSelect(LeadRepository.LEAD_STATUS_NEW);
       emailAddress.setLead(lead);
+      totalLeadRecords++;
     }
   }
 

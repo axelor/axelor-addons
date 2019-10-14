@@ -27,10 +27,6 @@
 					<field name="isContactImport" widget="boolean-switch" />
 					<field name="isTemplateImport" widget="boolean-switch" />
 					<field name="isCampaignImport" widget="boolean-switch" />
-					<field name="isEventImport" widget="boolean-switch" />
-					<field name="isReportImport" widget="boolean-switch" />
-					<field name="isContactStatImport" widget="boolean-switch" />
-					<field name="isCampaignStatImport" widget="boolean-switch" />
 				</panel>
 				<panel name="exportPanel" title="Export">
 					<field name="isContactExport" widget="boolean-switch" />

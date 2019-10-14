@@ -269,7 +269,9 @@ public class SendinBlueTemplateService {
                 || (importSendinBlue.getIsImportLatest()
                     && (createdAt != null && lastImportDateTime.isBefore(createdAt)
                         || (modifiedAt != null && lastImportDateTime.isBefore(modifiedAt))))
-                || (importSendinBlue.getIsNoUpdate() && createdAt != null && lastImportDateTime.isBefore(createdAt))) {
+                || (importSendinBlue.getIsNoUpdate()
+                    && createdAt != null
+                    && lastImportDateTime.isBefore(createdAt))) {
               createTemplate(template);
               totalImportRecord++;
             }
