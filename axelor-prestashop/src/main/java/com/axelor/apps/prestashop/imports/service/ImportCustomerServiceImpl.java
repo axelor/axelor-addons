@@ -41,6 +41,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -70,11 +71,16 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
     int done = 0;
     int errors = 0;
 
+    // Filter while fetching customer data
+    HashMap<String, String> filterMap = new HashMap<String, String>();
+    filterMap.put("active", "1");
+
     logBuffer.write(String.format("%n====== CUSTOMERS ======%n"));
 
     final PSWebServiceClient ws =
         new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
-    final List<PrestashopCustomer> remoteCustomers = ws.fetchAll(PrestashopResourceType.CUSTOMERS);
+    final List<PrestashopCustomer> remoteCustomers =
+        ws.fetch(PrestashopResourceType.CUSTOMERS, filterMap);
 
     for (PrestashopCustomer remoteCustomer : remoteCustomers) {
       logBuffer.write(
