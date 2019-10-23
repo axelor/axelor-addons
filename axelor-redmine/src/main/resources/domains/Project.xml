@@ -9,7 +9,7 @@
 
 		<integer name="redmineId" title="Redmine Id" />
 		<string name="code" title="Code" unique="true" required="true" />
-		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch"/>
+		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 

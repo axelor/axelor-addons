@@ -8,7 +8,7 @@
 	<entity name="TimesheetLine">
 
 		<integer name="redmineId" title="Redmine Id" />
-		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch"/>
+		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 

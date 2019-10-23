@@ -15,13 +15,13 @@
 	<menuitem title="Redmine" name="redmine-root"
 		if="__config__.app.isApp('redmine')" />
 
-	<menuitem title="Open suite redmine sync" name="redmine-open-suite-sync"
-		parent="redmine-root" action="redmine.open.suite.sync" />
+	<menuitem title="Open suite redmine import" name="redmine-open-suite-import"
+		parent="redmine-root" action="redmine.open.suite.import" />
 
-	<action-view name="redmine.open.suite.sync" title="Open suite redmine sync"
-		model="com.axelor.apps.redmine.db.OpenSuitRedmineSync">
-		<view type="grid" name="redmine-open-suite-sync-grid" />
-		<view type="form" name="redmine-open-suite-sync-form" />
+	<action-view name="redmine.open.suite.import" title="Open suite redmine import"
+		model="com.axelor.apps.redmine.db.RedmineImportConfig">
+		<view type="grid" name="redmine-import-config-grid" />
+		<view type="form" name="redmine-import-config-form" />
 	</action-view>
 
 </object-views>

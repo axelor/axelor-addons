@@ -30,11 +30,6 @@
 			<button name="updatedTasksInOsBtn" title="Updated tasks in OS"
 				colSpan="4" onClick="action-batch-method-open-updated-tasks-in-os" />
 
-			<field name="updatedIssuesInRedmine" colSpan="12" canNew="false"
-				canSelect="false" />
-			<button name="updatedIssuesInRedmineBtn" title="Updated issues in Redmine"
-				colSpan="4" onClick="action-batch-method-open-updated-issues-in-redmine" />
-
 			<field name="createdProjectsInOs" colSpan="12" canNew="false"
 				canSelect="false" />
 			<button name="createdProjectsInOsBtn" title="Created projects in OS"
@@ -44,19 +39,9 @@
 				canSelect="false" />
 			<button name="createdTimesheetLinesInOsBtn" title="Created timesheetlines in OS"
 				colSpan="4" onClick="action-batch-method-open-created-timesheetlines-in-os" />
-
-			<field name="createdTrackersInOs" colSpan="12" canNew="false"
-				canSelect="false" />
-			<button name="createdTrackersInOsBtn" title="Created trackers in OS"
-				colSpan="4" onClick="action-batch-method-open-created-trackers-in-os" />
 		</panel>
 
 	</form>
-
-	<action-method name="action-batch-method-open-created-trackers-in-os">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="createdTrackersInOs" />
-	</action-method>
 
 	<action-method name="action-batch-method-open-created-projects-in-os">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
@@ -66,11 +51,6 @@
 	<action-method name="action-batch-method-open-created-timesheetlines-in-os">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
 			method="createdTimesheetLinesInOs" />
-	</action-method>
-
-	<action-method name="action-batch-method-open-updated-issues-in-redmine">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="updatedIssuesInRedmine" />
 	</action-method>
 
 	<action-method name="action-batch-method-open-updated-tasks-in-os">

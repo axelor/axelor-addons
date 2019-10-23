@@ -19,7 +19,7 @@ package com.axelor.apps.redmine.message;
 
 public interface IMessage {
 
-  static final String BATCH_SYNC_SUCCESS = /*$$(*/ "Redmine sync completed" /*)*/;
+  static final String BATCH_REDMINE_IMPORT_SUCCESS = /*$$(*/ "Redmine import completed" /*)*/;
 
   static final String REDMINE_AUTHENTICATION_1 = /*$$(*/
       "URI and API Access Key should not be empty" /*)*/;
@@ -30,24 +30,42 @@ public interface IMessage {
   static final String REDMINE_TRANSPORT = /*$$(*/
       "Error connecting redmine server. Please check the configuration" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_ABS_FIELD_NOT_EXIST = /*$$(*/
-      "No such field found on ABS" /*)*/;
+  static final String REDMINE_IMPORT_TEAMTASK_ERROR = /*$$(*/ "TeamTask" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_REDMINE_FIELD_NOT_EXIST = /*$$(*/
-      "No such field found on Redmine" /*)*/;
+  static final String REDMINE_IMPORT_PROJECT_ERROR = /*$$(*/ "Project" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_RECORD_NOT_FOUND = /*$$(*/
-      "No record found with linked Redmine Id" /*)*/;
+  static final String REDMINE_IMPORT_TIMESHEET_LINE_ERROR = /*$$(*/ "TimesheetLine" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_ASSIGNEE_IS_NOT_VALID = /*$$(*/
-      "Assignee have no membership for associated project" /*)*/;
+  static final String REDMINE_IMPORT_PRODUCT_NOT_FOUND = /*$$(*/
+      "Entity not imported, no product found in OS" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_ISSUE_PROJECT_NOT_FOUND = /*$$(*/
-      "Associated project is not synced or not found" /*)*/;
+  static final String REDMINE_IMPORT_PARENT_TASK_NOT_FOUND = /*$$(*/
+      "Entity not imported, no parent task found in OS" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_REQUIRED_FIEDS_BINDINGS_MISSING = /*$$(*/
-      "Required field bindings are missing for sync" /*)*/;
+  static final String REDMINE_IMPORT_PROJECT_NOT_FOUND = /*$$(*/
+      "Entity not imported, no project found in OS" /*)*/;
 
-  static final String REDMINE_SYNC_ERROR_DYNAMIC_FIELDS_SYNC_LIST_NOT_FOUND = /*$$(*/
-      "Dynamic fields sync list not configured" /*)*/;
+  static final String REDMINE_IMPORT_PROJECT_CATEGORY_NOT_FOUND = /*$$(*/
+      "Entity not imported, no project category found in OS" /*)*/;
+
+  static final String REDMINE_IMPORT_TEAM_TASK_NOT_FOUND = /*$$(*/
+      "Entity not imported, no teamtask found in OS" /*)*/;
+
+  static final String REDMINE_IMPORT_WITH_DEFAULT_STATUS = /*$$(*/
+      "Status not found in OS, imported with default status" /*)*/;
+
+  static final String REDMINE_IMPORT_WITH_DEFAULT_PRIORITY = /*$$(*/
+      "Priority not found in OS, imported with default priority" /*)*/;
+
+  static final String REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND = /*$$(*/
+      "Client partner not found in OS" /*)*/;
+
+  static final String REDMINE_IMPORT_INVOICING_TYPE_NOT_FOUND = /*$$(*/
+      "Invoicing Type not found in OS" /*)*/;
+
+  static final String REDMINE_IMPORT_PARENT_PROJECT_NOT_FOUND = /*$$(*/
+      "Parent project not found on OS while it's set in redmine" /*)*/;
+
+  static final String REDMINE_IMPORT_USER_NOT_FOUND = /*$$(*/
+      "Entity not imported, no user found in OS" /*)*/;
 }

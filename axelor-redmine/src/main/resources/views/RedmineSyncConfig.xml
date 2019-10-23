@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid model="com.axelor.apps.redmine.db.RedmineImportConfig"
+		title="Redmine import config" name="redmine-import-config-grid">
+
+		<field name="redmineMappingFieldSelect" />
+
+	</grid>
+
+	<form model="com.axelor.apps.redmine.db.RedmineImportConfig"
+		title="Redmine import config" name="redmine-import-config-form" width="large">
+
+		<panel name="mainPanel">
+			<field name="redmineMappingFieldSelect" />
+		</panel>
+		<panel-related field="redmineImportMappingList" name="redmineImportMappingListPanel"
+			form-view="redmine-import-mapping-form" grid-view="redmine-import-mapping-grid"
+			colSpan="12" />
+
+	</form>
+
+</object-views>

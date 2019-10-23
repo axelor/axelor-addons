@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2018 Axelor (<http://axelor.com>).
+ * Copyright (C) 2019 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -15,16 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service;
+package com.axelor.apps.redmine.imports.service;
 
 import com.axelor.apps.base.db.Batch;
+import com.taskadapter.redmineapi.RedmineManager;
 import java.util.function.Consumer;
 
-public interface RedmineService {
+public interface RedmineIssueService {
 
-  public void redmineImportProjects(
-      Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError);
-
-  public void redmineImportIssues(
-      Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError);
+  void redmineImportIssue(
+      Batch batch,
+      RedmineManager redmineManager,
+      Consumer<Object> onSuccess,
+      Consumer<Throwable> onError);
 }

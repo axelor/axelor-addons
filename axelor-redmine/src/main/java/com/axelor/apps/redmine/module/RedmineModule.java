@@ -18,32 +18,18 @@
 package com.axelor.apps.redmine.module;
 
 import com.axelor.app.AxelorModule;
-import com.axelor.apps.redmine.exports.service.RedmineDynamicExportService;
-import com.axelor.apps.redmine.exports.service.RedmineDynamicExportServiceImpl;
-import com.axelor.apps.redmine.exports.service.RedmineExportIssueService;
-import com.axelor.apps.redmine.exports.service.RedmineExportIssueServiceImpl;
-import com.axelor.apps.redmine.exports.service.RedmineExportProjectService;
-import com.axelor.apps.redmine.exports.service.RedmineExportProjectServiceImpl;
-import com.axelor.apps.redmine.exports.service.RedmineExportTimeSpentService;
-import com.axelor.apps.redmine.exports.service.RedmineExportTimeSpentServiceImpl;
-import com.axelor.apps.redmine.exports.service.RedmineExportVersionService;
-import com.axelor.apps.redmine.exports.service.RedmineExportVersionServiceImpl;
-import com.axelor.apps.redmine.imports.service.RedmineDynamicImportService;
-import com.axelor.apps.redmine.imports.service.RedmineDynamicImportServiceImpl;
-import com.axelor.apps.redmine.imports.service.RedmineImportIssueService;
-import com.axelor.apps.redmine.imports.service.RedmineImportIssueServiceImpl;
-import com.axelor.apps.redmine.imports.service.RedmineImportProjectService;
-import com.axelor.apps.redmine.imports.service.RedmineImportProjectServiceImpl;
-import com.axelor.apps.redmine.imports.service.RedmineImportTimeSpentService;
-import com.axelor.apps.redmine.imports.service.RedmineImportTimeSpentServiceImpl;
-import com.axelor.apps.redmine.imports.service.RedmineImportTrackerService;
-import com.axelor.apps.redmine.imports.service.RedmineImportTrackerServiceImp;
-import com.axelor.apps.redmine.imports.service.RedmineImportVersionService;
-import com.axelor.apps.redmine.imports.service.RedmineImportVersionServiceImpl;
+import com.axelor.apps.redmine.imports.service.RedmineIssueService;
+import com.axelor.apps.redmine.imports.service.RedmineIssueServiceImpl;
+import com.axelor.apps.redmine.imports.service.RedmineProjectService;
+import com.axelor.apps.redmine.imports.service.RedmineProjectServiceImpl;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueService;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueServiceImpl;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentService;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentServiceImpl;
+import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectService;
+import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectServiceImpl;
 import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.apps.redmine.service.RedmineServiceImpl;
-import com.axelor.apps.redmine.sync.process.RedmineSyncProcessService;
-import com.axelor.apps.redmine.sync.process.RedmineSyncProcessServiceImpl;
 
 public class RedmineModule extends AxelorModule {
 
@@ -51,21 +37,10 @@ public class RedmineModule extends AxelorModule {
   protected void configure() {
 
     bind(RedmineService.class).to(RedmineServiceImpl.class);
-    bind(RedmineSyncProcessService.class).to(RedmineSyncProcessServiceImpl.class);
-
-    // Import Methods
-    bind(RedmineImportTrackerService.class).to(RedmineImportTrackerServiceImp.class);
+    bind(RedmineIssueService.class).to(RedmineIssueServiceImpl.class);
+    bind(RedmineProjectService.class).to(RedmineProjectServiceImpl.class);
     bind(RedmineImportProjectService.class).to(RedmineImportProjectServiceImpl.class);
-    bind(RedmineImportVersionService.class).to(RedmineImportVersionServiceImpl.class);
     bind(RedmineImportIssueService.class).to(RedmineImportIssueServiceImpl.class);
     bind(RedmineImportTimeSpentService.class).to(RedmineImportTimeSpentServiceImpl.class);
-    bind(RedmineDynamicImportService.class).to(RedmineDynamicImportServiceImpl.class);
-
-    // Export Methods
-    bind(RedmineExportProjectService.class).to(RedmineExportProjectServiceImpl.class);
-    bind(RedmineExportVersionService.class).to(RedmineExportVersionServiceImpl.class);
-    bind(RedmineExportIssueService.class).to(RedmineExportIssueServiceImpl.class);
-    bind(RedmineExportTimeSpentService.class).to(RedmineExportTimeSpentServiceImpl.class);
-    bind(RedmineDynamicExportService.class).to(RedmineDynamicExportServiceImpl.class);
   }
 }

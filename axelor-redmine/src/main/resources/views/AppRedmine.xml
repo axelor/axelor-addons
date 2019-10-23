@@ -6,9 +6,12 @@
 	<form name="app-redmine-config-form" title="App Redmine"
 		model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false"
 		width="large">
-		<panel>
-			<field name="uri" title="URI" />
-			<field name="apiAccessKey" title="Api Access Key" />
+		<panel name="mainPanel">
+			<field name="uri" />
+			<field name="apiAccessKey" />
+		</panel>
+		<panel name="fieldsPanel">
+			<field name="company" />
 		</panel>
 	</form>
 
