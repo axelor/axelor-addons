@@ -5,6 +5,7 @@
 
 	<grid name="redmine-batch-grid" title="Redmine batches"
 		model="com.axelor.apps.redmine.db.RedmineBatch">
+		<field name="redmineActionSelect" />
 		<field name="code" x-bind="{{code|unaccent|uppercase}}" />
 		<field name="batchUser" form-view="user-form" grid-view="user-grid" />
 		<field name="createdOn" />
@@ -15,6 +16,7 @@
 		title="Redmine Batch" model="com.axelor.apps.redmine.db.RedmineBatch"
 		width="large">
 		<panel name="main">
+			<field name="redmineActionSelect" />
 			<field name="code" x-bind="{{code|unaccent|uppercase}}"
 				onChange="action-base-batch-condition-check-unique-code" />
 			<field name="batchUser" canEdit="false" widget="SuggestBox"
@@ -23,9 +25,12 @@
 		<panel-tabs>
 			<panel name="actionPanel" title="Actions">
 				<panel colSpan="3">
-					<button name="redmineSyncBtn" title="Redmine Sync"
-						onClick="save,action-redmine-batch-method-sync-process"
-						colSpan="12" />
+					<button name="redmineImportProjectsBtn" title="Redmine Import Projects"
+						onClick="save,action-redmine-batch-method-import-projects"
+						colSpan="12" hidden="true" showIf="redmineActionSelect == 0" />
+					<button name="redmineImportIssuesBtn" title="Redmine Import Issues"
+						onClick="save,action-redmine-batch-method-import-issues" colSpan="12"
+						hidden="true" showIf="redmineActionSelect == 1" />
 				</panel>
 			</panel>
 			<panel name="information" title="Information">
@@ -53,9 +58,14 @@
 
 	<!-- ACTION METHOD -->
 
-	<action-method name="action-redmine-batch-method-sync-process">
+	<action-method name="action-redmine-batch-method-import-projects">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="redmineSyncProcess" />
+			method="redmineImportProjects" />
+	</action-method>
+
+	<action-method name="action-redmine-batch-method-import-issues">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="redmineImportIssues" />
 	</action-method>
 
 </object-views>

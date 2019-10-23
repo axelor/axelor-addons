@@ -21,7 +21,6 @@ import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.ProjectCategory;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.message.IMessage;
@@ -42,39 +41,32 @@ public class RedmineBatchController {
   @Inject private RedmineBatchRepository redmineBatchRepo;
   @Inject private BatchRepository batchRepo;
 
-  public void redmineSyncProcess(ActionRequest request, ActionResponse response) {
+  public void redmineImportProjects(ActionRequest request, ActionResponse response) {
 
     RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
     redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
 
-    Batch batch = Beans.get(RedmineBatchService.class).redmineSyncProcess(redmineBatch);
+    Batch batch = Beans.get(RedmineBatchService.class).redmineImportProjects(redmineBatch);
 
     if (batch != null) {
-      response.setFlash(IMessage.BATCH_SYNC_SUCCESS);
+      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
     }
 
     response.setReload(true);
   }
 
-  public void createdTrackersInOs(ActionRequest request, ActionResponse response) {
+  public void redmineImportIssues(ActionRequest request, ActionResponse response) {
 
-    Batch batch = request.getContext().asType(Batch.class);
-    batch = batchRepo.find(batch.getId());
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
+    redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
-    batch.getCreatedTrackersInOs().forEach(t -> idList.add(t.getId()));
+    Batch batch = Beans.get(RedmineBatchService.class).redmineImportIssues(redmineBatch);
 
-    if (!idList.isEmpty()) {
-      response.setView(
-          ActionView.define(I18n.get("Categories"))
-              .model(ProjectCategory.class.getName())
-              .add("grid", "category-grid")
-              .add("form", "category-form")
-              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
-              .map());
-
-      response.setCanClose(true);
+    if (batch != null) {
+      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
     }
+
+    response.setReload(true);
   }
 
   public void createdProjectsInOs(ActionRequest request, ActionResponse response) {
@@ -112,27 +104,6 @@ public class RedmineBatchController {
               .model(TimesheetLine.class.getName())
               .add("grid", "timesheet-line-grid")
               .add("form", "timesheet-line-form")
-              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
-              .map());
-
-      response.setCanClose(true);
-    }
-  }
-
-  public void updatedIssuesInRedmine(ActionRequest request, ActionResponse response) {
-
-    Batch batch = request.getContext().asType(Batch.class);
-    batch = batchRepo.find(batch.getId());
-
-    List<Long> idList = new ArrayList<Long>();
-    batch.getUpdatedIssuesInRedmine().forEach(t -> idList.add(t.getId()));
-
-    if (!idList.isEmpty()) {
-      response.setView(
-          ActionView.define(I18n.get("Teamtasks"))
-              .model(TeamTask.class.getName())
-              .add("grid", "team-task-grid")
-              .add("form", "team-task-form")
               .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
               .map());
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<form name="team-task-form" id="redmine-team-task-form" title="Task"
+		model="com.axelor.team.db.TeamTask" onNew="action-team-task-group-onnew"
+		onLoad="action-team-task-group-timer-process" width="large">
+
+		<panel-include view="team-task-form" from="axelor-project" />
+		<panel name="redminePanel" title="Redmine">
+			<field name="redmineId" />
+			<field name="fixedVersion" />
+			<field name="isTaskRefused" widget="boolean-switch" />
+		</panel>
+
+	</form>
+
+</object-views>

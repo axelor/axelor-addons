@@ -10,30 +10,15 @@
 		<option value="deployment">Deployment</option>
 	</selection>
 
-	<selection name="redmine.open.suite.sync.type.select">
-		<option value="issue">Issue</option>
-		<option value="spenttime">Spent time</option>
-		<option value="project">Project</option>
-		<option value="tracker">Tracker</option>
-		<option value="version">Version</option>
+	<selection name="redmine.import.config.redmine.mapping.field.select">
+		<option value="Status">Status</option>
+		<option value="Tracker">Tracker</option>
+		<option value="Priority">Priority</option>
 	</selection>
 
-	<selection
-		name="redmine.open.suite.redmine.sync.open.suite.redmine.sync.select">
-		<option value="none">None</option>
-		<option value="oncreate">On create</option>
-		<option value="onupdate">On update</option>
-	</selection>
-
-	<selection name="redmine.dynamic.fields.sync.type.select.in.abs">
-		<option value="m2o">M2O</option>
-		<option value="select">Select</option>
-	</selection>
-
-	<selection name="redmine.dynamic.fields.sync.type.field.mapping.direction">
-		<option value="redminetoos">Redmine to OS</option>
-		<option value="ostoredmine">OS to Redmine</option>
-		<option value="both">Both</option>
+	<selection name="redmine.batch.action.select">
+		<option value="0">Import Projects</option>
+		<option value="1">Import Issues</option>
 	</selection>
 
 </object-views>

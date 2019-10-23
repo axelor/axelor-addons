@@ -13,6 +13,18 @@
 		<string name="description" title="Description" large="true" />
 		<one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch"
 			mappedBy="redmineBatch" title="Batchs" />
+		<integer name="redmineActionSelect" title="Action"
+			selection="redmine.batch.action.select" />
+
+		<string name="failedRedmineIssuesIds" large="true" />
+		<string name="failedRedmineTimeEntriesIds" large="true" />
+
+		<extra-code>
+			<![CDATA[
+				public static final int ACTION_SELECT_IMPORT_PROJECT = 0;
+				public static final int ACTION_SELECT_IMPORT_ISSUE = 1;
+			]]>
+		</extra-code>
 
 	</entity>
 

@@ -8,10 +8,18 @@
 	<entity name="TeamTask">
 
 		<integer name="redmineId" title="Redmine Id" />
-		<many-to-many name="osbatchSet" ref="com.axelor.apps.base.db.Batch"/>
-		<many-to-many name="redminebatchSet" ref="com.axelor.apps.base.db.Batch"/>
+		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch" />
+		<string name="fixedVersion" title="Fixed version" />
+		<boolean name="isTaskRefused" title="Task refused" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
+
+		<extra-code>
+			<![CDATA[
+				public static final String TEAM_TASK_DEFAULT_STATUS = "new";
+				public static final String TEAM_TASK_DEFAULT_PRIORITY = "normal";
+			]]>
+		</extra-code>
 
 	</entity>
 
