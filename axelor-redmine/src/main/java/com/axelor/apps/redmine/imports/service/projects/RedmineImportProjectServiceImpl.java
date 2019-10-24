@@ -60,8 +60,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     implements RedmineImportProjectService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
-  protected AppRedmineRepository appRedmineRepo;
-  protected CompanyRepository companyRepo;
 
   @Inject
   public RedmineImportProjectServiceImpl(
@@ -75,7 +73,15 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo) {
 
-    super(userRepo, projectRepo, productRepo, teamTaskRepo, projectCategoryRepo, partnerRepo);
+    super(
+        userRepo,
+        projectRepo,
+        productRepo,
+        teamTaskRepo,
+        projectCategoryRepo,
+        partnerRepo,
+        appRedmineRepo,
+        companyRepo);
     this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.appRedmineRepo = appRedmineRepo;
     this.companyRepo = companyRepo;
@@ -161,22 +167,16 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     this.setRedmineCustomFieldsMap(redmineProject.getCustomFields());
 
     Project project = projectRepo.findByRedmineId(redmineProject.getId());
+    LocalDateTime redmineUpdatedOn =
+        redmineProject.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
     if (project == null) {
       project = new Project();
-    } else if (lastBatchUpdatedOn != null) {
-      LocalDateTime redmineUpdatedOn =
-          redmineProject
-              .getUpdatedOn()
-              .toInstant()
-              .atZone(ZoneId.systemDefault())
-              .toLocalDateTime();
-
-      if (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-          || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
-              && project.getUpdatedOn().isAfter(redmineUpdatedOn))) {
-        return;
-      }
+    } else if (lastBatchUpdatedOn != null
+        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
+            || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+                && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
+      return;
     }
 
     LOG.debug("Importing project: " + redmineProject.getIdentifier());
@@ -191,10 +191,16 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
       projectRepo.save(project);
 
+      JPA.em()
+          .createNativeQuery("update project_project SET updated_on = ?1 where id = ?2")
+          .setParameter(1, redmineUpdatedOn)
+          .setParameter(2, project.getId())
+          .executeUpdate();
+
       // CREATE MAP FOR CHILD-PARENT TASKS
 
       if (redmineProject.getParentId() != null) {
-        parentMap.put(project.getId(), redmineProject.getId());
+        parentMap.put(project.getId(), redmineProject.getParentId());
       }
 
       onSuccess.accept(project);
@@ -217,7 +223,19 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
         if (project != null) {
           project.setParentProject(projectRepo.findByRedmineId(entry.getValue()));
+          LocalDateTime updatedOn =
+              project.getUpdatedOn() != null
+                  ? project.getUpdatedOn().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                  : null;
           projectRepo.save(project);
+
+          if (updatedOn != null) {
+            JPA.em()
+                .createNativeQuery("update project_project SET updated_on = ?1 where id = ?2")
+                .setParameter(1, updatedOn)
+                .setParameter(2, project.getId())
+                .executeUpdate();
+          }
         }
       }
     }
@@ -260,7 +278,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     }
 
     project.setProjectTypeSelect(
-        project.getParentProject() != null
+        redmineProject.getParentId() != null
             ? ProjectRepository.TYPE_PHASE
             : ProjectRepository.TYPE_PROJECT);
 
@@ -331,6 +349,5 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     }
 
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
-    setLocalDateTime(project, redmineProject.getUpdatedOn(), "setUpdatedOn");
   }
 }

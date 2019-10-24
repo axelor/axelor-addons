@@ -19,6 +19,8 @@ package com.axelor.apps.redmine.imports.service.issues;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
+import com.axelor.apps.base.db.repo.AppRedmineRepository;
+import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
@@ -74,9 +76,19 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       PartnerRepository partnerRepo,
       TimesheetLineRepository timesheetLineRepo,
       TimesheetRepository timesheetRepo,
-      TimesheetService timesheetService) {
+      TimesheetService timesheetService,
+      AppRedmineRepository appRedmineRepo,
+      CompanyRepository companyRepo) {
 
-    super(userRepo, projectRepo, productRepo, teamTaskRepo, projectCategoryRepo, partnerRepo);
+    super(
+        userRepo,
+        projectRepo,
+        productRepo,
+        teamTaskRepo,
+        projectCategoryRepo,
+        partnerRepo,
+        appRedmineRepo,
+        companyRepo);
     this.timesheetLineRepo = timesheetLineRepo;
     this.timesheetRepo = timesheetRepo;
     this.timesheetService = timesheetService;
@@ -86,6 +98,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long projectId = (long) 0;
   protected Long teamTaskId = (long) 0;
   protected Long userId = (long) 0;
+  protected Long productId = (long) 0;
+  protected Long defaultCompanyId;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -99,6 +113,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       this.errorObjList = (List<Object[]>) paramsMap.get("errorObjList");
       this.lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
+      this.defaultCompanyId = appRedmineRepo.all().fetchOne().getCompany().getId();
 
       Comparator<TimeEntry> compareByDate =
           (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
@@ -202,6 +217,45 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
           }
         }
 
+        // ERROR AND DON'T IMPORT IF PRODUCT NOT FOUND
+
+        CustomField redmineProduct = redmineTimeEntry.getCustomField("Product");
+
+        if (redmineProduct != null) {
+          String value = redmineProduct.getValue();
+          Product product;
+
+          if (value != null && !value.equals("")) {
+            product = productRepo.findByCode(value);
+          } else {
+            product = null;
+          }
+
+          if (product != null) {
+            this.productId = product.getId();
+          } else {
+            errors =
+                errors.length == 0
+                    ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
+                    : ObjectArrays.concat(
+                        errors,
+                        new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
+                        Object.class);
+
+            redmineBatch.setFailedRedmineTimeEntriesIds(
+                failedRedmineTimeEntriesIds == null
+                    ? redmineTimeEntry.getId().toString()
+                    : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
+
+            setErrorLog(
+                I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
+                redmineTimeEntry.getId().toString());
+
+            fail++;
+            continue;
+          }
+        }
+
         try {
           this.createOpenSuiteTimesheetLine(redmineTimeEntry);
 
@@ -240,22 +294,20 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   public void createOpenSuiteTimesheetLine(TimeEntry redmineTimeEntry) {
 
     TimesheetLine timesheetLine = timesheetLineRepo.findByRedmineId(redmineTimeEntry.getId());
+    LocalDateTime redmineUpdatedOn =
+        redmineTimeEntry
+            .getUpdatedOn()
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDateTime();
 
     if (timesheetLine == null) {
       timesheetLine = new TimesheetLine();
-    } else if (timesheetLine != null && lastBatchUpdatedOn != null) {
-      LocalDateTime redmineUpdatedOn =
-          redmineTimeEntry
-              .getUpdatedOn()
-              .toInstant()
-              .atZone(ZoneId.systemDefault())
-              .toLocalDateTime();
-
-      if (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-          || (timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
-              && timesheetLine.getUpdatedOn().isAfter(redmineUpdatedOn))) {
-        return;
-      }
+    } else if (lastBatchUpdatedOn != null
+        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
+            || (timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+                && timesheetLine.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
+      return;
     }
 
     LOG.debug("Importing time entry: " + redmineTimeEntry.getId());
@@ -271,6 +323,13 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
         }
 
         timesheetLineRepo.save(timesheetLine);
+
+        JPA.em()
+            .createNativeQuery("update hr_timesheet_line SET updated_on = ?1 where id = ?2")
+            .setParameter(1, redmineUpdatedOn)
+            .setParameter(2, timesheetLine.getId())
+            .executeUpdate();
+
         onSuccess.accept(timesheetLine);
         success++;
       } catch (Exception e) {
@@ -290,20 +349,15 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       timesheetLine.setUser(user);
 
       Timesheet timesheet =
-          timesheetRepo
-              .all()
-              .filter(
-                  "self.user = ?1 AND self.statusSelect = ?2",
-                  user,
-                  TimesheetRepository.STATUS_DRAFT)
-              .order("-id")
-              .fetchOne();
+          timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();
 
       LocalDate redmineSpentOn =
           redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
       if (timesheet == null) {
         timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
+        timesheet.setCompany(companyRepo.find(defaultCompanyId));
+        timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
         timesheetRepo.save(timesheet);
       } else if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
         timesheet.setFromDate(redmineSpentOn);
@@ -314,37 +368,14 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       timesheetLine.setRedmineId(redmineTimeEntry.getId());
       timesheetLine.setProject(projectRepo.find(projectId));
       timesheetLine.setTeamTask(teamTaskRepo.find(teamTaskId));
+      timesheetLine.setProduct(productRepo.find(productId));
       timesheetLine.setComments(redmineTimeEntry.getComment());
       timesheetLine.setDuration(BigDecimal.valueOf(redmineTimeEntry.getHours()));
       timesheetLine.setDate(
           redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
-      CustomField customField = redmineTimeEntry.getCustomField("Product");
+      CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
       String value;
-
-      if (customField != null) {
-        value = customField.getValue();
-
-        if (value != null && !value.equals("")) {
-          Product product = productRepo.findByCode(value);
-
-          if (product != null) {
-            timesheetLine.setProduct(product);
-          } else if (user.getEmployee() != null) {
-            timesheetLine.setProduct(user.getEmployee().getProduct());
-          } else {
-            errors =
-                errors.length == 0
-                    ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
-                    : ObjectArrays.concat(
-                        errors,
-                        new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
-                        Object.class);
-          }
-        }
-      }
-
-      customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
 
       if (customField != null) {
         value = customField.getValue();
@@ -358,6 +389,5 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     }
 
     setLocalDateTime(timesheetLine, redmineTimeEntry.getCreatedOn(), "setCreatedOn");
-    setLocalDateTime(timesheetLine, redmineTimeEntry.getUpdatedOn(), "setUpdatedOn");
   }
 }

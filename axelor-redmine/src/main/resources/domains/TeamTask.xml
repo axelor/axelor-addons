@@ -11,6 +11,7 @@
 		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch" />
 		<string name="fixedVersion" title="Fixed version" />
 		<boolean name="isTaskRefused" title="Task refused" />
+		<decimal name="estimatedTime" title="Estimated time" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 

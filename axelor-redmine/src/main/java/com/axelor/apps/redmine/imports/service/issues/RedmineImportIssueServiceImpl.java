@@ -19,6 +19,8 @@ package com.axelor.apps.redmine.imports.service.issues;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
+import com.axelor.apps.base.db.repo.AppRedmineRepository;
+import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
@@ -74,9 +76,19 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       TeamTaskRepository teamTaskRepo,
       ProjectCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
-      RedmineImportMappingRepository redmineImportMappingRepository) {
+      RedmineImportMappingRepository redmineImportMappingRepository,
+      AppRedmineRepository appRedmineRepo,
+      CompanyRepository companyRepo) {
 
-    super(userRepo, projectRepo, productRepo, teamTaskRepo, projectCategoryRepo, partnerRepo);
+    super(
+        userRepo,
+        projectRepo,
+        productRepo,
+        teamTaskRepo,
+        projectCategoryRepo,
+        partnerRepo,
+        appRedmineRepo,
+        companyRepo);
     this.redmineImportMappingRepository = redmineImportMappingRepository;
   }
 
@@ -154,27 +166,29 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
         if (value != null && !value.equals("")) {
           this.product = productRepo.findByCode(value);
+        } else {
+          this.product = null;
+        }
 
-          if (product == null) {
-            errors =
-                errors.length == 0
-                    ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
-                    : ObjectArrays.concat(
-                        errors,
-                        new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
-                        Object.class);
+        if (product == null) {
+          errors =
+              errors.length == 0
+                  ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
+                  : ObjectArrays.concat(
+                      errors,
+                      new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
+                      Object.class);
 
-            redmineBatch.setFailedRedmineIssuesIds(
-                failedRedmineIssuesIds == null
-                    ? redmineIssue.getId().toString()
-                    : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
+          redmineBatch.setFailedRedmineIssuesIds(
+              failedRedmineIssuesIds == null
+                  ? redmineIssue.getId().toString()
+                  : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
 
-            setErrorLog(
-                I18n.get(IMessage.REDMINE_IMPORT_TEAMTASK_ERROR), redmineIssue.getId().toString());
+          setErrorLog(
+              I18n.get(IMessage.REDMINE_IMPORT_TEAMTASK_ERROR), redmineIssue.getId().toString());
 
-            fail++;
-            continue;
-          }
+          fail++;
+          continue;
         }
       }
 
@@ -263,19 +277,17 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   public void createOpenSuiteIssue(Issue redmineIssue) {
 
     TeamTask teamTask = teamTaskRepo.findByRedmineId(redmineIssue.getId());
+    LocalDateTime redmineUpdatedOn =
+        redmineIssue.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
 
     if (teamTask == null) {
       teamTask = new TeamTask();
       teamTask.setTypeSelect(TeamTaskRepository.TYPE_TASK);
-    } else if (lastBatchUpdatedOn != null) {
-      LocalDateTime redmineUpdatedOn =
-          redmineIssue.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-
-      if (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-          || (teamTask.getUpdatedOn().isAfter(lastBatchUpdatedOn)
-              && teamTask.getUpdatedOn().isAfter(redmineUpdatedOn))) {
-        return;
-      }
+    } else if (lastBatchUpdatedOn != null
+        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
+            || (teamTask.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+                && teamTask.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
+      return;
     }
 
     LOG.debug("Importing issue: " + redmineIssue.getId());
@@ -286,10 +298,16 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.addBatchSetItem(batch);
       teamTaskRepo.save(teamTask);
 
+      JPA.em()
+          .createNativeQuery("update team_task SET updated_on = ?1 where id = ?2")
+          .setParameter(1, redmineUpdatedOn)
+          .setParameter(2, teamTask.getId())
+          .executeUpdate();
+
       // CREATE MAP FOR CHILD-PARENT TASKS
 
       if (redmineIssue.getParentId() != null) {
-        parentMap.put(teamTask.getId(), redmineIssue.getId());
+        parentMap.put(teamTask.getId(), redmineIssue.getParentId());
       }
 
       onSuccess.accept(teamTask);
@@ -312,7 +330,19 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
         if (task != null) {
           task.setParentTask(teamTaskRepo.findByRedmineId(entry.getValue()));
+          LocalDateTime updatedOn =
+              task.getUpdatedOn() != null
+                  ? task.getUpdatedOn().atZone(ZoneId.systemDefault()).toLocalDateTime()
+                  : null;
           teamTaskRepo.save(task);
+
+          if (updatedOn != null) {
+            JPA.em()
+                .createNativeQuery("update team_task SET updated_on = ?1 where id = ?2")
+                .setParameter(1, updatedOn)
+                .setParameter(2, task.getId())
+                .executeUpdate();
+          }
         }
       }
     }
@@ -375,15 +405,16 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       value = customField != null ? customField.getValue() : null;
 
       if (value != null && !value.equals("")) {
-        teamTask.setTotalPlannedHrs(new BigDecimal(value));
+        teamTask.setEstimatedTime(new BigDecimal(value));
       }
 
       // ERROR AND IMPORT WITH DEFAULT IF STATUS NOT FOUND
 
       String status = fieldMap.get(redmineIssue.getStatusName());
+      value = selectionMap.get(status);
 
-      if (status != null) {
-        teamTask.setStatus(selectionMap.get(status));
+      if (status != null && value != null) {
+        teamTask.setStatus(value);
       } else {
         teamTask.setStatus(TeamTaskRepository.TEAM_TASK_DEFAULT_STATUS);
         errors =
@@ -398,9 +429,10 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       // ERROR AND IMPORT WITH DEFAULT IF PRIORITY NOT FOUND
 
       String priority = fieldMap.get(redmineIssue.getPriorityText());
+      value = selectionMap.get(priority);
 
-      if (priority != null) {
-        teamTask.setPriority(selectionMap.get(priority));
+      if (priority != null && value != null) {
+        teamTask.setPriority(value);
       } else {
         teamTask.setPriority(TeamTaskRepository.TEAM_TASK_DEFAULT_PRIORITY);
         errors =
@@ -414,7 +446,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       setCreatedByUser(teamTask, getOsUser(redmineIssue.getAuthorId()), "setCreatedBy");
       setLocalDateTime(teamTask, redmineIssue.getCreatedOn(), "setCreatedOn");
-      setLocalDateTime(teamTask, redmineIssue.getUpdatedOn(), "setUpdatedOn");
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
     }

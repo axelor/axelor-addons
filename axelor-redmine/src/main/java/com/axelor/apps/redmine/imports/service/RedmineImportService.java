@@ -18,6 +18,8 @@
 package com.axelor.apps.redmine.imports.service;
 
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.db.repo.AppRedmineRepository;
+import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
@@ -50,6 +52,8 @@ public class RedmineImportService {
   protected TeamTaskRepository teamTaskRepo;
   protected ProjectCategoryRepository projectCategoryRepo;
   protected PartnerRepository partnerRepo;
+  protected AppRedmineRepository appRedmineRepo;
+  protected CompanyRepository companyRepo;
 
   @Inject
   public RedmineImportService(
@@ -58,7 +62,9 @@ public class RedmineImportService {
       ProductRepository productRepo,
       TeamTaskRepository teamTaskRepo,
       ProjectCategoryRepository projectCategoryRepo,
-      PartnerRepository partnerRepo) {
+      PartnerRepository partnerRepo,
+      AppRedmineRepository appRedmineRepo,
+      CompanyRepository companyRepo) {
 
     this.userRepo = userRepo;
     this.projectRepo = projectRepo;
@@ -66,6 +72,8 @@ public class RedmineImportService {
     this.teamTaskRepo = teamTaskRepo;
     this.projectCategoryRepo = projectCategoryRepo;
     this.partnerRepo = partnerRepo;
+    this.appRedmineRepo = appRedmineRepo;
+    this.companyRepo = companyRepo;
   }
 
   public static String result = "";
