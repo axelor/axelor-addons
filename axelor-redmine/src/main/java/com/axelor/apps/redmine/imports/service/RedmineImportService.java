@@ -27,6 +27,7 @@ import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
+import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
@@ -160,5 +161,10 @@ public class RedmineImportService {
   public void setErrorLog(String object, String redmineRef) {
 
     errorObjList.add(ObjectArrays.concat(new Object[] {object, redmineRef}, errors, Object.class));
+  }
+
+  public void setUpdatedOn(String query, LocalDateTime dateTime, Long id) {
+
+    JPA.em().createNativeQuery(query).setParameter(1, dateTime).setParameter(2, id).executeUpdate();
   }
 }

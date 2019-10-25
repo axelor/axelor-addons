@@ -323,12 +323,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
         }
 
         timesheetLineRepo.save(timesheetLine);
-
-        JPA.em()
-            .createNativeQuery("update hr_timesheet_line SET updated_on = ?1 where id = ?2")
-            .setParameter(1, redmineUpdatedOn)
-            .setParameter(2, timesheetLine.getId())
-            .executeUpdate();
+        this.setUpdatedOn(
+            "update hr_timesheet_line SET updated_on = ?1 where id = ?2",
+            redmineUpdatedOn,
+            timesheetLine.getId());
 
         onSuccess.accept(timesheetLine);
         success++;
@@ -345,49 +343,47 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
     User user = userRepo.find(userId);
 
-    if (user != null) {
-      timesheetLine.setUser(user);
+    timesheetLine.setUser(user);
+    timesheetLine.setRedmineId(redmineTimeEntry.getId());
+    timesheetLine.setProject(projectRepo.find(projectId));
+    timesheetLine.setTeamTask(teamTaskRepo.find(teamTaskId));
+    timesheetLine.setProduct(productRepo.find(productId));
+    timesheetLine.setComments(redmineTimeEntry.getComment());
+    timesheetLine.setDuration(BigDecimal.valueOf(redmineTimeEntry.getHours()));
+    timesheetLine.setHoursDuration(timesheetLine.getDuration());
+    timesheetLine.setDate(
+        redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
-      Timesheet timesheet =
-          timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();
+    CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
+    String value;
 
-      LocalDate redmineSpentOn =
-          redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    if (customField != null) {
+      value = customField.getValue();
 
-      if (timesheet == null) {
-        timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
-        timesheet.setCompany(companyRepo.find(defaultCompanyId));
-        timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
-        timesheetRepo.save(timesheet);
-      } else if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
-        timesheet.setFromDate(redmineSpentOn);
+      if (value != null && !value.equals("")) {
+        timesheetLine.setDurationForCustomer(new BigDecimal(value));
       }
-
-      timesheetLine.setTimesheet(timesheet);
-
-      timesheetLine.setRedmineId(redmineTimeEntry.getId());
-      timesheetLine.setProject(projectRepo.find(projectId));
-      timesheetLine.setTeamTask(teamTaskRepo.find(teamTaskId));
-      timesheetLine.setProduct(productRepo.find(productId));
-      timesheetLine.setComments(redmineTimeEntry.getComment());
-      timesheetLine.setDuration(BigDecimal.valueOf(redmineTimeEntry.getHours()));
-      timesheetLine.setDate(
-          redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-
-      CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
-      String value;
-
-      if (customField != null) {
-        value = customField.getValue();
-
-        if (value != null && !value.equals("")) {
-          timesheetLine.setDurationForCustomer(new BigDecimal(value));
-        }
-      }
-
-      setCreatedByUser(timesheetLine, user, "setCreatedBy");
     }
 
+    Timesheet timesheet =
+        timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();
+
+    LocalDate redmineSpentOn =
+        redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+    if (timesheet == null) {
+      timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
+      timesheet.setCompany(companyRepo.find(defaultCompanyId));
+      timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
+    } else if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
+      timesheet.setFromDate(redmineSpentOn);
+    }
+
+    timesheet.setPeriodTotal(timesheet.getPeriodTotal().add(timesheetLine.getHoursDuration()));
+    timesheetRepo.save(timesheet);
+    timesheetLine.setTimesheet(timesheet);
+
+    setCreatedByUser(timesheetLine, user, "setCreatedBy");
     setLocalDateTime(timesheetLine, redmineTimeEntry.getCreatedOn(), "setCreatedOn");
   }
 }

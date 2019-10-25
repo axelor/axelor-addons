@@ -190,12 +190,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       }
 
       projectRepo.save(project);
-
-      JPA.em()
-          .createNativeQuery("update project_project SET updated_on = ?1 where id = ?2")
-          .setParameter(1, redmineUpdatedOn)
-          .setParameter(2, project.getId())
-          .executeUpdate();
+      this.setUpdatedOn(
+          "update project_project SET updated_on = ?1 where id = ?2",
+          redmineUpdatedOn,
+          project.getId());
 
       // CREATE MAP FOR CHILD-PARENT TASKS
 
@@ -230,11 +228,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
           projectRepo.save(project);
 
           if (updatedOn != null) {
-            JPA.em()
-                .createNativeQuery("update project_project SET updated_on = ?1 where id = ?2")
-                .setParameter(1, updatedOn)
-                .setParameter(2, project.getId())
-                .executeUpdate();
+            this.setUpdatedOn(
+                "update project_project SET updated_on = ?1 where id = ?2",
+                updatedOn,
+                project.getId());
           }
         }
       }
