@@ -24,20 +24,26 @@
 			onClick="action-team-task-view-time-spent" />
 	</grid>
 
-	<form name="team-task-form" id="redmine-team-task-form" title="Task"
-		model="com.axelor.team.db.TeamTask" onNew="action-team-task-group-onnew"
-		onLoad="action-team-task-group-timer-process" width="large">
+	<form id="redmine-team-task-form" name="project-team-task-form"
+		title="Task" model="com.axelor.team.db.TeamTask" extension="true">
 
-		<panel-include view="team-task-form" from="axelor-project" />
-		<panel name="redminePanel" title="Redmine">
-			<field name="redmineId" />
-			<field name="fixedVersion" />
-			<field name="estimatedTime" />
-			<field name="isTaskRefused" widget="boolean-switch" />
-			<panel-dashlet name="timesheetLinePanel" title="Timesheetline"
-				action="action-team-task-dashlet-timesheet-line" colSpan="12"
-				canSearch="true" />
-		</panel>
+		<extend target="panel-tabs[@name='mainPanelTab']/*[last()]">
+			<insert position="after">
+				<panel-dashlet name="timesheetLinePanel" title="Logged Time"
+					action="action-team-task-dashlet-timesheet-line" colSpan="12"
+					canSearch="true" />
+				<panel name="redminePanel" title="Redmine">
+					<field name="redmineId" />
+					<field name="fixedVersion" />
+					<field name="estimatedTime" />
+					<field name="isTaskRefused" widget="boolean-switch" />
+				</panel>
+			</insert>
+		</extend>
+
+		<extend target="//field[@name='taskDate']">
+			<attribute name="required" value="false" />
+		</extend>
 
 	</form>
 

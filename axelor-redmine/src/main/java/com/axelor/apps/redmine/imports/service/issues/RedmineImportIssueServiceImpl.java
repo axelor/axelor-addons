@@ -166,29 +166,27 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
         if (value != null && !value.equals("")) {
           this.product = productRepo.findByCode(value);
-        } else {
-          this.product = null;
-        }
 
-        if (product == null) {
-          errors =
-              errors.length == 0
-                  ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
-                  : ObjectArrays.concat(
-                      errors,
-                      new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
-                      Object.class);
+          if (product == null) {
+            errors =
+                errors.length == 0
+                    ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
+                    : ObjectArrays.concat(
+                        errors,
+                        new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
+                        Object.class);
 
-          redmineBatch.setFailedRedmineIssuesIds(
-              failedRedmineIssuesIds == null
-                  ? redmineIssue.getId().toString()
-                  : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
+            redmineBatch.setFailedRedmineIssuesIds(
+                failedRedmineIssuesIds == null
+                    ? redmineIssue.getId().toString()
+                    : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
 
-          setErrorLog(
-              I18n.get(IMessage.REDMINE_IMPORT_TEAMTASK_ERROR), redmineIssue.getId().toString());
+            setErrorLog(
+                I18n.get(IMessage.REDMINE_IMPORT_TEAMTASK_ERROR), redmineIssue.getId().toString());
 
-          fail++;
-          continue;
+            fail++;
+            continue;
+          }
         }
       }
 
@@ -297,12 +295,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     try {
       teamTask.addBatchSetItem(batch);
       teamTaskRepo.save(teamTask);
-
-      JPA.em()
-          .createNativeQuery("update team_task SET updated_on = ?1 where id = ?2")
-          .setParameter(1, redmineUpdatedOn)
-          .setParameter(2, teamTask.getId())
-          .executeUpdate();
+      this.setUpdatedOn(
+          "update team_task SET updated_on = ?1 where id = ?2", redmineUpdatedOn, teamTask.getId());
 
       // CREATE MAP FOR CHILD-PARENT TASKS
 
@@ -337,11 +331,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
           teamTaskRepo.save(task);
 
           if (updatedOn != null) {
-            JPA.em()
-                .createNativeQuery("update team_task SET updated_on = ?1 where id = ?2")
-                .setParameter(1, updatedOn)
-                .setParameter(2, task.getId())
-                .executeUpdate();
+            this.setUpdatedOn(
+                "update team_task SET updated_on = ?1 where id = ?2", updatedOn, task.getId());
           }
         }
       }
@@ -407,6 +398,11 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       if (value != null && !value.equals("")) {
         teamTask.setEstimatedTime(new BigDecimal(value));
       }
+
+      customField = redmineIssue.getCustomFieldByName("Déjà Facturé");
+      value = customField != null ? customField.getValue() : null;
+
+      teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
 
       // ERROR AND IMPORT WITH DEFAULT IF STATUS NOT FOUND
 
