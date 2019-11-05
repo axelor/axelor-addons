@@ -12,6 +12,7 @@
 		<string name="fixedVersion" title="Fixed version" />
 		<boolean name="isTaskRefused" title="Task refused" />
 		<decimal name="estimatedTime" title="Estimated time" />
+		<boolean name="accountedForMaintenance" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 
