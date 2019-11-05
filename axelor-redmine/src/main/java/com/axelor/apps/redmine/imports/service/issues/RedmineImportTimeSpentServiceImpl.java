@@ -227,32 +227,34 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
           if (value != null && !value.equals("")) {
             product = productRepo.findByCode(value);
+
+            if (product == null) {
+              errors =
+                  errors.length == 0
+                      ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
+                      : ObjectArrays.concat(
+                          errors,
+                          new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
+                          Object.class);
+
+              redmineBatch.setFailedRedmineTimeEntriesIds(
+                  failedRedmineTimeEntriesIds == null
+                      ? redmineTimeEntry.getId().toString()
+                      : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
+
+              setErrorLog(
+                  I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
+                  redmineTimeEntry.getId().toString());
+
+              fail++;
+              continue;
+            }
           } else {
-            product = null;
+            product = user.getEmployee() != null ? user.getEmployee().getProduct() : null;
           }
 
           if (product != null) {
             this.productId = product.getId();
-          } else {
-            errors =
-                errors.length == 0
-                    ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
-                    : ObjectArrays.concat(
-                        errors,
-                        new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
-                        Object.class);
-
-            redmineBatch.setFailedRedmineTimeEntriesIds(
-                failedRedmineTimeEntriesIds == null
-                    ? redmineTimeEntry.getId().toString()
-                    : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
-
-            setErrorLog(
-                I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
-                redmineTimeEntry.getId().toString());
-
-            fail++;
-            continue;
           }
         }
 

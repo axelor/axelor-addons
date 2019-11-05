@@ -399,10 +399,18 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         teamTask.setEstimatedTime(new BigDecimal(value));
       }
 
-      customField = redmineIssue.getCustomFieldByName("Déjà Facturé");
+      customField = redmineIssue.getCustomFieldByName("Déjà facturé");
       value = customField != null ? customField.getValue() : null;
 
-      teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
+      if (!teamTask.getInvoiced()) {
+        teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
+      }
+
+      customField = redmineIssue.getCustomFieldByName("Comptabilisé maintenance");
+      value = customField != null ? customField.getValue() : null;
+
+      teamTask.setAccountedForMaintenance(
+          value != null ? (value.equals("1") ? true : false) : false);
 
       // ERROR AND IMPORT WITH DEFAULT IF STATUS NOT FOUND
 
