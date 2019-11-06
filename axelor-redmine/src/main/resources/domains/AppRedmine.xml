@@ -11,20 +11,20 @@
 		<string name="uri" title="URI" />
 		<string name="apiAccessKey" title="Api Access Key" />
 		<many-to-one name="company" ref="com.axelor.apps.base.db.Company"
-			title="Company" required="true" />
+			title="Company" />
 
 		<!-- REDMINE CUSTOM FIELD CONFIGURATION DETAILS -->
-		<string name="redmineProjectInvoiceable" required="true" />
-		<string name="redmineProjectClientPartner" required="true" />
-		<string name="redmineProjectInvoicingSequenceSelect" required="true" />
-		<string name="redmineIssueProduct" required="true" />
-		<string name="redmineIssueIsTaskRefused" required="true" />
-		<string name="redmineIssueTaskDate" required="true" />
-		<string name="redmineIssueEstimatedTime" required="true" />
-		<string name="redmineIssueInvoiced" required="true" />
-		<string name="redmineIssueAccountedForMaintenance" required="true" />
-		<string name="redmineTimeSpentProduct" required="true" />
-		<string name="redmineTimeSpentDurationForCustomer" required="true" />
+		<string name="redmineProjectInvoiceable" />
+		<string name="redmineProjectClientPartner" />
+		<string name="redmineProjectInvoicingSequenceSelect" />
+		<string name="redmineIssueProduct" />
+		<string name="redmineIssueIsTaskRefused" />
+		<string name="redmineIssueTaskDate" />
+		<string name="redmineIssueEstimatedTime" />
+		<string name="redmineIssueInvoiced" />
+		<string name="redmineIssueAccountedForMaintenance" />
+		<string name="redmineTimeSpentProduct" />
+		<string name="redmineTimeSpentDurationForCustomer" />
 
 		<!-- REDMINE CUSTOM FIELD CONFIGURATION DEFAULT VALUES -->
 		<string name="redmineProjectInvoiceableDefault" />
