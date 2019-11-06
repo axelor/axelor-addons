@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.imports.service.issues;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -60,6 +61,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,6 +98,12 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected Product product;
   protected Project project;
   protected ProjectCategory projectCategory;
+  protected String redmineIssueProductDefault;
+  protected String redmineIssueIsTaskRefusedDefault;
+  protected String redmineIssueTaskDateDefault;
+  protected String redmineIssueEstimatedTimeDefault;
+  protected String redmineIssueInvoicedDefault;
+  protected String redmineIssueAccountedForMaintenanceDefault;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -110,6 +118,15 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
       this.selectionMap = new HashMap<>();
       this.fieldMap = new HashMap<>();
+
+      AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+      this.redmineIssueProductDefault = appRedmine.getRedmineIssueProductDefault();
+      this.redmineIssueIsTaskRefusedDefault = appRedmine.getRedmineIssueIsTaskRefusedDefault();
+      this.redmineIssueTaskDateDefault = appRedmine.getRedmineIssueTaskDateDefault();
+      this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
+      this.redmineIssueInvoicedDefault = appRedmine.getRedmineIssueInvoicedDefault();
+      this.redmineIssueAccountedForMaintenanceDefault =
+          appRedmine.getRedmineIssueAccountedForMaintenanceDefault();
 
       List<Option> selectionList = new ArrayList<Option>();
       selectionList.addAll(MetaStore.getSelectionList("team.task.status"));
@@ -139,6 +156,28 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       // SET ISSUES PARENTS
       this.setParentTasks();
+
+      if (!updatedOnMap.isEmpty()) {
+        String values =
+            updatedOnMap
+                .entrySet()
+                .stream()
+                .map(
+                    entry ->
+                        "("
+                            + entry.getKey()
+                            + ",TO_TIMESTAMP('"
+                            + entry.getValue()
+                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
+                .collect(Collectors.joining(","));
+
+        String query =
+            String.format(
+                "UPDATE team_task as teamtask SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where teamtask.id = v.id",
+                values);
+
+        JPA.em().createNativeQuery(query).executeUpdate();
+      }
     }
 
     String resultStr =
@@ -157,36 +196,38 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       errors = new Object[] {};
       String failedRedmineIssuesIds = redmineBatch.getFailedRedmineIssuesIds();
 
-      // ERROR AND DON'T IMPORT IF PRODUCT NOT FOUND
+      // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
 
       CustomField redmineProduct = redmineIssue.getCustomFieldByName("Product");
+      String value =
+          redmineProduct != null
+                  && redmineProduct.getValue() != null
+                  && !redmineProduct.getValue().equals("")
+              ? redmineProduct.getValue()
+              : redmineIssueProductDefault;
 
-      if (redmineProduct != null) {
-        String value = redmineProduct.getValue();
+      if (value != null) {
+        this.product = productRepo.findByCode(value);
 
-        if (value != null && !value.equals("")) {
-          this.product = productRepo.findByCode(value);
+        if (product == null) {
+          errors =
+              errors.length == 0
+                  ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
+                  : ObjectArrays.concat(
+                      errors,
+                      new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
+                      Object.class);
 
-          if (product == null) {
-            errors =
-                errors.length == 0
-                    ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)}
-                    : ObjectArrays.concat(
-                        errors,
-                        new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)},
-                        Object.class);
+          redmineBatch.setFailedRedmineIssuesIds(
+              failedRedmineIssuesIds == null
+                  ? redmineIssue.getId().toString()
+                  : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
 
-            redmineBatch.setFailedRedmineIssuesIds(
-                failedRedmineIssuesIds == null
-                    ? redmineIssue.getId().toString()
-                    : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
+          setErrorLog(
+              I18n.get(IMessage.REDMINE_IMPORT_TEAMTASK_ERROR), redmineIssue.getId().toString());
 
-            setErrorLog(
-                I18n.get(IMessage.REDMINE_IMPORT_TEAMTASK_ERROR), redmineIssue.getId().toString());
-
-            fail++;
-            continue;
-          }
+          fail++;
+          continue;
         }
       }
 
@@ -295,8 +336,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     try {
       teamTask.addBatchSetItem(batch);
       teamTaskRepo.save(teamTask);
-      this.setUpdatedOn(
-          "update team_task SET updated_on = ?1 where id = ?2", redmineUpdatedOn, teamTask.getId());
+      updatedOnMap.put(teamTask.getId(), redmineUpdatedOn);
 
       // CREATE MAP FOR CHILD-PARENT TASKS
 
@@ -324,16 +364,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
         if (task != null) {
           task.setParentTask(teamTaskRepo.findByRedmineId(entry.getValue()));
-          LocalDateTime updatedOn =
-              task.getUpdatedOn() != null
-                  ? task.getUpdatedOn().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                  : null;
           teamTaskRepo.save(task);
-
-          if (updatedOn != null) {
-            this.setUpdatedOn(
-                "update team_task SET updated_on = ?1 where id = ?2", updatedOn, task.getId());
-          }
         }
       }
     }
@@ -380,34 +411,57 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       }
 
       CustomField customField = redmineIssue.getCustomFieldByName("Prestation refusée/annulée");
-      String value = customField != null ? customField.getValue() : null;
-
-      teamTask.setIsTaskRefused(
-          value != null && !value.equals("") ? (value.equals("1") ? true : false) : false);
+      String value =
+          customField != null
+                  && customField.getValue() != null
+                  && !customField.getValue().equals("")
+              ? customField.getValue()
+              : redmineIssueIsTaskRefusedDefault;
+      teamTask.setIsTaskRefused(value != null ? (value.equals("1") ? true : false) : false);
 
       customField = redmineIssue.getCustomFieldByName("Date d'échéance (INTERNE)");
-      value = customField != null ? customField.getValue() : null;
+      value =
+          customField != null
+                  && customField.getValue() != null
+                  && !customField.getValue().equals("")
+              ? customField.getValue()
+              : redmineIssueTaskDateDefault;
 
-      if (value != null && !value.equals("")) {
+      if (value != null) {
         teamTask.setTaskDate(LocalDate.parse(value));
       }
 
       customField = redmineIssue.getCustomFieldByName("Temps estimé (INTERNE)");
-      value = customField != null ? customField.getValue() : null;
+      value =
+          customField != null
+                  && customField.getValue() != null
+                  && !customField.getValue().equals("")
+              ? customField.getValue()
+              : redmineIssueEstimatedTimeDefault;
 
-      if (value != null && !value.equals("")) {
+      if (value != null) {
         teamTask.setEstimatedTime(new BigDecimal(value));
       }
 
       customField = redmineIssue.getCustomFieldByName("Déjà facturé");
-      value = customField != null ? customField.getValue() : null;
+      value =
+          customField != null
+                  && customField.getValue() != null
+                  && !customField.getValue().equals("")
+              ? customField.getValue()
+              : redmineIssueInvoicedDefault;
 
       if (!teamTask.getInvoiced()) {
         teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
       }
 
       customField = redmineIssue.getCustomFieldByName("Comptabilisé maintenance");
-      value = customField != null ? customField.getValue() : null;
+      value =
+          customField != null
+                  && customField.getValue() != null
+                  && !customField.getValue().equals("")
+              ? customField.getValue()
+              : redmineIssueAccountedForMaintenanceDefault;
 
       teamTask.setAccountedForMaintenance(
           value != null ? (value.equals("1") ? true : false) : false);

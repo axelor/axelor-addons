@@ -41,6 +41,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RedmineIssueServiceImpl implements RedmineIssueService {
 
@@ -70,6 +72,8 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
     this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.redmineBatchRepo = redmineBatchRepo;
   }
+
+  Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
   @Transactional
@@ -106,6 +110,8 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
     Map<String, List<?>> importDataMap = new HashMap<>();
     HashMap<Integer, String> redmineUserMap = new HashMap<Integer, String>();
+
+    LOG.debug("Fetching issues and timespents from redmine..");
 
     try {
       importDataMap =

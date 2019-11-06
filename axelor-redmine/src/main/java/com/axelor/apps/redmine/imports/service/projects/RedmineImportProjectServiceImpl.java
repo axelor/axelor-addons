@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.imports.service.projects;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -53,6 +54,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,12 +85,13 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         appRedmineRepo,
         companyRepo);
     this.redmineImportMappingRepository = redmineImportMappingRepository;
-    this.appRedmineRepo = appRedmineRepo;
-    this.companyRepo = companyRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
   protected Long defaultCompanyId;
+  protected String redmineProjectInvoiceableDefault;
+  protected String redmineProjectClientPartnerDefault;
+  protected String redmineProjectInvoicingSequenceSelectDefault;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -105,7 +108,13 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
       this.redmineProjectManager = (ProjectManager) paramsMap.get("redmineProjectManager");
       this.fieldMap = new HashMap<>();
-      this.defaultCompanyId = appRedmineRepo.all().fetchOne().getCompany().getId();
+
+      AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+      this.defaultCompanyId = appRedmine.getCompany().getId();
+      this.redmineProjectInvoiceableDefault = appRedmine.getRedmineProjectInvoiceableDefault();
+      this.redmineProjectClientPartnerDefault = appRedmine.getRedmineProjectClientPartnerDefault();
+      this.redmineProjectInvoicingSequenceSelectDefault =
+          appRedmine.getRedmineProjectInvoicingSequenceSelectDefault();
 
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository.all().fetch();
@@ -118,6 +127,28 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
       // SET PROJECTS PARENTS
       this.setParentProjects();
+
+      if (!updatedOnMap.isEmpty()) {
+        String values =
+            updatedOnMap
+                .entrySet()
+                .stream()
+                .map(
+                    entry ->
+                        "("
+                            + entry.getKey()
+                            + ",TO_TIMESTAMP('"
+                            + entry.getValue()
+                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
+                .collect(Collectors.joining(","));
+
+        String query =
+            String.format(
+                "UPDATE project_project as project SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where project.id = v.id",
+                values);
+
+        JPA.em().createNativeQuery(query).executeUpdate();
+      }
     }
 
     String resultStr =
@@ -190,10 +221,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       }
 
       projectRepo.save(project);
-      this.setUpdatedOn(
-          "update project_project SET updated_on = ?1 where id = ?2",
-          redmineUpdatedOn,
-          project.getId());
+      updatedOnMap.put(project.getId(), redmineUpdatedOn);
 
       // CREATE MAP FOR CHILD-PARENT TASKS
 
@@ -221,18 +249,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
         if (project != null) {
           project.setParentProject(projectRepo.findByRedmineId(entry.getValue()));
-          LocalDateTime updatedOn =
-              project.getUpdatedOn() != null
-                  ? project.getUpdatedOn().atZone(ZoneId.systemDefault()).toLocalDateTime()
-                  : null;
           projectRepo.save(project);
-
-          if (updatedOn != null) {
-            this.setUpdatedOn(
-                "update project_project SET updated_on = ?1 where id = ?2",
-                updatedOn,
-                project.getId());
-          }
         }
       }
     }
@@ -248,18 +265,25 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     project.setCompany(companyRepo.find(defaultCompanyId));
 
     CustomField customField = (CustomField) redmineCustomFieldsMap.get("Invoiceable");
-    String value = customField != null ? customField.getValue() : null;
+    String value =
+        customField != null && customField.getValue() != null && !customField.getValue().equals("")
+            ? customField.getValue()
+            : redmineProjectInvoiceableDefault;
 
-    project.setIsInvoiceable(value != null ? (value.equals("1") ? true : false) : false);
-    project.setIsBusinessProject(project.getIsInvoiceable());
+    boolean invoiceable = value != null ? (value.equals("1") ? true : false) : false;
+    project.setIsInvoiceable(invoiceable);
+    project.setIsBusinessProject(invoiceable);
 
     // ERROR AND IMPORT IF CLIENT PARTNER NOT FOUND
 
-    customField = (CustomField) redmineCustomFieldsMap.get("Customer Code");
-    value = customField != null ? customField.getValue() : null;
+    customField = (CustomField) redmineCustomFieldsMap.get("Customer code");
+    value =
+        customField != null && customField.getValue() != null && !customField.getValue().equals("")
+            ? customField.getValue()
+            : redmineProjectClientPartnerDefault;
 
-    if (value != null && !value.equals("")) {
-      Partner partner = partnerRepo.findByReference((String) value);
+    if (value != null) {
+      Partner partner = partnerRepo.findByReference(value);
 
       if (partner != null) {
         project.setClientPartner(partner);
@@ -320,9 +344,12 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     // ERROR AND IMPORT IF INVOICING TYPE NOT FOUND
 
     customField = (CustomField) redmineCustomFieldsMap.get("Invoicing Type");
-    value = customField != null ? customField.getValue() : null;
+    value =
+        customField != null && customField.getValue() != null && !customField.getValue().equals("")
+            ? customField.getValue()
+            : redmineProjectInvoicingSequenceSelectDefault;
 
-    if (value != null && !value.equals("")) {
+    if (value != null) {
       int invoicingSequenceSelect =
           value.equals("Empty")
               ? ProjectRepository.INVOICING_SEQ_EMPTY
