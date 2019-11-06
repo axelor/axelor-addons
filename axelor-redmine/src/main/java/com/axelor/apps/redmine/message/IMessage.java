@@ -68,4 +68,7 @@ public interface IMessage {
 
   static final String REDMINE_IMPORT_USER_NOT_FOUND = /*$$(*/
       "Entity not imported, no user found in OS" /*)*/;
+
+  static final String REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR = /*$$(*/
+      "Custom field %s not found for %s, please check the app configurations" /*)*/;
 }

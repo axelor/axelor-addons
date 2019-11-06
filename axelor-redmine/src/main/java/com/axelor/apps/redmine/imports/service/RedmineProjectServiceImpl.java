@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RedmineProjectServiceImpl implements RedmineProjectService {
 
@@ -53,6 +55,8 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
   }
+
+  Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
   @Transactional
@@ -84,6 +88,8 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
 
     List<com.taskadapter.redmineapi.bean.Project> importProjectList = null;
     HashMap<Integer, String> redmineUserMap = new HashMap<Integer, String>();
+
+    LOG.debug("Fetching projects from redmine..");
 
     try {
       importProjectList = redmineProjectFetchImportDataService.fetchImportData(redmineManager);

@@ -13,6 +13,32 @@
 		<panel name="fieldsPanel">
 			<field name="company" />
 		</panel>
+		<panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
+			<field name="redmineProjectInvoiceable" />
+			<field name="redmineProjectClientPartner" />
+			<field name="redmineProjectInvoicingSequenceSelect" />
+			<field name="redmineIssueProduct" />
+			<field name="redmineIssueIsTaskRefused" />
+			<field name="redmineIssueTaskDate" />
+			<field name="redmineIssueEstimatedTime" />
+			<field name="redmineIssueInvoiced" />
+			<field name="redmineIssueAccountedForMaintenance" />
+			<field name="redmineTimeSpentProduct" />
+			<field name="redmineTimeSpentDurationForCustomer" />
+		</panel>
+		<panel name="redmineCustomFieldDefaultPanel" title="Redmine custom field defaults">
+			<field name="redmineProjectInvoiceableDefault" />
+			<field name="redmineProjectClientPartnerDefault" />
+			<field name="redmineProjectInvoicingSequenceSelectDefault" />
+			<field name="redmineIssueProductDefault" />
+			<field name="redmineIssueIsTaskRefusedDefault" />
+			<field name="redmineIssueTaskDateDefault" />
+			<field name="redmineIssueEstimatedTimeDefault" />
+			<field name="redmineIssueInvoicedDefault" />
+			<field name="redmineIssueAccountedForMaintenanceDefault" />
+			<field name="redmineTimeSpentProductDefault" />
+			<field name="redmineTimeSpentDurationForCustomerDefault" />
+		</panel>
 	</form>
 
 	<action-view name="admin.root.conf.redmine.config" title="Redmine configurations"

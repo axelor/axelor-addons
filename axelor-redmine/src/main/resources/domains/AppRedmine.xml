@@ -13,6 +13,32 @@
 		<many-to-one name="company" ref="com.axelor.apps.base.db.Company"
 			title="Company" required="true" />
 
+		<!-- REDMINE CUSTOM FIELD CONFIGURATION DETAILS -->
+		<string name="redmineProjectInvoiceable" required="true" />
+		<string name="redmineProjectClientPartner" required="true" />
+		<string name="redmineProjectInvoicingSequenceSelect" required="true" />
+		<string name="redmineIssueProduct" required="true" />
+		<string name="redmineIssueIsTaskRefused" required="true" />
+		<string name="redmineIssueTaskDate" required="true" />
+		<string name="redmineIssueEstimatedTime" required="true" />
+		<string name="redmineIssueInvoiced" required="true" />
+		<string name="redmineIssueAccountedForMaintenance" required="true" />
+		<string name="redmineTimeSpentProduct" required="true" />
+		<string name="redmineTimeSpentDurationForCustomer" required="true" />
+
+		<!-- REDMINE CUSTOM FIELD CONFIGURATION DEFAULT VALUES -->
+		<string name="redmineProjectInvoiceableDefault" />
+		<string name="redmineProjectClientPartnerDefault" />
+		<string name="redmineProjectInvoicingSequenceSelectDefault" />
+		<string name="redmineIssueProductDefault" />
+		<string name="redmineIssueIsTaskRefusedDefault" />
+		<string name="redmineIssueTaskDateDefault" />
+		<string name="redmineIssueEstimatedTimeDefault" />
+		<string name="redmineIssueInvoicedDefault" />
+		<string name="redmineIssueAccountedForMaintenanceDefault" />
+		<string name="redmineTimeSpentProductDefault" />
+		<string name="redmineTimeSpentDurationForCustomerDefault" />
+
 	</entity>
 
 </domain-models>
