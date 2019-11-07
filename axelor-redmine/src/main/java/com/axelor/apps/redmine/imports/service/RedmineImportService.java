@@ -22,8 +22,8 @@ import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
-import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
@@ -50,7 +50,7 @@ public class RedmineImportService {
   protected ProjectRepository projectRepo;
   protected ProductRepository productRepo;
   protected TeamTaskRepository teamTaskRepo;
-  protected ProjectCategoryRepository projectCategoryRepo;
+  protected TeamTaskCategoryRepository projectCategoryRepo;
   protected PartnerRepository partnerRepo;
   protected AppRedmineRepository appRedmineRepo;
   protected CompanyRepository companyRepo;
@@ -61,7 +61,7 @@ public class RedmineImportService {
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       TeamTaskRepository teamTaskRepo,
-      ProjectCategoryRepository projectCategoryRepo,
+      TeamTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo) {

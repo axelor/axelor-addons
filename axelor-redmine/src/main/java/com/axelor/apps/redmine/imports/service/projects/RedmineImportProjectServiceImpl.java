@@ -26,9 +26,9 @@ import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.ProjectCategory;
-import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
+import com.axelor.apps.project.db.TeamTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.imports.service.RedmineImportService;
@@ -69,7 +69,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       TeamTaskRepository teamTaskRepo,
-      ProjectCategoryRepository projectCategoryRepo,
+      TeamTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       RedmineImportMappingRepository redmineImportMappingRepository,
       AppRedmineRepository appRedmineRepo,
@@ -217,7 +217,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     try {
 
       if (project.getId() == null) {
-        project.addBatchSetItem(batch);
+        project.addCreatedBatchSetItem(batch);
+      } else {
+        project.addUpdatedBatchSetItem(batch);
       }
 
       projectRepo.save(project);
@@ -271,7 +273,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
             : redmineProjectInvoiceableDefault;
 
     boolean invoiceable = value != null ? (value.equals("1") ? true : false) : false;
-    project.setIsInvoiceable(invoiceable);
+    project.setToInvoice(invoiceable);
     project.setIsBusinessProject(invoiceable);
 
     // ERROR AND IMPORT IF CLIENT PARTNER NOT FOUND
@@ -329,10 +331,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
       for (Tracker tracker : redmineTrackers) {
         String name = fieldMap.get(tracker.getName());
-        ProjectCategory projectCategory = projectCategoryRepo.findByName(name);
+        TeamTaskCategory projectCategory = projectCategoryRepo.findByName(name);
 
         if (projectCategory != null) {
-          project.addProjectCategorySetItem(projectCategory);
+          project.addTeamTaskCategorySetItem(projectCategory);
         }
       }
     }

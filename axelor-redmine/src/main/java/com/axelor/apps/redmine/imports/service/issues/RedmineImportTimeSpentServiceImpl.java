@@ -31,8 +31,8 @@ import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.apps.redmine.message.IMessage;
@@ -74,7 +74,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       TeamTaskRepository teamTaskRepo,
-      ProjectCategoryRepository projectCategoryRepo,
+      TeamTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       TimesheetLineRepository timesheetLineRepo,
       TimesheetRepository timesheetRepo,
@@ -134,6 +134,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       int i = 0;
 
       for (TimeEntry redmineTimeEntry : redmineTimeEntryList) {
+        LOG.debug("Importing time entry: " + redmineTimeEntry.getId());
 
         errors = new Object[] {};
         String failedRedmineTimeEntriesIds = redmineBatch.getFailedRedmineTimeEntriesIds();
@@ -224,6 +225,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
             fail++;
             continue;
           }
+        } else {
+          this.teamTaskId = (long) 0;
         }
 
         // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
@@ -264,6 +267,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
           }
 
           this.productId = product.getId();
+        } else {
+          this.productId = (long) 0;
         }
 
         try {
@@ -342,8 +347,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       return;
     }
 
-    LOG.debug("Importing time entry: " + redmineTimeEntry.getId());
-
     this.setTimesheetLineFields(timesheetLine, redmineTimeEntry);
 
     if (timesheetLine.getTimesheet() != null) {
@@ -351,7 +354,9 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       try {
 
         if (timesheetLine.getId() == null) {
-          timesheetLine.addBatchSetItem(batch);
+          timesheetLine.addCreatedBatchSetItem(batch);
+        } else {
+          timesheetLine.addUpdatedBatchSetItem(batch);
         }
 
         timesheetLineRepo.save(timesheetLine);

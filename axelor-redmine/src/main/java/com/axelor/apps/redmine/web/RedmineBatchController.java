@@ -90,6 +90,27 @@ public class RedmineBatchController {
     }
   }
 
+  public void updatedProjectsInOs(ActionRequest request, ActionResponse response) {
+
+    Batch batch = request.getContext().asType(Batch.class);
+    batch = batchRepo.find(batch.getId());
+
+    List<Long> idList = new ArrayList<Long>();
+    batch.getUpdatedProjectsInOs().forEach(p -> idList.add(p.getId()));
+
+    if (!idList.isEmpty()) {
+      response.setView(
+          ActionView.define(I18n.get("Projects"))
+              .model(Project.class.getName())
+              .add("grid", "project-grid")
+              .add("form", "project-form")
+              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
+              .map());
+
+      response.setCanClose(true);
+    }
+  }
+
   public void createdTimesheetLinesInOs(ActionRequest request, ActionResponse response) {
 
     Batch batch = request.getContext().asType(Batch.class);
@@ -104,6 +125,48 @@ public class RedmineBatchController {
               .model(TimesheetLine.class.getName())
               .add("grid", "timesheet-line-grid")
               .add("form", "timesheet-line-form")
+              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
+              .map());
+
+      response.setCanClose(true);
+    }
+  }
+
+  public void updatedTimesheetLinesInOs(ActionRequest request, ActionResponse response) {
+
+    Batch batch = request.getContext().asType(Batch.class);
+    batch = batchRepo.find(batch.getId());
+
+    List<Long> idList = new ArrayList<Long>();
+    batch.getUpdatedTimesheetLinesInOs().forEach(t -> idList.add(t.getId()));
+
+    if (!idList.isEmpty()) {
+      response.setView(
+          ActionView.define(I18n.get("Timesheetlines"))
+              .model(TimesheetLine.class.getName())
+              .add("grid", "timesheet-line-grid")
+              .add("form", "timesheet-line-form")
+              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
+              .map());
+
+      response.setCanClose(true);
+    }
+  }
+
+  public void createdTasksInOs(ActionRequest request, ActionResponse response) {
+
+    Batch batch = request.getContext().asType(Batch.class);
+    batch = batchRepo.find(batch.getId());
+
+    List<Long> idList = new ArrayList<Long>();
+    batch.getCreatedTasksInOs().forEach(t -> idList.add(t.getId()));
+
+    if (!idList.isEmpty()) {
+      response.setView(
+          ActionView.define(I18n.get("Teamtasks"))
+              .model(TeamTask.class.getName())
+              .add("grid", "team-task-grid")
+              .add("form", "team-task-form")
               .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
               .map());
 
