@@ -26,9 +26,9 @@ import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.ProjectCategory;
-import com.axelor.apps.project.db.repo.ProjectCategoryRepository;
+import com.axelor.apps.project.db.TeamTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
@@ -76,7 +76,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       TeamTaskRepository teamTaskRepo,
-      ProjectCategoryRepository projectCategoryRepo,
+      TeamTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       RedmineImportMappingRepository redmineImportMappingRepository,
       AppRedmineRepository appRedmineRepo,
@@ -97,7 +97,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   Logger LOG = LoggerFactory.getLogger(getClass());
   protected Product product;
   protected Project project;
-  protected ProjectCategory projectCategory;
+  protected TeamTaskCategory projectCategory;
   protected String redmineIssueProductDefault;
   protected String redmineIssueIsTaskRefusedDefault;
   protected String redmineIssueTaskDateDefault;
@@ -192,6 +192,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     int i = 0;
 
     for (Issue redmineIssue : redmineIssueList) {
+      LOG.debug("Importing issue: " + redmineIssue.getId());
 
       errors = new Object[] {};
       String failedRedmineIssuesIds = redmineBatch.getFailedRedmineIssuesIds();
@@ -229,6 +230,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
           fail++;
           continue;
         }
+      } else {
+        this.product = null;
       }
 
       // ERROR AND DON'T IMPORT IF PROJECT NOT FOUND
@@ -329,12 +332,16 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       return;
     }
 
-    LOG.debug("Importing issue: " + redmineIssue.getId());
-
     this.setTeamTaskFields(teamTask, redmineIssue);
 
     try {
-      teamTask.addBatchSetItem(batch);
+
+      if (teamTask.getId() == null) {
+        teamTask.addCreatedBatchSetItem(batch);
+      } else {
+        teamTask.addUpdatedBatchSetItem(batch);
+      }
+
       teamTaskRepo.save(teamTask);
       updatedOnMap.put(teamTask.getId(), redmineUpdatedOn);
 
@@ -376,7 +383,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setRedmineId(redmineIssue.getId());
       teamTask.setProduct(product);
       teamTask.setProject(project);
-      teamTask.setProjectCategory(projectCategory);
+      teamTask.setTeamTaskCategory(projectCategory);
       teamTask.setName(redmineIssue.getSubject());
       teamTask.setDescription(redmineIssue.getDescription());
 
@@ -404,6 +411,12 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         teamTask.setTaskEndDate(closedOn.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
       }
 
+      Date startDate = redmineIssue.getStartDate();
+
+      if (startDate != null) {
+        teamTask.setTaskDate(startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+      }
+
       Version targetVersion = redmineIssue.getTargetVersion();
 
       if (targetVersion != null) {
@@ -428,7 +441,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
               : redmineIssueTaskDateDefault;
 
       if (value != null) {
-        teamTask.setTaskDate(LocalDate.parse(value));
+        teamTask.setDueDate(LocalDate.parse(value));
       }
 
       customField = redmineIssue.getCustomFieldByName("Temps estimé (INTERNE)");

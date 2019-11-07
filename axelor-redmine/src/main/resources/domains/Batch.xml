@@ -11,11 +11,17 @@
 			ref="com.axelor.apps.redmine.db.RedmineBatch" />
 
 		<many-to-many name="updatedTasksInOs" ref="com.axelor.team.db.TeamTask"
-			mappedBy="batchSet" />
+			mappedBy="updatedBatchSet" />
 		<many-to-many name="createdProjectsInOs" ref="com.axelor.apps.project.db.Project"
-			mappedBy="batchSet" />
+			mappedBy="createdBatchSet" />
 		<many-to-many name="createdTimesheetLinesInOs" ref="com.axelor.apps.hr.db.TimesheetLine"
-			mappedBy="batchSet" />
+			mappedBy="createdBatchSet" />
+		<many-to-many name="createdTasksInOs" ref="com.axelor.team.db.TeamTask"
+			mappedBy="createdBatchSet" />
+		<many-to-many name="updatedProjectsInOs" ref="com.axelor.apps.project.db.Project"
+			mappedBy="updatedBatchSet" />
+		<many-to-many name="updatedTimesheetLinesInOs" ref="com.axelor.apps.hr.db.TimesheetLine"
+			mappedBy="updatedBatchSet" />
 
 		<many-to-one name="errorLogFile" title="Error log"
 			ref="com.axelor.meta.db.MetaFile" />

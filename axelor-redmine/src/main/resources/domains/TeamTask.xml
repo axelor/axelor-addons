@@ -8,11 +8,13 @@
 	<entity name="TeamTask">
 
 		<integer name="redmineId" title="Redmine Id" />
-		<many-to-many name="batchSet" ref="com.axelor.apps.base.db.Batch" />
+		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
+		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
 		<string name="fixedVersion" title="Fixed version" />
 		<boolean name="isTaskRefused" title="Task refused" />
 		<decimal name="estimatedTime" title="Estimated time" />
 		<boolean name="accountedForMaintenance" />
+		<date name="dueDate" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 
