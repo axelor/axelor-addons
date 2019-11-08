@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	
+	<form name="invoice-form" title="Invoice" model="com.axelor.apps.account.db.Invoice" id="invoice-exractor-invoice-form"
+          onNew="action-account-invoice-onnew-group,action-invoice-extractor-onnew-group,save"
+          onLoad="action-account-invoice-onload-group" >
+          
+          <panel-include view="invoice-form" from="axelor-account"/>
+          
+	</form>         
+	
+	<action-group name="action-invoice-extractor-onnew-group">
+		<action name="action-invoice-extractor-method-generateInvoice" if="invoiceFormId" />
+		<action name="action-invoice-method-compute" if="invoiceLineList != null"/>
+	</action-group>														   
+	
+	<action-method name="action-invoice-extractor-method-generateInvoice">
+		<call class="com.axelor.apps.invoice.extractor.web.InvoiceController" method="generateInvoice"/>
+	</action-method>
+	
+</object-views>

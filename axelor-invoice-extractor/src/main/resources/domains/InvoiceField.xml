@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models
+	xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="invoice-extractor" package="com.axelor.apps.invoice.extractor.db" />
+
+	<entity name="InvoiceField" lang="java">
+		<string name="templateField" title="Template field"/>
+		<many-to-one name="metaModel" ref="com.axelor.meta.db.MetaModel" title="Meta model"/>
+		<many-to-one name="metaField" ref="com.axelor.meta.db.MetaField" title="Invoice field"/>
+		<one-to-many name="subMetaFieldList" ref="InvoiceField"	title="Sub fields" />
+		<string name="defaultValue" title="Default Value"/>
+		<string name="jsonFieldType" title="Json Type"/>
+		<string name="templateFieldValue" title="Template Demo Data"/>
+		<many-to-one name="dateFormate" ref="DateFormateCollection"/>
+		<boolean name="mappingField" title="Mapping Field"/>
+	</entity>
+	
+</domain-models>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid name="invoice-field-grid" title="Invoice Field"
+		model="com.axelor.apps.invoice.extractor.db.InvoiceField" edit-icon="true">
+			<field name="templateField"/>
+			<field name="metaModel" hidden="true"/>
+			<field name="metaField"/>
+			<field name="defaultValue" hideIf="templateField"/>
+			<field name="templateFieldValue"/>
+			<field name="mappingField"/>
+	</grid>
+
+	<form name="invoice-field-form" title="Invoice Field"
+		model="com.axelor.apps.invoice.extractor.db.InvoiceField" onNew="action-invoice-field-method-set-meta-model">
+		<panel name="fieldPanel">
+			<field name="templateField" hideIf="!templateField"/>
+			<field name="metaModel" hidden="true"/>
+			<field name="dateFormate" hideIf="metaField.typeName != 'LocalDate'" canNew="true"/>
+ 			<field name="metaField" domain="self.metaModel = :metaModel" canEdit="false" onChange="action-invoice-extractor-method-set-required-field-list"/>
+ 			<field name="defaultValue" requiredIf="mappingField == true" hideIf="metaField.relationship != null"/>
+ 			<field name="jsonFieldType" hidden="true"/>
+ 			<field name="templateFieldValue" hideIf="!templateField"/>
+		    <field name="metaField.typeName" hidden="true"/>
+		    <field name="metaField.relationship" hidden="true"/>
+		    <field name="metaField.name" hidden="true"/>
+		    <field name="mappingField" hideIf="metaField.relationship != null" onChange="action-invoice-extractor-record-set-default-value"/>
+		 </panel>
+		<panel-related name="subFieldListPanel" hidden="false" showIf="metaField.relationship != null || templateField == 'lines'" field="subMetaFieldList"/>
+	</form>
+	
+	<action-method name="action-invoice-field-method-set-meta-model" >
+	   <call class="com.axelor.apps.invoice.extractor.web.InvoiceFieldController" method="setMetaModel" />
+	</action-method>
+	
+	<action-record name="action-invoice-extractor-record-set-default-value" model="com.axelor.apps.invoice.extractor.db.InvoiceField">
+		<field name="defaultValue"  expr="eval: _parent?.templateFieldValue" if="mappingField == true" />
+	</action-record>
+	
+	<action-method name="action-invoice-extractor-method-set-required-field-list">
+		<call class="com.axelor.apps.invoice.extractor.web.InvoiceFieldController" method="setRequiredField"/>
+	</action-method>
+
+</object-views>

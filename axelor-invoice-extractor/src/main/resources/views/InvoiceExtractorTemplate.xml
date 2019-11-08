@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid name="invoice-extractor-template-grid" title="Template Extractor"
+		model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate"
+		edit-icon="true">
+		<field name="name"/>
+		<field name="templateFile"/>
+		<field name="pdfFile"/>
+	</grid>
+
+	<form name="invoice-extractor-template-form" title="Template Extractor"
+		model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate">
+		<panel name="generateFieldPanel">
+			<field name="name" colSpan="12"/>
+			<field name="templateFile" widget="binary-link" onChange="action-invoice-extractor-template-method-check-yml-file"/>
+			<field name="pdfFile" widget="binary-link" onChange="action-invoice-extractor-template-method-check-pdf-file"/>
+		</panel>
+		<panel-related name="fieldListPanel" field="invoiceFieldList"/>
+		<panel name="btnPanel">
+			<button name="generateFieldBtn" onClick="action-invoice-extractor-method-generate-field" colSpan="12" title="Generate-Field" />
+		</panel>
+	</form>
+
+	<action-method name="action-invoice-extractor-template-method-check-yml-file">
+		<call class="com.axelor.apps.invoice.extractor.web.TemplateExtractorController" method="checkYmlFile"/>
+	</action-method>
+	<action-method name="action-invoice-extractor-template-method-check-pdf-file">
+		<call class="com.axelor.apps.invoice.extractor.web.TemplateExtractorController" method="checkPdfFile"/>
+	</action-method>
+	<action-method name="action-invoice-extractor-method-generate-field">
+		<call class="com.axelor.apps.invoice.extractor.web.TemplateExtractorController" method="generateField"/>
+	</action-method>
+
+</object-views>

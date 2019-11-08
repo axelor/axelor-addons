@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid name="invoice-extractor-grid" title="Invoice Extractor"
+		model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor"
+		edit-icon="true">
+		<field name="invoiceFile"/>
+		<field name="invoiceExtractorTemplate"/>
+	</grid>
+
+	<form name="invoice-extractor-form" title="Invoice Extractor"
+		model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor">
+		<panel name="generateInvoicePanel">
+			<field name="invoiceFile" widget="binary-link" onChange="action-invoice-extractor-method-check-pdf-file"/>
+			<field name="invoiceExtractorTemplate"/>
+			<button name="generateInvoiceBtn" onClick="save,action-invoice-extractor-method-generate-invoice" colSpan="6" title="Generate-Invoice" />
+		</panel>
+	</form>
+
+	<action-method name="action-invoice-extractor-method-check-pdf-file">
+		<call class="com.axelor.apps.invoice.extractor.web.InvoiceExtractorController" method="checkPdfFile"/>
+	</action-method>
+	
+	<action-method name="action-invoice-extractor-method-generate-invoice">
+		<call class="com.axelor.apps.invoice.extractor.web.InvoiceExtractorController" method="setInvoice"/>
+	</action-method>
+
+</object-views>
