@@ -26,10 +26,6 @@ public class RedmineProjectFetchDataService {
 
   public List<Project> fetchImportData(RedmineManager redmineManager) throws RedmineException {
 
-    List<Project> importProjectList = null;
-
-    importProjectList = redmineManager.getProjectManager().getProjects();
-
-    return importProjectList;
+    return redmineManager.getProjectManager().getProjects();
   }
 }

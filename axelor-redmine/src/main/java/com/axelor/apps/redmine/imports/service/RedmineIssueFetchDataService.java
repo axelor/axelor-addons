@@ -121,7 +121,13 @@ public class RedmineIssueFetchDataService {
     Map<String, String> params = new HashMap<String, String>();
 
     if (lastBatchEndDate != null) {
-      params.put("from", lastBatchEndDate.toLocalDate().toString());
+      params.put("set_filter", "1");
+      params.put("f[]", "updated_on");
+      params.put("op[updated_on]", ">=");
+      params.put(
+          "v[updated_on][]",
+          lastBatchEndDate.withZoneSameInstant(ZoneOffset.UTC).withNano(0).toString());
+
       importTimeEntryList = redmineTimeEntryManager.getTimeEntries(params).getResults();
     } else {
       importTimeEntryList = redmineTimeEntryManager.getTimeEntries();
