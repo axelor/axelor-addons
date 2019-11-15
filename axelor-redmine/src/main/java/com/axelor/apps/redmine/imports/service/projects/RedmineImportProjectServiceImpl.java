@@ -89,7 +89,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
   Logger LOG = LoggerFactory.getLogger(getClass());
   protected Long defaultCompanyId;
-  protected String redmineProjectInvoiceableDefault;
   protected String redmineProjectClientPartnerDefault;
   protected String redmineProjectInvoicingSequenceSelectDefault;
 
@@ -111,7 +110,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       this.defaultCompanyId = appRedmine.getCompany().getId();
-      this.redmineProjectInvoiceableDefault = appRedmine.getRedmineProjectInvoiceableDefault();
       this.redmineProjectClientPartnerDefault = appRedmine.getRedmineProjectClientPartnerDefault();
       this.redmineProjectInvoicingSequenceSelectDefault =
           appRedmine.getRedmineProjectInvoicingSequenceSelectDefault();
@@ -267,10 +265,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     project.setCompany(companyRepo.find(defaultCompanyId));
 
     CustomField customField = (CustomField) redmineCustomFieldsMap.get("Invoiceable");
-    String value =
-        customField != null && customField.getValue() != null && !customField.getValue().equals("")
-            ? customField.getValue()
-            : redmineProjectInvoiceableDefault;
+    String value = customField != null ? customField.getValue() : null;
 
     boolean invoiceable = value != null ? (value.equals("1") ? true : false) : false;
     project.setToInvoice(invoiceable);
