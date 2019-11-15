@@ -103,7 +103,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long productId = (long) 0;
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
-  protected String redmineTimeSpentDurationForCustomerDefault;
+  protected BigDecimal redmineTimeSpentDurationForCustomerDefault;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -392,14 +392,11 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
     CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
-    String value =
-        customField != null && customField.getValue() != null && !customField.getValue().equals("")
-            ? customField.getValue()
-            : redmineTimeSpentDurationForCustomerDefault;
-
-    if (value != null) {
-      timesheetLine.setDurationForCustomer(new BigDecimal(value));
-    }
+    String value = customField != null ? customField.getValue() : null;
+    timesheetLine.setDurationForCustomer(
+        value != null && !value.equals("")
+            ? new BigDecimal(value)
+            : redmineTimeSpentDurationForCustomerDefault);
 
     Timesheet timesheet =
         timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();

@@ -14,8 +14,4 @@
 		</bind>
 	</input>
 
-	<input file="base_appRedmineConfig.csv" separator=";"
-		type="com.axelor.apps.base.db.AppRedmine" search="self.code = :code"
-		update="true" />
-
 </csv-inputs>

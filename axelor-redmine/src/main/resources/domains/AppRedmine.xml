@@ -19,7 +19,7 @@
 		<string name="redmineProjectInvoicingSequenceSelect" />
 		<string name="redmineIssueProduct" />
 		<string name="redmineIssueIsTaskRefused" />
-		<string name="redmineIssueTaskDate" />
+		<string name="redmineIssueDueDate" />
 		<string name="redmineIssueEstimatedTime" />
 		<string name="redmineIssueInvoiced" />
 		<string name="redmineIssueAccountedForMaintenance" />
@@ -27,17 +27,13 @@
 		<string name="redmineTimeSpentDurationForCustomer" />
 
 		<!-- REDMINE CUSTOM FIELD CONFIGURATION DEFAULT VALUES -->
-		<string name="redmineProjectInvoiceableDefault" />
 		<string name="redmineProjectClientPartnerDefault" />
 		<string name="redmineProjectInvoicingSequenceSelectDefault" />
 		<string name="redmineIssueProductDefault" />
-		<string name="redmineIssueIsTaskRefusedDefault" />
-		<string name="redmineIssueTaskDateDefault" />
-		<string name="redmineIssueEstimatedTimeDefault" />
-		<string name="redmineIssueInvoicedDefault" />
-		<string name="redmineIssueAccountedForMaintenanceDefault" />
+		<date name="redmineIssueDueDateDefault" />
+		<decimal name="redmineIssueEstimatedTimeDefault" />
 		<string name="redmineTimeSpentProductDefault" />
-		<string name="redmineTimeSpentDurationForCustomerDefault" />
+		<decimal name="redmineTimeSpentDurationForCustomerDefault" />
 
 	</entity>
 

@@ -128,7 +128,7 @@ public class RedmineServiceImpl implements RedmineService {
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueInvoiced(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsTaskRefused(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueProduct(), false);
-      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueTaskDate(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueDueDate(), false);
       customFieldsValidationMap.put(
           "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
       customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);

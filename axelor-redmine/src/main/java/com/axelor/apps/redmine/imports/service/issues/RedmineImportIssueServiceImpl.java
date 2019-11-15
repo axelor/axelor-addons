@@ -99,11 +99,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected Project project;
   protected TeamTaskCategory projectCategory;
   protected String redmineIssueProductDefault;
-  protected String redmineIssueIsTaskRefusedDefault;
-  protected String redmineIssueTaskDateDefault;
-  protected String redmineIssueEstimatedTimeDefault;
-  protected String redmineIssueInvoicedDefault;
-  protected String redmineIssueAccountedForMaintenanceDefault;
+  protected LocalDate redmineIssueDueDateDefault;
+  protected BigDecimal redmineIssueEstimatedTimeDefault;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -121,12 +118,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       this.redmineIssueProductDefault = appRedmine.getRedmineIssueProductDefault();
-      this.redmineIssueIsTaskRefusedDefault = appRedmine.getRedmineIssueIsTaskRefusedDefault();
-      this.redmineIssueTaskDateDefault = appRedmine.getRedmineIssueTaskDateDefault();
+      this.redmineIssueDueDateDefault = appRedmine.getRedmineIssueDueDateDefault();
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
-      this.redmineIssueInvoicedDefault = appRedmine.getRedmineIssueInvoicedDefault();
-      this.redmineIssueAccountedForMaintenanceDefault =
-          appRedmine.getRedmineIssueAccountedForMaintenanceDefault();
 
       List<Option> selectionList = new ArrayList<Option>();
       selectionList.addAll(MetaStore.getSelectionList("team.task.status"));
@@ -424,57 +417,30 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       }
 
       CustomField customField = redmineIssue.getCustomFieldByName("Prestation refusée/annulée");
-      String value =
-          customField != null
-                  && customField.getValue() != null
-                  && !customField.getValue().equals("")
-              ? customField.getValue()
-              : redmineIssueIsTaskRefusedDefault;
+      String value = customField != null ? customField.getValue() : null;
       teamTask.setIsTaskRefused(value != null ? (value.equals("1") ? true : false) : false);
 
       customField = redmineIssue.getCustomFieldByName("Date d'échéance (INTERNE)");
-      value =
-          customField != null
-                  && customField.getValue() != null
-                  && !customField.getValue().equals("")
-              ? customField.getValue()
-              : redmineIssueTaskDateDefault;
-
-      if (value != null) {
-        teamTask.setDueDate(LocalDate.parse(value));
-      }
+      value = customField != null ? customField.getValue() : null;
+      teamTask.setDueDate(
+          value != null && !value.equals("") ? LocalDate.parse(value) : redmineIssueDueDateDefault);
 
       customField = redmineIssue.getCustomFieldByName("Temps estimé (INTERNE)");
-      value =
-          customField != null
-                  && customField.getValue() != null
-                  && !customField.getValue().equals("")
-              ? customField.getValue()
-              : redmineIssueEstimatedTimeDefault;
-
-      if (value != null) {
-        teamTask.setEstimatedTime(new BigDecimal(value));
-      }
+      value = customField != null ? customField.getValue() : null;
+      teamTask.setEstimatedTime(
+          value != null && !value.equals("")
+              ? new BigDecimal(value)
+              : redmineIssueEstimatedTimeDefault);
 
       customField = redmineIssue.getCustomFieldByName("Déjà facturé");
-      value =
-          customField != null
-                  && customField.getValue() != null
-                  && !customField.getValue().equals("")
-              ? customField.getValue()
-              : redmineIssueInvoicedDefault;
+      value = customField != null ? customField.getValue() : null;
 
       if (!teamTask.getInvoiced()) {
         teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
       }
 
       customField = redmineIssue.getCustomFieldByName("Comptabilisé maintenance");
-      value =
-          customField != null
-                  && customField.getValue() != null
-                  && !customField.getValue().equals("")
-              ? customField.getValue()
-              : redmineIssueAccountedForMaintenanceDefault;
+      value = customField != null ? customField.getValue() : null;
 
       teamTask.setAccountedForMaintenance(
           value != null ? (value.equals("1") ? true : false) : false);
