@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="redmine" package="com.axelor.apps.redmine.db" />
+
+	<entity name="RedmineImportMapping" lang="java">
+
+		<string name="redmineValue" title="Redmine value" required="true" />
+		<string name="osValue" title="OS value" required="true" />
+		<many-to-one name="redmineImportConfig"
+			ref="com.axelor.apps.redmine.db.RedmineImportConfig" />
+
+	</entity>
+
+</domain-models>

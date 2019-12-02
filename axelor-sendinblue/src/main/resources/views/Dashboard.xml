@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<dashboard title="Dashboard" name="sendinblue.dashboard.report">
+		<dashlet action="dashlet.sendinblue.dashboard.total.report"
+			height="350" canSearch="true" colSpan="12" title="Event Report" />
+		<dashlet action="dashlet.sendinblue.dashboard.tag.report"
+			height="500" canSearch="true" colSpan="12" title="Event Tag Report" />
+	</dashboard>
+
+	<action-view name="dashlet.sendinblue.dashboard.total.report"
+		title="Event Report" model="com.axelor.apps.sendinblue.db.SendinBlueReport">
+		<view type="chart" name="chart.sendinblue.report.total.report" />
+	</action-view>
+
+	<action-view name="dashlet.sendinblue.dashboard.tag.report"
+		title="Event Tag Report" model="com.axelor.apps.sendinblue.db.SendinBlueEvent">
+		<view type="chart" name="chart.sendinblue.event.tag" />
+	</action-view>
+
+</object-views>

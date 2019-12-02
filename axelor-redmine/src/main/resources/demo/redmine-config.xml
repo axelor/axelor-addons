@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<csv-inputs xmlns="http://axelor.com/xml/ns/data-import"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/data-import http://axelor.com/xml/ns/data-import/data-import_5.0.xsd">
+
+	<input file="redmine_redmineImportConfig.csv" type="com.axelor.apps.redmine.db.RedmineImportConfig"
+		search="self.importId = :importId" separator=";">
+
+		<bind column="redmineMappingFieldSelect" to="redmineMappingFieldSelect" />
+
+		<bind to="redmineImportMappingList">
+			<bind column="redmineValue" to="redmineValue" />
+			<bind column="osValue" to="osValue" />
+		</bind>
+	</input>
+
+</csv-inputs>

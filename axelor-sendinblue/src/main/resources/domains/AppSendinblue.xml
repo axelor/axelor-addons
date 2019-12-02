@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.1.xsd">
+
+	<module name="base" package="com.axelor.apps.base.db" />
+
+	<entity name="AppSendinblue" lang="java" extends="App">
+		<string name="uri" title="URI" />
+		<string name="apiKey" title="Api Key" />
+
+		<many-to-many name="partnerFieldSet" ref="com.axelor.meta.db.MetaField"
+			title="Contact fields" />
+		<many-to-many name="leadFieldSet" ref="com.axelor.meta.db.MetaField"
+			title="Lead fields" />
+
+		<boolean name="isContactExport" title="Export contact" />
+		<boolean name="isTemplateExport" title="Export template" />
+		<boolean name="isCampaignExport" title="Export campaign" />
+
+		<boolean name="isContactImport" title="Import contact" />
+		<boolean name="isTemplateImport" title="Import template" />
+		<boolean name="isCampaignImport" title="Import campaign" />
+
+	</entity>
+
+</domain-models>

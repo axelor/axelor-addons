@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<form name="partner-form" id="partner-sendinblue-form" title="Partner"
+		model="com.axelor.apps.base.db.Partner" onNew="action-group-base-partner-onnew"
+		onLoad="action-group-partner-onload" onSave="action-partner-iban-check-on-save"
+		width="large">
+		<panel-include view="partner-form" from="axelor-base" />
+		<panel-tabs name="sendinblueReportPanelTab" showIf="id"
+			if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()">
+			<panel title="SendinBlue Campaign Reporting">
+				<panel-dashlet action="dashlet.sendinblue.contact.stat"
+					name="sendinBlueContactStatPanel" height="350"
+					title="SendinBlue Campaign Reporting" colSpan="12" />
+				<button name="deleteSendinBlueContactStatistics" title="Delete SendinBlue Contact Statistics" onClick="action-partner-method-delete-sendinBlueContactStatistics"/>
+			</panel>
+			<panel-dashlet action="dashlet.sendinblue.chart.contact.stat"
+				name="sendinBlueChartContactStatPanel" height="350" title="SendinBlue Reporting"
+				colSpan="12" />
+		</panel-tabs>
+	</form>
+	<action-method name="action-partner-method-delete-sendinBlueContactStatistics">
+		<call class="com.axelor.apps.sendinblue.web.PartnerController" method="deleteSendinBlueContactStatistics"/>
+	</action-method>
+
+</object-views>

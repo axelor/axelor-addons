@@ -12,9 +12,10 @@
 	<string name="typeSelect" default="discussion" selection="team.post.type.select"/>
 	<many-to-one name="parentTeamPost" ref="TeamPost" title="Parent" />
 	<many-to-one name="project" ref="com.axelor.apps.project.db.Project" title="Project" />
-	<many-to-many name="membersUserSet" ref="com.axelor.auth.db.User" title="Members"/>
 	<many-to-one name="originalTeamPost" ref="TeamPost"/>
 	<one-to-many name="historyTeamPostList"  ref="TeamPost" mappedBy="originalTeamPost" title="Team post history"/>
+	<many-to-many name="visitedUser" ref="com.axelor.auth.db.User" title="visited User"/>
+	<many-to-many name="membersUserSet" ref="com.axelor.auth.db.User" title="Members"/>
 	<track>
 		<field name="name" if="typeSelect == 'page'"/>
 		<field name="statusSelect" if="typeSelect == 'page'"/>
@@ -22,8 +23,9 @@
 		<field name="parentTeamPost" if="typeSelect == 'page'"/>
 		<field name="content" if="typeSelect == 'page'"/>
 		<field name="project" if="typeSelect == 'page'"/>
+		<field name="membersUserSet" if="typeSelect == 'page'"/>
 		<message if="typeSelect == 'page'" on="CREATE">Post created</message>
-		<message if="typeSelect == 'page'" on ="UPDATE">Post updated</message>
+		<message if="typeSelect == 'page'" on ="UPDATE" fields="name,statusSelect,title,parentTeamPost,content,project">Post updated</message>
 	</track>
   </entity>
   

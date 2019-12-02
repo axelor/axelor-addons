@@ -18,14 +18,32 @@
 package com.axelor.apps.redmine.module;
 
 import com.axelor.app.AxelorModule;
+import com.axelor.apps.businesssupport.db.repo.TeamTaskBusinessSupportRepository;
+import com.axelor.apps.redmine.db.repo.TeamTaskRedmineRepositiry;
+import com.axelor.apps.redmine.imports.service.RedmineIssueService;
+import com.axelor.apps.redmine.imports.service.RedmineIssueServiceImpl;
+import com.axelor.apps.redmine.imports.service.RedmineProjectService;
+import com.axelor.apps.redmine.imports.service.RedmineProjectServiceImpl;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueService;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueServiceImpl;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentService;
+import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentServiceImpl;
+import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectService;
+import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectServiceImpl;
 import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.apps.redmine.service.RedmineServiceImpl;
 
 public class RedmineModule extends AxelorModule {
 
-	@Override
-	protected void configure() {
-		bind(RedmineService.class).to(RedmineServiceImpl.class);
-	}
+  @Override
+  protected void configure() {
 
+    bind(RedmineService.class).to(RedmineServiceImpl.class);
+    bind(RedmineIssueService.class).to(RedmineIssueServiceImpl.class);
+    bind(RedmineProjectService.class).to(RedmineProjectServiceImpl.class);
+    bind(RedmineImportProjectService.class).to(RedmineImportProjectServiceImpl.class);
+    bind(RedmineImportIssueService.class).to(RedmineImportIssueServiceImpl.class);
+    bind(RedmineImportTimeSpentService.class).to(RedmineImportTimeSpentServiceImpl.class);
+    bind(TeamTaskBusinessSupportRepository.class).to(TeamTaskRedmineRepositiry.class);
+  }
 }

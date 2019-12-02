@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<grid id="redmine-team-task-grid" name="team-task-grid" title="Tasks"
+		model="com.axelor.team.db.TeamTask" orderBy="taskDate, priority"
+		edit-icon="true">
+		<hilite color="success" if="status == 'closed'" />
+		<hilite color="danger"
+			if="$moment(taskEndDate).diff(todayDate,'days') &lt; 0" />
+		<hilite color="warning" if="priority == 'urgent'" />
+		<field name="name" />
+		<field name="project" />
+		<field name="taskDate" />
+		<field name="taskEndDate" hidden="true" />
+		<field name="status" />
+		<field name="priority" />
+		<field name="projectCategory" />
+		<field if="__config__.app.isApp('business-support')" if-module="axelor-business-support"
+			name="targetVersion" />
+		<field name="redmineId" />
+		<button name="timeSpentBtn" title="Enter Time spent" icon="fa-clock-o"
+			onClick="action-team-task-view-time-spent" />
+	</grid>
+
+	<form id="redmine-team-task-form" name="team-task-form" title="Task"
+		model="com.axelor.team.db.TeamTask" extension="true">
+
+		<extend target="panel-tabs[@name='mainPanelTab']/*[last()]">
+			<insert position="after">
+				<panel-dashlet name="timesheetLinePanel" title="Logged Time"
+					action="action-team-task-dashlet-timesheet-line" colSpan="12"
+					canSearch="true" />
+				<panel name="redminePanel" title="Redmine">
+					<field name="redmineId" />
+					<field name="fixedVersion" />
+					<field name="estimatedTime" />
+					<field name="isTaskRefused" widget="boolean-switch" colSpan="3" />
+					<field name="accountedForMaintenance" widget="boolean-switch"
+						colSpan="3" />
+				</panel>
+			</insert>
+		</extend>
+
+		<extend target="//field[@name='taskEndDate']">
+			<insert position="after">
+				<field name="dueDate" colSpan="4" />
+			</insert>
+		</extend>
+
+	</form>
+
+	<action-view name="action-team-task-dashlet-timesheet-line"
+		title="Timesheetline" model="com.axelor.apps.hr.db.TimesheetLine">
+		<view type="grid" name="timesheet-line-grid" />
+		<view type="form" name="timesheet-line-timesheet-form" />
+		<view-param name="popup" value="true" />
+		<domain>self.teamTask.id = :id</domain>
+	</action-view>
+
+</object-views>

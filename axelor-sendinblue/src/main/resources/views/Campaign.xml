@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<form name="campaign-form" id="campaign-sendinblue-form" title="Campaign"
+		model="com.axelor.apps.marketing.db.Campaign" extension="true">
+		<extend target="panel-tabs/panel[@name='emailingPanel']">
+		    <replace>
+		    		<panel name="emailingTemplatePanel" title="Templates" showIf="emailing"
+						colSpan="12">
+						<field name="partnerTemplate"
+							domain="self.metaModel.name = 'Partner' AND self.mediaTypeSelect IN (4)"
+							showIf="emailing" />
+						<field name="leadTemplate"
+							domain="self.metaModel.name = 'Lead' AND self.mediaTypeSelect IN (4)"
+							showIf="emailing" />
+						<field name="partnerReminderTemplate"
+							domain="self.metaModel.name = 'Partner' AND self.mediaTypeSelect IN (4)" />
+						<field name="leadReminderTemplate"
+							domain="self.metaModel.name = 'Lead' AND self.mediaTypeSelect IN (4)" />
+						<field name="emailAccount" showIf="emailing" />
+					</panel>
+					<panel name="emailingReportingPanel" title="Reporting" showIf="emailing"
+						colSpan="12">
+						<panel-dashlet name="generatedEmailsPanel" action="dashlet.generated.emails"
+							height="350" colSpan="12" />
+						<panel-dashlet name="sendinBlueCampaignStatPanel"
+							action="dashlet.sendinblue.campaign.stat" height="350"
+							title="Campaign Statistics" colSpan="12" showIf="id"
+							if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()" />
+						<button name="deleteSendinBlueCamapignStatistics" title="Delete SendinBlue Camapign Statistics" onClick="action-campaign-method-delete-sendinBlueCampaigStatistics"/>
+					</panel>
+		    </replace>
+    	</extend>
+	</form>
+	<action-method name="action-campaign-method-delete-sendinBlueCampaigStatistics">
+		<call class="com.axelor.apps.sendinblue.web.CampaignController" method="deleteSendinBlueCampignStatistics"/>
+	</action-method>
+
+</object-views>

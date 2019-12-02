@@ -12,8 +12,9 @@ axelor {
 }
 
 dependencies {
-	compile project(":modules:axelor-helpdesk")
-	compile project(":modules:axelor-project")
-	
-	compile 'com.taskadapter:redmine-java-api:3.1.0'
+	compile project(":modules:axelor-business-support")
+	compile ('org.json:json:20090211')
+	compile fileTree(dir: 'libs', include: ['*.jar'])
+	compile 'com.squareup.okhttp3:okhttp:3.14.1'
+	compile 'net.java:textile-j:2.2'
 }

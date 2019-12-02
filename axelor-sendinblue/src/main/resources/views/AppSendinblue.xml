@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<form name="app-sendinblue-config-form" title="App sendinblue"
+		canDelete="false" canNew="false" width="large"
+		model="com.axelor.apps.base.db.AppSendinblue">
+		<panel name="mainPanel">
+			<field name="uri" colSpan="5" help="Path to load the server" />
+			<field name="apiKey" help="Specify Version3 API key" colSpan="5"
+				required="true" />
+			<button name="authBtn" title="Authenticate"
+				onClick="save,action-sendinblue-method-authenticate" colSpan="2" />
+		</panel>
+		<panel-tabs>
+			<panel name="fieldPanel" title="Export field">
+				<field name="partnerFieldSet" colSpan="12" form-view="meta-field-form"
+					grid-view="meta-field-grid" domain="self.metaModel.name = 'Partner' AND ((self.relationship != 'ManyToMany' AND self.relationship != 'OneToMany') OR self.relationship = null)" />
+				<field name="leadFieldSet" colSpan="12" form-view="meta-field-form"
+					grid-view="meta-field-grid" domain="self.metaModel.name = 'Lead' AND ((self.relationship != 'ManyToMany' AND self.relationship != 'OneToMany') OR self.relationship = null)" />
+				<button name="exportFieldBtn" title="Export fields"
+					onClick="save,action-sendinblue-method-add-contact-fields" />
+			</panel>
+			<panel name="configrationPanel" title="Configration">
+				<panel name="importPanel" title="Import">
+					<field name="isContactImport" widget="boolean-switch" />
+					<field name="isTemplateImport" widget="boolean-switch" />
+					<field name="isCampaignImport" widget="boolean-switch" />
+				</panel>
+				<panel name="exportPanel" title="Export">
+					<field name="isContactExport" widget="boolean-switch" />
+					<field name="isTemplateExport" widget="boolean-switch" />
+					<field name="isCampaignExport" widget="boolean-switch" />
+				</panel>
+			</panel>
+		</panel-tabs>
+	</form>
+
+	<action-method name="action-sendinblue-method-authenticate">
+		<call class="com.axelor.apps.sendinblue.web.AppSendinBlueController"
+			method="authenticateSendinBlue" />
+	</action-method>
+
+	<action-method name="action-sendinblue-method-add-contact-fields">
+		<call class="com.axelor.apps.sendinblue.web.AppSendinBlueController"
+			method="addContactFields" />
+	</action-method>
+
+	<action-method name="action-sendinblue-method-delete-sendinblueAggregatedStatistics">
+		<call class="com.axelor.apps.sendinblue.web.AppSendinBlueController" method="deleteSendinBlueAggregatedStatistics"/>
+	</action-method>
+</object-views>

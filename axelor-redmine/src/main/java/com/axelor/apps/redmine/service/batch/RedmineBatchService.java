@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2018 Axelor (<http://axelor.com>).
+ * Copyright (C) 2019 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -30,34 +30,40 @@ import com.axelor.inject.Beans;
 
 public class RedmineBatchService extends AbstractBatchService {
 
-	@Override
-	protected Class<? extends Model> getModelClass() {
-		return RedmineBatch.class;
-	}
+  @Override
+  protected Class<? extends Model> getModelClass() {
+    return RedmineBatch.class;
+  }
 
-	@Override
-	public Batch run(Model batchModel) throws AxelorException {
-		Batch batch;
-		RedmineBatch redmineBatch = (RedmineBatch) batchModel;
+  @Override
+  public Batch run(Model batchModel) throws AxelorException {
 
-		switch (redmineBatch.getActionSelect()) {
+    Batch batch;
+    RedmineBatch redmineBatch = (RedmineBatch) batchModel;
 
-		case RedmineBatchRepository.ACTION_IMPORT:
-			batch = importIssues(redmineBatch);
-			break;
+    switch (redmineBatch.getRedmineActionSelect()) {
+      case RedmineBatchRepository.ACTION_SELECT_IMPORT_PROJECT:
+        batch = redmineImportProjects(redmineBatch);
+        break;
+      case RedmineBatchRepository.ACTION_SELECT_IMPORT_ISSUE:
+        batch = redmineImportIssues(redmineBatch);
+        break;
+      default:
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_INCONSISTENCY,
+            I18n.get(IExceptionMessage.BASE_BATCH_1),
+            redmineBatch.getRedmineActionSelect(),
+            redmineBatch.getCode());
+    }
 
-		default:
-			throw new AxelorException(TraceBackRepository.CATEGORY_INCONSISTENCY, I18n.get(IExceptionMessage.BASE_BATCH_1),
-					redmineBatch.getActionSelect(), redmineBatch.getCode());
-		}
+    return batch;
+  }
 
-		return batch;
-	}
+  public Batch redmineImportProjects(RedmineBatch redmineBatch) {
+    return Beans.get(BatchImportAllRedmineProject.class).run(redmineBatch);
+  }
 
-	/*
-	 * Calling BatchImportRedmine.class to import the issues from Redmine
-	 */
-	public Batch importIssues(RedmineBatch redmineBatch) {
-		return Beans.get(BatchImportRedmine.class).run(redmineBatch);
-	}
+  public Batch redmineImportIssues(RedmineBatch redmineBatch) {
+    return Beans.get(BatchImportAllRedmineIssue.class).run(redmineBatch);
+  }
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<form name="lead-form" id="lead-sendinblue-form" title="Lead"
+		model="com.axelor.apps.crm.db.Lead" onLoad="action-group-crm-lead-onload"
+		onNew="action-group-crm-lead-onnew" onSave="action-crm-lead-method-check-name">
+		<panel-include view="lead-form" from="axelor-crm" />
+		<panel-tabs name="sendinblueReportPanelTab" showIf="id"
+			if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()">
+			<panel title="SendinBlue Campaign Reporting">
+				<panel-dashlet action="dashlet.sendinblue.contact.stat"
+					name="sendinBlueContactStatPanel" height="350"
+					title="SendinBlue Campaign Reporting" colSpan="12" />
+				<button name="deleteSendinBlueContactStatistics" title="Delete SendinBlue Contact Statistics" onClick="action-lead-method-delete-sendinBlueContactStatistics"/>
+			</panel>
+			<panel-dashlet action="dashlet.sendinblue.chart.contact.stat"
+				name="sendinBlueChartContactStatPanel" height="350" title="SendinBlue Reporting"
+				colSpan="12" />
+		</panel-tabs>
+	</form>
+	<action-method name="action-lead-method-delete-sendinBlueContactStatistics">
+		<call class="com.axelor.apps.sendinblue.web.LeadController" method="deleteSendinBlueContactStatistics"/>
+	</action-method>
+
+</object-views>

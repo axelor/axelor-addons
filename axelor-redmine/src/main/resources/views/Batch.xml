@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<form name="redmine-base-batch-form" title="Batch"
+		model="com.axelor.apps.base.db.Batch" onNew="action-batch-attrs"
+		onLoad="action-batch-attrs,action-batch-attrs-hide-creted-updated-set"
+		canEdit="false" canDelete="false" canNew="false" canCopy="false"
+		canSave="false" width="large">
+
+		<panel name="main">
+			<field name="createdBy" form-view="user-form" grid-view="user-grid" />
+			<field name="duration" />
+			<field name="startDate" requirded="true" />
+			<field name="endDate" />
+			<field name="done" />
+			<field name="anomaly" />
+			<field name="errorLogFile" hidden="true" showIf="errorLogFile != null"
+				widget="binary-link" />
+			<field name="metaFile" hidden="true" showIf="metaFile != null"
+				widget="binary-link" />
+			<field name="comments" showTitle="false" colSpan="12" />
+			<button name="showTraceBack" title="Anomalies" colSpan="2"
+				onClick="save,action-batch-show-trace-back" />
+		</panel>
+
+		<panel name="batchActionPanel" title="Results">
+			<field name="createdTasksInOs" colSpan="12" canNew="false"
+				canSelect="false" />
+			<button name="createdTasksInOsBtn" title="Created tasks in OS"
+				colSpan="4" onClick="action-batch-method-open-created-tasks-in-os" />
+			<field name="updatedTasksInOs" colSpan="12" canNew="false"
+				canSelect="false" />
+			<button name="updatedTasksInOsBtn" title="Updated tasks in OS"
+				colSpan="4" onClick="action-batch-method-open-updated-tasks-in-os" />
+
+			<field name="createdProjectsInOs" colSpan="12" canNew="false"
+				canSelect="false" />
+			<button name="createdProjectsInOsBtn" title="Created projects in OS"
+				colSpan="4" onClick="action-batch-method-open-created-projects-in-os" />
+			<field name="updatedProjectsInOs" colSpan="12" canNew="false"
+				canSelect="false" />
+			<button name="updatedProjectsInOsBtn" title="Updated projects in OS"
+				colSpan="4" onClick="action-batch-method-open-updated-projects-in-os" />
+
+			<field name="createdTimesheetLinesInOs" colSpan="12" canNew="false"
+				canSelect="false" />
+			<button name="createdTimesheetLinesInOsBtn" title="Created timesheetlines in OS"
+				colSpan="4" onClick="action-batch-method-open-created-timesheetlines-in-os" />
+			<field name="updatedTimesheetLinesInOs" colSpan="12" canNew="false"
+				canSelect="false" />
+			<button name="updatedTimesheetLinesInOsBtn" title="Updated timesheetlines in OS"
+				colSpan="4" onClick="action-batch-method-open-updated-timesheetlines-in-os" />
+		</panel>
+
+	</form>
+
+	<action-method name="action-batch-method-open-created-projects-in-os">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="createdProjectsInOs" />
+	</action-method>
+
+	<action-method name="action-batch-method-open-created-timesheetlines-in-os">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="createdTimesheetLinesInOs" />
+	</action-method>
+
+	<action-method name="action-batch-method-open-updated-tasks-in-os">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="updatedTasksInOs" />
+	</action-method>
+
+	<action-method name="action-batch-method-open-updated-projects-in-os">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="updatedProjectsInOs" />
+	</action-method>
+
+	<action-method name="action-batch-method-open-updated-timesheetlines-in-os">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="updatedTimesheetLinesInOs" />
+	</action-method>
+
+	<action-method name="action-batch-method-open-created-tasks-in-os">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="createdTasksInOs" />
+	</action-method>
+
+	<action-attrs name="action-batch-attrs-hide-creted-updated-set">
+		<attribute name="hidden"
+			for="createdProjectsInOs,createdProjectsInOsBtn,updatedProjectsInOs,updatedProjectsInOsBtn"
+			expr="eval: true" if="eval: _parent?.redmineActionSelect == 1" />
+		<attribute name="hidden"
+			for="createdTasksInOs,createdTasksInOsBtn,updatedTasksInOs,updatedTasksInOsBtn,createdTimesheetLinesInOs,createdTimesheetLinesInOsBtn,updatedTimesheetLinesInOs,updatedTimesheetLinesInOsBtn"
+			expr="eval: true" if="eval: _parent?.redmineActionSelect == 0" />
+	</action-attrs>
+
+</object-views>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+
+	<menuitem name="sendinblue-root" title="SendinBlue" icon="fa fa-bullseye"
+		if="__config__.app.isApp('sendinblue')" icon-background="violet" />
+
+	<menuitem name="sendinblue-dashboard" parent="sendinblue-root"
+		title="Dashboard" action="sendinblue.dashboard" if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()"/>
+
+	<action-view name="sendinblue.dashboard"
+		model="com.axelor.apps.sendinblue.db.SendinBlueReport" title="Dashboard">
+		<view name="sendinblue.dashboard.report" type="dashboard" />
+	</action-view>
+
+	<menuitem name="sendinblue-import" parent="sendinblue-root"
+		title="Import" action="sendinblue.import" />
+
+	<action-view name="sendinblue.import"
+		model="com.axelor.apps.sendinblue.db.ImportSendinBlue" title="Import">
+		<view name="sendinblue-import-grid" type="grid" />
+		<view name="sendinblue-import-form" type="form" />
+	</action-view>
+
+	<menuitem name="sendinblue-export" parent="sendinblue-root"
+		title="Export" action="sendinblue.export" />
+
+	<action-view name="sendinblue.export"
+		model="com.axelor.apps.sendinblue.db.ExportSendinBlue" title="Export">
+		<view name="sendinblue-export-grid" type="grid" />
+		<view name="sendinblue-export-form" type="form" />
+	</action-view>
+
+</object-views>

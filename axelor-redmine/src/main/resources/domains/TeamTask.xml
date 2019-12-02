@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="project" package="com.axelor.team.db" />
+
+	<entity name="TeamTask">
+
+		<integer name="redmineId" title="Redmine Id" />
+		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
+		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
+		<string name="fixedVersion" title="Fixed version" />
+		<boolean name="isTaskRefused" title="Task refused" />
+		<decimal name="estimatedTime" title="Estimated time" />
+		<boolean name="accountedForMaintenance" />
+		<date name="dueDate" />
+
+		<finder-method name="findByRedmineId" using="redmineId" />
+
+		<extra-code>
+			<![CDATA[
+				public static final String TEAM_TASK_DEFAULT_STATUS = "new";
+				public static final String TEAM_TASK_DEFAULT_PRIORITY = "normal";
+			]]>
+		</extra-code>
+
+	</entity>
+
+</domain-models>
