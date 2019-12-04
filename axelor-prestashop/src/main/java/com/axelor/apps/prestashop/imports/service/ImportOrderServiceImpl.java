@@ -461,7 +461,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
             try {
               Invoice invoice =
                   saleOrderInvoiceService.generateInvoice(
-                      localOrder, SaleOrderRepository.INVOICE_ALL, null, false, null);
+                      localOrder, SaleOrderRepository.INVOICE_ALL, null, false, null, null);
               invoice.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
               invoice.setPrintingSettings(localOrder.getPrintingSettings());
               invoiceService.ventilate(invoice);
