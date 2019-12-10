@@ -23,6 +23,9 @@
 			<field name="redmineIssueEstimatedTime" required="true" />
 			<field name="redmineIssueInvoiced" required="true" />
 			<field name="redmineIssueAccountedForMaintenance" required="true" />
+			<field name="redmineIssueIsTaskAccepted" required="true" />
+			<field name="redmineIssueIsOffered" required="true" />
+			<field name="redmineIssueUnitPrice" required="true" />
 			<field name="redmineTimeSpentProduct" required="true" />
 			<field name="redmineTimeSpentDurationForCustomer" required="true" />
 		</panel>
@@ -32,6 +35,7 @@
 			<field name="redmineIssueProductDefault" />
 			<field name="redmineIssueDueDateDefault" />
 			<field name="redmineIssueEstimatedTimeDefault" />
+			<field name="redmineIssueUnitPriceDefault" />
 			<field name="redmineTimeSpentProductDefault" />
 			<field name="redmineTimeSpentDurationForCustomerDefault" />
 		</panel>

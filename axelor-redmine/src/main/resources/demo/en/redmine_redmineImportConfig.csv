@@ -31,3 +31,8 @@ importId;redmineMappingFieldSelect;redmineValue;osValue
 3;Priority;Normal;Normal
 3;Priority;High;High
 3;Priority;Urgent;Urgent
+4;Activity;On project/Bugfix;On project/Bugfix
+4;Activity;On project/Project Management;On project/Project Management
+4;Activity;On ticket;On ticket
+4;Activity;On project/Feature;On project/Feature
+4;Activity;A. Technologies;A. Technologies

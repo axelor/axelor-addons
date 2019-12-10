@@ -19,8 +19,6 @@ package com.axelor.apps.redmine.db.repo;
 
 import com.axelor.apps.businesssupport.db.repo.TeamTaskBusinessSupportRepository;
 import com.axelor.team.db.TeamTask;
-import java.util.ArrayList;
-import java.util.List;
 
 public class TeamTaskRedmineRepositiry extends TeamTaskBusinessSupportRepository {
 
@@ -30,10 +28,7 @@ public class TeamTaskRedmineRepositiry extends TeamTaskBusinessSupportRepository
     super.save(teamTask);
 
     if (teamTask.getRedmineId() != null) {
-      List<String> composedNames = new ArrayList<>();
-      composedNames.add("#" + teamTask.getRedmineId());
-      composedNames.add(teamTask.getName());
-      teamTask.setFullName(String.join(" ", composedNames));
+      teamTask.setFullName(teamTask.getName());
     }
 
     return teamTask;
