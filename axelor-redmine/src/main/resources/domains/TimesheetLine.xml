@@ -10,7 +10,7 @@
 		<integer name="redmineId" title="Redmine Id" />
 		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
 		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
-
+		<string name="activityTypeSelect" selection="redmine.timesheetline.activity.type.select" title="Activity Type" />
 		<finder-method name="findByRedmineId" using="redmineId" />
 
 	</entity>

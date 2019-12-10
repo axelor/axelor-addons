@@ -13,6 +13,7 @@
 			from="axelor-human-resource" />
 		<panel name="redminePanel" title="Redmine">
 			<field name="redmineId" />
+			<field name="activityTypeSelect" />
 		</panel>
 
 	</form>

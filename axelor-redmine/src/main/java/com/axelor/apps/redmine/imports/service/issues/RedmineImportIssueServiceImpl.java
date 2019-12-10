@@ -101,6 +101,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected String redmineIssueProductDefault;
   protected LocalDate redmineIssueDueDateDefault;
   protected BigDecimal redmineIssueEstimatedTimeDefault;
+  protected BigDecimal redmineIssueUnitPriceDefault;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -120,6 +121,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       this.redmineIssueProductDefault = appRedmine.getRedmineIssueProductDefault();
       this.redmineIssueDueDateDefault = appRedmine.getRedmineIssueDueDateDefault();
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
+      this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
 
       List<Option> selectionList = new ArrayList<Option>();
       selectionList.addAll(MetaStore.getSelectionList("team.task.status"));
@@ -377,7 +379,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setProduct(product);
       teamTask.setProject(project);
       teamTask.setTeamTaskCategory(projectCategory);
-      teamTask.setName(redmineIssue.getSubject());
+      teamTask.setName("#" + redmineIssue.getId() + " " + redmineIssue.getSubject());
       teamTask.setDescription(redmineIssue.getDescription());
 
       Integer assigneeId = redmineIssue.getAssigneeId();
@@ -444,6 +446,21 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       teamTask.setAccountedForMaintenance(
           value != null ? (value.equals("1") ? true : false) : false);
+
+      customField = redmineIssue.getCustomFieldByName("Offert");
+      value = customField != null ? customField.getValue() : null;
+      teamTask.setIsOffered(value != null ? (value.equals("1") ? true : false) : false);
+
+      customField = redmineIssue.getCustomFieldByName("Montant à facturer");
+      value = customField != null ? customField.getValue() : null;
+      teamTask.setUnitPrice(
+          value != null && !value.equals("")
+              ? new BigDecimal(value)
+              : redmineIssueUnitPriceDefault);
+
+      customField = redmineIssue.getCustomFieldByName("Acceptée");
+      value = customField != null ? customField.getValue() : null;
+      teamTask.setIsTaskAccepted(value != null ? (value.equals("1") ? true : false) : false);
 
       // ERROR AND IMPORT WITH DEFAULT IF STATUS NOT FOUND
 

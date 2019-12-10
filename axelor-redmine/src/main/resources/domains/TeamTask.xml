@@ -11,10 +11,11 @@
 		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
 		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
 		<string name="fixedVersion" title="Fixed version" />
-		<boolean name="isTaskRefused" title="Task refused" />
 		<decimal name="estimatedTime" title="Estimated time" />
 		<boolean name="accountedForMaintenance" />
 		<date name="dueDate" />
+		<boolean name="isOffered" title="Offered" />
+		<boolean name="isTaskAccepted" title="Task Accepted" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
 

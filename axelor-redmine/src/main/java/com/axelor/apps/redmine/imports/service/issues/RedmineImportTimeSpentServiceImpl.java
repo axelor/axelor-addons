@@ -41,6 +41,8 @@ import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.meta.MetaStore;
+import com.axelor.meta.schema.views.Selection.Option;
 import com.axelor.team.db.TeamTask;
 import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
@@ -52,10 +54,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -118,11 +123,24 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       this.lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
       this.defaultCompanyId = appRedmineRepo.all().fetchOne().getCompany().getId();
+      this.selectionMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       this.redmineTimeSpentProductDefault = appRedmine.getRedmineTimeSpentProductDefault();
       this.redmineTimeSpentDurationForCustomerDefault =
           appRedmine.getRedmineTimeSpentDurationForCustomerDefault();
+
+      List<Option> selectionList = new ArrayList<Option>();
+      selectionList.addAll(
+          MetaStore.getSelectionList("redmine.timesheetline.activity.type.select"));
+
+      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
+      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
+
+      for (Option option : selectionList) {
+        selectionMap.put(fr.getString(option.getTitle()), option.getValue());
+        selectionMap.put(en.getString(option.getTitle()), option.getValue());
+      }
 
       Comparator<TimeEntry> compareByDate =
           (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
@@ -398,6 +416,11 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
             ? new BigDecimal(value)
             : redmineTimeSpentDurationForCustomerDefault);
 
+    String activityType = redmineTimeEntry.getActivityName();
+    if (activityType != null && !activityType.isEmpty()) {
+      timesheetLine.setActivityTypeSelect(selectionMap.get(activityType));
+    }
+
     Timesheet timesheet =
         timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();
 
@@ -406,7 +429,11 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
     if (timesheet == null) {
       timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
-      timesheet.setCompany(companyRepo.find(defaultCompanyId));
+      timesheet.setCompany(
+          companyRepo.find(
+              user.getActiveCompany() != null
+                  ? user.getActiveCompany().getId()
+                  : defaultCompanyId));
       timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
     } else if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
       timesheet.setFromDate(redmineSpentOn);
