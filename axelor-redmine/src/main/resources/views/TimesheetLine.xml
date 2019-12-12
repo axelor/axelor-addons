@@ -2,20 +2,56 @@
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+	
+	<grid id="redmine-timesheet-line-timesheet-grid" name="timesheet-line-timesheet-grid" title="Timesheet Lines" model="com.axelor.apps.hr.db.TimesheetLine" extension="true" 
+		editable="true" orderBy="date" >
+		<extend target="/">
+			<attribute name="onNew" value="action-hr-default-timesheet-line-timesheet,action-redmine-timesheet-line-attrs-set-duration-unit"/>
+		</extend>
+		<extend target="//field[@name='user']">
+			<insert position="after">
+				<field name="durationUnit" hidden="true" />
+			</insert>
+		</extend>
+	</grid>
 
-	<form name="timesheet-line-timesheet-form" id="redmine-timesheet-line-timesheet-form"
-		title="Timesheet Line" model="com.axelor.apps.hr.db.TimesheetLine"
-		onNew="action-hr-default-timesheet-line-timesheet,action-timesheet-line-attrs-set-duration-label,action-timesheet-line-attrs-title-project"
-		onLoad="action-timesheet-line-attrs-set-duration-label,action-timesheet-line-attrs-set-visible-duration-title,action-timesheet-line-attrs-title-project"
-		width="large">
+	<form name="timesheet-line-timesheet-form"
+		id="redmine-timesheet-line-timesheet-form" title="Timesheet Line"
+		model="com.axelor.apps.hr.db.TimesheetLine" extension="true">	
+		<extend target="/">
+			<attribute name="onNew" value="action-hr-default-timesheet-line-timesheet,action-timesheet-line-attrs-set-duration-label,action-timesheet-line-attrs-title-project,action-redmine-timesheet-line-attrs-set-duration-unit"/>
+		</extend>
 
-		<panel-include view="timesheet-line-timesheet-form"
-			from="axelor-human-resource" />
-		<panel name="redminePanel" title="Redmine">
-			<field name="redmineId" />
-			<field name="activityTypeSelect" />
-		</panel>
-
+		<extend target="panel[@name='overviewPanel']">
+			<insert position="after">
+				<panel name="redminePanel" title="Redmine">
+					<field name="redmineId" />
+					<field name="activityTypeSelect" />
+				</panel>
+			</insert>
+			
+			<replace>
+				<panel name="overviewPanel" title="Overview">
+					<field name="project" onChange="action-timesheet-line-group-project-onchange" onSelect="action-timesheet-line-attrs-domain-project" form-view="project-form" grid-view="project-grid"/>
+					<field name="teamTask" form-view="team-task-form" grid-view="team-task-grid" onSelect="action-timesheet-line-attrs-domain-team-task" onChange="action-timesheet-line-method-set-default-to-invoice"/>
+					<field name="date" />
+					<field name="product" requiredIf="toInvoice" canEdit="false" onSelect="action-hr-timesheet-line-attrs-domain-product" widget="SuggestBox" form-view="product-activity-form" grid-view="product-activity-grid"/>
+					<field name="duration" width="62%" colSpan="3" onChange="action-timesheet-line-method-set-stored-duration" min="0.01"/>
+					<label name="durationLabel" colSpan="3"/>
+		    		<field name="durationForCustomer" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')"/>
+		    		<!-- REDMINE CHANGES replace the durationLabel with below durationUnit field -->
+		    		<field name="durationUnit" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" readonly="true" />
+					<field name="hoursDuration" hidden="true" />
+					<field name="toInvoice" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" />
+					<field name="enableEditor" />
+					<field name="comments" />
+					<field name="user" form-view="user-form" grid-view="user-grid" hidden="true" canNew="false" canEdit="false" canView="false"/>
+				</panel>
+			</replace>
+		</extend>
 	</form>
-
+	
+	<action-attrs name="action-redmine-timesheet-line-attrs-set-duration-unit">
+	    <attribute name="value" for="durationUnit" expr="eval: __parent__?.timeLoggingPreferenceSelect == 'days' ? __repo__(AppBase).all().fetchOne().unitDays : __parent__?.timeLoggingPreferenceSelect == 'minutes' ? __repo__(AppBase).all().fetchOne().unitMinutes : __repo__(AppBase).all().fetchOne().unitHours"/>
+	</action-attrs>
 </object-views>

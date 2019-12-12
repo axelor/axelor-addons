@@ -24,6 +24,7 @@ import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.base.db.repo.UnitRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
@@ -72,6 +73,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected TimesheetLineRepository timesheetLineRepo;
   protected TimesheetRepository timesheetRepo;
   protected TimesheetService timesheetService;
+  protected UnitRepository unitRepo;
 
   @Inject
   public RedmineImportTimeSpentServiceImpl(
@@ -85,7 +87,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       TimesheetRepository timesheetRepo,
       TimesheetService timesheetService,
       AppRedmineRepository appRedmineRepo,
-      CompanyRepository companyRepo) {
+      CompanyRepository companyRepo,
+      UnitRepository unitRepo) {
 
     super(
         userRepo,
@@ -99,6 +102,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     this.timesheetLineRepo = timesheetLineRepo;
     this.timesheetRepo = timesheetRepo;
     this.timesheetService = timesheetService;
+    this.unitRepo = unitRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -109,6 +113,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
   protected BigDecimal redmineTimeSpentDurationForCustomerDefault;
+  protected String redmineTimeSpentDurationUnitDefault;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -129,6 +134,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       this.redmineTimeSpentProductDefault = appRedmine.getRedmineTimeSpentProductDefault();
       this.redmineTimeSpentDurationForCustomerDefault =
           appRedmine.getRedmineTimeSpentDurationForCustomerDefault();
+      this.redmineTimeSpentDurationUnitDefault =
+          appRedmine.getRedmineTimeSpentDurationUnitDefault();
 
       List<Option> selectionList = new ArrayList<Option>();
       selectionList.addAll(
@@ -416,13 +423,27 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
             ? new BigDecimal(value)
             : redmineTimeSpentDurationForCustomerDefault);
 
+    customField = redmineTimeEntry.getCustomField("Unité client");
+    value = customField != null ? customField.getValue() : null;
+    timesheetLine.setDurationUnit(
+        value != null && !value.equals("")
+            ? unitRepo.findByName(value)
+            : unitRepo.findByName(redmineTimeSpentDurationUnitDefault));
+
     String activityType = redmineTimeEntry.getActivityName();
     if (activityType != null && !activityType.isEmpty()) {
       timesheetLine.setActivityTypeSelect(selectionMap.get(activityType));
     }
 
     Timesheet timesheet =
-        timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();
+        timesheetRepo
+            .all()
+            .filter(
+                "self.user = ?1 AND self.statusSelect != ?2",
+                user,
+                TimesheetRepository.STATUS_CANCELED)
+            .order("-id")
+            .fetchOne();
 
     LocalDate redmineSpentOn =
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
@@ -434,11 +455,17 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
               user.getActiveCompany() != null
                   ? user.getActiveCompany().getId()
                   : defaultCompanyId));
-      timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
-    } else if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
-      timesheet.setFromDate(redmineSpentOn);
+      timesheet.setToDate(redmineSpentOn);
+    } else {
+      if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
+        timesheet.setFromDate(redmineSpentOn);
+      }
+      if (timesheet.getToDate().isBefore(redmineSpentOn)) {
+        timesheet.setToDate(redmineSpentOn);
+      }
     }
 
+    timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
     timesheet.setPeriodTotal(timesheet.getPeriodTotal().add(timesheetLine.getHoursDuration()));
     timesheetRepo.save(timesheet);
     timesheetLine.setTimesheet(timesheet);

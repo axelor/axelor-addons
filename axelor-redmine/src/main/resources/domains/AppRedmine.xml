@@ -28,6 +28,7 @@
 		<string name="redmineIssueIsTaskAccepted" />
 		<string name="redmineIssueIsOffered" />
 		<string name="redmineIssueUnitPrice" />
+		<string name="redmineTimeSpentDurationUnit" />
 
 		<!-- REDMINE CUSTOM FIELD CONFIGURATION DEFAULT VALUES -->
 		<string name="redmineProjectClientPartnerDefault" />
@@ -38,7 +39,7 @@
 		<string name="redmineTimeSpentProductDefault" />
 		<decimal name="redmineTimeSpentDurationForCustomerDefault" />
 		<decimal name="redmineIssueUnitPriceDefault" />
-
+		<string name="redmineTimeSpentDurationUnitDefault" />
 	</entity>
 
 </domain-models>
