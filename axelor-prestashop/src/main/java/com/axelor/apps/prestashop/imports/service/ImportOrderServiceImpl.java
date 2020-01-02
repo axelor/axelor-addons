@@ -599,7 +599,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         // Set all default information (product name, tax, unit, cost price)
         // Even if we'll override some of them later, it does not hurt to pass
         // through service method
-        saleOrderLineService.computeProductInformation(localLine, localOrder);
+        saleOrderLineService.computeProductInformation(
+            localLine, localOrder, localLine.getPackPriceSelect());
 
         localLine.setQty(BigDecimal.valueOf(remoteLine.getProductQuantity()));
         localLine.setProductName(remoteLine.getProductName());
@@ -701,7 +702,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       // Set all default information (product name, tax, unit, cost price)
       // Even if we'll override some of them later, it does not hurt to pass
       // through service method
-      saleOrderLineService.computeProductInformation(localLine, localOrder);
+      saleOrderLineService.computeProductInformation(
+          localLine, localOrder, product.getPackPriceSelect());
 
       localLine.setQty(BigDecimal.ONE);
       localLine.setPrice(price);
