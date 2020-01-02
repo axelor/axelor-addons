@@ -457,10 +457,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
                   : defaultCompanyId));
       timesheet.setToDate(redmineSpentOn);
     } else {
-      if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
+      if (timesheet.getFromDate() == null || timesheet.getFromDate().isAfter(redmineSpentOn)) {
         timesheet.setFromDate(redmineSpentOn);
       }
-      if (timesheet.getToDate().isBefore(redmineSpentOn)) {
+      if (timesheet.getToDate() == null || timesheet.getToDate().isBefore(redmineSpentOn)) {
         timesheet.setToDate(redmineSpentOn);
       }
     }
