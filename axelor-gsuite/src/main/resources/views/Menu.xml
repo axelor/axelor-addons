@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+
+	<menuitem name="gsuite-root" title="Gsuite" icon="fa-google"
+		icon-background="blue" order="-61" if="__config__.app.isApp('gsuite')"/>
+
+	<menuitem name="gsuite-google-account" parent="gsuite-root"
+		title="Google account" action="gsuite.google.account" />
+
+	<action-view name="gsuite.google.account" title="Google account"
+		model="com.axelor.apps.gsuite.db.GoogleAccount">
+		<view type="grid" name="google-account-grid" />
+		<view type="form" name="google-account-form" />
+	</action-view>
+
+</object-views>
