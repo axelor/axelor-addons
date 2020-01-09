@@ -130,14 +130,23 @@ public class RedmineServiceImpl implements RedmineService {
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueProduct(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueDueDate(), false);
       customFieldsValidationMap.put(
+          "issue " + appRedmine.getRedmineIssueAccountedForMaintenance(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsTaskAccepted(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsOffered(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueUnitPrice(), false);
+
+      customFieldsValidationMap.put(
           "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
       customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
+      customFieldsValidationMap.put(
+          "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
     } else {
       customFieldsValidationMap.put(
           "project " + appRedmine.getRedmineProjectClientPartner(), false);
       customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectInvoiceable(), false);
       customFieldsValidationMap.put(
           "project " + appRedmine.getRedmineProjectInvoicingSequenceSelect(), false);
+      customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectAssignedTo(), false);
     }
 
     CustomFieldManager customFieldManager = redmineManager.getCustomFieldManager();

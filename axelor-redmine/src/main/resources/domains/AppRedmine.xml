@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+<domain-models
+	xmlns="http://axelor.com/xml/ns/domain-models"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
-	<entity name="AppRedmine" lang="java" cachable="true" extends="App">
+	<entity name="AppRedmine" lang="java" cachable="true"
+		extends="App">
 
 		<!-- REDMINE CONFIGURATION DETAILS -->
 		<string name="uri" title="URI" />
 		<string name="apiAccessKey" title="Api Access Key" />
-		<many-to-one name="company" ref="com.axelor.apps.base.db.Company"
-			title="Company" />
+		<many-to-one name="company"
+			ref="com.axelor.apps.base.db.Company" title="Company" />
 
 		<!-- REDMINE CUSTOM FIELD CONFIGURATION DETAILS -->
 		<string name="redmineProjectInvoiceable" />
 		<string name="redmineProjectClientPartner" />
 		<string name="redmineProjectInvoicingSequenceSelect" />
+		<string name="redmineProjectAssignedTo" />
 		<string name="redmineIssueProduct" />
 		<string name="redmineIssueIsTaskRefused" />
 		<string name="redmineIssueDueDate" />

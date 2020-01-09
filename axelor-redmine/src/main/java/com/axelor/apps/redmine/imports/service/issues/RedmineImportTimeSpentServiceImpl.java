@@ -30,6 +30,7 @@ import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
+import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.repo.ProjectRepository;
@@ -40,6 +41,7 @@ import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
+import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
@@ -74,6 +76,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected TimesheetRepository timesheetRepo;
   protected TimesheetService timesheetService;
   protected UnitRepository unitRepo;
+  protected TimesheetLineService timesheetLineService;
 
   @Inject
   public RedmineImportTimeSpentServiceImpl(
@@ -88,7 +91,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       TimesheetService timesheetService,
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo,
-      UnitRepository unitRepo) {
+      UnitRepository unitRepo,
+      TimesheetLineService timesheetLineService) {
 
     super(
         userRepo,
@@ -103,6 +107,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     this.timesheetRepo = timesheetRepo;
     this.timesheetService = timesheetService;
     this.unitRepo = unitRepo;
+    this.timesheetLineService = timesheetLineService;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -410,7 +415,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setComments(redmineTimeEntry.getComment());
 
     BigDecimal duration = BigDecimal.valueOf(redmineTimeEntry.getHours());
-    timesheetLine.setDuration(duration);
     timesheetLine.setHoursDuration(duration);
 
     timesheetLine.setDate(
@@ -421,7 +425,9 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setDurationForCustomer(
         value != null && !value.equals("")
             ? new BigDecimal(value)
-            : redmineTimeSpentDurationForCustomerDefault);
+            : (redmineTimeSpentDurationForCustomerDefault.compareTo(BigDecimal.ZERO) != 0
+                ? redmineTimeSpentDurationForCustomerDefault
+                : duration));
 
     customField = redmineTimeEntry.getCustomField("Unité client");
     value = customField != null ? customField.getValue() : null;
@@ -466,6 +472,13 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     }
 
     timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
+
+    try {
+      timesheetLine.setDuration(
+          timesheetLineService.computeHoursDuration(timesheet, duration, false));
+    } catch (AxelorException e) {
+      TraceBackService.trace(e, "", batch.getId());
+    }
     timesheet.setPeriodTotal(timesheet.getPeriodTotal().add(timesheetLine.getHoursDuration()));
     timesheetRepo.save(timesheet);
     timesheetLine.setTimesheet(timesheet);

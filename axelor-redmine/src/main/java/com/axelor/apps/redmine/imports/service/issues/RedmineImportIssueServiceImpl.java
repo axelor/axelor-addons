@@ -383,13 +383,12 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setDescription(redmineIssue.getDescription());
 
       Integer assigneeId = redmineIssue.getAssigneeId();
+      User assignedTo = assigneeId != null ? getOsUser(assigneeId) : null;
 
-      if (assigneeId != null) {
-        User user = getOsUser(assigneeId);
-
-        if (user != null) {
-          teamTask.setAssignedTo(user);
-        }
+      if (assignedTo != null) {
+        teamTask.setAssignedTo(assignedTo);
+      } else {
+        teamTask.setAssignedTo(project.getAssignedTo());
       }
 
       teamTask.setProgressSelect(redmineIssue.getDoneRatio());

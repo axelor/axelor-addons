@@ -271,6 +271,13 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     project.setToInvoice(invoiceable);
     project.setIsBusinessProject(invoiceable);
 
+    customField = (CustomField) redmineCustomFieldsMap.get("Assigné par défaut à");
+    value = customField != null ? customField.getValue() : null;
+
+    if (value != null && !value.isEmpty()) {
+      project.setAssignedTo(getOsUser(Integer.parseInt(value)));
+    }
+
     // ERROR AND IMPORT IF CLIENT PARTNER NOT FOUND
 
     customField = (CustomField) redmineCustomFieldsMap.get("Customer code");

@@ -17,6 +17,7 @@
 			<field name="redmineProjectInvoiceable" required="true" />
 			<field name="redmineProjectClientPartner" required="true" />
 			<field name="redmineProjectInvoicingSequenceSelect" required="true" />
+			<field name="redmineProjectAssignedTo" required="true"/>
 			<field name="redmineIssueProduct" required="true" />
 			<field name="redmineIssueIsTaskRefused" required="true" />
 			<field name="redmineIssueDueDate" required="true" />
