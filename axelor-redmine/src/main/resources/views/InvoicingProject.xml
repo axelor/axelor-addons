@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+	<form name="invoicing-project-form" title="Invoicing business project" model="com.axelor.apps.businessproject.db.InvoicingProject"
+		onNew="action-invoicing-project-group-on-new" onLoad="action-invoicing-project-attrs-title-project" width="large" extension="true" id="redmine-invoicing-project-form">
+		
+		<extend target="//field[@name='invoice']">
+			<insert position="after">
+				<field name="consolidatePhaseWhenInvoicing" showIf="project.projectTypeSelect == 1"/>
+			</insert>
+		</extend>
+		
+		<extend target="/">
+			<attribute name="onNew" value="action-invoicing-project-record-set-consolidate-phase-when-invoicing,action-invoicing-project-group-on-new"/>
+		</extend>
+	</form>
+	
+	<action-record name="action-invoicing-project-record-set-consolidate-phase-when-invoicing" model="com.axelor.apps.businessproject.db.InvoicingProject">
+		<field name="consolidatePhaseWhenInvoicing" expr="eval: _project.consolidatePhaseWhenInvoicing"/>
+	</action-record>
+	
+</object-views>	
