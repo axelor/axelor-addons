@@ -21,7 +21,6 @@
 		<string name="redmineProjectInvoicingSequenceSelect" />
 		<string name="redmineProjectAssignedTo" />
 		<string name="redmineIssueProduct" />
-		<string name="redmineIssueIsTaskRefused" />
 		<string name="redmineIssueDueDate" />
 		<string name="redmineIssueEstimatedTime" />
 		<string name="redmineIssueInvoiced" />
