@@ -417,12 +417,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         teamTask.setFixedVersion(targetVersion.getName());
       }
 
-      CustomField customField = redmineIssue.getCustomFieldByName("Prestation refusée/annulée");
+      CustomField customField = redmineIssue.getCustomFieldByName("Date d'échéance (INTERNE)");
       String value = customField != null ? customField.getValue() : null;
-      teamTask.setIsTaskRefused(value != null ? (value.equals("1") ? true : false) : false);
-
-      customField = redmineIssue.getCustomFieldByName("Date d'échéance (INTERNE)");
-      value = customField != null ? customField.getValue() : null;
       teamTask.setDueDate(
           value != null && !value.equals("") ? LocalDate.parse(value) : redmineIssueDueDateDefault);
 

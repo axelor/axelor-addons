@@ -22,6 +22,7 @@ import com.axelor.apps.base.exceptions.IExceptionMessage;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
+import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.db.Model;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -40,6 +41,7 @@ public class RedmineBatchService extends AbstractBatchService {
 
     Batch batch;
     RedmineBatch redmineBatch = (RedmineBatch) batchModel;
+    RedmineImportService.result = "";
 
     switch (redmineBatch.getRedmineActionSelect()) {
       case RedmineBatchRepository.ACTION_SELECT_IMPORT_PROJECT:

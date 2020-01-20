@@ -65,7 +65,8 @@ public class RedmineServiceImpl implements RedmineService {
       validateCustomFieldConfig(redmineManager, appRedmine, true);
 
       redmineImportProjectService.redmineImportProject(batch, redmineManager, onSuccess, onError);
-    } catch (Exception e) {
+    } catch (AxelorException | RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
   }
@@ -86,7 +87,8 @@ public class RedmineServiceImpl implements RedmineService {
       validateCustomFieldConfig(redmineManager, appRedmine, false);
 
       redmineImportIssueService.redmineImportIssue(batch, redmineManager, onSuccess, onError);
-    } catch (Exception e) {
+    } catch (AxelorException | RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
   }
@@ -126,7 +128,6 @@ public class RedmineServiceImpl implements RedmineService {
     if (!isProject) {
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueEstimatedTime(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueInvoiced(), false);
-      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsTaskRefused(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueProduct(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueDueDate(), false);
       customFieldsValidationMap.put(
