@@ -39,7 +39,6 @@
 		<date name="redmineIssueDueDateDefault" />
 		<decimal name="redmineIssueEstimatedTimeDefault" />
 		<string name="redmineTimeSpentProductDefault" />
-		<decimal name="redmineTimeSpentDurationForCustomerDefault" />
 		<decimal name="redmineIssueUnitPriceDefault" />
 		<string name="redmineTimeSpentDurationUnitDefault" />
 	</entity>

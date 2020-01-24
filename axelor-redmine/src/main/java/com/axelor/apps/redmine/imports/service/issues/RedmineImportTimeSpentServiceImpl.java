@@ -117,7 +117,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long productId = (long) 0;
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
-  protected BigDecimal redmineTimeSpentDurationForCustomerDefault;
   protected String redmineTimeSpentDurationUnitDefault;
 
   @Override
@@ -137,8 +136,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       this.redmineTimeSpentProductDefault = appRedmine.getRedmineTimeSpentProductDefault();
-      this.redmineTimeSpentDurationForCustomerDefault =
-          appRedmine.getRedmineTimeSpentDurationForCustomerDefault();
       this.redmineTimeSpentDurationUnitDefault =
           appRedmine.getRedmineTimeSpentDurationUnitDefault();
 
@@ -423,11 +420,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
     String value = customField != null ? customField.getValue() : null;
     timesheetLine.setDurationForCustomer(
-        value != null && !value.equals("")
-            ? new BigDecimal(value)
-            : (redmineTimeSpentDurationForCustomerDefault.compareTo(BigDecimal.ZERO) != 0
-                ? redmineTimeSpentDurationForCustomerDefault
-                : duration));
+        value != null && !value.equals("") ? new BigDecimal(value) : duration);
 
     customField = redmineTimeEntry.getCustomField("Unité client");
     value = customField != null ? customField.getValue() : null;

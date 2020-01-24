@@ -38,7 +38,6 @@
 			<field name="redmineIssueEstimatedTimeDefault" />
 			<field name="redmineIssueUnitPriceDefault" />
 			<field name="redmineTimeSpentProductDefault" />
-			<field name="redmineTimeSpentDurationForCustomerDefault" />
 			<field name="redmineTimeSpentDurationUnitDefault" />
 		</panel>
 	</form>
