@@ -376,7 +376,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
     try {
       teamTask.setRedmineId(redmineIssue.getId());
-      teamTask.setProduct(product);
       teamTask.setProject(project);
       teamTask.setTeamTaskCategory(projectCategory);
       teamTask.setName("#" + redmineIssue.getId() + " " + redmineIssue.getSubject());
@@ -434,6 +433,21 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       if (!teamTask.getInvoiced()) {
         teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
+        
+        teamTask.setProduct(product);
+
+        customField = redmineIssue.getCustomFieldByName("Montant à facturer");
+        value = customField != null ? customField.getValue() : null;
+        teamTask.setUnitPrice(
+            value != null && !value.equals("")
+                ? new BigDecimal(value)
+                : redmineIssueUnitPriceDefault);
+        teamTask.setUnit(null);
+        teamTask.setQuantity(BigDecimal.ZERO);
+        teamTask.setExTaxTotal(BigDecimal.ZERO);
+        teamTask.setInvoicingType(0);
+        teamTask.setToInvoice(false);
+        teamTask.setCurrency(null);
       }
 
       customField = redmineIssue.getCustomFieldByName("Comptabilisé maintenance");
@@ -445,13 +459,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       customField = redmineIssue.getCustomFieldByName("Offert");
       value = customField != null ? customField.getValue() : null;
       teamTask.setIsOffered(value != null ? (value.equals("1") ? true : false) : false);
-
-      customField = redmineIssue.getCustomFieldByName("Montant à facturer");
-      value = customField != null ? customField.getValue() : null;
-      teamTask.setUnitPrice(
-          value != null && !value.equals("")
-              ? new BigDecimal(value)
-              : redmineIssueUnitPriceDefault);
 
       customField = redmineIssue.getCustomFieldByName("Acceptée");
       value = customField != null ? customField.getValue() : null;
