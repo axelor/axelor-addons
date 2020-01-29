@@ -22,6 +22,7 @@ import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businessproduction.service.TimesheetBusinessProductionServiceImpl;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.service.app.AppHumanResourceService;
 import com.axelor.apps.hr.service.config.HRConfigService;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
@@ -50,7 +51,8 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
       UserHrService userHrService,
       TimesheetLineService timesheetLineService,
       ProjectPlanningTimeRepository projectPlanningTimeRepository,
-      TeamTaskRepository teamTaskRepository) {
+      TeamTaskRepository teamTaskRepository,
+      TimesheetLineRepository timesheetLineRepo) {
     super(
         priceListService,
         appHumanResourceService,
@@ -61,7 +63,8 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
         userHrService,
         timesheetLineService,
         projectPlanningTimeRepository,
-        teamTaskRepository);
+        teamTaskRepository,
+        timesheetLineRepo);
   }
 
   @Override
