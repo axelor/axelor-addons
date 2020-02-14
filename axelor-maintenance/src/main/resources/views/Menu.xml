@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
 	<menuitem name="maintenance-root" title="Maintenance" order="-84" if="__config__.app.isApp('maintenance')"
 		icon="fa-recycle" icon-background="olive"/>
@@ -85,7 +85,12 @@
 	<menuitem name="maintenance-root-config-prod-process" parent="maintenance-root-config" order="15"
 		title="Production processes" action="manufacturing.root.prod.process"/>
 
-	<menuitem name="maintenance-root-config-bill-of-material" parent="maintenance-root-config" order="20"
-		title="Bills of materials" action="manufacturing.root.bill.of.material"/>
+	<menuitem name="maintenance-root-config-bill-of-material" parent="maintenance-root-config" title="Bills of materials" order="20" />
 
+	<menuitem name="maintenance-root-config-general-bill-of-material" parent="maintenance-root-config-bill-of-material" title="General BoM"
+		action="manufacturing.root.general.bill.of.material" order="1" />
+
+	<menuitem name="maintenance-root-config-personalized-bill-of-material" parent="maintenance-root-config-bill-of-material" title="Personalized BoM"
+		action="manufacturing.root.personalized.bill.of.material" order="2" /> 
+	 
 </object-views>
