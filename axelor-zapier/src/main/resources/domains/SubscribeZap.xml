@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+
+	<module name="zapier" package="com.axelor.apps.zapier.db"/>
+
+	<entity name="SubscribeZap" lang="java" cacheable="true">
+		<many-to-one name="zapierUser" ref="com.axelor.auth.db.User" title="User"/>
+		<string name="url" title="Callback url"/>
+		<string name="model" title="Model"/>
+	</entity>
+
+</domain-models>
