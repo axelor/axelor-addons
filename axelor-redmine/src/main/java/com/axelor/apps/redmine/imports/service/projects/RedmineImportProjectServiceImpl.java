@@ -91,6 +91,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   protected Long defaultCompanyId;
   protected String redmineProjectClientPartnerDefault;
   protected String redmineProjectInvoicingSequenceSelectDefault;
+  protected String redmineProjectInvoiceable;
+  protected String redmineProjectClientPartner;
+  protected String redmineProjectInvoicingSequenceSelect;
+  protected String redmineProjectAssignedTo;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -109,6 +113,13 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       this.fieldMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+
+      this.redmineProjectInvoiceable = appRedmine.getRedmineProjectInvoiceable();
+      this.redmineProjectClientPartner = appRedmine.getRedmineProjectClientPartner();
+      this.redmineProjectInvoicingSequenceSelect =
+          appRedmine.getRedmineProjectInvoicingSequenceSelect();
+      this.redmineProjectAssignedTo = appRedmine.getRedmineProjectAssignedTo();
+
       this.defaultCompanyId = appRedmine.getCompany().getId();
       this.redmineProjectClientPartnerDefault = appRedmine.getRedmineProjectClientPartnerDefault();
       this.redmineProjectInvoicingSequenceSelectDefault =
@@ -264,14 +275,14 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     project.setDescription(redmineProject.getDescription());
     project.setCompany(companyRepo.find(defaultCompanyId));
 
-    CustomField customField = (CustomField) redmineCustomFieldsMap.get("Invoiceable");
+    CustomField customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectInvoiceable);
     String value = customField != null ? customField.getValue() : null;
 
     boolean invoiceable = value != null ? (value.equals("1") ? true : false) : false;
     project.setToInvoice(invoiceable);
     project.setIsBusinessProject(invoiceable);
 
-    customField = (CustomField) redmineCustomFieldsMap.get("Assigné par défaut à");
+    customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectAssignedTo);
     value = customField != null ? customField.getValue() : null;
 
     if (value != null && !value.isEmpty()) {
@@ -280,7 +291,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     // ERROR AND IMPORT IF CLIENT PARTNER NOT FOUND
 
-    customField = (CustomField) redmineCustomFieldsMap.get("Customer code");
+    customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectClientPartner);
     value =
         customField != null && customField.getValue() != null && !customField.getValue().equals("")
             ? customField.getValue()
@@ -347,7 +358,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     // ERROR AND IMPORT IF INVOICING TYPE NOT FOUND
 
-    customField = (CustomField) redmineCustomFieldsMap.get("Invoicing Type");
+    customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectInvoicingSequenceSelect);
     value =
         customField != null && customField.getValue() != null && !customField.getValue().equals("")
             ? customField.getValue()

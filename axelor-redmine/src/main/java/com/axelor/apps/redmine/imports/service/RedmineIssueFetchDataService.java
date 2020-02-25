@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
+import com.axelor.exception.service.TraceBackService;
 import com.taskadapter.redmineapi.IssueManager;
 import com.taskadapter.redmineapi.Params;
 import com.taskadapter.redmineapi.RedmineException;
@@ -142,7 +143,12 @@ public class RedmineIssueFetchDataService {
               .toArray();
 
       for (int id : failedIds) {
-        importTimeEntryList.add(redmineTimeEntryManager.getTimeEntry(id));
+
+        try {
+          importTimeEntryList.add(redmineTimeEntryManager.getTimeEntry(id));
+        } catch (RedmineException e) {
+          TraceBackService.trace(e);
+        }
       }
     }
 

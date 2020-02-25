@@ -118,6 +118,9 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
   protected String redmineTimeSpentDurationUnitDefault;
+  protected String redmineTimeSpentProduct;
+  protected String redmineTimeSpentDurationForCustomer;
+  protected String redmineTimeSpentDurationUnit;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -135,6 +138,12 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       this.selectionMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+
+      this.redmineTimeSpentProduct = appRedmine.getRedmineTimeSpentProduct();
+      this.redmineTimeSpentDurationForCustomer =
+          appRedmine.getRedmineTimeSpentDurationForCustomer();
+      this.redmineTimeSpentDurationUnit = appRedmine.getRedmineTimeSpentDurationUnit();
+
       this.redmineTimeSpentProductDefault = appRedmine.getRedmineTimeSpentProductDefault();
       this.redmineTimeSpentDurationUnitDefault =
           appRedmine.getRedmineTimeSpentDurationUnitDefault();
@@ -258,7 +267,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
         // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
 
-        CustomField redmineProduct = redmineTimeEntry.getCustomField("Product");
+        CustomField redmineProduct = redmineTimeEntry.getCustomField(redmineTimeSpentProduct);
         String value =
             redmineProduct != null
                     && redmineProduct.getValue() != null
@@ -417,12 +426,12 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setDate(
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
-    CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
+    CustomField customField = redmineTimeEntry.getCustomField(redmineTimeSpentDurationForCustomer);
     String value = customField != null ? customField.getValue() : null;
     timesheetLine.setDurationForCustomer(
         value != null && !value.equals("") ? new BigDecimal(value) : duration);
 
-    customField = redmineTimeEntry.getCustomField("Unité client");
+    customField = redmineTimeEntry.getCustomField(redmineTimeSpentDurationUnit);
     value = customField != null ? customField.getValue() : null;
     timesheetLine.setDurationUnit(
         value != null && !value.equals("")
