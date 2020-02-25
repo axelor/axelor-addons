@@ -102,6 +102,14 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected LocalDate redmineIssueDueDateDefault;
   protected BigDecimal redmineIssueEstimatedTimeDefault;
   protected BigDecimal redmineIssueUnitPriceDefault;
+  protected String redmineIssueProduct;
+  protected String redmineIssueDueDate;
+  protected String redmineIssueEstimatedTime;
+  protected String redmineIssueInvoiced;
+  protected String redmineIssueAccountedForMaintenance;
+  protected String redmineIssueIsTaskAccepted;
+  protected String redmineIssueIsOffered;
+  protected String redmineIssueUnitPrice;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -118,6 +126,17 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       this.fieldMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+
+      this.redmineIssueProduct = appRedmine.getRedmineIssueProduct();
+      this.redmineIssueDueDate = appRedmine.getRedmineIssueDueDate();
+      this.redmineIssueEstimatedTime = appRedmine.getRedmineIssueEstimatedTime();
+      this.redmineIssueInvoiced = appRedmine.getRedmineIssueInvoiced();
+      this.redmineIssueAccountedForMaintenance =
+          appRedmine.getRedmineIssueAccountedForMaintenance();
+      this.redmineIssueIsTaskAccepted = appRedmine.getRedmineIssueIsTaskAccepted();
+      this.redmineIssueIsOffered = appRedmine.getRedmineIssueIsOffered();
+      this.redmineIssueUnitPrice = appRedmine.getRedmineIssueUnitPrice();
+
       this.redmineIssueProductDefault = appRedmine.getRedmineIssueProductDefault();
       this.redmineIssueDueDateDefault = appRedmine.getRedmineIssueDueDateDefault();
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
@@ -194,7 +213,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
 
-      CustomField redmineProduct = redmineIssue.getCustomFieldByName("Product");
+      CustomField redmineProduct = redmineIssue.getCustomFieldByName(redmineIssueProduct);
       String value =
           redmineProduct != null
                   && redmineProduct.getValue() != null
@@ -416,27 +435,27 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         teamTask.setFixedVersion(targetVersion.getName());
       }
 
-      CustomField customField = redmineIssue.getCustomFieldByName("Date d'échéance (INTERNE)");
+      CustomField customField = redmineIssue.getCustomFieldByName(redmineIssueDueDate);
       String value = customField != null ? customField.getValue() : null;
       teamTask.setDueDate(
           value != null && !value.equals("") ? LocalDate.parse(value) : redmineIssueDueDateDefault);
 
-      customField = redmineIssue.getCustomFieldByName("Temps estimé (INTERNE)");
+      customField = redmineIssue.getCustomFieldByName(redmineIssueEstimatedTime);
       value = customField != null ? customField.getValue() : null;
       teamTask.setEstimatedTime(
           value != null && !value.equals("")
               ? new BigDecimal(value)
               : redmineIssueEstimatedTimeDefault);
 
-      customField = redmineIssue.getCustomFieldByName("Déjà facturé");
+      customField = redmineIssue.getCustomFieldByName(redmineIssueInvoiced);
       value = customField != null ? customField.getValue() : null;
 
       if (!teamTask.getInvoiced()) {
         teamTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
-        
+
         teamTask.setProduct(product);
 
-        customField = redmineIssue.getCustomFieldByName("Montant à facturer");
+        customField = redmineIssue.getCustomFieldByName(redmineIssueUnitPrice);
         value = customField != null ? customField.getValue() : null;
         teamTask.setUnitPrice(
             value != null && !value.equals("")
@@ -450,17 +469,17 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         teamTask.setCurrency(null);
       }
 
-      customField = redmineIssue.getCustomFieldByName("Comptabilisé maintenance");
+      customField = redmineIssue.getCustomFieldByName(redmineIssueAccountedForMaintenance);
       value = customField != null ? customField.getValue() : null;
 
       teamTask.setAccountedForMaintenance(
           value != null ? (value.equals("1") ? true : false) : false);
 
-      customField = redmineIssue.getCustomFieldByName("Offert");
+      customField = redmineIssue.getCustomFieldByName(redmineIssueIsOffered);
       value = customField != null ? customField.getValue() : null;
       teamTask.setIsOffered(value != null ? (value.equals("1") ? true : false) : false);
 
-      customField = redmineIssue.getCustomFieldByName("Acceptée");
+      customField = redmineIssue.getCustomFieldByName(redmineIssueIsTaskAccepted);
       value = customField != null ? customField.getValue() : null;
       teamTask.setIsTaskAccepted(value != null ? (value.equals("1") ? true : false) : false);
 
