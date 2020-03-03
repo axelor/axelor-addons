@@ -508,15 +508,10 @@ public class SendinBlueCampaignService {
 
     if ((!importSendinBlue.getIsImportLatest() && !importSendinBlue.getIsNoUpdate())
         || (importSendinBlue.getIsImportLatest()
-            && (lastImportDateTime != null
-                    && createdAt != null
-                    && lastImportDateTime.isBefore(createdAt)
-                || (lastImportDateTime != null
-                    && modifiedAt != null
-                    && lastImportDateTime.isBefore(modifiedAt))))
+            && (lastImportDateTime != null && createdAt != null && lastImportDateTime.isBefore(createdAt)
+                || (lastImportDateTime != null && modifiedAt != null && lastImportDateTime.isBefore(modifiedAt))))
         || (importSendinBlue.getIsNoUpdate()
-            && lastImportDateTime != null
-            && createdAt != null
+            && lastImportDateTime != null && createdAt != null
             && lastImportDateTime.isBefore(createdAt))) {
       Long id = ((Double) campaignObj.get("id")).longValue();
       SendinBlueCampaign sendinBlueCampaign = sendinBlueCampaignRepo.findBySendinBlueId(id);
