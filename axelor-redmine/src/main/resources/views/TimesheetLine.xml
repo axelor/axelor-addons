@@ -15,6 +15,35 @@
 		</extend>
 	</grid>
 
+	<form model="com.axelor.apps.hr.db.TimesheetLine" title="Log Time" name="timesheet-line-project-form" id="redmine-timesheet-line-project-form" extension="true">
+
+		<extend target="/">
+			<attribute name="onNew" value="action-hr-default-timesheet-line-project,action-timesheet-line-attrs-set-duration-label,action-timesheet-line-record-to-invoice-parent,action-redmine-timesheet-line-attrs-set-duration-unit"/>
+		</extend>
+
+		<extend target="panel[@name='overviewPanel']">
+			<replace>
+				<panel name="overviewPanel" title="Overview">
+					<field name="user" form-view="user-form" grid-view="user-grid" canNew="false" canEdit="false" canView="false"/>
+					<field name="teamTask"/>
+					<field name="date" />
+					<field name="product" requiredIf="toInvoice" canEdit="false" onSelect="action-hr-timesheet-line-attrs-domain-product" widget="SuggestBox" form-view="product-activity-form" grid-view="product-activity-grid"/>
+					<field name="duration" width="62%" colSpan="3" onChange="action-timesheet-line-method-set-stored-duration" min="0.01"/>
+					<label name="durationLabel" colSpan="3"/>
+					<field name="durationForCustomer" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')"/>
+		    		<!-- REDMINE CHANGES replace the durationLabel with below durationUnit field -->
+		    		<field name="durationUnit" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" readonly="true" />
+					<field name="hoursDuration" hidden="true" />
+					<field name="timesheet" grid-view="timesheet-grid" form-view="timesheet-form"/>
+					<field name="toInvoice" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" />
+					<field name="enableEditor" />
+					<field name="comments" />
+				</panel>
+			</replace>
+		</extend>
+
+	</form>
+
 	<form name="timesheet-line-timesheet-form"
 		id="redmine-timesheet-line-timesheet-form" title="Timesheet Line"
 		model="com.axelor.apps.hr.db.TimesheetLine" extension="true">	

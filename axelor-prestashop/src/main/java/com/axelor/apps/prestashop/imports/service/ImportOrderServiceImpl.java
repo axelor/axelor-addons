@@ -600,7 +600,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         // Even if we'll override some of them later, it does not hurt to pass
         // through service method
         saleOrderLineService.computeProductInformation(
-            localLine, localOrder, localLine.getPackPriceSelect());
+            localLine, localOrder);
 
         localLine.setQty(BigDecimal.valueOf(remoteLine.getProductQuantity()));
         localLine.setProductName(remoteLine.getProductName());
@@ -703,7 +703,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       // Even if we'll override some of them later, it does not hurt to pass
       // through service method
       saleOrderLineService.computeProductInformation(
-          localLine, localOrder, product.getPackPriceSelect());
+          localLine, localOrder);
 
       localLine.setQty(BigDecimal.ONE);
       localLine.setPrice(price);
