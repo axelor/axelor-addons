@@ -24,6 +24,7 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.TimeEntryManager;
 import com.taskadapter.redmineapi.bean.Issue;
+import com.taskadapter.redmineapi.bean.TimeEntry;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -145,7 +146,11 @@ public class RedmineIssueFetchDataService {
       for (int id : failedIds) {
 
         try {
-          importTimeEntryList.add(redmineTimeEntryManager.getTimeEntry(id));
+          TimeEntry timeEntry = redmineTimeEntryManager.getTimeEntry(id);
+
+          if (!importTimeEntryList.contains(timeEntry)) {
+            importTimeEntryList.add(timeEntry);
+          }
         } catch (RedmineException e) {
           TraceBackService.trace(e);
         }
