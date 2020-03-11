@@ -20,12 +20,14 @@ package com.axelor.apps.redmine.imports.service.issues;
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
+import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.db.repo.UnitRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
@@ -77,6 +79,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected TimesheetService timesheetService;
   protected UnitRepository unitRepo;
   protected TimesheetLineService timesheetLineService;
+  protected AppBaseService appBaseService;
 
   @Inject
   public RedmineImportTimeSpentServiceImpl(
@@ -92,7 +95,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo,
       UnitRepository unitRepo,
-      TimesheetLineService timesheetLineService) {
+      TimesheetLineService timesheetLineService,
+      AppBaseService appBaseService) {
 
     super(
         userRepo,
@@ -108,6 +112,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     this.timesheetService = timesheetService;
     this.unitRepo = unitRepo;
     this.timesheetLineService = timesheetLineService;
+    this.appBaseService = appBaseService;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -115,6 +120,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long teamTaskId = (long) 0;
   protected Long userId = (long) 0;
   protected Long productId = (long) 0;
+  protected String unitHoursName = null;
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
   protected String redmineTimeSpentDurationUnitDefault;
@@ -147,6 +153,12 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       this.redmineTimeSpentProductDefault = appRedmine.getRedmineTimeSpentProductDefault();
       this.redmineTimeSpentDurationUnitDefault =
           appRedmine.getRedmineTimeSpentDurationUnitDefault();
+
+      Unit unitHours = appBaseService.getAppBase().getUnitHours();
+
+      if (unitHours != null) {
+        this.unitHoursName = unitHours.getName();
+      }
 
       List<Option> selectionList = new ArrayList<Option>();
       selectionList.addAll(
@@ -433,10 +445,19 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
     customField = redmineTimeEntry.getCustomField(redmineTimeSpentDurationUnit);
     value = customField != null ? customField.getValue() : null;
-    timesheetLine.setDurationUnit(
-        value != null && !value.equals("")
-            ? unitRepo.findByName(value)
-            : unitRepo.findByName(redmineTimeSpentDurationUnitDefault));
+
+    Unit unit = null;
+
+    if (value != null && !value.isEmpty()) {
+      unit = unitRepo.findByName(value);
+    }
+
+    if (unit != null) {
+      timesheetLine.setDurationUnit(unit);
+    } else {
+      unit = unitRepo.findByName(redmineTimeSpentDurationUnitDefault);
+      timesheetLine.setDurationUnit(unit != null ? unit : unitRepo.findByName(unitHoursName));
+    }
 
     String activityType = redmineTimeEntry.getActivityName();
     if (activityType != null && !activityType.isEmpty()) {
