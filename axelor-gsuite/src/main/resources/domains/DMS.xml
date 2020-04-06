@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+
+	<module name="dms" package="com.axelor.dms.db" />
+
+	<entity name="DMSFile" lang="java">
+
+		<one-to-many name="driveGoogleAccounts" ref="com.axelor.apps.gsuite.db.DriveGoogleAccount" mappedBy="dms" />
+
+	</entity>
+
+</domain-models>

@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+
+	<module name="gsuite" package="com.axelor.apps.gsuite.db" />
+
+	<entity name="GSuiteBatch" cacheable="true">
+		
+		<!-- HEADER -->
+		<string name="code" title="Code" namecolumn="true" unique="true"/>
+		<integer name="actionSelect" title="Action" required="true" selection="igsuite.batch.action.select"/>
+		
+		<!-- OTHERS INFORMATIONS -->
+		<string name="description" title="Description" large="true" />
+		<one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch" mappedBy="gSuiteBatch" title="Batchs" />
+		
+		<!-- EMAIL BATCH -->
+		<date name="emailFromDate"/>
+	
+	  	<extra-code><![CDATA[
+	
+	   	// ACTION TYPE
+		public static final int ACTION_EMAIL_SYNC = 1;
+		public static final int ACTION_EVENT_SYNC = 2;
+		public static final int ACTION_TASK_SYNC = 2;
+	
+	]]></extra-code>	
+				
+	</entity>
+	
+	
+	
+</domain-models>
