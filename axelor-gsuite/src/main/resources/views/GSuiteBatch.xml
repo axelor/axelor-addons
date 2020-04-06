@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+  <grid name="gsuite-batch-grid" title="G-Suite batches" model="com.axelor.apps.gsuite.db.GSuiteBatch">
+		<field name="actionSelect" />
+		<field name="code" x-bind="{{code|unaccent|uppercase}}" />
+		<field name="createdOn"/>
+		<field name="createdBy" form-view="user-form" grid-view="user-grid"/>
+  </grid>
+ 
+    <form name="gsuite-batch-form" title="G-Suite Batch" model="com.axelor.apps.gsuite.db.GSuiteBatch">
+    	<panel name="mainPanel">
+		    <field name="actionSelect" />
+		    <field name="code" x-bind="{{code|unaccent|uppercase}}"/>
+		    <panel name="emailBatchPanel">
+		    	<field name="emailFromDate" showIf="actionSelect == 1"/>
+		    </panel>
+		</panel>
+	  	<panel-tabs name="mainPanelTab">
+	    	<panel name="informationPanel" title="Information">
+		      <field name="createdOn" title="Created on"/>
+		      <field name="createdBy" title="Created by" form-view="user-form" grid-view="user-grid"/>
+		      <field name="description" showTitle="false" colSpan="12"/>
+		      <panel-related name="batchListPanel" field="batchList" readonly="true"  colSpan="12" form-view="batch-form" grid-view="batch-grid"/>
+		    </panel>
+  		</panel-tabs>
+  		<panel name="syncBtnPanel" sidebar="true">
+  			<button name="syncEmailBtn" showIf="actionSelect == 1" title="Batch Email synchronization" onClick="save,action-gsuite-batch-method-action-email-sync"/>
+  			<button name="syncEventBtn" showIf="actionSelect == 2" title="Batch Event synchronization" onClick="save,action-gsuite-batch-method-action-event-sync"/>
+  			<button name="syncTaskBtn" showIf="actionSelect == 3" title="Batch Task synchronization" onClick="save,action-gsuite-batch-method-action-task-sync"/>
+  		</panel>
+    </form>
+	
+	<action-method name="action-gsuite-batch-method-action-email-sync">
+		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionEmailSyncBatch"/>
+	</action-method>
+	
+	<action-method name="action-gsuite-batch-method-action-event-sync">
+		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionEventSyncBatch"/>
+	</action-method>
+	
+	<action-method name="action-gsuite-batch-method-action-task-sync">
+		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionTaskSyncBatch"/>
+	</action-method>
+	
+	
+</object-views>

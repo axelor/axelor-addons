@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+
+	<module name="gsuite" package="com.axelor.apps.gsuite.db" />
+
+	<entity name="GoogleAccount" cacheable="true">
+	
+		<string name="name" title="Name" />
+		<boolean name="isAuthorized" title="Authorized ?"  readonly="true"/>
+		<one-to-many name="userList" ref="com.axelor.auth.db.User" title="Users" mappedBy="googleAccount" orphanRemoval="false"/>
+		
+		<string name="accessToken" />
+		<string name="refreshToken" />
+		<string name="eventSyncToken" />
+		<string name="deletedContacts" large="true" />
+		
+		<datetime name="contactSyncToGoogleDate" title="Contact Sync To Google Date" />
+		<string name="contactSyncToGoogleLog" title="Contact Sync To Google Log" large="true" />
+		<datetime name="contactSyncFromGoogleDate" title="Contact Sync From Google Date" />
+		<string name="contactSyncFromGoogleLog" title="Contact Sync From Google Log" large="true" />
+		
+		<datetime name="eventSyncFromGoogleDate" title="Event Sync From Google Date" />
+		<string name="eventSyncFromGoogleLog" title="Event Sync From Google Log" large="true" />
+		<datetime name="eventSyncToGoogleDate" title="Event Sync To Google Date" />
+		<string name="eventSyncToGoogleLog" title="Event Sync To Google Log" large="true" />
+		
+		<datetime name="docSyncFromGoogleDate" title="Doc Sync From Google Date" />
+		<string name="docSyncFromGoogleLog" title="Doc Sync From Google Log" large="true" />
+		<datetime name="docSyncToGoogleDate" title="Doc Sync To Google Date" />
+		<string name="docSyncToGoogleLog" title="Doc Sync To Google Log" large="true" />
+		
+		<datetime name="gmailSyncFromGoogleDate" title="Gmail Sync From Google Date" />
+		
+	</entity>
+
+</domain-models>

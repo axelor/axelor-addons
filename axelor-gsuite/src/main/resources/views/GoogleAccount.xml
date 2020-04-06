@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+	<grid title="Google account" name="google-account-grid"
+		model="com.axelor.apps.gsuite.db.GoogleAccount">
+		<field name="name" />
+		<field name="isAuthorized" />
+	</grid>
+
+	<form name="google-account-form" title="Google account" model="com.axelor.apps.gsuite.db.GoogleAccount" onNew="action-google-account-record-on-new" onLoad="action-google-account-attrs-sync-log-hide">
+		<panel name="mainPanel" colSpan="12">
+			<field name="name" colSpan="6"/>
+			<field name="isAuthorized" colSpan="6"/>
+			<panel showIf="!isAuthorized" colSpan="12">
+				<button name="$authorizeAccountBtn" title="Generate authorization url" colSpan="4" onClick="save,action-google-account-method-set-auth-url" />
+				<label name="authUrl" title=""/>
+			</panel>
+		</panel>
+		<panel-tabs showIf="isAuthorized">
+			<panel title="Contact Synchronization">
+				<panel colSpan="12">
+					<button name="syncToGoogleContactsBtn" title="Synchronize contacts to Google"
+						colSpan="4" onClick="save,action-google-account-method-sync-contacts" />
+					<field name="contactSyncToGoogleDate" colSpan="4" />
+					<field name="contactSyncToGoogleLog" colSpan="12" />
+				</panel>
+				<panel colSpan="12">
+					<button name="syncFromGoogleContactsBtn" title="Synchronize contacts from Google"
+						colSpan="4" onClick="save,action-google-account-method-sync-google-contacts" />
+					<field name="contactSyncFromGoogleDate" colSpan="4" />
+					<field name="contactSyncFromGoogleLog" colSpan="12" />
+				</panel>
+			</panel>
+			<panel title="Event Synchronization">
+				<panel colSpan="12">
+					<button name="syncToGoogleEventsBtn" title="Synchronize events to Google"
+						colSpan="4" onClick="save,action-google-account-method-sync-events" />
+					<field name="eventSyncToGoogleDate" colSpan="4" />
+					<field name="eventSyncToGoogleLog" colSpan="12" />
+				</panel>
+				<panel colSpan="12">
+					<button name="syncFromGoogleEventsBtn" title="Synchronize events from Google"
+						colSpan="4" onClick="save,action-google-account-method-sync-google-events" />
+					<field name="eventSyncFromGoogleDate" colSpan="4" />
+					<field name="eventSyncFromGoogleLog" colSpan="12" />
+				</panel>
+			</panel>
+			<panel title="Doc Synchronization">
+				<panel colSpan="12">
+					<button name="syncToGoogleDocsBtn" title="Synchronize docs to Google"
+						colSpan="4" onClick="save,action-google-account-method-sync-docs" />
+					<field name="docSyncToGoogleDate" colSpan="4" />
+					<field name="docSyncToGoogleLog" hidden="true" colSpan="12" />
+				</panel>
+				<panel colSpan="12">
+					<button name="syncFromGoogleDocsBtn" title="Synchronize docs from Google"
+						colSpan="4" onClick="save,action-google-account-method-sync-google-docs" />
+					<field name="docSyncFromGoogleDate" colSpan="4" />
+					<field name="docSyncFromGoogleLog" hidden="true" colSpan="12" />
+				</panel>
+			</panel>
+			<panel title="Gmail Synchronization">
+				<panel colSpan="12">
+					<button name="syncFromGoogleGmailBtn" title="Synchronize Google from Gmail"
+						colSpan="4" onClick="save,action-google-account-method-sync-google-mails" />
+					<field name="gmailSyncFromGoogleDate" colSpan="4" />
+				</panel>
+			</panel>			
+		</panel-tabs>
+	</form>
+		
+	<action-attrs name="action-google-account-attrs-sync-log-hide">
+		<attribute name="hidden" for="contactSyncToGoogleLog"
+			expr="eval: contactSyncToGoogleLog == null" />
+		<attribute name="hidden" for="contactSyncFromGoogleLog"
+			expr="eval: contactSyncFromGoogleLog == null" />
+		<attribute name="hidden" for="eventSyncToGoogleLog"
+			expr="eval: eventSyncToGoogleLog == null" />
+		<attribute name="hidden" for="eventSyncFromGoogleLog"
+			expr="eval: eventSyncFromGoogleLog == null" />
+		<attribute name="hidden" for="docSyncToGoogleLog"
+			expr="eval: docSyncToGoogleLog == null" />
+		<attribute name="hidden" for="docSyncFromGoogleLog"
+			expr="eval: docSyncFromGoogleLog == null" />
+	</action-attrs>
+	
+	<action-record name="action-google-account-record-on-new" model="com.axelor.apps.gsuite.db.GoogleAccount">
+		<field name="userList" expr="eval:__repo__(User).find(user_id)" if="user_id"/>
+	</action-record>
+
+	<action-method name="action-google-account-method-set-auth-url">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="getAuthUrl" />
+	</action-method>
+
+	<action-method name="action-google-account-method-sync-contacts">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncContacts" />
+	</action-method>
+
+	<action-method name="action-google-account-method-sync-google-contacts">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncGoogleContacts" />
+	</action-method>
+
+	<action-method name="action-google-account-method-sync-events">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncEvents" />
+	</action-method>
+
+	<action-method name="action-google-account-method-sync-google-events">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncGoogleEvents" />
+	</action-method>
+
+	<action-method name="action-google-account-method-sync-docs">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncDocs" />
+	</action-method>
+
+	<action-method name="action-google-account-method-sync-google-docs">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncGoogleDocs" />
+	</action-method>
+	
+	<action-method name="action-google-account-method-sync-google-mails">
+		<call class="com.axelor.apps.gsuite.web.GoogleAccountController" method="syncGoogleMails"/>
+	</action-method>
+	
+</object-views>
