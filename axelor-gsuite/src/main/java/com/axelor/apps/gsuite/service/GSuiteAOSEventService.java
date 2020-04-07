@@ -21,11 +21,14 @@ import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.calendar.Calendar;
 import java.io.IOException;
+import java.time.LocalDate;
 
 public interface GSuiteAOSEventService {
 
   GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 
-  void syncEvents(GoogleAccount googleAccount, Calendar calendar)
+  GoogleAccount sync(GoogleAccount googleAccount, LocalDate syncDate) throws AxelorException;
+
+  void syncEvents(GoogleAccount googleAccount, Calendar calendar, LocalDate syncDate)
       throws IOException, AxelorException;
 }

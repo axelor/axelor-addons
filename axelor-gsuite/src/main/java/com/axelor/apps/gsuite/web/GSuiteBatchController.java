@@ -43,8 +43,6 @@ public class GSuiteBatchController {
     try {
       GSuiteBatch gSuiteBatch = request.getContext().asType(GSuiteBatch.class);
       gSuiteBatch = Beans.get(GSuiteBatchRepository.class).find(gSuiteBatch.getId());
-      //	      Batch batch = Beans.get(GSuiteBatchService.class).emailSyncBatch(gSuiteBatch);
-      //	      response.setFlash(batch.getComments());
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     } finally {

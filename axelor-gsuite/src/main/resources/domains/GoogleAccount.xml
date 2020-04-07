@@ -8,12 +8,14 @@
 	<entity name="GoogleAccount" cacheable="true">
 	
 		<string name="name" title="Name" />
+		<many-to-one name="ownerUser" ref="com.axelor.auth.db.User" title="Users"/>
 		<boolean name="isAuthorized" title="Authorized ?"  readonly="true"/>
-		<one-to-many name="userList" ref="com.axelor.auth.db.User" title="Users" mappedBy="googleAccount" orphanRemoval="false"/>
 		
 		<string name="accessToken" />
 		<string name="refreshToken" />
 		<string name="eventSyncToken" />
+
+		<!-- TODO:to delete -->		
 		<string name="deletedContacts" large="true" />
 		
 		<datetime name="contactSyncToGoogleDate" title="Contact Sync To Google Date" />

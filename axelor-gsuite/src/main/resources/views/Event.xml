@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+        
+	<form name="event-form" title="Events" model="com.axelor.apps.crm.db.Event" extension="true" id="agora-event-form">		
+		<extend target="//panel[@name='followupPanel']/field[@name='calendar']">
+			<replace>
+				<field name="googleAccount" canView="false" colSpan="6"/>
+			</replace>
+		</extend>
+
+	</form>
+	
+</object-views>
