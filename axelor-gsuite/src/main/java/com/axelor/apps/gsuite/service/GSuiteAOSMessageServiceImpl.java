@@ -206,7 +206,7 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
     message.setSentDateT(DateTool.toLocalDateT(email.getSentDate()));
     message.setSenderUser(userRepo.findByEmail(message.getFromEmailAddress().getAddress()));
     setRelatedTo(message);
-    setRelatedUsers(message, googleAccount.getUserList());
+    setRelatedUsers(message, googleAccount.getOwnerUser());
 
     message = messageRepo.save(message);
 
@@ -227,14 +227,11 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
     return message;
   }
 
-  private void setRelatedUsers(Message message, List<User> userList) {
-
-    for (User user : userList) {
-      MessageRelatedSelect related = new MessageRelatedSelect();
-      related.setRelatedToSelect(User.class.getName());
-      related.setRelatedToSelectId(user.getId());
-      message.addRelatedListItem(related);
-    }
+  private void setRelatedUsers(Message message, User user) {
+    MessageRelatedSelect related = new MessageRelatedSelect();
+    related.setRelatedToSelect(User.class.getName());
+    related.setRelatedToSelectId(user.getId());
+    message.addRelatedListItem(related);
   }
 
   private void setRelatedTo(Message message) {

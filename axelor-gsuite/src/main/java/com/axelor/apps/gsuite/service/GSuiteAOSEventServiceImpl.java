@@ -29,6 +29,7 @@ import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
+import com.axelor.apps.gsuite.utils.DateUtils;
 import com.axelor.apps.gsuite.utils.StringUtils;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
@@ -37,6 +38,7 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.Calendar.Events.List;
 import com.google.api.services.calendar.model.Event.Organizer;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
@@ -45,9 +47,9 @@ import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.text.ParseException;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalTime;
 import java.util.Set;
 import javax.mail.MessagingException;
 import org.slf4j.Logger;
@@ -77,19 +79,23 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
   @Override
   @Transactional
   public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException {
-
     if (googleAccount == null) {
       return null;
     }
-    LocalDateTime syncDate = googleAccount.getEventSyncFromGoogleDate();
-    log.debug("Last sync date: {}", syncDate);
+    return sync(googleAccount, null);
+  }
+
+  @Override
+  @Transactional
+  public GoogleAccount sync(GoogleAccount googleAccount, LocalDate syncDate)
+      throws AxelorException {
+
     googleAccount = googleAccountRepo.find(googleAccount.getId());
     try {
       Credential credential = gSuiteService.getCredential(googleAccount.getId());
       calendar = gSuiteService.getCalendar(credential);
       relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet();
-      syncEvents(googleAccount, calendar);
-      googleAccount.setEventSyncFromGoogleDate(LocalDateTime.now());
+      syncEvents(googleAccount, calendar, syncDate);
 
     } catch (IOException e) {
       throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
@@ -100,16 +106,28 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
   @Override
   @Transactional
-  public void syncEvents(GoogleAccount googleAccount, Calendar calendar) throws AxelorException {
+  public void syncEvents(GoogleAccount googleAccount, Calendar calendar, LocalDate syncDate)
+      throws AxelorException {
     String pageToken = null;
+    int total = 0;
     do {
       com.google.api.services.calendar.model.Events events = null;
       try {
-        events = calendar.events().list("primary").setPageToken(pageToken).execute();
+        List list = calendar.events().list("primary");
+        if (syncDate != null) {
+          list =
+              list.setTimeMin(DateUtils.toGoogleDateTime(syncDate.atStartOfDay()))
+                  .setTimeMax(
+                      DateUtils.toGoogleDateTime(LocalDateTime.of(syncDate, LocalTime.MAX)));
+        }
+        events = list.setPageToken(pageToken).execute();
         String timeZone = events.getTimeZone();
+
         for (com.google.api.services.calendar.model.Event event : events.getItems()) {
+
           EventGoogleAccount eventGoogleAccount =
               eventGoogleAccountRepo.findByGoogleEventId(event.getId());
+
           Event crmEvent =
               eventGoogleAccount != null
                   ? crmEventRepo.find(eventGoogleAccount.getEvent().getId())
@@ -119,16 +137,22 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
           crmEvent.setLocation(event.getLocation());
           crmEvent.setOrganizer(findOrCreateICalUser(event.getOrganizer(), crmEvent));
           crmEvent.setVisibilitySelect(getEventVisibilitySelect(event.getVisibility()));
+          crmEvent.setGoogleAccount(googleAccount);
           setEventDates(event, crmEvent, timeZone);
           setAttendees(crmEvent, event);
+
           crmEventRepo.save(crmEvent);
+
           eventGoogleAccount =
               eventGoogleAccount == null ? new EventGoogleAccount() : eventGoogleAccount;
           eventGoogleAccount.setEvent(crmEvent);
           eventGoogleAccount.setGoogleAccount(googleAccount);
           eventGoogleAccount.setGoogleEventId(event.getId());
+
           eventGoogleAccountRepo.save(eventGoogleAccount);
+          total++;
         }
+
         pageToken = events.getNextPageToken();
       } catch (IOException
           | ClassNotFoundException
@@ -141,6 +165,8 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
         throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
       }
     } while (pageToken != null);
+
+    log.debug("{} Event retrived and processed", total);
   }
 
   protected Integer getEventVisibilitySelect(String value) {
@@ -165,11 +191,17 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
       throws ClassNotFoundException, InstantiationException, IllegalAccessException,
           AxelorException, MessagingException, IOException, ICalendarException, ParseException {
 
-    for (EventAttendee eventAttendee : gsuiteEvent.getAttendees()) {
-      ICalendarUser user = findOrCreateICalUser(eventAttendee, aosEvent);
-      if (user != null) {
-        aosEvent.addAttendee(user);
+    if (ObjectUtils.notEmpty(gsuiteEvent.getAttendees())) {
+      for (EventAttendee eventAttendee : gsuiteEvent.getAttendees()) {
+        ICalendarUser user = findOrCreateICalUser(eventAttendee, aosEvent);
+        if (user != null) {
+          aosEvent.addAttendee(user);
+        }
       }
+    }
+
+    if (ObjectUtils.isEmpty(gsuiteEvent.getDescription())) {
+      return;
     }
 
     for (String email : StringUtils.parseEmails(gsuiteEvent.getDescription())) {
@@ -191,22 +223,21 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
     EventDateTime eventStart = googleEvent.getStart();
     EventDateTime eventEnd = googleEvent.getEnd();
-    long startMils = 0;
-    long endMils = 0;
+    LocalDateTime startDateTime = null;
+    LocalDateTime endDateTime = null;
 
     if (eventStart.getDateTime() != null && eventEnd.getDateTime() != null) {
-      startMils = eventStart.getDateTime().getValue();
-      endMils = eventEnd.getDateTime().getValue();
+      startDateTime = DateUtils.toLocalDateTime(eventStart.getDateTime());
+      endDateTime = DateUtils.toLocalDateTime(eventEnd.getDateTime());
+
     } else if (eventStart.getDate() != null && eventEnd.getDate() != null) {
-      startMils = eventStart.getDate().getValue();
-      endMils = eventEnd.getDate().getValue();
+      startDateTime = DateUtils.toLocalDateTime(eventStart.getDate());
+      endDateTime = DateUtils.toLocalDateTime(eventEnd.getDate());
       aosEvent.setAllDay(true);
     }
 
-    aosEvent.setStartDateTime(
-        Instant.ofEpochMilli(startMils).atZone(ZoneId.of(timeZone)).toLocalDateTime());
-    aosEvent.setEndDateTime(
-        Instant.ofEpochMilli(endMils).atZone(ZoneId.of(timeZone)).toLocalDateTime());
+    aosEvent.setStartDateTime(startDateTime);
+    aosEvent.setEndDateTime(endDateTime);
   }
 
   @Transactional
