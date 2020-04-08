@@ -8,7 +8,7 @@
 	<entity name="GoogleAccount" cacheable="true">
 	
 		<string name="name" title="Name" />
-		<many-to-one name="ownerUser" ref="com.axelor.auth.db.User" title="Users"/>
+		<many-to-one name="ownerUser" ref="com.axelor.auth.db.User" title="User"/>
 		<boolean name="isAuthorized" title="Authorized ?"  readonly="true"/>
 		
 		<string name="accessToken" />
