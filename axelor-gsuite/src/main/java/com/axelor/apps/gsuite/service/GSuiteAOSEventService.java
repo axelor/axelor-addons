@@ -20,15 +20,20 @@ package com.axelor.apps.gsuite.service;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.calendar.Calendar;
-import java.io.IOException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public interface GSuiteAOSEventService {
 
   GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 
-  GoogleAccount sync(GoogleAccount googleAccount, LocalDate syncDate) throws AxelorException;
+  public GoogleAccount sync(
+      GoogleAccount googleAccount, LocalDateTime startDateT, LocalDateTime endDateT)
+      throws AxelorException;
 
-  void syncEvents(GoogleAccount googleAccount, Calendar calendar, LocalDate syncDate)
-      throws IOException, AxelorException;
+  public void syncEvents(
+      GoogleAccount googleAccount,
+      Calendar calendar,
+      LocalDateTime startDateT,
+      LocalDateTime endDateT)
+      throws AxelorException;
 }
