@@ -47,9 +47,7 @@ import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.text.ParseException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Set;
 import javax.mail.MessagingException;
 import org.slf4j.Logger;
@@ -82,12 +80,13 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
     if (googleAccount == null) {
       return null;
     }
-    return sync(googleAccount, null);
+    return sync(googleAccount, null, null);
   }
 
   @Override
   @Transactional
-  public GoogleAccount sync(GoogleAccount googleAccount, LocalDate syncDate)
+  public GoogleAccount sync(
+      GoogleAccount googleAccount, LocalDateTime startDateT, LocalDateTime endDateT)
       throws AxelorException {
 
     googleAccount = googleAccountRepo.find(googleAccount.getId());
@@ -95,7 +94,7 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
       Credential credential = gSuiteService.getCredential(googleAccount.getId());
       calendar = gSuiteService.getCalendar(credential);
       relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet();
-      syncEvents(googleAccount, calendar, syncDate);
+      syncEvents(googleAccount, calendar, startDateT, endDateT);
 
     } catch (IOException e) {
       throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
@@ -106,7 +105,11 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
   @Override
   @Transactional
-  public void syncEvents(GoogleAccount googleAccount, Calendar calendar, LocalDate syncDate)
+  public void syncEvents(
+      GoogleAccount googleAccount,
+      Calendar calendar,
+      LocalDateTime startDateT,
+      LocalDateTime endDateT)
       throws AxelorException {
     String pageToken = null;
     int total = 0;
@@ -114,12 +117,13 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
       com.google.api.services.calendar.model.Events events = null;
       try {
         List list = calendar.events().list("primary");
-        if (syncDate != null) {
-          list =
-              list.setTimeMin(DateUtils.toGoogleDateTime(syncDate.atStartOfDay()))
-                  .setTimeMax(
-                      DateUtils.toGoogleDateTime(LocalDateTime.of(syncDate, LocalTime.MAX)));
+        if (startDateT != null) {
+          list = list.setTimeMin(DateUtils.toGoogleDateTime(startDateT));
         }
+        if (endDateT != null) {
+          list = list.setTimeMax(DateUtils.toGoogleDateTime(endDateT));
+        }
+
         events = list.setPageToken(pageToken).execute();
         String timeZone = events.getTimeZone();
 
