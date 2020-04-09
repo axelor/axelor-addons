@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,7 +273,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     project.setRedmineId(redmineProject.getId());
     project.setName(redmineProject.getName());
     project.setCode(redmineProject.getIdentifier());
-    project.setDescription(redmineProject.getDescription());
+    project.setDescription(getHtmlFromTextile(redmineProject.getDescription()));
     project.setCompany(companyRepo.find(defaultCompanyId));
 
     CustomField customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectInvoiceable);
@@ -284,10 +285,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectAssignedTo);
     value = customField != null ? customField.getValue() : null;
-
-    if (value != null && !value.isEmpty()) {
-      project.setAssignedTo(getOsUser(Integer.parseInt(value)));
-    }
+    project.setAssignedTo(
+        StringUtils.isNotEmpty(value) ? getOsUser(Integer.parseInt(value)) : null);
 
     // ERROR AND IMPORT IF CLIENT PARTNER NOT FOUND
 
@@ -311,6 +310,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
                     new Object[] {I18n.get(IMessage.REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND)},
                     Object.class);
       }
+    } else {
+      project.setClientPartner(null);
     }
 
     project.setProjectTypeSelect(
@@ -333,6 +334,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
             project.addMembersUserSetItem(user);
           }
         }
+      } else {
+        project.clearMembersUserSet();
       }
     } catch (RedmineException e) {
       TraceBackService.trace(e, "", batch.getId());
@@ -350,6 +353,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
           project.addTeamTaskCategorySetItem(projectCategory);
         }
       }
+    } else {
+      project.clearTeamTaskCategorySet();
     }
 
     if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
@@ -385,6 +390,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
                     new Object[] {I18n.get(IMessage.REDMINE_IMPORT_INVOICING_TYPE_NOT_FOUND)},
                     Object.class);
       }
+    } else {
+      project.setInvoicingSequenceSelect(null);
     }
 
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");

@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 
 public class RedmineIssueFetchDataService {
 
@@ -130,7 +131,7 @@ public class RedmineIssueFetchDataService {
           "v[updated_on][]",
           lastBatchEndDate.withZoneSameInstant(ZoneOffset.UTC).withNano(0).toString());
 
-      importTimeEntryList = redmineTimeEntryManager.getTimeEntries(params).getResults();
+      importTimeEntryList = fetchTimeEntries(params);
     } else {
       importTimeEntryList = redmineTimeEntryManager.getTimeEntries();
     }
@@ -158,5 +159,31 @@ public class RedmineIssueFetchDataService {
     }
 
     importDataMap.put("importTimeEntryList", importTimeEntryList);
+  }
+
+  public List<TimeEntry> fetchTimeEntries(Map<String, String> params) throws RedmineException {
+
+    List<TimeEntry> redmineTimeEntryList = new ArrayList<>();
+    List<TimeEntry> tempRedmineTimeEntryList;
+    Map<String, String> tempParams;
+
+    params.put("limit", FETCH_LIMIT.toString());
+    TOTAL_FETCH_COUNT = 0;
+
+    do {
+      tempParams = params;
+      tempParams.put("offset", TOTAL_FETCH_COUNT.toString());
+      tempRedmineTimeEntryList = redmineTimeEntryManager.getTimeEntries(tempParams).getResults();
+
+      if (CollectionUtils.isNotEmpty(tempRedmineTimeEntryList)) {
+        redmineTimeEntryList.addAll(tempRedmineTimeEntryList);
+        TOTAL_FETCH_COUNT += tempRedmineTimeEntryList.size();
+        tempRedmineTimeEntryList.clear();
+      } else {
+        params = null;
+      }
+    } while (params != null);
+
+    return redmineTimeEntryList;
   }
 }

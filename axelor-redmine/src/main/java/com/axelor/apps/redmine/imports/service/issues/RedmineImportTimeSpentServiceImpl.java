@@ -460,9 +460,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     }
 
     String activityType = redmineTimeEntry.getActivityName();
-    if (activityType != null && !activityType.isEmpty()) {
-      timesheetLine.setActivityTypeSelect(selectionMap.get(activityType));
-    }
+    timesheetLine.setActivityTypeSelect(
+        activityType != null && !activityType.isEmpty() ? selectionMap.get(activityType) : null);
 
     Timesheet timesheet =
         timesheetRepo
