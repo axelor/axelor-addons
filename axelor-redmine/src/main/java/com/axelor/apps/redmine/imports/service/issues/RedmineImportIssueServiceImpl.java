@@ -398,7 +398,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setProject(project);
       teamTask.setTeamTaskCategory(projectCategory);
       teamTask.setName("#" + redmineIssue.getId() + " " + redmineIssue.getSubject());
-      teamTask.setDescription(redmineIssue.getDescription());
+      teamTask.setDescription(getHtmlFromTextile(redmineIssue.getDescription()));
 
       Integer assigneeId = redmineIssue.getAssigneeId();
       User assignedTo = assigneeId != null ? getOsUser(assigneeId) : null;
@@ -412,28 +412,22 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setProgressSelect(redmineIssue.getDoneRatio());
 
       Float estimatedHours = redmineIssue.getEstimatedHours();
-
-      if (estimatedHours != null) {
-        teamTask.setBudgetedTime(BigDecimal.valueOf(estimatedHours));
-      }
+      teamTask.setBudgetedTime(estimatedHours != null ? BigDecimal.valueOf(estimatedHours) : null);
 
       Date closedOn = redmineIssue.getClosedOn();
-
-      if (closedOn != null) {
-        teamTask.setTaskEndDate(closedOn.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-      }
+      teamTask.setTaskEndDate(
+          closedOn != null
+              ? closedOn.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+              : null);
 
       Date startDate = redmineIssue.getStartDate();
-
-      if (startDate != null) {
-        teamTask.setTaskDate(startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-      }
+      teamTask.setTaskDate(
+          startDate != null
+              ? startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+              : null);
 
       Version targetVersion = redmineIssue.getTargetVersion();
-
-      if (targetVersion != null) {
-        teamTask.setFixedVersion(targetVersion.getName());
-      }
+      teamTask.setFixedVersion(targetVersion != null ? targetVersion.getName() : null);
 
       CustomField customField = redmineIssue.getCustomFieldByName(redmineIssueDueDate);
       String value = customField != null ? customField.getValue() : null;

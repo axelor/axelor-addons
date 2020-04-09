@@ -33,6 +33,7 @@ import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.bean.CustomField;
+import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -43,6 +44,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import net.java.textilej.parser.MarkupParser;
+import net.java.textilej.parser.builder.HtmlDocumentBuilder;
+import net.java.textilej.parser.markup.textile.TextileDialect;
+import org.apache.commons.lang.StringUtils;
 
 public class RedmineImportService {
 
@@ -161,5 +166,22 @@ public class RedmineImportService {
   public void setErrorLog(String object, String redmineRef) {
 
     errorObjList.add(ObjectArrays.concat(new Object[] {object, redmineRef}, errors, Object.class));
+  }
+
+  protected String getHtmlFromTextile(String textile) {
+
+    if (!StringUtils.isBlank(textile)) {
+      MarkupParser parser = new MarkupParser(new TextileDialect());
+      StringWriter sw = new StringWriter();
+      HtmlDocumentBuilder builder = new HtmlDocumentBuilder(sw);
+      boolean isDocument = false;
+      builder.setEmitAsDocument(isDocument);
+      parser.setBuilder(builder);
+      parser.parse(textile);
+
+      return sw.toString();
+    }
+
+    return "";
   }
 }
