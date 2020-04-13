@@ -33,9 +33,11 @@ import com.axelor.apps.gsuite.utils.DateUtils;
 import com.axelor.apps.gsuite.utils.StringUtils;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
+import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
+import com.axelor.inject.Beans;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.List;
@@ -324,8 +326,15 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
       user = new ICalendarUser();
       user.setEmail(email.getAddress());
       user.setName(email.getName());
-      if (email.getPartner() != null && email.getPartner().getUser() != null) {
-        user.setUser(email.getPartner().getUser());
+      if (email.getPartner() != null) {
+        user.setUser(
+            Beans.get(UserRepository.class)
+                .all()
+                .filter(
+                    "self.partner = :partner or self.partner.emailAddress.address = :email OR self.email = :email")
+                .bind("partner", email.getPartner())
+                .bind("email", email.getAddress())
+                .fetchOne());
       }
     }
     return user;

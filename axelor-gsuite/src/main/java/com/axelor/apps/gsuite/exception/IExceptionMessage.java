@@ -37,9 +37,6 @@ public interface IExceptionMessage {
   public static final String NO_CONFIGURATION_EXCEPTION = /*$$(*/
       "No google configuration found" /*)*/;
 
-  public static final String CONFIGURATION_FILE_EXCEPTION = /*$$(*/
-      "Configuration file not found" /*)*/;
-
   public static final String GMAIL_SYNC_FAILURE = /*$$(*/
       "Gmail sync failed.Please check tacebaack for detailed log." /*)*/;
 

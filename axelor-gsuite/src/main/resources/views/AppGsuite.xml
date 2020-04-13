@@ -5,11 +5,20 @@
 	
 	<form name="app-gsuite-config-form" title="App Gsuite" model="com.axelor.apps.base.db.AppGsuite" canDelete="false" canNew="false" width="large">
 		<panel name="mainPanel">
-			<field name="clientSecretFile" widget="binary-link"/>
+			<field name="clientId" colSpan="6"/>
+			<field name="clientSecret" colSpan="6"/>
 			<field name="isPartnerIncluded" widget="InlineCheckbox" colSpan="2"/>
 			<field name="isLeadIncluded" widget="InlineCheckbox" colSpan="2"/>
 			<field name="isContactIncluded" widget="InlineCheckbox" colSpan="2"/>
   		</panel>
+  		<panel-tabs name="mainPanelTab">
+  			<panel name="eventSyncPanel" title="Event/Calendar configuration">
+  				<field name="isEventSyncAllowed" widget="boolean-switch"/>
+  			</panel>
+  			<panel name="emailSyncPanel" title="Email configuration">
+  				<field name="isEmailSyncAllowed" widget="boolean-switch"/>
+  			</panel>
+  		</panel-tabs>
 	</form>
 	
 </object-views>

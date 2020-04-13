@@ -14,7 +14,7 @@
 					<panel colSpan="12"  name="relatedTo2SelectPanel">
 						<field name="relatedTo2Select" widget="RefSelect" x-related="relatedTo2SelectId" colSpan="12" showIf="relatedTo1Select != null"/>
 					</panel>
-					<panel colSpan="12" name="relatedToSelectO2MPanel">
+					<panel colSpan="12" name="relatedToSelectO2MPanel" if="__config__.app.getApp('gsuite').getIsEmailSyncAllowed()">
 						<field name="relatedList" form-view="message-related-select-form" grid-view="message-related-select-grid" colSpan="12">
 							<editor x-viewer="true">
 								<field name="relatedToSelect" widget="RefSelect" colSpan="12" x-related="relatedToSelectId" showTitle="false" showIf="relatedToSelectId != null"/>

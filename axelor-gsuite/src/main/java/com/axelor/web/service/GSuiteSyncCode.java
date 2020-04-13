@@ -48,7 +48,7 @@ public class GSuiteSyncCode {
     }
 
     String baseUri = uriInfo.getBaseUri().toString();
-    String formUri = baseUri.replace("/ws/", "/#/ds/google.google.account/edit/" + accountId);
+    String formUri = baseUri.replace("/ws/", "/#");
 
     return Response.seeOther(URI.create(formUri)).build();
   }
