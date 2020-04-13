@@ -28,7 +28,7 @@ public class BatchGSuiteEventSyncService extends AbstractBatch {
         eventSyncService.sync(account);
         incrementDone();
       } catch (AxelorException e) {
-        TraceBackService.trace(e);
+        TraceBackService.trace(e, "", batch.getId());
         incrementAnomaly();
       }
     }

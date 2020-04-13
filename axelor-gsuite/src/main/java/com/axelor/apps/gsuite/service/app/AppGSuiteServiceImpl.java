@@ -36,18 +36,12 @@ public class AppGSuiteServiceImpl implements AppGSuiteService {
     }
 
     if (app.getIsPartnerIncluded()) {
-      List<Map> partnerAddresses =
-          getRelatedEmailByModel(
-              Partner.class,
-              "self.employee = null and self.linkedUser = null and self.isContact = false");
+      List<Map> partnerAddresses = getRelatedEmailByModel(Partner.class, "self.isContact = false");
       addresses.addAll(partnerAddresses);
     }
 
     if (app.getIsContactIncluded()) {
-      List<Map> contactAddresses =
-          getRelatedEmailByModel(
-              Partner.class,
-              "self.employee = null and self.linkedUser = null and self.isContact = true");
+      List<Map> contactAddresses = getRelatedEmailByModel(Partner.class, "self.isContact = true");
       addresses.addAll(contactAddresses);
     }
 

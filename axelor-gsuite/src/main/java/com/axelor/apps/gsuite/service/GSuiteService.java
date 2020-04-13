@@ -19,20 +19,17 @@ package com.axelor.apps.gsuite.service;
 
 import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppGsuite;
-import com.axelor.apps.base.db.repo.AppGsuiteRepository;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
+import com.axelor.apps.gsuite.service.app.AppGSuiteService;
+import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
-import com.axelor.i18n.I18n;
-import com.axelor.inject.Beans;
-import com.axelor.meta.MetaFiles;
-import com.axelor.meta.db.MetaFile;
+import com.axelor.exception.db.repo.TraceBackRepository;
 import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
-import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -44,7 +41,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Arrays;
@@ -69,8 +65,11 @@ public class GSuiteService {
   private final FileDataStoreFactory DATA_STORE_FACTORY;
 
   @Inject private GoogleAccountRepository googleAccountRepo;
+  @Inject private AppGSuiteService appGSuiteService;
 
   private GoogleAuthorizationCodeFlow flow = null;
+
+  private static final String APP_NAME = AppSettings.get().get("application.name", "Axelor gsuite");
 
   public GSuiteService() throws IOException {
     DATA_STORE_FACTORY =
@@ -95,9 +94,22 @@ public class GSuiteService {
   public GoogleAuthorizationCodeFlow getFlow() throws IOException, AxelorException {
 
     if (flow == null) {
+      AppGsuite appGsuite = appGSuiteService.getAppGSuite();
+
+      if (ObjectUtils.isEmpty(appGsuite.getClientId())
+          || ObjectUtils.isEmpty(appGsuite.getClientSecret())) {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+            IExceptionMessage.NO_CONFIGURATION_EXCEPTION);
+      }
+
       flow =
           new GoogleAuthorizationCodeFlow.Builder(
-                  HTTP_TRANSPORT, JSON_FACTORY, getClientSecrets(), Arrays.asList(SCOPES))
+                  HTTP_TRANSPORT,
+                  JSON_FACTORY,
+                  appGsuite.getClientId(),
+                  appGsuite.getClientSecret(),
+                  Arrays.asList(SCOPES))
               .setDataStoreFactory(DATA_STORE_FACTORY)
               .build();
     }
@@ -133,13 +145,13 @@ public class GSuiteService {
     return credential;
   }
 
-  @SuppressWarnings("deprecation")
   public Credential refreshToken(Credential credential) throws AxelorException, IOException {
 
     log.debug("Refresh token: {}", credential.getAccessToken());
 
     if (!credential.refreshToken()) {
-      throw new AxelorException(I18n.get(IExceptionMessage.AUTH_EXCEPTION_2), 4);
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, IExceptionMessage.AUTH_EXCEPTION_2);
     }
 
     log.debug("Token refreshed: {}", credential.getAccessToken());
@@ -147,47 +159,26 @@ public class GSuiteService {
     return credential;
   }
 
-  @SuppressWarnings("deprecation")
-  public GoogleClientSecrets getClientSecrets() throws AxelorException, IOException {
-
-    AppGsuite appGsuite = Beans.get(AppGsuiteRepository.class).all().fetchOne();
-    MetaFile googleConfigFile = appGsuite.getClientSecretFile();
-    if (googleConfigFile == null) {
-      throw new AxelorException(I18n.get(IExceptionMessage.NO_CONFIGURATION_EXCEPTION), 4);
-    }
-
-    File clientSecretFile = MetaFiles.getPath(googleConfigFile).toFile();
-
-    if (clientSecretFile == null || !clientSecretFile.exists()) {
-      throw new AxelorException(I18n.get(IExceptionMessage.CONFIGURATION_FILE_EXCEPTION), 4);
-    }
-
-    FileReader reader = new FileReader(clientSecretFile);
-
-    return GoogleClientSecrets.load(new JacksonFactory(), reader);
-  }
-
   public Drive getDrive(Long accountId) throws IOException, AxelorException {
 
     Credential credential = getCredential(accountId);
 
     return new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-        .setApplicationName("ABS Drive")
+        .setApplicationName(APP_NAME)
         .build();
   }
 
   public Calendar getCalendar(Credential credential) {
 
     return new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-        .setApplicationName("ABS calendar")
+        .setApplicationName(APP_NAME)
         .build();
   }
 
   public Gmail getGmail(Long accountId) throws IOException, AxelorException {
     Credential credential = getCredential(accountId);
-    final String GMAIL_APP_NAME = "AOS Gsuite Gmail";
     return new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
-        .setApplicationName(GMAIL_APP_NAME)
+        .setApplicationName(APP_NAME)
         .build();
   }
 }

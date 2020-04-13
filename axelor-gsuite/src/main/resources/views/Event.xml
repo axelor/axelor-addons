@@ -4,12 +4,34 @@
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
         
 	<form name="event-form" title="Events" model="com.axelor.apps.crm.db.Event" extension="true" id="agora-event-form">		
+		
 		<extend target="//panel[@name='followupPanel']/field[@name='calendar']">
-			<replace>
-				<field name="googleAccount" canView="false" colSpan="6"/>
-			</replace>
+			<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
+			<insert position="after">
+				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>			
+			</insert>
 		</extend>
 
 	</form>
 	
-</object-views>
+	<form name="calendar-event-form" extension="true" id="agora-calendar-event-form" title="Event" model="com.axelor.apps.base.db.ICalendarEvent">
+	
+		<extend target="//panel[@name='mainPanel']/field[@name='calendar']">
+			<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
+			<insert position="after">
+				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>			
+			</insert>
+		</extend>
+		
+	</form>
+	
+	<grid name="calendar-event-grid" id="agora-calendar-event-grid" title="Events" model="com.axelor.apps.base.db.ICalendarEvent" extension="true">
+	  <extend target="//field[@name='calendar']">
+	  		<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
+			<insert position="after">
+				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>
+			</insert>
+	  </extend>
+	</grid>
+	
+</object-views>	

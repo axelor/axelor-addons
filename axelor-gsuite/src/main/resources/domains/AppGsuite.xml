@@ -6,10 +6,20 @@
 
 	<entity name="AppGsuite" lang="java" extends="App">
 	
-		<many-to-one name="clientSecretFile" ref="com.axelor.meta.db.MetaFile" title="Client secret" />
+		<!-- oauth configuration -->
+		<string name="clientId" title="Client ID" encrypted="true"/>
+		<string name="clientSecret" title="Client secret" encrypted="true"/>	
+		
+		<!-- General configuration -->
 		<boolean name="isPartnerIncluded" title="Partner ?"/>
 		<boolean name="isLeadIncluded" title="Lead ?"/>
 		<boolean name="isContactIncluded" title="Contact ?"/>
+		
+		<!-- Event/Calendar configuration -->
+		<boolean name="isEventSyncAllowed" title="Event sync allowed?"/>
+		
+		<!-- Email configuration -->
+		<boolean name="isEmailSyncAllowed" title="Email sync allowed?"/>
 		
 	</entity>
 

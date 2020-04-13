@@ -6,7 +6,7 @@
 	 <form name="user-form" id="user-form-gsuite" title="User" model="com.axelor.auth.db.User"  extension="true">
 		<extend target="panel-tabs[@name='mainPanelTab']/panel[@name='calendarsConfigPanel']">
 			<insert position="after">
-			  <panel name="gSuitePanel" showIf="[1,5].indexOf(stepStatusSelect) > -1" title="G-Suite Configuration">
+			  <panel name="gSuitePanel" showIf="[1,5].indexOf(stepStatusSelect) > -1" title="G-Suite Configuration" if="__config__.app.isApp('gsuite')">
 	    	  	<field name="isGSuiteSyncAllowed" widget="boolean-switch"/>
 	    	  	<button name="createGoogleAccount" title="Create Google account" showIf="!googleAccount &amp;&amp; isGSuiteSyncAllowed" onClick="save,action-user-record-form-google-account" colSpan="4"/>	
 				<field name="googleAccount" showIf="isGSuiteSyncAllowed" colSpan="12" onChange="action-user-google-account-attrs-reset-authurl"  form-view="google-account-form" grid-view="google-account-grid" showTitle="false" canNew="true">
@@ -31,7 +31,7 @@
 	
 		<extend target="panel[@name='userPreferencesPanel']/*[last()]">
 			<insert position="after">
-				<panel name="gsuiteGooogleAccountPanel">
+				<panel name="gsuiteGooogleAccountPanel" if="__config__.app.isApp('gsuite')">
 					<button name="createGoogleAccount" title="Create Google account" showIf="!googleAccount &amp;&amp; isGSuiteSyncAllowed" onClick="action-user-record-form-google-account" colSpan="4"/>	
 					<field name="googleAccount" showIf="isGSuiteSyncAllowed" colSpan="12" onChange="action-user-google-account-attrs-reset-authurl" form-view="google-account-form" grid-view="google-account-grid" showTitle="false" canNew="true">
 						<editor x-viewer="true">
