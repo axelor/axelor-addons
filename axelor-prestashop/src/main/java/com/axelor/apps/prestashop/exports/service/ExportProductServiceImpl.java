@@ -167,6 +167,12 @@ public class ExportProductServiceImpl implements ExportProductService {
               String.format(
                   "[ERROR] Product has variants, which are not handled right now, skipping%n"));
           continue;
+        } else if (localProduct.getProductTypeSelect() == ProductRepository.PRODUCT_TYPE_PACK) {
+          // FIXME fairly easy to fix through product_bundle association + set type to pack
+          logBuffer.write(
+              String.format(
+                  "[ERROR] Product is a pack, these are not handled right now, skipping%n"));
+          continue;
         }
 
         PrestashopProduct remoteProduct;
