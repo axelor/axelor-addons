@@ -45,7 +45,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,7 +231,7 @@ public class GSuiteEventServiceImpl implements GSuiteEventService {
 
     String description = event.getDescription();
     if (description != null) {
-      description = Jsoup.parse(description).text();
+      //      description = Jsoup.parse(description).text();
       googleEvent.setDescription(description);
     } else {
       googleEvent.setDescription(null);
