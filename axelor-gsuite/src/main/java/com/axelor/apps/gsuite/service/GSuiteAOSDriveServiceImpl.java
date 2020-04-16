@@ -92,13 +92,11 @@ public class GSuiteAOSDriveServiceImpl implements GSuiteAOSDriveService {
               .execute();
       List<File> allData = result.getFiles();
       List<File> files =
-          allData
-              .stream()
+          allData.stream()
               .filter(file -> !StringUtils.containsIgnoreCase(file.getMimeType(), "folder"))
               .collect(Collectors.toList());
       List<File> folders =
-          allData
-              .stream()
+          allData.stream()
               .filter(file -> StringUtils.containsIgnoreCase(file.getMimeType(), "folder"))
               .collect(Collectors.toList());
       System.err.println("folders : " + folders.size());

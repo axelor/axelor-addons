@@ -107,8 +107,7 @@ public class SendinBlueTemplateService {
                         TraceBackRepository.CATEGORY_NO_VALUE,
                         I18n.get(ITranslation.TEMPLATE_SENDER_ERROR)));
                 continue;
-              } else if (!senderEmails
-                  .stream()
+              } else if (!senderEmails.stream()
                   .anyMatch(email -> email.equals(dataObject.getFromAdress()))) {
                 sendinBlueCampaignService.createSender(dataObject.getFromAdress());
               }

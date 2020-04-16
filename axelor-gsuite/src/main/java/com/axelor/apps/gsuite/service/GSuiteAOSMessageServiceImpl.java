@@ -108,8 +108,7 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
   private String getFilterQuery(GoogleAccount account) {
     Set<String> addressSet = appGSuiteService.getRelatedEmailAddressSet();
     String leadEmailsQuery =
-        addressSet
-            .stream()
+        addressSet.stream()
             .map(address -> String.format("%s", address))
             .collect(Collectors.joining(" "))
             .trim();

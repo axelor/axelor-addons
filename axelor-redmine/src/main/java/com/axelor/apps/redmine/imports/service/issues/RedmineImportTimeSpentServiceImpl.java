@@ -346,9 +346,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
       if (!updatedOnMap.isEmpty()) {
         String values =
-            updatedOnMap
-                .entrySet()
-                .stream()
+            updatedOnMap.entrySet().stream()
                 .map(
                     entry ->
                         "("
