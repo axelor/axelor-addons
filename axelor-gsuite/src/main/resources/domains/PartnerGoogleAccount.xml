@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+
+	<module name="gsuite" package="com.axelor.apps.gsuite.db" />
+
+	<entity name="PartnerGoogleAccount" cacheable="true">
+	
+		<many-to-one name="partner" ref="com.axelor.apps.base.db.Partner" />
+		<string name="googleContactId" />
+		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount" />
+
+		<finder-method name="findByGoogleContactId" using="googleContactId" />
+		
+	</entity>
+
+</domain-models>

@@ -17,7 +17,10 @@
  */
 package com.axelor.apps.redmine.service;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
+import com.axelor.exception.AxelorException;
+import com.taskadapter.redmineapi.RedmineManager;
 import java.util.function.Consumer;
 
 public interface RedmineService {
@@ -27,4 +30,6 @@ public interface RedmineService {
 
   public void redmineImportIssues(
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError);
+
+  public RedmineManager getRedmineManager(AppRedmine appRedmine) throws AxelorException;
 }

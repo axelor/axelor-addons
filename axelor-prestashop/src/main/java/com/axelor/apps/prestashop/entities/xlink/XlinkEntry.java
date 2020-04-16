@@ -227,4 +227,28 @@ public abstract class XlinkEntry {
       return PrestashopResourceType.STOCK_AVAILABLES;
     }
   }
+
+  @XmlRootElement(name = "tax_rule_groups")
+  public static class TaxRuleGroupsXlink extends XlinkEntry {
+    @Override
+    public PrestashopResourceType getEntryType() {
+      return PrestashopResourceType.TAX_RULE_GROUPS;
+    }
+  }
+
+  @XmlRootElement(name = "tax_rules")
+  public static class TaxRulesXlink extends XlinkEntry {
+    @Override
+    public PrestashopResourceType getEntryType() {
+      return PrestashopResourceType.TAX_RULES;
+    }
+  }
+
+  @XmlRootElement(name = "taxes")
+  public static class TaxesXlink extends XlinkEntry {
+    @Override
+    public PrestashopResourceType getEntryType() {
+      return PrestashopResourceType.TAXES;
+    }
+  }
 }

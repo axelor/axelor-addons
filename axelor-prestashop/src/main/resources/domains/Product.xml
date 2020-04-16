@@ -4,11 +4,14 @@
 	<module name="base" package="com.axelor.apps.base.db"/>
 
 	<entity name="Product" lang="java">
-		<integer name="prestaShopId" nullable="true"/>
+		<integer name="prestaShopId" nullable="true" copy="false"/>
 		<integer name="prestaShopVersion" nullable="true"/>
 		<!-- LOCAL id of the picture stored on PS, to detect changes -->
 		<long name="prestaShopImageId" nullable="true"/>
 		<integer name="prestaShopImageVersion" nullable="true"/>
+		<boolean name="productSynchronizedInPrestashop" title="Product Synchronized in Prestashop" default="true"/>
+
+		<datetime name="prestaShopUpdateDateTime" nullable="true"/>
 
 		<unique-constraint columns="prestaShopId"/>
 

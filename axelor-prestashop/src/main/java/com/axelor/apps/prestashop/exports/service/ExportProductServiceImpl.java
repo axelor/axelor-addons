@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
+import com.axelor.apps.account.db.AccountManagement;
+import com.axelor.apps.account.db.Tax;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.Unit;
@@ -35,12 +37,11 @@ import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.entities.PrestashopTranslatableString;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.apps.stock.db.repo.StockLocationRepository;
-import com.axelor.apps.stock.db.repo.StockMoveRepository;
-import com.axelor.db.JPA;
+import com.axelor.apps.stock.service.StockLocationService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
@@ -58,6 +59,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +126,7 @@ public class ExportProductServiceImpl implements ExportProductService {
         new StringBuilder(
             "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
-      filter.append(" AND (self.sellable = true)");
+      filter.append(" AND (self.sellable = true and self.productSynchronizedInPrestashop = true)");
     }
 
     final PrestashopProduct defaultProduct = ws.fetchDefault(PrestashopResourceType.PRODUCTS);
@@ -337,8 +339,23 @@ public class ExportProductServiceImpl implements ExportProductService {
 
           remoteProduct.getName().setTranslation(language, localProduct.getName());
           remoteProduct.getDescription().setTranslation(language, localProduct.getDescription());
+
+          Tax tax = null;
+          if (CollectionUtils.isEmpty(localProduct.getAccountManagementList())) {
+            if (localProduct.getProductFamily() != null
+                && !CollectionUtils.isEmpty(
+                    localProduct.getProductFamily().getAccountManagementList())) {
+              AccountManagement accountManagement =
+                  localProduct.getProductFamily().getAccountManagementList().get(0);
+              tax = accountManagement.getSaleTax();
+            }
+          } else {
+            AccountManagement accountManagement = localProduct.getAccountManagementList().get(0);
+            tax = accountManagement.getSaleTax();
+          }
           remoteProduct.setTaxRulesGroupId(
-              1); // FIXME Need to have a mapping and use getAccountManagementList
+              tax != null ? tax.getPrestaShopId() : appConfig.getDefaultTax().getPrestaShopId());
+
           if (localProduct.getSalesUnit() != null) {
             remoteProduct.setUnity(localProduct.getSalesUnit().getLabelToPrinting());
           } else if (localProduct.getUnit() != null) {
@@ -395,32 +412,15 @@ public class ExportProductServiceImpl implements ExportProductService {
     int done = 0;
     logBuffer.write(String.format("%n===== STOCKS =====%n"));
 
-    @SuppressWarnings("unchecked")
-    final List<Object[]> stocks =
-        JPA.em()
-            .createQuery(
-                "SELECT product, "
-                    + "("
-                    + "SELECT COALESCE(SUM(CASE WHEN fromLocation.typeSelect = :virtualLocation THEN line.realQty ELSE -line.realQty END), 0) "
-                    + "FROM StockMoveLine line "
-                    + "JOIN line.stockMove move "
-                    + "JOIN move.fromStockLocation fromLocation "
-                    + "JOIN move.toStockLocation toLocation "
-                    + "WHERE line.product = product "
-                    + "AND move.statusSelect != :canceledStatus "
-                    + "AND (fromLocation.typeSelect != :virtualLocation OR toLocation.typeSelect != :virtualLocation) "
-                    + "AND (fromLocation.typeSelect = :virtualLocation OR toLocation.typeSelect = :virtualLocation) "
-                    + ")"
-                    + "FROM Product product "
-                    + "WHERE product.prestaShopId is not null "
-                    + "GROUP BY product")
-            .setParameter("canceledStatus", StockMoveRepository.STATUS_CANCELED)
-            .setParameter("virtualLocation", StockLocationRepository.TYPE_VIRTUAL)
-            .getResultList();
-    for (Object[] row : stocks) {
+    List<Product> localProductList =
+        productRepo.all().filter("self.prestaShopId IS NOT NULL").fetch();
+
+    StockLocationService stockLocationService = Beans.get(StockLocationService.class);
+
+    for (Product localProduct : localProductList) {
       try {
-        final Product localProduct = (Product) row[0];
-        final int currentStock = ((BigDecimal) row[1]).intValue();
+        final int currentStock =
+            stockLocationService.getRealQty(localProduct.getId(), null, null).intValue();
         logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
         PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
         if (remoteProduct == null) {
@@ -456,7 +456,7 @@ public class ExportProductServiceImpl implements ExportProductService {
           }
         }
         ++done;
-      } catch (PrestaShopWebserviceException e) {
+      } catch (PrestaShopWebserviceException | AxelorException e) {
         logBuffer.write(String.format(" [ERROR] exception occured: %s%n", e.getMessage()));
         TraceBackService.trace(
             e, I18n.get("Prestashop stocks export"), AbstractBatch.getCurrentBatchId());

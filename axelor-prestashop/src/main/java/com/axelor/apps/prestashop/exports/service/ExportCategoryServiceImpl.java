@@ -20,12 +20,15 @@ package com.axelor.apps.prestashop.exports.service;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.ProductCategory;
 import com.axelor.apps.base.db.repo.ProductCategoryRepository;
+import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.entities.PrestashopProductCategory;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.entities.PrestashopTranslatableString;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.axelor.db.Query;
+import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
@@ -68,7 +71,7 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
     final List<Object> params = new ArrayList<>(2);
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
       filter.append(
-          " AND EXISTS(Select 1 From Product where productCategory = self and sellable = true)");
+          " AND EXISTS(Select 1 From Product where productCategory = self and sellable = true and productSynchronizedInPrestashop = true)");
     }
     q.filter(filter.toString(), params.toArray());
     q.order("-parentProductCategory.id");
@@ -152,6 +155,8 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
         logBuffer.write(String.format(" [SUCCESS]%n"));
         ++done;
       } catch (PrestaShopWebserviceException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop product categories export"), AbstractBatch.getCurrentBatchId());
         logBuffer.write(
             String.format(
                 " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));

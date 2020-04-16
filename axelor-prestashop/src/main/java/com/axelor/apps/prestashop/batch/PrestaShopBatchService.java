@@ -18,6 +18,7 @@
 package com.axelor.apps.prestashop.batch;
 
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.db.repo.AppPrestashopRepository;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.db.IPrestaShopBatch;
 import com.axelor.apps.prestashop.db.PrestaShopBatch;
@@ -29,6 +30,7 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.google.inject.Inject;
 import java.time.ZonedDateTime;
 
 /**
@@ -39,6 +41,8 @@ import java.time.ZonedDateTime;
  * @version 0.1
  */
 public class PrestaShopBatchService extends AbstractBatchService {
+
+  @Inject AppPrestashopRepository appRepository;
 
   /**
    * Lancer un batch à partir de son code.
@@ -78,14 +82,33 @@ public class PrestaShopBatchService extends AbstractBatchService {
     return batch;
   }
 
-  /** Batch run import prestashop to ABS */
-  public Batch importPrestaShop(PrestaShopBatch prestaShopBatch) {
+  /**
+   * Batch run import prestashop to ABS
+   *
+   * @throws AxelorException
+   */
+  public Batch importPrestaShop(PrestaShopBatch prestaShopBatch) throws AxelorException {
 
+    if (!appRepository.all().fetchOne().getIsValid()) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+          I18n.get(IExceptionMessage.PRESTASHOP_CONNECTION_VALIDATION_ERROR));
+    }
     return Beans.get(ImportPrestaShop.class).run(prestaShopBatch);
   }
 
-  /** Batch run export ABS to prestashop */
-  public Batch exportPrestaShop(PrestaShopBatch prestaShopBatch) {
+  /**
+   * Batch run export ABS to prestashop
+   *
+   * @throws AxelorException
+   */
+  public Batch exportPrestaShop(PrestaShopBatch prestaShopBatch) throws AxelorException {
+
+    if (!appRepository.all().fetchOne().getIsValid()) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+          I18n.get(IExceptionMessage.PRESTASHOP_CONNECTION_VALIDATION_ERROR));
+    }
     return Beans.get(ExportPrestaShop.class).run(prestaShopBatch);
   }
 

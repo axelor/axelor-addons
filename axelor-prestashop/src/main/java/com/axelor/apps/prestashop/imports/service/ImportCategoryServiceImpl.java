@@ -119,12 +119,21 @@ public class ImportCategoryServiceImpl implements ImportCategoryService {
         localCategory.setPrestaShopId(remoteCategory.getId());
       }
 
+      if (localCategory.getPrestaShopUpdateDateTime() != null
+          && remoteCategory.getUpdateDate() != null
+          && localCategory.getPrestaShopUpdateDateTime().compareTo(remoteCategory.getUpdateDate())
+              >= 0) {
+        logWriter.write(String.format("already up-to-date, skipping [WARNING]%n"));
+        continue;
+      }
+
       if (localCategory.getId() == null
           || appConfig.getPrestaShopMasterForCategories() == Boolean.TRUE) {
         localCategory.setParentProductCategory(parentCategory);
         localCategory.setName(remoteCategory.getName().getTranslation(language));
         localCategory.setCode(categoryCode);
         localCategory.setImportOrigin(IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP);
+        localCategory.setPrestaShopUpdateDateTime(remoteCategory.getUpdateDate());
         productCategoryRepo.save(localCategory);
       } else {
         logWriter.write(

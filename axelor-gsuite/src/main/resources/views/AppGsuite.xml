@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+	
+	<form name="app-gsuite-config-form" title="App Gsuite" model="com.axelor.apps.base.db.AppGsuite" canDelete="false" canNew="false" width="large">
+		<panel name="mainPanel">
+			<field name="clientId" colSpan="6"/>
+			<field name="clientSecret" colSpan="6"/>
+			<field name="isPartnerIncluded" widget="InlineCheckbox" colSpan="2"/>
+			<field name="isLeadIncluded" widget="InlineCheckbox" colSpan="2"/>
+			<field name="isContactIncluded" widget="InlineCheckbox" colSpan="2"/>
+  		</panel>
+  		<panel-tabs name="mainPanelTab">
+  			<panel name="eventSyncPanel" title="Event/Calendar configuration">
+  				<field name="isEventSyncAllowed" widget="boolean-switch"/>
+  			</panel>
+  			<panel name="emailSyncPanel" title="Email configuration">
+  				<field name="isEmailSyncAllowed" widget="boolean-switch"/>
+  			</panel>
+  		</panel-tabs>
+	</form>
+	
+</object-views>

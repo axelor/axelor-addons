@@ -17,14 +17,18 @@
 			<field name="redmineProjectInvoiceable" required="true" />
 			<field name="redmineProjectClientPartner" required="true" />
 			<field name="redmineProjectInvoicingSequenceSelect" required="true" />
+			<field name="redmineProjectAssignedTo" required="true"/>
 			<field name="redmineIssueProduct" required="true" />
-			<field name="redmineIssueIsTaskRefused" required="true" />
 			<field name="redmineIssueDueDate" required="true" />
 			<field name="redmineIssueEstimatedTime" required="true" />
 			<field name="redmineIssueInvoiced" required="true" />
 			<field name="redmineIssueAccountedForMaintenance" required="true" />
+			<field name="redmineIssueIsTaskAccepted" required="true" />
+			<field name="redmineIssueIsOffered" required="true" />
+			<field name="redmineIssueUnitPrice" required="true" />
 			<field name="redmineTimeSpentProduct" required="true" />
 			<field name="redmineTimeSpentDurationForCustomer" required="true" />
+			<field name="redmineTimeSpentDurationUnit" required="true" />
 		</panel>
 		<panel name="redmineCustomFieldDefaultPanel" title="Redmine custom field defaults">
 			<field name="redmineProjectClientPartnerDefault" />
@@ -32,8 +36,9 @@
 			<field name="redmineIssueProductDefault" />
 			<field name="redmineIssueDueDateDefault" />
 			<field name="redmineIssueEstimatedTimeDefault" />
+			<field name="redmineIssueUnitPriceDefault" />
 			<field name="redmineTimeSpentProductDefault" />
-			<field name="redmineTimeSpentDurationForCustomerDefault" />
+			<field name="redmineTimeSpentDurationUnitDefault" />
 		</panel>
 	</form>
 

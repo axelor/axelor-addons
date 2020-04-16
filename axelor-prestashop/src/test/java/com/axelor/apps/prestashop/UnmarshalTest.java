@@ -34,6 +34,9 @@ import com.axelor.apps.prestashop.entities.ListContainer.OrderStatusesContainer;
 import com.axelor.apps.prestashop.entities.ListContainer.OrdersContainer;
 import com.axelor.apps.prestashop.entities.ListContainer.ProductCategoriesContainer;
 import com.axelor.apps.prestashop.entities.ListContainer.ProductsContainer;
+import com.axelor.apps.prestashop.entities.ListContainer.TaxRuleGroupsContainer;
+import com.axelor.apps.prestashop.entities.ListContainer.TaxRulesContainer;
+import com.axelor.apps.prestashop.entities.ListContainer.TaxesContainer;
 import com.axelor.apps.prestashop.entities.Prestashop;
 import com.axelor.apps.prestashop.entities.PrestashopAddress;
 import com.axelor.apps.prestashop.entities.PrestashopAvailableStock;
@@ -53,6 +56,9 @@ import com.axelor.apps.prestashop.entities.PrestashopOrderStatus;
 import com.axelor.apps.prestashop.entities.PrestashopProduct;
 import com.axelor.apps.prestashop.entities.PrestashopProductCategory;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
+import com.axelor.apps.prestashop.entities.PrestashopTax;
+import com.axelor.apps.prestashop.entities.PrestashopTaxRule;
+import com.axelor.apps.prestashop.entities.PrestashopTaxRuleGroup;
 import com.axelor.apps.prestashop.entities.xlink.ApiContainer;
 import com.axelor.apps.prestashop.entities.xlink.XlinkEntry;
 import com.axelor.common.StringUtils;
@@ -105,7 +111,10 @@ public class UnmarshalTest {
             PrestashopResourceType.ORDER_PAYMENTS,
             PrestashopResourceType.ORDERS,
             PrestashopResourceType.PRODUCTS,
-            PrestashopResourceType.STOCK_AVAILABLES);
+            PrestashopResourceType.STOCK_AVAILABLES,
+            PrestashopResourceType.TAX_RULE_GROUPS,
+            PrestashopResourceType.TAX_RULES,
+            PrestashopResourceType.TAXES);
 
     Assert.assertNotNull(envelop.getContent());
     Assert.assertEquals(ApiContainer.class, envelop.getContent().getClass());
@@ -733,5 +742,86 @@ public class UnmarshalTest {
     LanguagesContainer statuses = envelop.getContent();
 
     Assert.assertEquals(2, statuses.getEntities().size());
+  }
+
+  @Test
+  public void testTaxRuleGroup() throws JAXBException {
+    Prestashop envelop =
+        (Prestashop)
+            getUnmarshaller().unmarshal(getClass().getResourceAsStream("tax-rule-group.xml"));
+
+    Assert.assertNotNull(envelop.getContent());
+    Assert.assertEquals(PrestashopTaxRuleGroup.class, envelop.getContent().getClass());
+    PrestashopTaxRuleGroup taxRuleGroup = envelop.getContent();
+
+    Assert.assertEquals(Integer.valueOf(1), taxRuleGroup.getId());
+    Assert.assertEquals(" IN Standard Rate (12.5%) ", taxRuleGroup.getName());
+    Assert.assertTrue(taxRuleGroup.isActive());
+  }
+
+  @Test
+  public void testTaxRuleGroups() throws JAXBException {
+    Prestashop envelop =
+        (Prestashop)
+            getUnmarshaller().unmarshal(getClass().getResourceAsStream("tax-rule-groups.xml"));
+
+    Assert.assertNotNull(envelop.getContent());
+    Assert.assertEquals(TaxRuleGroupsContainer.class, envelop.getContent().getClass());
+    TaxRuleGroupsContainer taxRuleGroups = envelop.getContent();
+
+    Assert.assertEquals(3, taxRuleGroups.getEntities().size());
+  }
+
+  @Test
+  public void testTaxRule() throws JAXBException {
+    Prestashop envelop =
+        (Prestashop) getUnmarshaller().unmarshal(getClass().getResourceAsStream("tax-rule.xml"));
+
+    Assert.assertNotNull(envelop.getContent());
+    Assert.assertEquals(PrestashopTaxRule.class, envelop.getContent().getClass());
+    PrestashopTaxRule taxRule = envelop.getContent();
+
+    Assert.assertEquals(Integer.valueOf(1), taxRule.getId());
+    Assert.assertEquals(new Integer(1), taxRule.getTaxRuleGroupId());
+    Assert.assertEquals(new Integer(110), taxRule.getCountryId());
+  }
+
+  @Test
+  public void testTaxRules() throws JAXBException {
+    Prestashop envelop =
+        (Prestashop) getUnmarshaller().unmarshal(getClass().getResourceAsStream("tax-rules.xml"));
+
+    Assert.assertNotNull(envelop.getContent());
+    Assert.assertEquals(TaxRulesContainer.class, envelop.getContent().getClass());
+    TaxRulesContainer taxRules = envelop.getContent();
+
+    Assert.assertEquals(3, taxRules.getEntities().size());
+  }
+
+  @Test
+  public void testTax() throws JAXBException {
+    Prestashop envelop =
+        (Prestashop) getUnmarshaller().unmarshal(getClass().getResourceAsStream("tax.xml"));
+
+    Assert.assertNotNull(envelop.getContent());
+    Assert.assertEquals(PrestashopTax.class, envelop.getContent().getClass());
+    PrestashopTax tax = envelop.getContent();
+
+    Assert.assertEquals(Integer.valueOf(1), tax.getId());
+    Assert.assertEquals("VAT IN 12.5%", tax.getName().getTranslations().get(0).getTranslation());
+    Assert.assertEquals(new BigDecimal("12.5"), tax.getRate());
+    Assert.assertTrue(tax.isActive());
+  }
+
+  @Test
+  public void testTaxes() throws JAXBException {
+    Prestashop envelop =
+        (Prestashop) getUnmarshaller().unmarshal(getClass().getResourceAsStream("taxes.xml"));
+
+    Assert.assertNotNull(envelop.getContent());
+    Assert.assertEquals(TaxesContainer.class, envelop.getContent().getClass());
+    TaxesContainer taxes = envelop.getContent();
+
+    Assert.assertEquals(3, taxes.getEntities().size());
   }
 }

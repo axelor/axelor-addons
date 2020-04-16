@@ -24,8 +24,6 @@ import com.axelor.apps.redmine.imports.service.RedmineIssueService;
 import com.axelor.apps.redmine.imports.service.RedmineProjectService;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
@@ -42,10 +40,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
+import javax.persistence.PersistenceException;
 
 public class RedmineServiceImpl implements RedmineService {
 
-  @Inject private AppRedmineRepository appRedmineRepo;
+  @Inject protected AppRedmineRepository appRedmineRepo;
   @Inject protected RedmineProjectService redmineImportProjectService;
   @Inject protected RedmineIssueService redmineImportIssueService;
 
@@ -54,20 +53,23 @@ public class RedmineServiceImpl implements RedmineService {
   public void redmineImportProjects(
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
+    RedmineManager redmineManager = null;
+
     try {
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
-      RedmineManager redmineManager = getRedmineManager(appRedmine);
+      redmineManager = getRedmineManager(appRedmine);
 
       if (redmineManager == null) {
         return;
       }
 
       validateCustomFieldConfig(redmineManager, appRedmine, true);
-
-      redmineImportProjectService.redmineImportProject(batch, redmineManager, onSuccess, onError);
-    } catch (Exception e) {
+    } catch (RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
+
+    redmineImportProjectService.redmineImportProject(batch, redmineManager, onSuccess, onError);
   }
 
   @Override
@@ -75,23 +77,27 @@ public class RedmineServiceImpl implements RedmineService {
   public void redmineImportIssues(
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
+    RedmineManager redmineManager = null;
+
     try {
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
-      RedmineManager redmineManager = getRedmineManager(appRedmine);
+      redmineManager = getRedmineManager(appRedmine);
 
       if (redmineManager == null) {
         return;
       }
 
       validateCustomFieldConfig(redmineManager, appRedmine, false);
-
-      redmineImportIssueService.redmineImportIssue(batch, redmineManager, onSuccess, onError);
-    } catch (Exception e) {
+    } catch (RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
+
+    redmineImportIssueService.redmineImportIssue(batch, redmineManager, onSuccess, onError);
   }
 
-  public RedmineManager getRedmineManager(AppRedmine appRedmine) throws AxelorException {
+  @Override
+  public RedmineManager getRedmineManager(AppRedmine appRedmine) {
 
     if (!StringUtils.isBlank(appRedmine.getUri())
         && !StringUtils.isBlank(appRedmine.getApiAccessKey())) {
@@ -101,43 +107,48 @@ public class RedmineServiceImpl implements RedmineService {
       try {
         redmineManager.getUserManager().getCurrentUser();
       } catch (RedmineTransportException | NotFoundException e) {
-        throw new AxelorException(
-            TraceBackRepository.CATEGORY_NO_VALUE, IMessage.REDMINE_TRANSPORT);
+        throw new PersistenceException(IMessage.REDMINE_TRANSPORT);
       } catch (RedmineAuthenticationException e) {
-        throw new AxelorException(
-            TraceBackRepository.CATEGORY_NO_VALUE, IMessage.REDMINE_AUTHENTICATION_2);
+        throw new PersistenceException(IMessage.REDMINE_AUTHENTICATION_2);
       } catch (RedmineException e) {
-        throw new AxelorException(TraceBackRepository.CATEGORY_NO_VALUE, e.getLocalizedMessage());
+        throw new PersistenceException(e.getLocalizedMessage());
       }
 
       return redmineManager;
     } else {
-      throw new AxelorException(
-          TraceBackRepository.CATEGORY_NO_VALUE, IMessage.REDMINE_AUTHENTICATION_1);
+      throw new PersistenceException(IMessage.REDMINE_AUTHENTICATION_1);
     }
   }
 
   public void validateCustomFieldConfig(
       RedmineManager redmineManager, AppRedmine appRedmine, Boolean isProject)
-      throws RedmineException, AxelorException {
+      throws RedmineException {
 
     HashMap<String, Boolean> customFieldsValidationMap = new HashMap<String, Boolean>();
 
     if (!isProject) {
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueEstimatedTime(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueInvoiced(), false);
-      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsTaskRefused(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueProduct(), false);
       customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueDueDate(), false);
       customFieldsValidationMap.put(
+          "issue " + appRedmine.getRedmineIssueAccountedForMaintenance(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsTaskAccepted(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsOffered(), false);
+      customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueUnitPrice(), false);
+
+      customFieldsValidationMap.put(
           "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
       customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
+      customFieldsValidationMap.put(
+          "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
     } else {
       customFieldsValidationMap.put(
           "project " + appRedmine.getRedmineProjectClientPartner(), false);
       customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectInvoiceable(), false);
       customFieldsValidationMap.put(
           "project " + appRedmine.getRedmineProjectInvoicingSequenceSelect(), false);
+      customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectAssignedTo(), false);
     }
 
     CustomFieldManager customFieldManager = redmineManager.getCustomFieldManager();
@@ -159,8 +170,7 @@ public class RedmineServiceImpl implements RedmineService {
       if (entry.getValue().equals(Boolean.FALSE)) {
         String key = entry.getKey();
 
-        throw new AxelorException(
-            TraceBackRepository.CATEGORY_NO_VALUE,
+        throw new PersistenceException(
             String.format(
                 I18n.get(IMessage.REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR),
                 key.substring(key.indexOf(" ") + 1),

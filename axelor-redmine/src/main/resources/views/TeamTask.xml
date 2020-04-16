@@ -36,9 +36,10 @@
 					<field name="redmineId" />
 					<field name="fixedVersion" />
 					<field name="estimatedTime" />
-					<field name="isTaskRefused" widget="boolean-switch" colSpan="3" />
+					<field name="isOffered" colSpan="2" widget="boolean-switch" />
 					<field name="accountedForMaintenance" widget="boolean-switch"
-						colSpan="3" />
+						colSpan="2" />
+					<field name="isTaskAccepted" widget="boolean-switch" colSpan="2" />
 				</panel>
 			</insert>
 		</extend>

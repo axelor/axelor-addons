@@ -20,10 +20,12 @@ package com.axelor.apps.prestashop.exports.service;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.entities.PrestashopCustomer;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -139,18 +141,20 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
             if (localCustomer.getPartnerTypeSelect() == PartnerRepository.PARTNER_TYPE_INDIVIDUAL) {
               remoteCustomer.setFirstname(localCustomer.getFirstName());
               remoteCustomer.setLastname(localCustomer.getName());
+              if (localCustomer.getTitleSelect() != null) {
+                remoteCustomer.setGenderId(
+                    localCustomer.getTitleSelect() == PartnerRepository.PARTNER_TITLE_M
+                        ? PrestashopCustomer.GENDER_MALE
+                        : PrestashopCustomer.GENDER_FEMALE);
+              }
             } else {
               remoteCustomer.setCompany(localCustomer.getName());
-              if (localCustomer.getContactPartnerSet().isEmpty() == false) {
-                Partner localContact = localCustomer.getContactPartnerSet().iterator().next();
-                remoteCustomer.setFirstname(localContact.getFirstName());
-                remoteCustomer.setLastname(localContact.getName());
-              } else {
-                logBuffer.write(
-                    String.format(
-                        " [WARNING] No contact filled, required for Pretashop, skipping%n"));
-                continue;
-              }
+              remoteCustomer.setFirstname(" ");
+              remoteCustomer.setLastname(
+                  localCustomer.getName().matches(".*\\d+.*")
+                      ? localCustomer.getName().replaceAll("[*0-9]", "")
+                      : localCustomer.getName()); // remove digits from name
+              remoteCustomer.setGenderId(PrestashopCustomer.GENDER_NEUTRAL);
             }
           }
         }
@@ -175,9 +179,7 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 
           remoteCustomer.setUpdateDate(now);
           remoteCustomer = ws.save(PrestashopResourceType.CUSTOMERS, remoteCustomer);
-          if (remoteCustomer.getId() == 12) {
-            log.debug("Local customer name: {}", localCustomer.getName());
-          }
+
           localCustomer.setPrestaShopId(remoteCustomer.getId());
           localCustomer.setPrestaShopVersion(localCustomer.getVersion() + 1);
           localCustomer.setEmailAddressPrestaShopVersion(
@@ -189,6 +191,8 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
         logBuffer.write(String.format(" [SUCCESS]%n"));
         ++done;
       } catch (PrestaShopWebserviceException | IOException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop customers export"), AbstractBatch.getCurrentBatchId());
         logBuffer.write(
             String.format(
                 " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));

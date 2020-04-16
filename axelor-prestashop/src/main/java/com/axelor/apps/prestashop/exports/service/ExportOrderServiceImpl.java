@@ -27,6 +27,7 @@ import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.base.service.UnitConversionService;
+import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.entities.Associations.CartRowsAssociationElement;
 import com.axelor.apps.prestashop.entities.Associations.OrderRowsAssociationElement;
 import com.axelor.apps.prestashop.entities.PrestashopCart;
@@ -45,6 +46,7 @@ import com.axelor.apps.sale.db.repo.AdvancePaymentRepository;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.stock.db.StockMove;
 import com.axelor.exception.AxelorException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -117,250 +119,268 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 
     orderLoop: // Not very pretty
     for (SaleOrder localOrder : saleOrderRepo.all().filter(filter.toString()).fetch()) {
-      logBuffer.write(
-          String.format(
-              "Exporting order #%d (%s) ‑ ", localOrder.getId(), localOrder.getSaleOrderSeq()));
-      if (localOrder.getClientPartner().getPrestaShopId() == null) {
-        logBuffer.write(String.format(" [WARNING] Customer is not synced yet, skipping%n"));
-        continue;
-      }
-      if (localOrder.getDeliveryAddress() == null) {
-        logBuffer.write(
-            String.format(
-                " [WARNING] No delivery address filled, required for prestashop, skipping%n"));
-        continue;
-      } else if (localOrder.getDeliveryAddress().getPrestaShopId() == null) {
-        logBuffer.write(
-            String.format(" [WARNING] Delivery address has not been synced yet, skipping%n"));
-        continue;
-      }
-      if (localOrder.getMainInvoicingAddress() == null) {
-        logBuffer.write(
-            String.format(
-                " [WARNING] No invoicing address filled, required for prestashop, skipping%n"));
-        continue;
-      } else if (localOrder.getMainInvoicingAddress().getPrestaShopId() == null) {
-        logBuffer.write(
-            String.format(" [WARNING] Invoicing address has not been synced yet, skipping%n"));
-        continue;
-      }
-      if (localOrder.getCurrency().getPrestaShopId() == null) {
-        logBuffer.write(String.format(" [WARNING] Currency has not been synced yet, skipping%n"));
-        continue;
-      }
-
-      PrestashopOrder remoteOrder;
-      PrestashopCart remoteCart;
-
-      // We do not fetch the all remote orders as for other entities since
-      // it could lead to memory issues on heavy databases, tradeoff is that
-      // we'd have a lot of HTTP roundtrips.
-      if (localOrder.getPrestaShopId() != null) {
-        logBuffer.write("prestashop id=" + localOrder.getPrestaShopId());
-        remoteOrder = ws.fetch(PrestashopResourceType.ORDERS, localOrder.getPrestaShopId());
-        if (remoteOrder == null) {
-          logBuffer.write(String.format(" [ERROR] Not found remotely%n"));
-          log.error(
-              "Unable to fetch remote order #{} ({}), something's probably very wrong, skipping",
-              localOrder.getPrestaShopId(),
-              localOrder.getSaleOrderSeq());
-          ++errors;
-          continue;
-        }
-        remoteCart = ws.fetch(PrestashopResourceType.CARTS, remoteOrder.getCartId());
-        if (remoteCart == null) {
-          logBuffer.write(
-              String.format(
-                  " [ERROR] Cart for order #%s (%s) not found remotely, your prestashop installation seems to be in a very bad shape%n",
-                  localOrder.getPrestaShopId(), localOrder.getSaleOrderSeq()));
-          log.error(
-              "Unable to fetch cart #{} (for order {}), something's probably very wrong, skipping",
-              remoteOrder.getCartId(),
-              localOrder.getSaleOrderSeq());
-          ++errors;
-          continue;
-        }
-      } else {
-        logBuffer.write("no prestashop id, assuming new order & cart");
-        remoteOrder = new PrestashopOrder();
-        remoteCart = new PrestashopCart();
-
-        remoteOrder.setCustomerId(localOrder.getClientPartner().getPrestaShopId());
-        remoteOrder.setCurrencyId(localOrder.getCurrency().getPrestaShopId());
-        remoteOrder.setDeliveryAddressId(localOrder.getDeliveryAddress().getPrestaShopId());
-        remoteOrder.setInvoiceAddressId(localOrder.getMainInvoicingAddress().getPrestaShopId());
-        remoteOrder.setLanguageId(
-            appConfig.getTextsLanguage().getPrestaShopId() == null
-                ? 1
-                : appConfig.getTextsLanguage().getPrestaShopId());
-        remoteOrder.setCarrierId(
-            1); // TODO We should have a way to provide mapping between FreightCarrierModes and
-        // PrestaShop carriers
-        remoteOrder.setAddDate(localOrder.getCreatedOn());
-        if (localOrder.getPaymentCondition() != null) {
-          remoteOrder.setPayment(localOrder.getPaymentCondition().getName());
-        } else {
-          remoteOrder.setPayment(
-              I18n.getBundle(
-                      new Locale(
-                          partnerService.getPartnerLanguageCode(localOrder.getClientPartner())))
-                  .getString("Unknown"));
-        }
-        remoteOrder.setModule(
-            "ps_checkpayment"); // FIXME make this configurable (through translation table?)
-        remoteOrder.setSecureKey(RandomStringUtils.random(32, "0123456789abcdef"));
-
-        remoteCart.setCustomerId(remoteOrder.getCustomerId());
-        remoteCart.setCurrencyId(remoteOrder.getCurrencyId());
-        remoteCart.setDeliveryAddressId(remoteOrder.getDeliveryAddressId());
-        remoteCart.setInvoiceAddressId(remoteOrder.getInvoiceAddressId());
-        remoteCart.setLanguageId(remoteOrder.getLanguageId());
-        remoteCart.setAddDate(remoteOrder.getAddDate());
-      }
-
-      // Rebuild cart from scratch (should we?)
-
       try {
-        // Prestashop expects rate to convert from prestashop'scurrency order currency, it will
-        // use it when generating default order details to convert from product's prices (in
-        // prestashop
-        // currency) to order prices (in order currency)
-        remoteOrder.setConversionRate(
-            currencyService.getCurrencyConversionRate(
-                appConfig.getPrestaShopCurrency(),
-                localOrder.getCurrency(),
-                remoteOrder.getAddDate().toLocalDate()));
-        logBuffer.write(
-            String.format(", using conversion rate of %f", remoteOrder.getConversionRate()));
-      } catch (AxelorException e) {
         logBuffer.write(
             String.format(
-                " [WARNING] Unable to get currency conversion rate, leaving it untouched"));
-      }
-      BigDecimal taxIncludedShippingCosts = BigDecimal.ZERO;
-      BigDecimal taxExcludedShippingCosts = BigDecimal.ZERO;
-      BigDecimal taxIncludedProducts = BigDecimal.ZERO;
-      BigDecimal taxExcludedProducts = BigDecimal.ZERO;
-
-      final List<CartRowsAssociationElement> remoteCartRows =
-          remoteCart.getAssociations().getCartRows().getCartRows();
-      remoteCartRows.clear();
-
-      // Extract lines containing products and rebuild cart from them
-      final List<SaleOrderLine> localRows = new LinkedList<>();
-      for (SaleOrderLine localRow : localOrder.getSaleOrderLineList()) {
-        if (localRow.getProduct() == null) continue;
-        if (localRow.getProduct().getPrestaShopId() == null) {
+                "Exporting order #%d (%s) ‑ ", localOrder.getId(), localOrder.getSaleOrderSeq()));
+        if (localOrder.getClientPartner().getPrestaShopId() == null) {
+          logBuffer.write(String.format(" [WARNING] Customer is not synced yet, skipping%n"));
+          continue;
+        }
+        if (localOrder.getDeliveryAddress() == null) {
           logBuffer.write(
               String.format(
-                  " [WARNING] Product %s has not been synced yet, skipping order%n",
-                  localRow.getProduct().getCode()));
-          continue orderLoop;
+                  " [WARNING] No delivery address filled, required for prestashop, skipping%n"));
+          continue;
+        } else if (localOrder.getDeliveryAddress().getPrestaShopId() == null) {
+          logBuffer.write(
+              String.format(" [WARNING] Delivery address has not been synced yet, skipping%n"));
+          continue;
         }
-        if (localRow.getProduct().getIsShippingCostsProduct()) {
-          taxIncludedShippingCosts = taxIncludedShippingCosts.add(localRow.getInTaxTotal());
-          taxExcludedShippingCosts = taxExcludedShippingCosts.add(localRow.getExTaxTotal());
+        if (localOrder.getMainInvoicingAddress() == null) {
+          logBuffer.write(
+              String.format(
+                  " [WARNING] No invoicing address filled, required for prestashop, skipping%n"));
+          continue;
+        } else if (localOrder.getMainInvoicingAddress().getPrestaShopId() == null) {
+          logBuffer.write(
+              String.format(" [WARNING] Invoicing address has not been synced yet, skipping%n"));
+          continue;
+        }
+        if (localOrder.getCurrency().getPrestaShopId() == null) {
+          logBuffer.write(String.format(" [WARNING] Currency has not been synced yet, skipping%n"));
+          continue;
+        }
+
+        PrestashopOrder remoteOrder;
+        PrestashopCart remoteCart;
+
+        // We do not fetch the all remote orders as for other entities since
+        // it could lead to memory issues on heavy databases, tradeoff is that
+        // we'd have a lot of HTTP roundtrips.
+        if (localOrder.getPrestaShopId() != null) {
+          logBuffer.write("prestashop id=" + localOrder.getPrestaShopId());
+          remoteOrder = ws.fetch(PrestashopResourceType.ORDERS, localOrder.getPrestaShopId());
+          if (remoteOrder == null) {
+            logBuffer.write(String.format(" [ERROR] Not found remotely%n"));
+            log.error(
+                "Unable to fetch remote order #{} ({}), something's probably very wrong, skipping",
+                localOrder.getPrestaShopId(),
+                localOrder.getSaleOrderSeq());
+            ++errors;
+            continue;
+          }
+          remoteCart = ws.fetch(PrestashopResourceType.CARTS, remoteOrder.getCartId());
+          if (remoteCart == null) {
+            logBuffer.write(
+                String.format(
+                    " [ERROR] Cart for order #%s (%s) not found remotely, your prestashop installation seems to be in a very bad shape%n",
+                    localOrder.getPrestaShopId(), localOrder.getSaleOrderSeq()));
+            log.error(
+                "Unable to fetch cart #{} (for order {}), something's probably very wrong, skipping",
+                remoteOrder.getCartId(),
+                localOrder.getSaleOrderSeq());
+            ++errors;
+            continue;
+          }
         } else {
-          taxIncludedProducts = taxIncludedProducts.add(localRow.getInTaxTotal());
-          taxExcludedProducts = taxExcludedProducts.add(localRow.getExTaxTotal());
+          logBuffer.write("no prestashop id, assuming new order & cart");
+          remoteOrder = new PrestashopOrder();
+          remoteCart = new PrestashopCart();
+
+          remoteOrder.setCustomerId(localOrder.getClientPartner().getPrestaShopId());
+          remoteOrder.setCurrencyId(localOrder.getCurrency().getPrestaShopId());
+          remoteOrder.setDeliveryAddressId(localOrder.getDeliveryAddress().getPrestaShopId());
+          remoteOrder.setInvoiceAddressId(localOrder.getMainInvoicingAddress().getPrestaShopId());
+          remoteOrder.setLanguageId(
+              appConfig.getTextsLanguage().getPrestaShopId() == null
+                  ? 1
+                  : appConfig.getTextsLanguage().getPrestaShopId());
+          remoteOrder.setCarrierId(
+              1); // TODO We should have a way to provide mapping between FreightCarrierModes and
+          // PrestaShop carriers
+          remoteOrder.setAddDate(localOrder.getCreatedOn());
+          if (localOrder.getPaymentCondition() != null) {
+            remoteOrder.setPayment(localOrder.getPaymentCondition().getName());
+          } else {
+            remoteOrder.setPayment(
+                I18n.getBundle(
+                        new Locale(
+                            partnerService.getPartnerLanguageCode(localOrder.getClientPartner())))
+                    .getString("Unknown"));
+          }
+          remoteOrder.setModule(
+              "ps_checkpayment"); // FIXME make this configurable (through translation table?)
+          remoteOrder.setSecureKey(RandomStringUtils.random(32, "0123456789abcdef"));
+
+          remoteCart.setCustomerId(remoteOrder.getCustomerId());
+          remoteCart.setCurrencyId(remoteOrder.getCurrencyId());
+          remoteCart.setDeliveryAddressId(remoteOrder.getDeliveryAddressId());
+          remoteCart.setInvoiceAddressId(remoteOrder.getInvoiceAddressId());
+          remoteCart.setLanguageId(remoteOrder.getLanguageId());
+          remoteCart.setAddDate(remoteOrder.getAddDate());
         }
-        CartRowsAssociationElement remoteRow = new CartRowsAssociationElement();
-        remoteRow.setProductId(localRow.getProduct().getPrestaShopId());
-        remoteRow.setQuantity(localRow.getQty().intValue());
-        remoteRow.setDeliveryAddressId(localOrder.getDeliveryAddress().getPrestaShopId());
-        // TODO Handle variants (productAttribute)
-        remoteCartRows.add(remoteRow);
-        localRows.add(localRow);
-      }
 
-      remoteCart = ws.save(PrestashopResourceType.CARTS, remoteCart);
-      // FIXME if something gets wrong here, we end up with a cart being pushed twice ('cause we
-      // don't
-      // track cart IDs which is pretty easy to fix).
+        // Rebuild cart from scratch (should we?)
 
-      // Recreate order
-      remoteOrder.setCartId(remoteCart.getId());
-      remoteOrder.setTotalPaidTaxIncluded(
-          localOrder
-              .getInTaxTotal()
-              .setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
-      remoteOrder.setTotalPaidTaxExcluded(
-          localOrder
-              .getExTaxTotal()
-              .setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
-      remoteOrder.setTotalPaid(remoteOrder.getTotalPaidTaxIncluded());
-      remoteOrder.setTotalPaidReal(remoteOrder.getTotalPaidTaxIncluded());
-      remoteOrder.setTotalProductsTaxExcluded(
-          taxExcludedProducts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
-      remoteOrder.setTotalProductsTaxIncluded(
-          taxIncludedProducts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
-      remoteOrder.setTotalShipping(
-          taxIncludedShippingCosts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
-      remoteOrder.setTotalShippingTaxIncluded(
-          taxIncludedShippingCosts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
-      remoteOrder.setTotalShippingTaxExcluded(
-          taxExcludedShippingCosts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        try {
+          // Prestashop expects rate to convert from prestashop'scurrency order currency, it will
+          // use it when generating default order details to convert from product's prices (in
+          // prestashop
+          // currency) to order prices (in order currency)
+          remoteOrder.setConversionRate(
+              currencyService.getCurrencyConversionRate(
+                  appConfig.getPrestaShopCurrency(),
+                  localOrder.getCurrency(),
+                  remoteOrder.getAddDate().toLocalDate()));
+          logBuffer.write(
+              String.format(", using conversion rate of %f", remoteOrder.getConversionRate()));
+        } catch (AxelorException e) {
+          logBuffer.write(
+              String.format(
+                  " [WARNING] Unable to get currency conversion rate, leaving it untouched"));
+        }
+        BigDecimal taxIncludedShippingCosts = BigDecimal.ZERO;
+        BigDecimal taxExcludedShippingCosts = BigDecimal.ZERO;
+        BigDecimal taxIncludedProducts = BigDecimal.ZERO;
+        BigDecimal taxExcludedProducts = BigDecimal.ZERO;
 
-      // TODO Check if recreating on every run is an issue, we could also perform a diff on the
-      // order
-      List<OrderRowsAssociationElement> remoteOrderRows =
-          remoteOrder.getAssociations().getOrderRows().getOrderRows();
-      remoteOrderRows.clear();
-      for (SaleOrderLine localRow : localOrder.getSaleOrderLineList()) {
-        if (localRow.getProduct() == null) continue;
-        OrderRowsAssociationElement remoteRow = new OrderRowsAssociationElement();
-        remoteRow.setProductId(
-            localRow
-                .getProduct()
-                .getPrestaShopId()); // Validity has already been checked when creating cart
-        remoteRow.setProductAttributeId(0); // TODO Handle variants
-        remoteRow.setQuantity(localRow.getQty().intValue());
-        remoteOrderRows.add(remoteRow);
-      }
-      if (log.isDebugEnabled()) {
-        log.debug(
-            String.format(
-                "Rows for order %s: %s",
-                localOrder.getSaleOrderSeq(),
-                remoteOrder.getAssociations().getOrderRows().getOrderRows()));
-      }
+        final List<CartRowsAssociationElement> remoteCartRows =
+            remoteCart.getAssociations().getCartRows().getCartRows();
+        remoteCartRows.clear();
 
-      if (localOrder.getPrestaShopId() == null) {
-        // Let prestashop assign a reference before further processing… Of course,
-        // as it would be too simple, save does not fill reference and we have to make
-        // an additional fetch()…
+        // Extract lines containing products and rebuild cart from them
+        final List<SaleOrderLine> localRows = new LinkedList<>();
+        for (SaleOrderLine localRow : localOrder.getSaleOrderLineList()) {
+          if (localRow.getProduct() == null) continue;
+          if (localRow.getProduct().getPrestaShopId() == null) {
+            logBuffer.write(
+                String.format(
+                    " [WARNING] Product %s has not been synced yet, skipping order%n",
+                    localRow.getProduct().getCode()));
+            continue orderLoop;
+          }
+          if (localRow.getProduct().getIsShippingCostsProduct()) {
+            taxIncludedShippingCosts = taxIncludedShippingCosts.add(localRow.getInTaxTotal());
+            taxExcludedShippingCosts = taxExcludedShippingCosts.add(localRow.getExTaxTotal());
+          } else {
+            taxIncludedProducts = taxIncludedProducts.add(localRow.getInTaxTotal());
+            taxExcludedProducts = taxExcludedProducts.add(localRow.getExTaxTotal());
+          }
+          CartRowsAssociationElement remoteRow = new CartRowsAssociationElement();
+          remoteRow.setProductId(localRow.getProduct().getPrestaShopId());
+          remoteRow.setQuantity(localRow.getQty().intValue());
+          remoteRow.setDeliveryAddressId(localOrder.getDeliveryAddress().getPrestaShopId());
+          // TODO Handle variants (productAttribute)
+          remoteCartRows.add(remoteRow);
+          localRows.add(localRow);
+        }
+
+        remoteCart = ws.save(PrestashopResourceType.CARTS, remoteCart);
+        // FIXME if something gets wrong here, we end up with a cart being pushed twice ('cause we
+        // don't
+        // track cart IDs which is pretty easy to fix).
+
+        // Recreate order
+        remoteOrder.setCartId(remoteCart.getId());
+        remoteOrder.setTotalPaidTaxIncluded(
+            localOrder
+                .getInTaxTotal()
+                .setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        remoteOrder.setTotalPaidTaxExcluded(
+            localOrder
+                .getExTaxTotal()
+                .setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        remoteOrder.setTotalPaid(remoteOrder.getTotalPaidTaxIncluded());
+        remoteOrder.setTotalPaidReal(remoteOrder.getTotalPaidTaxIncluded());
+        remoteOrder.setTotalProductsTaxExcluded(
+            taxExcludedProducts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        remoteOrder.setTotalProductsTaxIncluded(
+            taxIncludedProducts.setScale(appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        remoteOrder.setTotalShipping(
+            taxIncludedShippingCosts.setScale(
+                appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        remoteOrder.setTotalShippingTaxIncluded(
+            taxIncludedShippingCosts.setScale(
+                appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+        remoteOrder.setTotalShippingTaxExcluded(
+            taxExcludedShippingCosts.setScale(
+                appConfig.getExportPriceScale(), RoundingMode.HALF_UP));
+
+        // TODO Check if recreating on every run is an issue, we could also perform a diff on the
+        // order
+        List<OrderRowsAssociationElement> remoteOrderRows =
+            remoteOrder.getAssociations().getOrderRows().getOrderRows();
+        remoteOrderRows.clear();
+        for (SaleOrderLine localRow : localOrder.getSaleOrderLineList()) {
+          if (localRow.getProduct() == null) continue;
+          OrderRowsAssociationElement remoteRow = new OrderRowsAssociationElement();
+          remoteRow.setProductId(
+              localRow
+                  .getProduct()
+                  .getPrestaShopId()); // Validity has already been checked when creating cart
+          remoteRow.setProductAttributeId(0); // TODO Handle variants
+          remoteRow.setQuantity(localRow.getQty().intValue());
+          remoteOrderRows.add(remoteRow);
+        }
+        if (log.isDebugEnabled()) {
+          log.debug(
+              String.format(
+                  "Rows for order %s: %s",
+                  localOrder.getSaleOrderSeq(),
+                  remoteOrder.getAssociations().getOrderRows().getOrderRows()));
+        }
+
+        if (localOrder.getPrestaShopId() == null) {
+          // Let prestashop assign a reference before further processing… Of course,
+          // as it would be too simple, save does not fill reference and we have to make
+          // an additional fetch()…
+          remoteOrder = ws.save(PrestashopResourceType.ORDERS, remoteOrder);
+          remoteOrder = ws.fetch(PrestashopResourceType.ORDERS, remoteOrder.getId());
+        }
+
+        Integer remoteInvoiceId =
+            generateInvoicingEntities(appConfig, ws, localOrder, remoteOrder, logBuffer);
+
+        if (localOrder.getPrestaShopId() == null) {
+          List<SaleOrderLine> rows = new LinkedList<>(localRows);
+          // If we just created order, lines have been created from cart
+          for (OrderRowsAssociationElement remoteRow :
+              remoteOrder.getAssociations().getOrderRows().getOrderRows()) {
+            SaleOrderLine localRow = rows.remove(0);
+            localRow.setPrestaShopId(remoteRow.getId());
+          }
+        }
+        localOrder.setPrestaShopId(remoteOrder.getId());
+        localOrder.setPrestaShopVersion(localOrder.getVersion() + 1);
+
+        logBuffer.write(String.format(" [SUCCESS]%n\tExporting lines:%n"));
+
+        exportLines(appConfig, ws, localOrder, localRows, remoteInvoiceId, logBuffer);
+
+        // We've to save *after* the lines are updated since totalPaid fields are totally ignored
+        // and
+        // forced
+        // to product base price * qty otherwhise.
         remoteOrder = ws.save(PrestashopResourceType.ORDERS, remoteOrder);
-        remoteOrder = ws.fetch(PrestashopResourceType.ORDERS, remoteOrder.getId());
+
+        // OK, so we've an order with its lines, but those lines currently have no informations, eg.
+        // price was
+        // taken from product configuration, so we've to improve them
+        ++done;
+      } catch (PrestaShopWebserviceException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop orders export"), AbstractBatch.getCurrentBatchId());
+        logBuffer.write(
+            String.format(
+                " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));
+        log.error(
+            String.format(
+                "Exception while synchronizing order #%d (%s)",
+                localOrder.getId(), localOrder.getFullName()),
+            e);
+        ++errors;
       }
-
-      Integer remoteInvoiceId =
-          generateInvoicingEntities(appConfig, ws, localOrder, remoteOrder, logBuffer);
-
-      if (localOrder.getPrestaShopId() == null) {
-        List<SaleOrderLine> rows = new LinkedList<>(localRows);
-        // If we just created order, lines have been created from cart
-        for (OrderRowsAssociationElement remoteRow :
-            remoteOrder.getAssociations().getOrderRows().getOrderRows()) {
-          SaleOrderLine localRow = rows.remove(0);
-          localRow.setPrestaShopId(remoteRow.getId());
-        }
-      }
-      localOrder.setPrestaShopId(remoteOrder.getId());
-      localOrder.setPrestaShopVersion(localOrder.getVersion() + 1);
-
-      logBuffer.write(String.format(" [SUCCESS]%n\tExporting lines:%n"));
-
-      exportLines(appConfig, ws, localOrder, localRows, remoteInvoiceId, logBuffer);
-
-      // We've to save *after* the lines are updated since totalPaid fields are totally ignored and
-      // forced
-      // to product base price * qty otherwhise.
-      remoteOrder = ws.save(PrestashopResourceType.ORDERS, remoteOrder);
-
-      // OK, so we've an order with its lines, but those lines currently have no informations, eg.
-      // price was
-      // taken from product configuration, so we've to improve them
-      ++done;
     }
 
     logBuffer.write(

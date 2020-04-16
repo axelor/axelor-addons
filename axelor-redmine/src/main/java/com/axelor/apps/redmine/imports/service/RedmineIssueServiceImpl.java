@@ -98,7 +98,9 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
         batchRepo
             .all()
             .filter(
-                "self.id != ?1 and self.redmineBatch.id = ?2", batch.getId(), redmineBatch.getId())
+                "self.id != ?1 and self.redmineBatch.id = ?2 and self.endDate != null",
+                batch.getId(),
+                redmineBatch.getId())
             .order("-updatedOn")
             .fetchOne();
 

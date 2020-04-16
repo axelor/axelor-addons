@@ -20,15 +20,19 @@ package com.axelor.apps.redmine.imports.service.issues;
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
+import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.base.db.repo.UnitRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
+import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.repo.ProjectRepository;
@@ -39,8 +43,11 @@ import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
+import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.meta.MetaStore;
+import com.axelor.meta.schema.views.Selection.Option;
 import com.axelor.team.db.TeamTask;
 import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
@@ -52,10 +59,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -67,6 +77,9 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected TimesheetLineRepository timesheetLineRepo;
   protected TimesheetRepository timesheetRepo;
   protected TimesheetService timesheetService;
+  protected UnitRepository unitRepo;
+  protected TimesheetLineService timesheetLineService;
+  protected AppBaseService appBaseService;
 
   @Inject
   public RedmineImportTimeSpentServiceImpl(
@@ -80,7 +93,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       TimesheetRepository timesheetRepo,
       TimesheetService timesheetService,
       AppRedmineRepository appRedmineRepo,
-      CompanyRepository companyRepo) {
+      CompanyRepository companyRepo,
+      UnitRepository unitRepo,
+      TimesheetLineService timesheetLineService,
+      AppBaseService appBaseService) {
 
     super(
         userRepo,
@@ -94,6 +110,9 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     this.timesheetLineRepo = timesheetLineRepo;
     this.timesheetRepo = timesheetRepo;
     this.timesheetService = timesheetService;
+    this.unitRepo = unitRepo;
+    this.timesheetLineService = timesheetLineService;
+    this.appBaseService = appBaseService;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -101,9 +120,13 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Long teamTaskId = (long) 0;
   protected Long userId = (long) 0;
   protected Long productId = (long) 0;
+  protected String unitHoursName = null;
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
-  protected BigDecimal redmineTimeSpentDurationForCustomerDefault;
+  protected String redmineTimeSpentDurationUnitDefault;
+  protected String redmineTimeSpentProduct;
+  protected String redmineTimeSpentDurationForCustomer;
+  protected String redmineTimeSpentDurationUnit;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -118,11 +141,36 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       this.lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
       this.defaultCompanyId = appRedmineRepo.all().fetchOne().getCompany().getId();
+      this.selectionMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+
+      this.redmineTimeSpentProduct = appRedmine.getRedmineTimeSpentProduct();
+      this.redmineTimeSpentDurationForCustomer =
+          appRedmine.getRedmineTimeSpentDurationForCustomer();
+      this.redmineTimeSpentDurationUnit = appRedmine.getRedmineTimeSpentDurationUnit();
+
       this.redmineTimeSpentProductDefault = appRedmine.getRedmineTimeSpentProductDefault();
-      this.redmineTimeSpentDurationForCustomerDefault =
-          appRedmine.getRedmineTimeSpentDurationForCustomerDefault();
+      this.redmineTimeSpentDurationUnitDefault =
+          appRedmine.getRedmineTimeSpentDurationUnitDefault();
+
+      Unit unitHours = appBaseService.getAppBase().getUnitHours();
+
+      if (unitHours != null) {
+        this.unitHoursName = unitHours.getName();
+      }
+
+      List<Option> selectionList = new ArrayList<Option>();
+      selectionList.addAll(
+          MetaStore.getSelectionList("redmine.timesheetline.activity.type.select"));
+
+      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
+      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
+
+      for (Option option : selectionList) {
+        selectionMap.put(fr.getString(option.getTitle()), option.getValue());
+        selectionMap.put(en.getString(option.getTitle()), option.getValue());
+      }
 
       Comparator<TimeEntry> compareByDate =
           (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
@@ -231,7 +279,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
         // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
 
-        CustomField redmineProduct = redmineTimeEntry.getCustomField("Product");
+        CustomField redmineProduct = redmineTimeEntry.getCustomField(redmineTimeSpentProduct);
         String value =
             redmineProduct != null
                     && redmineProduct.getValue() != null
@@ -385,33 +433,74 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setComments(redmineTimeEntry.getComment());
 
     BigDecimal duration = BigDecimal.valueOf(redmineTimeEntry.getHours());
-    timesheetLine.setDuration(duration);
     timesheetLine.setHoursDuration(duration);
 
     timesheetLine.setDate(
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
 
-    CustomField customField = redmineTimeEntry.getCustomField("Temps passé ajusté client");
+    CustomField customField = redmineTimeEntry.getCustomField(redmineTimeSpentDurationForCustomer);
     String value = customField != null ? customField.getValue() : null;
     timesheetLine.setDurationForCustomer(
-        value != null && !value.equals("")
-            ? new BigDecimal(value)
-            : redmineTimeSpentDurationForCustomerDefault);
+        value != null && !value.equals("") ? new BigDecimal(value) : duration);
+
+    customField = redmineTimeEntry.getCustomField(redmineTimeSpentDurationUnit);
+    value = customField != null ? customField.getValue() : null;
+
+    Unit unit = null;
+
+    if (value != null && !value.isEmpty()) {
+      unit = unitRepo.findByName(value);
+    }
+
+    if (unit != null) {
+      timesheetLine.setDurationUnit(unit);
+    } else {
+      unit = unitRepo.findByName(redmineTimeSpentDurationUnitDefault);
+      timesheetLine.setDurationUnit(unit != null ? unit : unitRepo.findByName(unitHoursName));
+    }
+
+    String activityType = redmineTimeEntry.getActivityName();
+    timesheetLine.setActivityTypeSelect(
+        activityType != null && !activityType.isEmpty() ? selectionMap.get(activityType) : null);
 
     Timesheet timesheet =
-        timesheetRepo.all().filter("self.user = ?1", user).order("-id").fetchOne();
+        timesheetRepo
+            .all()
+            .filter(
+                "self.user = ?1 AND self.statusSelect != ?2",
+                user,
+                TimesheetRepository.STATUS_CANCELED)
+            .order("-id")
+            .fetchOne();
 
     LocalDate redmineSpentOn =
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
     if (timesheet == null) {
       timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
-      timesheet.setCompany(companyRepo.find(defaultCompanyId));
-      timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
-    } else if (timesheet.getFromDate().isAfter(redmineSpentOn)) {
-      timesheet.setFromDate(redmineSpentOn);
+      timesheet.setCompany(
+          companyRepo.find(
+              user.getActiveCompany() != null
+                  ? user.getActiveCompany().getId()
+                  : defaultCompanyId));
+      timesheet.setToDate(redmineSpentOn);
+    } else {
+      if (timesheet.getFromDate() == null || timesheet.getFromDate().isAfter(redmineSpentOn)) {
+        timesheet.setFromDate(redmineSpentOn);
+      }
+      if (timesheet.getToDate() == null || timesheet.getToDate().isBefore(redmineSpentOn)) {
+        timesheet.setToDate(redmineSpentOn);
+      }
     }
 
+    timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
+
+    try {
+      timesheetLine.setDuration(
+          timesheetLineService.computeHoursDuration(timesheet, duration, false));
+    } catch (AxelorException e) {
+      TraceBackService.trace(e, "", batch.getId());
+    }
     timesheet.setPeriodTotal(timesheet.getPeriodTotal().add(timesheetLine.getHoursDuration()));
     timesheetRepo.save(timesheet);
     timesheetLine.setTimesheet(timesheet);

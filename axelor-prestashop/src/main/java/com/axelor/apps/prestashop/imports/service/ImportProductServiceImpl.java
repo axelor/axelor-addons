@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
+import com.axelor.apps.account.db.AccountManagement;
+import com.axelor.apps.account.db.repo.TaxRepository;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Product;
@@ -35,7 +37,10 @@ import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.exports.service.ExportProductServiceImpl;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.auth.AuthUtils;
 import com.axelor.exception.AxelorException;
+import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaFiles;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
@@ -52,6 +57,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -62,6 +68,7 @@ public class ImportProductServiceImpl implements ImportProductService {
   private Logger log = LoggerFactory.getLogger(getClass());
 
   private MetaFiles metaFiles;
+  private TaxRepository taxRepo;
   private ProductCategoryRepository productCategoryRepo;
   private ProductRepository productRepo;
   private CurrencyService currencyService;
@@ -70,11 +77,13 @@ public class ImportProductServiceImpl implements ImportProductService {
   @Inject
   public ImportProductServiceImpl(
       MetaFiles metaFiles,
+      TaxRepository taxRepo,
       ProductCategoryRepository productCategoryRepo,
       ProductRepository productRepo,
       CurrencyService currencyService,
       UnitConversionService unitConversionService) {
     this.metaFiles = metaFiles;
+    this.taxRepo = taxRepo;
     this.productCategoryRepo = productCategoryRepo;
     this.productRepo = productRepo;
     this.currencyService = currencyService;
@@ -166,7 +175,16 @@ public class ImportProductServiceImpl implements ImportProductService {
             localProduct = new Product();
             localProduct.setPrestaShopId(remoteProduct.getId());
             localProduct.setSellable(Boolean.TRUE);
+            localProduct.setProductSynchronizedInPrestashop(Boolean.TRUE);
           }
+        }
+
+        if (localProduct.getPrestaShopUpdateDateTime() != null
+            && remoteProduct.getUpdateDate() != null
+            && localProduct.getPrestaShopUpdateDateTime().compareTo(remoteProduct.getUpdateDate())
+                >= 0) {
+          logWriter.write(String.format("already up-to-date, skipping [WARNING]%n"));
+          continue;
         }
 
         if (localProduct.getId() == null
@@ -280,6 +298,22 @@ public class ImportProductServiceImpl implements ImportProductService {
               localProduct.setPicture(null);
             }
           }
+
+          AccountManagement accountManagement;
+          if (localProduct.getId() != null
+              && !CollectionUtils.isEmpty(localProduct.getAccountManagementList())) {
+            accountManagement = localProduct.getAccountManagementList().get(0);
+          } else {
+            accountManagement = new AccountManagement();
+          }
+          accountManagement.setCompany(AuthUtils.getUser().getActiveCompany());
+          accountManagement.setTypeSelect(1);
+          accountManagement.setSaleAccount(appConfig.getDefaultSaleAccountForProduct());
+          accountManagement.setSaleTax(
+              taxRepo.findByPrestaShopId(remoteProduct.getTaxRulesGroupId()));
+          localProduct.addAccountManagementListItem(accountManagement);
+
+          localProduct.setPrestaShopUpdateDateTime(remoteProduct.getUpdateDate());
           productRepo.save(localProduct);
         } else {
           logWriter.write(
@@ -287,7 +321,9 @@ public class ImportProductServiceImpl implements ImportProductService {
         }
         logWriter.write(String.format(" [SUCCESS]%n"));
         ++done;
-      } catch (AxelorException e) {
+      } catch (PrestaShopWebserviceException | AxelorException e) {
+        TraceBackService.trace(
+            e, I18n.get("Prestashop products import"), AbstractBatch.getCurrentBatchId());
         logWriter.write(
             String.format(
                 " [ERROR] %s (full trace is in application logs)%n", e.getLocalizedMessage()));

@@ -120,12 +120,25 @@ public class ImportAddressServiceImpl implements ImportAddressService {
           partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
           partnerAddress.setIsInvoicingAddr(Boolean.TRUE);
           partnerAddress.setIsDefaultAddr(Boolean.TRUE);
-          customer.addPartnerAddressListItem(partnerAddress);
+        }
+        customer.addPartnerAddressListItem(partnerAddress);
+
+        String remoteAddressPhone = remoteAddress.getPhone();
+
+        if (customer.getFixedPhone() == null) {
+          customer.setFixedPhone(remoteAddressPhone);
+        } else if (remoteAddressPhone != null) {
+          String description = customer.getDescription();
+
+          if (description == null) {
+            customer.setDescription(remoteAddressPhone);
+          } else if (!description.contains(remoteAddressPhone)) {
+            customer.setDescription(description.concat(", " + remoteAddressPhone));
+          }
         }
       }
 
-      if (localAddress == null
-          || IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localAddress.getImportOrigin())) {
+      if (IPrestaShopBatch.IMPORT_ORIGIN_PRESTASHOP.equals(localAddress.getImportOrigin())) {
         localAddress.setAddressL4(remoteAddress.getAddress1());
         localAddress.setAddressL5(remoteAddress.getAddress2());
         City city = cityRepo.findByName(remoteAddress.getCity());
