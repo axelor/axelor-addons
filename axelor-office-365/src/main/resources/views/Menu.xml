@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+	<menuitem name="office365-root" title="Office365"
+		if="__config__.app.isApp('office365')" icon="fa-windows"
+		icon-background="violet" />
+
+	<menuitem name="office365-contact" parent="office365-root"
+		title="Office365 contacts" action="office365.contact" order="1"/>
+
+	<action-view name="office365.contact"
+		title="Office365 contacts" model="com.axelor.apps.base.db.Partner">
+		<view type="grid" name="partner-grid" />
+		<view type="form" name="partner-form" />
+		<domain>self.office365Id IS NOT NULL</domain>
+	</action-view>
+
+	<menuitem name="office365-calendar" parent="office365-root"
+		title="Office365 calendars" action="office365.calendar" order="2"/>
+
+	<action-view name="office365.calendar"
+		title="Office365 calendars" model="com.axelor.apps.base.db.ICalendar">
+		<view type="grid" name="calendar-grid"/>
+		<view type="form" name="calendar-form"/>
+		<domain>self.office365Id IS NOT NULL</domain>
+	</action-view>
+
+	<menuitem name="office365-calendar-event" parent="office365-root"
+		title="Office365 calendar events" action="office365.calendar.event" order="3"/>
+
+	<action-view name="office365.calendar.event"
+		title="Office365 calendar events" model="com.axelor.apps.crm.db.Event">
+		<view type="calendar" name="calendar-event-all"/>
+		<view type="grid" name="calendar-event-grid"/>
+		<view type="form" name="event-form"/>
+		<domain>self.office365Id IS NOT NULL</domain>
+	</action-view>
+
+</object-views>

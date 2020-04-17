@@ -1,0 +1,17 @@
+apply plugin: "com.axelor.app-module"
+
+apply {
+  version = "5.3.0-SNAPSHOT"
+}
+
+axelor {
+  title "Axelor Office 365"
+  description "Axelor Office 365 connector Module"
+}
+
+dependencies {
+  compile project(":modules:axelor-crm")
+
+  compile 'com.github.scribejava:scribejava-apis:6.9.0'
+  compile 'com.microsoft.azure:adal4j:1.6.4'
+}

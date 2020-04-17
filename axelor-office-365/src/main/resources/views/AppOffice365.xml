@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+	<form name="app-office365-config-form" title="App office365" model="com.axelor.apps.base.db.AppOffice365" 
+		canDelete="false" canNew="false" width="large" onSave="action-office365-method-generateUrl">
+		<panel name="mainPanel">
+			<field name="clientId" required="true"/>
+			<field name="redirectUri" required="true"/>
+			<field name="clientSecret" required="true" widget="password"/>
+			<field name="authenticationUrl" showTitle="false" readonly="true" widget="html" hidden="true"/>
+			<field name="refreshToken" hidden="true"/>
+		</panel>
+		<panel name="btnPanel" sidebar="true" showIf="refreshToken">
+			<button name="syncContactBtn" title="Sync contact" onClick="action-office365-method-sync-contact" />
+			<button name="syncCalendarBtn" title="Sync calendar" onClick="action-office365-method-sync-calendar" />
+		</panel>
+	</form>
+
+	<action-method name="action-office365-method-generateUrl">
+		<call class="com.axelor.apps.office365.web.Office365Controller" method="generateUrl" />
+	</action-method>
+
+	<action-method name="action-office365-method-sync-contact">
+		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncContact" />
+	</action-method>
+
+	<action-method name="action-office365-method-sync-calendar">
+		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncCalendar" />
+	</action-method>
+
+</object-views>
