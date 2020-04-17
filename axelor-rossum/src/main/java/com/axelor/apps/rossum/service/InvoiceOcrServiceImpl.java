@@ -29,6 +29,7 @@ import com.axelor.apps.rossum.db.InvoiceField;
 import com.axelor.apps.rossum.db.InvoiceOcr;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
+import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.db.JpaRepository;
 import com.axelor.db.Model;
@@ -59,7 +60,7 @@ import wslite.json.JSONObject;
 
 public class InvoiceOcrServiceImpl implements InvoiceOcrService {
 
-  protected RossumApiService rossumApiService;
+  protected AppRossumService rossumApiService;
   protected InvoiceOcrRepository invoiceOcrRepository;
   protected InvoiceRepository invoiceRepository;
   protected InvoiceLineRepository invoiceLineRepository;
@@ -71,7 +72,7 @@ public class InvoiceOcrServiceImpl implements InvoiceOcrService {
 
   @Inject
   public InvoiceOcrServiceImpl(
-      RossumApiService rossumApiService,
+      AppRossumService rossumApiService,
       InvoiceOcrRepository invoiceOcrRepository,
       InvoiceRepository invoiceRepository,
       InvoiceLineRepository invoiceLineRepository,
@@ -97,7 +98,8 @@ public class InvoiceOcrServiceImpl implements InvoiceOcrService {
 
     if (Strings.isNullOrEmpty(invoiceOcr.getRawData())) {
       result =
-          rossumApiService.extractInvoiceData(invoiceOcr.getInvoiceFile(), invoiceOcr.getTimeout());
+          rossumApiService.extractInvoiceDataJson(
+              invoiceOcr.getInvoiceFile(), invoiceOcr.getTimeout(), null, null);
       result = rossumApiService.generateUniqueKeyFromJsonData(result);
       invoiceOcr.setRawData(result.toString());
       invoiceOcrRepository.save(invoiceOcr);

@@ -86,6 +86,6 @@
 		title="Production processes" action="manufacturing.root.prod.process"/>
 
 	<menuitem name="maintenance-root-config-bill-of-material" parent="maintenance-root-config" order="20"
-		title="Bills of materials" action="manufacturing.root.bill.of.material"/>
+		title="Bills of materials" action="manufacturing.root.general.bill.of.material"/>
 
 </object-views>

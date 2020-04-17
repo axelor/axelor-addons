@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+  
+   <module package="com.axelor.apps.rossum.db" name="rossum"/>
+  
+   <entity name="Schema">
+      <integer name="schemaId" title="Schema id" readonly="true" initParam="true"/>
+      <string name="schemaName" title="Schema name" initParam="true" namecolumn="true"/>
+      <string name="schemaUrl" title="Schema url" readonly="true" initParam="true"/>
+      <string name="schemaResult" title="Schema result" large="true" json="true"/>
+
+      <one-to-many name="queueList" ref="com.axelor.apps.rossum.db.Queue" title="Queues" mappedBy="schemaUrl" readonly="true"/>
+      
+      <finder-method name="findByUrl" using="schemaUrl"/>
+   </entity>
+</domain-models>
