@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.rossum.service;
 
+import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.exception.AxelorException;
 import java.io.IOException;
@@ -47,4 +48,6 @@ public interface InvoiceOcrTemplateService {
    */
   public void filterInvoiceData(JSONObject invoiceResult, InvoiceOcrTemplate invoiceOcrTemplate)
       throws IOException, JSONException;
+
+  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate);
 }

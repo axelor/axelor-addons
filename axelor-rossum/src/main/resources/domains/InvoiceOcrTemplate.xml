@@ -1,15 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?><domain-models xmlns="http://axelor.com/xml/ns/domain-models"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
 
-  <module package="com.axelor.apps.rossum.db" name="rossum"/>
+   <module package="com.axelor.apps.rossum.db" name="rossum"/>
   
-  <entity name="InvoiceOcrTemplate">
-    <many-to-one name="templateFile" ref="com.axelor.meta.db.MetaFile" title="Template" help="Please upload file with max. 16 pages"/>
-    <integer name="timeout" title="Timeout (Sec.)" default="60" help="Please enter seconds in multiple of 5"/>
-    <string name="name" title="Template Name"/>
-    <string name="rawData" title="Raw Data" large="true"/>
-    <one-to-many name="invoiceFieldList" ref="com.axelor.apps.rossum.db.InvoiceField" title="Invoice fields" mappedBy="invoiceOcrTemplate"/>
-  </entity>  
+   <entity name="InvoiceOcrTemplate">
+		<many-to-one name="templateFile" ref="com.axelor.meta.db.MetaFile" title="Template" help="Please upload file with max. 32 pages"/>
+		<integer name="timeout" title="Timeout (Sec.)" default="60" help="Please enter seconds in multiple of 5"/>
+		<string name="name" title="Template Name"/>
+		<string name="rawData" title="Raw Data" large="true"/>
+      <string name="exportTypeSelect" title="Export type" selection="rossum.export.type.select" default="csv"/>
+      <integer name="invoiceOperationTypeSelect" title="Invoice document Type" selection="iinvoice.operation.type.select"/>
+      <integer name="invoiceOperationSubTypeSelect" title="Invoice document Subtype" default="1" selection="iinvoice.operation.sub.type.select"/>
+
+      
+      <many-to-one name="queue" ref="com.axelor.apps.rossum.db.Queue" title="Queue"/>
+      <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV or XML file"/>
+      <one-to-many name="invoiceFieldList" ref="com.axelor.apps.rossum.db.InvoiceField" title="Invoice fields" mappedBy="invoiceOcrTemplate"/>
+   
+      <extra-code>
+         <![CDATA[
+         //Export type select
+         
+         public static final String EXPORT_TYPE_SELECT_JSON = "json";
+         public static final String EXPORT_TYPE_SELECT_CSV = "csv";
+         public static final String EXPORT_TYPE_SELECT_XML = "xml";
+         
+         ]]>
+      </extra-code>
+   
+   </entity>  
   
 </domain-models>

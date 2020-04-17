@@ -19,8 +19,8 @@ package com.axelor.apps.rossum.exception;
 
 public interface IExceptionMessage {
 
-  public static final String MISSING_URL_OR_API_KEY = /*$$(*/
-      "Please Fill Rossum Url and API key first" /*)*/;
+  public static final String INVALID_USERNAME_OR_PASSWORD = /*$$(*/
+      "Invalid Rossum Username or password. Please enter correct Rossum username and password." /*)*/;
   public static final String PDF_FILE_ERROR = /*$$(*/ "Please Upload PDF file!" /*)*/;
   public static final String INVOICE_SUBMISSION_ERROR = /*$$(*/
       "Could not submit invoice: %s" /*)*/;

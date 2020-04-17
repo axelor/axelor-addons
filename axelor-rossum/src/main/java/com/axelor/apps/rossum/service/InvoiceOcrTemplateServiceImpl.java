@@ -17,21 +17,40 @@
  */
 package com.axelor.apps.rossum.service;
 
+import com.axelor.apps.account.db.Invoice;
+import com.axelor.apps.account.db.InvoiceLine;
+import com.axelor.apps.account.db.repo.InvoiceRepository;
+import com.axelor.apps.base.db.Company;
+import com.axelor.apps.base.db.Currency;
+import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
+import com.axelor.apps.base.db.repo.CompanyRepository;
+import com.axelor.apps.base.db.repo.CurrencyRepository;
+import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.base.service.readers.DataReaderFactory;
+import com.axelor.apps.base.service.readers.DataReaderService;
 import com.axelor.apps.rossum.db.InvoiceField;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.apps.rossum.db.repo.InvoiceFieldRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
+import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.translation.ITranslation;
+import com.axelor.auth.AuthUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
+import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaField;
-import com.beust.jcommander.Strings;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import wslite.json.JSONArray;
 import wslite.json.JSONException;
@@ -39,27 +58,30 @@ import wslite.json.JSONObject;
 
 public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService {
 
-  protected RossumApiService rossumApiService;
+  protected AppRossumService rossumApiService;
   protected InvoiceOcrTemplateRepository invoiceOcrTemplateRepository;
   protected InvoiceFieldRepository invoiceFieldRepository;
   protected AppRossumRepository appRossumRepository;
   protected MetaFiles metaFiles;
   protected MetaField metaField;
+  protected DataReaderFactory dataReaderFactory;
 
   @Inject
   public InvoiceOcrTemplateServiceImpl(
-      RossumApiService rossumApiService,
+      AppRossumService rossumApiService,
       InvoiceOcrTemplateRepository invoiceOcrTemplateRepository,
       InvoiceFieldRepository invoiceFieldRepository,
       AppRossumRepository appRossumRepository,
       MetaFiles metaFiles,
-      MetaField metaField) {
+      MetaField metaField,
+      DataReaderFactory dataReaderFactory) {
     this.rossumApiService = rossumApiService;
     this.invoiceOcrTemplateRepository = invoiceOcrTemplateRepository;
     this.invoiceFieldRepository = invoiceFieldRepository;
     this.appRossumRepository = appRossumRepository;
     this.metaFiles = metaFiles;
     this.metaField = metaField;
+    this.dataReaderFactory = dataReaderFactory;
   }
 
   @Override
@@ -67,24 +89,45 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   public void createTemplate(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, InterruptedException, JSONException {
 
-    JSONObject resultData;
+    String exportTypeSelect = invoiceOcrTemplate.getExportTypeSelect();
 
-    if (Strings.isStringEmpty(invoiceOcrTemplate.getRawData())) {
-      resultData =
-          rossumApiService.extractInvoiceData(
-              invoiceOcrTemplate.getTemplateFile(), invoiceOcrTemplate.getTimeout());
-      resultData = rossumApiService.generateUniqueKeyFromJsonData(resultData);
-      invoiceOcrTemplate.setRawData(resultData.toString());
-      invoiceOcrTemplate.setName(invoiceOcrTemplate.getTemplateFile().getFileName());
-      metaFiles.attach(
-          invoiceOcrTemplate.getTemplateFile(),
-          invoiceOcrTemplate.getTemplateFile().getFileName(),
-          invoiceOcrTemplate);
-      invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
-    } else {
-      resultData = new JSONObject(invoiceOcrTemplate.getRawData());
+    if (!Strings.isNullOrEmpty(exportTypeSelect)) {
+      if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_JSON)) {
+        JSONObject resultData;
+        if (Strings.isNullOrEmpty(invoiceOcrTemplate.getRawData())) {
+          resultData =
+              rossumApiService.extractInvoiceDataJson(
+                  invoiceOcrTemplate.getTemplateFile(),
+                  invoiceOcrTemplate.getTimeout(),
+                  invoiceOcrTemplate.getQueue(),
+                  exportTypeSelect);
+          resultData = rossumApiService.generateUniqueKeyFromJsonData(resultData);
+          invoiceOcrTemplate.setRawData(resultData.toString());
+          invoiceOcrTemplate.setName(invoiceOcrTemplate.getTemplateFile().getFileName());
+          metaFiles.attach(
+              invoiceOcrTemplate.getTemplateFile(),
+              invoiceOcrTemplate.getTemplateFile().getFileName(),
+              invoiceOcrTemplate);
+          invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
+        } else {
+          resultData = new JSONObject(invoiceOcrTemplate.getRawData());
+        }
+        filterInvoiceData(resultData, invoiceOcrTemplate);
+      } else if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)
+          || exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML)) {
+        File exportedFile =
+            rossumApiService.extractInvoiceDataMetaFile(
+                invoiceOcrTemplate.getTemplateFile(),
+                invoiceOcrTemplate.getTimeout(),
+                invoiceOcrTemplate.getQueue(),
+                exportTypeSelect);
+
+        if (exportedFile != null) {
+          invoiceOcrTemplate.setExportedFile(metaFiles.upload(exportedFile));
+          invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
+        }
+      }
     }
-    filterInvoiceData(resultData, invoiceOcrTemplate);
   }
 
   @Override
@@ -172,5 +215,234 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     invField.setInvoiceOcrTemplate(invoiceOcrTemplate);
     invField.setParentInvoiceField(invoiceField);
     return invoiceFieldRepository.save(invField);
+  }
+
+  @Override
+  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate) {
+
+    Invoice invoice = null;
+
+    if (invoiceOcrTemplate.getExportedFile() != null
+        && invoiceOcrTemplate.getExportedFile().getFileType().equals("text/csv")) {
+      DataReaderService readerService =
+          dataReaderFactory.getDataReader(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV);
+
+      readerService.initialize(invoiceOcrTemplate.getExportedFile(), ",");
+      invoice =
+          this.process(
+              readerService,
+              invoiceOcrTemplate.getInvoiceOperationTypeSelect(),
+              invoiceOcrTemplate.getInvoiceOperationSubTypeSelect());
+    }
+    return invoice;
+  }
+
+  /**
+   * This following are the header of csv file which is generated from Rossum. And it's sequence is
+   * given to fetch data from it. Folllowing are of Invoice and later from 22 details are of Invoice
+   * lines.
+   *
+   * <p>Invoice number = 0,
+   *
+   * <p>Order number = 1,
+   *
+   * <p>Issue date = 2,
+   *
+   * <p>Due date = 3,
+   *
+   * <p>Tax point date = 4,
+   *
+   * <p>Account number = 5,
+   *
+   * <p>Bank code = 6,
+   *
+   * <p>IBAN = 7,
+   *
+   * <p>BIC/SWIFT = 8,
+   *
+   * <p>Payment reference = 9,
+   *
+   * <p>Specific Symbol = 10,
+   *
+   * <p>Total without tax = 11,
+   *
+   * <p>Total tax = 12,
+   *
+   * <p>Amount due = 13,
+   *
+   * <p>Currency = 14,
+   *
+   * <p>Vendor company ID = 15,
+   *
+   * <p>Vendor VAT number = 16,
+   *
+   * <p>Customer company ID = 17,
+   *
+   * <p>Customer VAT number = 18,
+   *
+   * <p>Notes = 19,
+   *
+   * <p>VAT Rate = 20,
+   *
+   * <p>VAT Base = 21,
+   *
+   * <p>VAT Amount = 22.
+   *
+   * <p>From now Invoice Lines details start.
+   *
+   * <p>Description = 23,
+   *
+   * <p>Quantity = 24,
+   *
+   * <p>Unit price without VAT = 25,
+   *
+   * <p>VAT rate = 26,
+   *
+   * <p>Total amount = 27.
+   *
+   * <p>All of the above sequence might get altered due to its updates.. but title will be fixed.
+   */
+  @Transactional
+  protected Invoice process(
+      DataReaderService readerService,
+      Integer invoiceOptTypeSelect,
+      Integer invoiceOptSubTypeSelect) {
+
+    String[] sheets = readerService.getSheetNames();
+
+    Invoice invoice = null;
+    for (String sheet : sheets) {
+      int totalLines = readerService.getTotalLines(sheet);
+      if (totalLines == 0) {
+        continue;
+      }
+      invoice = new Invoice();
+      invoice.setStatusSelect(InvoiceRepository.STATUS_DRAFT);
+      invoice.setOperationTypeSelect(invoiceOptTypeSelect);
+      invoice.setOperationSubTypeSelect(invoiceOptSubTypeSelect);
+
+      String[] headerRow = readerService.read(sheet, 0, 0);
+      Map<String, Integer> headerTitleMap = new HashMap<>();
+
+      for (Integer i = 0; i < headerRow.length; i++) {
+        String key = headerRow[i].toLowerCase();
+        if (headerTitleMap.containsKey(key) && key.equals("total amount")) {
+          key = "line total amount";
+        }
+        headerTitleMap.put(key, i);
+      }
+
+      for (Integer i = 1; i < totalLines; i++) {
+        String[] dataRow = readerService.read(sheet, i, headerRow.length);
+
+        if (i == 1) {
+          invoice.setInvoiceId(dataRow[headerTitleMap.get("invoice number")]);
+          invoice.setExternalReference(dataRow[headerTitleMap.get("order number")]);
+          invoice.setInvoiceDate(LocalDate.parse(dataRow[headerTitleMap.get("issue date")]));
+          invoice.setDueDate(LocalDate.parse(dataRow[headerTitleMap.get("due date")]));
+          invoice.setExTaxTotal(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total without tax")])
+                  ? new BigDecimal(dataRow[headerTitleMap.get("total without tax")])
+                  : BigDecimal.ZERO);
+          invoice.setTaxTotal(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total tax")])
+                  ? new BigDecimal(dataRow[headerTitleMap.get("total tax")])
+                  : BigDecimal.ZERO);
+          invoice.setInTaxTotal(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total amount")])
+                  ? new BigDecimal(dataRow[headerTitleMap.get("total amount")])
+                  : BigDecimal.ZERO);
+
+          Currency currency =
+              Beans.get(CurrencyRepository.class)
+                  .findByCode(dataRow[headerTitleMap.get("currency")].toUpperCase());
+          invoice.setCurrency(
+              currency != null ? currency : Beans.get(CurrencyRepository.class).findByCode("EUR"));
+
+          PartnerRepository partnerRepository = Beans.get(PartnerRepository.class);
+          Partner partner =
+              partnerRepository
+                  .all()
+                  .filter(
+                      "self.name = ?1 OR self.registrationCode = ?1",
+                      dataRow[headerTitleMap.get("vendor company id")])
+                  .fetchOne();
+          if (partner == null) {
+            partner =
+                partnerRepository
+                    .all()
+                    .filter("self.taxNbr =?1", dataRow[headerTitleMap.get("vendor vat number")])
+                    .fetchOne();
+          }
+
+          if (partner == null) {
+            partner = partnerRepository.all().fetchOne();
+          }
+
+          invoice.setPartner(partner);
+
+          CompanyRepository companyRepository = Beans.get(CompanyRepository.class);
+          Company company =
+              companyRepository
+                  .all()
+                  .filter("self.name = ?1", dataRow[headerTitleMap.get("customer company id")])
+                  .fetchOne();
+
+          if (company == null) {
+            company =
+                companyRepository
+                    .all()
+                    .filter(
+                        "self.partner.taxNbr = ?1",
+                        dataRow[headerTitleMap.get("customer vat number")])
+                    .fetchOne();
+          }
+
+          if (company == null) {
+            company =
+                AuthUtils.getUser().getActiveCompany() != null
+                    ? AuthUtils.getUser().getActiveCompany()
+                    : companyRepository.all().fetchOne();
+          }
+
+          invoice.setCompany(company);
+
+          invoice.setNote(dataRow[headerTitleMap.get("notes")]);
+        }
+
+        if (!Strings.isNullOrEmpty(dataRow[headerTitleMap.get("description")])) {
+          InvoiceLine invoiceLine = new InvoiceLine();
+
+          invoiceLine.setProductName(dataRow[headerTitleMap.get("description")]);
+          invoiceLine.setQty(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("quantity")])
+                  ? new BigDecimal(dataRow[headerTitleMap.get("quantity")])
+                  : BigDecimal.ZERO);
+          invoiceLine.setPrice(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("unit price without vat")])
+                  ? new BigDecimal(dataRow[headerTitleMap.get("unit price without vat")])
+                  : BigDecimal.ZERO);
+          invoiceLine.setInTaxTotal(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("line total amount")])
+                  ? new BigDecimal(dataRow[headerTitleMap.get("line total amount")])
+                  : BigDecimal.ZERO);
+          invoice.addInvoiceLineListItem(invoiceLine);
+        }
+      }
+    }
+
+    InvoiceRepository invoiceRepository = Beans.get(InvoiceRepository.class);
+    if (invoiceRepository
+            .all()
+            .filter(
+                "self.invoiceId = ?1 AND self.company =?2",
+                invoice.getInvoiceId(),
+                invoice.getCompany())
+            .fetchOne()
+        != null) {
+      invoice.setInvoiceId(null);
+    }
+
+    return invoice != null ? invoiceRepository.save(invoice) : invoice;
   }
 }

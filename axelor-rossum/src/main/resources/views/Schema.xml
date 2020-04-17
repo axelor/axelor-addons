@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+   <grid model="com.axelor.apps.rossum.db.Schema" title="Schemas" name="schema-grid">
+      <field name="schemaName"/>
+      <field name="schemaUrl"/>
+      <field name="schemaId"/>
+   </grid>
+
+   <form model="com.axelor.apps.rossum.db.Schema" title="Schema" name="schema-form" width="large">
+      <panel name="mainPanel">
+			<field name="schemaName" onChange="action-rossum-schema-method-update-json-data"/>
+			<field name="schemaUrl"/>
+         <field name="schemaId"/>
+
+         <panel-related field="queueList" grid-view="queue-grid" form-view="queue-form" colSpan="12"/>
+      </panel>
+      <panel name="jsonDataPanel" title="Json Data">
+         <field name="schemaResult" widget="json-raw" colSpan="12" readonly="true"/>
+      </panel>
+      
+      <panel name="buttonPanel" sidebar="true">
+         <button name="updateSchemaBtn" title="Update Schema" onClick="save,action-rossum-schema-method-update-schema"/>
+      </panel>
+   </form>
+
+   <action-method name="action-rossum-schema-method-update-json-data">
+      <call class="com.axelor.apps.rossum.web.SchemaController" method="updateJsonData"/>
+   </action-method>
+
+   <action-method name="action-rossum-schema-method-update-schema">
+      <call class="com.axelor.apps.rossum.web.SchemaController" method="updateSchema"/>
+   </action-method>
+</object-views>
