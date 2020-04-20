@@ -35,8 +35,13 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.calendar.Calendar;
+import com.google.api.services.calendar.CalendarScopes;
 import com.google.api.services.drive.Drive;
+import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.GmailScopes;
+import com.google.api.services.tasks.Tasks;
+import com.google.api.services.tasks.TasksScopes;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
@@ -55,9 +60,10 @@ public class GSuiteService {
   private static final String[] SCOPES =
       new String[] {
         "https://www.google.com/m8/feeds/",
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/calendar",
-        "https://mail.google.com/"
+        DriveScopes.DRIVE,
+        CalendarScopes.CALENDAR,
+        GmailScopes.MAIL_GOOGLE_COM,
+        TasksScopes.TASKS_READONLY
       };
 
   private HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
@@ -178,6 +184,13 @@ public class GSuiteService {
   public Gmail getGmail(Long accountId) throws IOException, AxelorException {
     Credential credential = getCredential(accountId);
     return new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+        .setApplicationName(APP_NAME)
+        .build();
+  }
+
+  public Tasks getTask(Long accountId) throws IOException, AxelorException {
+    Credential credential = getCredential(accountId);
+    return new Tasks.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
         .setApplicationName(APP_NAME)
         .build();
   }

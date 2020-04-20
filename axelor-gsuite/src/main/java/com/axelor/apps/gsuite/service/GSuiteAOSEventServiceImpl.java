@@ -17,10 +17,8 @@
  */
 package com.axelor.apps.gsuite.service;
 
-import com.axelor.apps.base.db.ICalendarEvent;
 import com.axelor.apps.base.db.ICalendarUser;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
-import com.axelor.apps.base.db.repo.ICalendarUserRepository;
 import com.axelor.apps.base.ical.ICalendarException;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
@@ -28,20 +26,14 @@ import com.axelor.apps.gsuite.db.EventGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
-import com.axelor.apps.gsuite.service.app.AppGSuiteService;
 import com.axelor.apps.gsuite.utils.DateUtils;
-import com.axelor.apps.gsuite.utils.StringUtils;
-import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
-import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.inject.Beans;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events.List;
-import com.google.api.services.calendar.model.Event.Organizer;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.inject.Inject;
@@ -50,7 +42,6 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.text.ParseException;
 import java.time.LocalDateTime;
-import java.util.Set;
 import javax.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,22 +50,17 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-  private Calendar calendar;
-  private Set<String> relatedEmailSet;
-
   @Inject protected EventRepository crmEventRepo;
 
-  @Inject private GSuiteService gSuiteService;
+  @Inject protected GSuiteService gSuiteService;
 
-  @Inject private GoogleAccountRepository googleAccountRepo;
+  @Inject protected GoogleAccountRepository googleAccountRepo;
 
-  @Inject private EventGoogleAccountRepository eventGoogleAccountRepo;
+  @Inject protected EventGoogleAccountRepository eventGoogleAccountRepo;
 
-  @Inject private EmailAddressRepository emailRepo;
+  @Inject protected EmailAddressRepository emailRepo;
 
-  @Inject private ICalendarUserRepository iCalUserRepo;
-
-  @Inject private AppGSuiteService appGSuiteService;
+  @Inject protected ICalUserService iCalUserService;
 
   @Override
   @Transactional
@@ -94,8 +80,7 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
     googleAccount = googleAccountRepo.find(googleAccount.getId());
     try {
       Credential credential = gSuiteService.getCredential(googleAccount.getId());
-      calendar = gSuiteService.getCalendar(credential);
-      relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet();
+      Calendar calendar = gSuiteService.getCalendar(credential);
       syncEvents(googleAccount, calendar, startDateT, endDateT);
 
     } catch (IOException e) {
@@ -141,7 +126,8 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
           crmEvent.setSubject(event.getSummary());
           crmEvent.setDescription(event.getDescription());
           crmEvent.setLocation(event.getLocation());
-          crmEvent.setOrganizer(findOrCreateICalUser(event.getOrganizer(), crmEvent));
+          crmEvent.setOrganizer(
+              iCalUserService.findOrCreateICalUser(event.getOrganizer(), crmEvent));
           crmEvent.setVisibilitySelect(getEventVisibilitySelect(event.getVisibility()));
           crmEvent.setGoogleAccount(googleAccount);
           setEventDates(event, crmEvent, timeZone);
@@ -199,29 +185,15 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
     if (ObjectUtils.notEmpty(gsuiteEvent.getAttendees())) {
       for (EventAttendee eventAttendee : gsuiteEvent.getAttendees()) {
-        ICalendarUser user = findOrCreateICalUser(eventAttendee, aosEvent);
+        ICalendarUser user = iCalUserService.findOrCreateICalUser(eventAttendee, aosEvent);
         if (user != null) {
           aosEvent.addAttendee(user);
         }
       }
     }
-
-    if (ObjectUtils.isEmpty(gsuiteEvent.getDescription())) {
-      return;
-    }
-
-    for (String email : StringUtils.parseEmails(gsuiteEvent.getDescription())) {
-      EmailAddress address = emailRepo.findByAddress(email);
-      if (address == null) {
-        address = new EmailAddress();
-        address.setAddress(email);
-        address.setName(email);
-      }
-      ICalendarUser user = findOrCreateICalUser(address, aosEvent, false);
-      if (user != null) {
-        aosEvent.addAttendee(user);
-      }
-    }
+    iCalUserService
+        .parseICalUsers(aosEvent, gsuiteEvent.getDescription())
+        .forEach(aosEvent::addAttendee);
   }
 
   protected void setEventDates(
@@ -244,99 +216,5 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
     aosEvent.setStartDateTime(startDateTime);
     aosEvent.setEndDateTime(endDateTime);
-  }
-
-  @Transactional
-  protected ICalendarUser findOrCreateICalUser(Object source, ICalendarEvent event) {
-    String email = null;
-    boolean isOrganizer;
-
-    if (source instanceof Organizer) {
-      isOrganizer = true;
-    } else if (source instanceof EventAttendee) {
-      isOrganizer = false;
-    } else {
-      return null;
-    }
-
-    if (isOrganizer) {
-      email = ((Organizer) source).getEmail();
-    } else {
-      email = ((EventAttendee) source).getEmail();
-    }
-
-    if (ObjectUtils.isEmpty(email) || !relatedEmailSet.contains(email)) {
-      return null;
-    }
-
-    String displayName = email;
-    if (isOrganizer && !ObjectUtils.isEmpty(((Organizer) source).getDisplayName())) {
-      displayName = ((Organizer) source).getDisplayName();
-    } else if (!isOrganizer && !ObjectUtils.isEmpty(((EventAttendee) source).getDisplayName())) {
-      displayName = ((EventAttendee) source).getDisplayName();
-    }
-
-    EmailAddress emailAddress = emailRepo.findByAddress(email);
-    if (emailAddress == null) {
-      emailAddress = new EmailAddress();
-      emailAddress.setAddress(email);
-    }
-    emailAddress.setName(displayName);
-    emailRepo.save(emailAddress);
-
-    ICalendarUser user = findOrCreateICalUser(emailAddress, event, isOrganizer);
-
-    if (!isOrganizer && !ObjectUtils.isEmpty(((EventAttendee) source).getResponseStatus())) {
-      switch (((EventAttendee) source).getResponseStatus()) {
-        case "accepted":
-          user.setStatusSelect(ICalendarUserRepository.STATUS_YES);
-          break;
-        case "tentative":
-          user.setStatusSelect(ICalendarUserRepository.STATUS_MAYBE);
-          break;
-        case "declined":
-          user.setStatusSelect(ICalendarUserRepository.STATUS_NO);
-          break;
-      }
-    }
-
-    return iCalUserRepo.save(user);
-  }
-
-  protected ICalendarUser findOrCreateICalUser(
-      EmailAddress email, ICalendarEvent event, boolean isOrganizer) {
-
-    ICalendarUser user = null;
-
-    if (!relatedEmailSet.contains(email.getAddress())) {
-      return null;
-    }
-
-    if (isOrganizer) {
-      user = iCalUserRepo.all().filter("self.email = ?1", email.getAddress()).fetchOne();
-    } else {
-      user =
-          iCalUserRepo
-              .all()
-              .filter("self.email = ?1 AND self.event.id = ?2", email.getAddress(), event.getId())
-              .fetchOne();
-    }
-
-    if (user == null) {
-      user = new ICalendarUser();
-      user.setEmail(email.getAddress());
-      user.setName(email.getName());
-      if (email.getPartner() != null) {
-        user.setUser(
-            Beans.get(UserRepository.class)
-                .all()
-                .filter(
-                    "self.partner = :partner or self.partner.emailAddress.address = :email OR self.email = :email")
-                .bind("partner", email.getPartner())
-                .bind("email", email.getAddress())
-                .fetchOne());
-      }
-    }
-    return user;
   }
 }

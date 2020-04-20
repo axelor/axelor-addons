@@ -44,7 +44,9 @@ public class GSuiteBatchController {
     if (appGsuite.getIsEventSyncAllowed()) {
       actionSelect.add(GSuiteBatchRepository.ACTION_EVENT_SYNC);
     }
-    // TO DO add for task,drive etc.
+    if (appGsuite.getIsTaskSyncAllowed()) {
+      actionSelect.add(GSuiteBatchRepository.ACTION_TASK_SYNC);
+    }
     response.setAttr("actionSelect", "selection-in", actionSelect);
   }
 
@@ -78,6 +80,8 @@ public class GSuiteBatchController {
     try {
       GSuiteBatch gSuiteBatch = request.getContext().asType(GSuiteBatch.class);
       gSuiteBatch = Beans.get(GSuiteBatchRepository.class).find(gSuiteBatch.getId());
+      Batch batch = Beans.get(GSuiteBatchService.class).taskSyncBatch(gSuiteBatch);
+      response.setFlash(batch.getComments());
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     } finally {

@@ -24,4 +24,8 @@ public class DateUtils {
   public static DateTime toGoogleDateTime(LocalDateTime dateTime) {
     return DateTime.parseRfc3339(dateTime.format(RFC3339_PATTERN));
   }
+
+  public static String toRfc3339(LocalDateTime dateTime) {
+    return dateTime.atZone(ZoneId.systemDefault()).format(RFC3339_PATTERN);
+  }
 }

@@ -18,6 +18,9 @@
   			<panel name="emailSyncPanel" title="Email configuration">
   				<field name="isEmailSyncAllowed" widget="boolean-switch"/>
   			</panel>
+  			<panel name="taskSyncPanel" title="Event/Task configuration">
+  				<field name="isTaskSyncAllowed" widget="boolean-switch"/>
+  			</panel>
   		</panel-tabs>
 	</form>
 	

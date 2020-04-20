@@ -18,5 +18,6 @@ dependencies {
 	compile 'com.google.apis:google-api-services-drive:v3-rev188-1.25.0'
 	compile 'com.google.apis:google-api-services-calendar:v3-rev401-1.25.0'
 	compile 'com.google.apis:google-api-services-gmail:v1-rev109-1.25.0'
+	compile 'com.google.apis:google-api-services-tasks:v1-rev71-1.25.0'
 	
 }

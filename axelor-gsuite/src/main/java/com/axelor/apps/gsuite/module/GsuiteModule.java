@@ -28,12 +28,16 @@ import com.axelor.apps.gsuite.service.GSuiteAOSEventService;
 import com.axelor.apps.gsuite.service.GSuiteAOSEventServiceImpl;
 import com.axelor.apps.gsuite.service.GSuiteAOSMessageService;
 import com.axelor.apps.gsuite.service.GSuiteAOSMessageServiceImpl;
+import com.axelor.apps.gsuite.service.GSuiteAOSTaskService;
+import com.axelor.apps.gsuite.service.GSuiteAOSTaskServiceImpl;
 import com.axelor.apps.gsuite.service.GSuiteContactService;
 import com.axelor.apps.gsuite.service.GSuiteContactServiceImpl;
 import com.axelor.apps.gsuite.service.GSuiteDriveService;
 import com.axelor.apps.gsuite.service.GSuiteDriveServiceImpl;
 import com.axelor.apps.gsuite.service.GSuiteEventService;
 import com.axelor.apps.gsuite.service.GSuiteEventServiceImpl;
+import com.axelor.apps.gsuite.service.ICalUserService;
+import com.axelor.apps.gsuite.service.ICalUserServiceImpl;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
 import com.axelor.apps.gsuite.service.app.AppGSuiteServiceImpl;
 
@@ -50,5 +54,7 @@ public class GsuiteModule extends AxelorModule {
     bind(GSuiteAOSDriveService.class).to(GSuiteAOSDriveServiceImpl.class);
     bind(GSuiteAOSEventService.class).to(GSuiteAOSEventServiceImpl.class);
     bind(GSuiteAOSMessageService.class).to(GSuiteAOSMessageServiceImpl.class);
+    bind(GSuiteAOSTaskService.class).to(GSuiteAOSTaskServiceImpl.class);
+    bind(ICalUserService.class).to(ICalUserServiceImpl.class);
   }
 }

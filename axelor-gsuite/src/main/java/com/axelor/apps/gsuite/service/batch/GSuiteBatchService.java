@@ -26,6 +26,8 @@ public class GSuiteBatchService extends AbstractBatchService {
         return emailSyncBatch(batch);
       case GSuiteBatchRepository.ACTION_EVENT_SYNC:
         return eventSyncBatch(batch);
+      case GSuiteBatchRepository.ACTION_TASK_SYNC:
+        return eventSyncBatch(batch);
       default:
         throw new AxelorException(
             TraceBackRepository.CATEGORY_INCONSISTENCY,
@@ -41,5 +43,9 @@ public class GSuiteBatchService extends AbstractBatchService {
 
   public Batch eventSyncBatch(GSuiteBatch batch) {
     return Beans.get(BatchGSuiteEventSyncService.class).run(batch);
+  }
+
+  public Batch taskSyncBatch(GSuiteBatch batch) {
+    return Beans.get(BatchGSuiteTaskSyncService.class).run(batch);
   }
 }
