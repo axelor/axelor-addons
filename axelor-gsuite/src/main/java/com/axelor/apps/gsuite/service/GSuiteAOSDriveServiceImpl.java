@@ -64,7 +64,8 @@ public class GSuiteAOSDriveServiceImpl implements GSuiteAOSDriveService {
     if (googleAccount == null) {
       return null;
     }
-    LocalDateTime syncDate = googleAccount.getEventSyncFromGoogleDate();
+    // TODO to make date dynamic
+    LocalDateTime syncDate = LocalDateTime.now();
     log.debug("Last sync date: {}", syncDate);
     googleAccount = googleAccountRepo.find(googleAccount.getId());
     try {

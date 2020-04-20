@@ -23,8 +23,6 @@
 		<datetime name="contactSyncFromGoogleDate" title="Contact Sync From Google Date" />
 		<string name="contactSyncFromGoogleLog" title="Contact Sync From Google Log" large="true" />
 		
-		<datetime name="eventSyncFromGoogleDate" title="Event Sync From Google Date" />
-		<string name="eventSyncFromGoogleLog" title="Event Sync From Google Log" large="true" />
 		<datetime name="eventSyncToGoogleDate" title="Event Sync To Google Date" />
 		<string name="eventSyncToGoogleLog" title="Event Sync To Google Log" large="true" />
 		
@@ -32,9 +30,7 @@
 		<string name="docSyncFromGoogleLog" title="Doc Sync From Google Log" large="true" />
 		<datetime name="docSyncToGoogleDate" title="Doc Sync To Google Date" />
 		<string name="docSyncToGoogleLog" title="Doc Sync To Google Log" large="true" />
-		
-		<datetime name="gmailSyncFromGoogleDate" title="Gmail Sync From Google Date" />
-		
+				
 	</entity>
 
 </domain-models>
