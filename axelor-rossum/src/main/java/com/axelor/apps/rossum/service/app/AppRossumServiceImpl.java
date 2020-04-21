@@ -193,7 +193,10 @@ public class AppRossumServiceImpl implements AppRossumService {
       throws AxelorException, IOException, JSONException, InterruptedException {
     JSONObject result = null;
 
-    if (metaFile != null && metaFile.getFileType().equals(ITranslation.FILE_TYPE_PDF)) {
+    if (metaFile != null
+        && (metaFile.getFileType().equals(ITranslation.FILE_TYPE_PDF)
+            || metaFile.getFileType().equals(ITranslation.FILE_TYPE_PNG)
+            || metaFile.getFileType().equals(ITranslation.FILE_TYPE_JPEG))) {
 
       response = httpClient.execute(httpPost(metaFile, queue));
 

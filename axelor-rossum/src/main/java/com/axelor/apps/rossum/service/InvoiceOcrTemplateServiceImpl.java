@@ -238,8 +238,8 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   }
 
   /**
-   * This following are the header of csv file which is generated from Rossum. And it's sequence is
-   * given to fetch data from it. Folllowing are of Invoice and later from 22 details are of Invoice
+   * This following are the header of CSV file which is generated from Rossum. And it's sequence is
+   * given to fetch data from it. Following are of Invoice and later from 22 details are of Invoice
    * lines.
    *
    * <p>Invoice number = 0,
@@ -338,16 +338,27 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
         if (i == 1) {
           invoice.setInvoiceId(dataRow[headerTitleMap.get("invoice number")]);
           invoice.setExternalReference(dataRow[headerTitleMap.get("order number")]);
-          invoice.setInvoiceDate(LocalDate.parse(dataRow[headerTitleMap.get("issue date")]));
-          invoice.setDueDate(LocalDate.parse(dataRow[headerTitleMap.get("due date")]));
+
+          invoice.setInvoiceDate(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("issue date")])
+                  ? LocalDate.parse(dataRow[headerTitleMap.get("issue date")])
+                  : null);
+
+          invoice.setDueDate(
+              !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("due date")])
+                  ? LocalDate.parse(dataRow[headerTitleMap.get("due date")])
+                  : null);
+
           invoice.setExTaxTotal(
               !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total without tax")])
                   ? new BigDecimal(dataRow[headerTitleMap.get("total without tax")])
                   : BigDecimal.ZERO);
+
           invoice.setTaxTotal(
               !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total tax")])
                   ? new BigDecimal(dataRow[headerTitleMap.get("total tax")])
                   : BigDecimal.ZERO);
+
           invoice.setInTaxTotal(
               !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total amount")])
                   ? new BigDecimal(dataRow[headerTitleMap.get("total amount")])
@@ -364,16 +375,10 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
               partnerRepository
                   .all()
                   .filter(
-                      "self.name = ?1 OR self.registrationCode = ?1",
-                      dataRow[headerTitleMap.get("vendor company id")])
+                      "self.name = ?1 OR self.registrationCode = ?1 OR self.taxNbr =?2",
+                      dataRow[headerTitleMap.get("vendor company id")],
+                      dataRow[headerTitleMap.get("vendor vat number")])
                   .fetchOne();
-          if (partner == null) {
-            partner =
-                partnerRepository
-                    .all()
-                    .filter("self.taxNbr =?1", dataRow[headerTitleMap.get("vendor vat number")])
-                    .fetchOne();
-          }
 
           if (partner == null) {
             partner = partnerRepository.all().fetchOne();
@@ -385,18 +390,11 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
           Company company =
               companyRepository
                   .all()
-                  .filter("self.name = ?1", dataRow[headerTitleMap.get("customer company id")])
+                  .filter(
+                      "self.name = ?1 OR self.partner.taxNbr = ?2",
+                      dataRow[headerTitleMap.get("customer company id")],
+                      dataRow[headerTitleMap.get("customer vat number")])
                   .fetchOne();
-
-          if (company == null) {
-            company =
-                companyRepository
-                    .all()
-                    .filter(
-                        "self.partner.taxNbr = ?1",
-                        dataRow[headerTitleMap.get("customer vat number")])
-                    .fetchOne();
-          }
 
           if (company == null) {
             company =
@@ -432,14 +430,15 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     }
 
     InvoiceRepository invoiceRepository = Beans.get(InvoiceRepository.class);
-    if (invoiceRepository
-            .all()
-            .filter(
-                "self.invoiceId = ?1 AND self.company =?2",
-                invoice.getInvoiceId(),
-                invoice.getCompany())
-            .fetchOne()
-        != null) {
+    if (invoice != null
+        && invoiceRepository
+                .all()
+                .filter(
+                    "self.invoiceId = ?1 AND self.company =?2",
+                    invoice.getInvoiceId(),
+                    invoice.getCompany())
+                .fetchOne()
+            != null) {
       invoice.setInvoiceId(null);
     }
 
