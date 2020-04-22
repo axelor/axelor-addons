@@ -21,6 +21,7 @@ import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
+import com.axelor.apps.message.db.Message;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.i18n.I18n;
@@ -76,7 +77,7 @@ public class Office365Controller {
     appOffice365 = Beans.get(AppOffice365Repository.class).find(appOffice365.getId());
     office365Service.syncContact(appOffice365);
     response.setView(
-        ActionView.define("Office365 contact")
+        ActionView.define(I18n.get(ITranslation.OFFICE365_CONTACT_TITLE))
             .model(Partner.class.getName())
             .add("grid", "partner-grid")
             .add("form", "partner-form")
@@ -90,10 +91,24 @@ public class Office365Controller {
     appOffice365 = Beans.get(AppOffice365Repository.class).find(appOffice365.getId());
     office365Service.syncCalendar(appOffice365);
     response.setView(
-        ActionView.define("Office365 contact")
+        ActionView.define(I18n.get(ITranslation.OFFICE365_CALENDAR_TITLE))
             .model(ICalendar.class.getName())
             .add("grid", "calendar-grid")
             .add("form", "calendar-form")
+            .domain("self.office365Id IS NOT NULL")
+            .map());
+  }
+
+  public void syncMail(ActionRequest request, ActionResponse response) throws Exception {
+
+    AppOffice365 appOffice365 = request.getContext().asType(AppOffice365.class);
+    appOffice365 = Beans.get(AppOffice365Repository.class).find(appOffice365.getId());
+    office365Service.syncMail(appOffice365);
+    response.setView(
+        ActionView.define(I18n.get(ITranslation.OFFICE365_MAIL_TITLE))
+            .model(Message.class.getName())
+            .add("grid", "message-grid")
+            .add("form", "message-form")
             .domain("self.office365Id IS NOT NULL")
             .map());
   }

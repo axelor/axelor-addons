@@ -38,4 +38,14 @@
 		<domain>self.office365Id IS NOT NULL</domain>
 	</action-view>
 
+	<menuitem name="office365-message" parent="office365-root"
+		title="Office365 mails" action="office365.message" order="4"/>
+
+	<action-view name="office365.message"
+		title="Office365 mails" model="com.axelor.apps.message.db.Message">
+		<view type="grid" name="message-grid"/>
+		<view type="form" name="message-form"/>
+		<domain>self.office365Id IS NOT NULL</domain>
+	</action-view>
+
 </object-views>

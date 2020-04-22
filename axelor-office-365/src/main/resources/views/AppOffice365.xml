@@ -15,6 +15,7 @@
 		<panel name="btnPanel" sidebar="true" showIf="refreshToken">
 			<button name="syncContactBtn" title="Sync contact" onClick="action-office365-method-sync-contact" />
 			<button name="syncCalendarBtn" title="Sync calendar" onClick="action-office365-method-sync-calendar" />
+			<button name="syncMailBtn" title="Sync mail" onClick="action-office365-method-sync-mail" />
 		</panel>
 	</form>
 
@@ -28,6 +29,10 @@
 
 	<action-method name="action-office365-method-sync-calendar">
 		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncCalendar" />
+	</action-method>
+
+	<action-method name="action-office365-method-sync-mail">
+		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncMail" />
 	</action-method>
 
 </object-views>

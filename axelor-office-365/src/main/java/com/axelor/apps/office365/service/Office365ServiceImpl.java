@@ -50,9 +50,11 @@ public class Office365ServiceImpl implements Office365Service {
   private static final String CONTACT_URL = "https://graph.microsoft.com/v1.0/me/contacts";
   private static final String CALENDAR_URL = "https://graph.microsoft.com/v1.0/me/calendars";
   private static final String EVENT_URL = "https://graph.microsoft.com/v1.0/me/calendars/%s/events";
+  private static final String MAIL_URL = "https://graph.microsoft.com/v1.0/me/messages";
 
   @Inject Office365ContactService contactService;
   @Inject Office365CalendarService calendarService;
+  @Inject Office365MailService mailService;
 
   @Transactional
   public String getAccessTocken(AppOffice365 appOffice365) throws AxelorException {
@@ -151,6 +153,21 @@ public class Office365ServiceImpl implements Office365Service {
       for (Object object : eventArray) {
         jsonObject = (JSONObject) object;
         calendarService.createEvent(jsonObject, iCalendar);
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public void syncMail(AppOffice365 appOffice365) throws AxelorException, MalformedURLException {
+
+    String accessToken = getAccessTocken(appOffice365);
+    URL url = new URL(MAIL_URL);
+    JSONObject jsonObject = fetchData(url, accessToken);
+    JSONArray messageArray = (JSONArray) jsonObject.getOrDefault("value", new ArrayList<>());
+    if (messageArray != null) {
+      for (Object object : messageArray) {
+        jsonObject = (JSONObject) object;
+        mailService.createMessage(jsonObject);
       }
     }
   }

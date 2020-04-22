@@ -23,9 +23,12 @@ import java.net.MalformedURLException;
 
 public interface Office365Service {
 
-  static final String SCOPE = "openid offline_access Contacts.ReadWrite Calendars.ReadWrite";
+  static final String SCOPE =
+      "openid offline_access Contacts.ReadWrite Calendars.ReadWrite Mail.ReadWrite";
 
   void syncContact(AppOffice365 appOffice365) throws AxelorException, MalformedURLException;
 
   void syncCalendar(AppOffice365 appOffice365) throws AxelorException, MalformedURLException;
+
+  void syncMail(AppOffice365 appOffice365) throws AxelorException, MalformedURLException;
 }
