@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.rossum.service.app;
 
+import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
 import com.axelor.apps.rossum.db.Queue;
@@ -37,7 +38,6 @@ import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.beust.jcommander.Strings;
-import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.File;
@@ -173,13 +173,17 @@ public class AppRossumServiceImpl implements AppRossumService {
         && response.getEntity() != null) {
       String content = EntityUtils.toString(response.getEntity());
 
-      File tempDir = Files.createTempDir();
+      String defaultPath = AppSettings.get().getPath("file.upload.dir", "");
+      String dirPath = defaultPath + "/rossum";
 
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmSS");
+      File dir = new File(dirPath);
+      if (!dir.isDirectory()) dir.mkdir();
+
+      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
       String logFileName =
           "Rossum_export_" + LocalDateTime.now().format(formatter) + "." + exportTypeSelect;
 
-      file = new File(tempDir.getAbsolutePath(), logFileName);
+      file = new File(dir.getAbsolutePath(), logFileName);
       PrintWriter pw = new PrintWriter(file);
 
       pw.write(content);
@@ -221,7 +225,8 @@ public class AppRossumServiceImpl implements AppRossumService {
       }
     } else {
       throw new AxelorException(
-          TraceBackRepository.CATEGORY_MISSING_FIELD, I18n.get(IExceptionMessage.PDF_FILE_ERROR));
+          TraceBackRepository.CATEGORY_MISSING_FIELD,
+          I18n.get(IExceptionMessage.ROSSUM_FILE_ERROR));
     }
 
     return result;
@@ -277,7 +282,7 @@ public class AppRossumServiceImpl implements AppRossumService {
 
     String filePath = MetaFiles.getPath(metaFile).toString();
     log.debug("Submitting File: " + filePath);
-    log.debug("Content type: " + ITranslation.FILE_TYPE_PDF);
+    log.debug("Content type: " + metaFile.getFileType());
 
     String url =
         String.format(

@@ -53,17 +53,21 @@ public class InvoiceOcrTemplateController {
         Beans.get(InvoiceOcrTemplateRepository.class)
             .find(request.getContext().asType(InvoiceOcrTemplate.class).getId());
 
-    Invoice invoice =
-        Beans.get(InvoiceOcrTemplateService.class).generateInvoiceFromCSV(invoiceOcrTemplate);
-
-    if (invoice != null) {
-      response.setView(
-          ActionView.define(I18n.get("Invoice"))
-              .model(Invoice.class.getName())
-              .add("form", "invoice-form")
-              .add("grid", "invoice-grid")
-              .context("_showRecord", invoice.getId())
-              .map());
+    Invoice invoice;
+    try {
+      invoice =
+          Beans.get(InvoiceOcrTemplateService.class).generateInvoiceFromCSV(invoiceOcrTemplate);
+      if (invoice != null) {
+        response.setView(
+            ActionView.define(I18n.get("Invoice"))
+                .model(Invoice.class.getName())
+                .add("form", "invoice-form")
+                .add("grid", "invoice-grid")
+                .context("_showRecord", invoice.getId())
+                .map());
+      }
+    } catch (IOException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }
 }

@@ -49,5 +49,5 @@ public interface InvoiceOcrTemplateService {
   public void filterInvoiceData(JSONObject invoiceResult, InvoiceOcrTemplate invoiceOcrTemplate)
       throws IOException, JSONException;
 
-  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate);
+  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate) throws IOException;
 }

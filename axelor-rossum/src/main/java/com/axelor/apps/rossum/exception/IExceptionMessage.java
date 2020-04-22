@@ -21,7 +21,8 @@ public interface IExceptionMessage {
 
   public static final String INVALID_USERNAME_OR_PASSWORD = /*$$(*/
       "Invalid Rossum Username or password. Please enter correct Rossum username and password." /*)*/;
-  public static final String PDF_FILE_ERROR = /*$$(*/ "Please Upload PDF file!" /*)*/;
+  public static final String ROSSUM_FILE_ERROR = /*$$(*/
+      "Please Upload PDF or PNG or JPEG file only!" /*)*/;
   public static final String INVOICE_SUBMISSION_ERROR = /*$$(*/
       "Could not submit invoice: %s" /*)*/;
   public static final String DOCUMENT_PROCESS_ERROR = /*$$(*/

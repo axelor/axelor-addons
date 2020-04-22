@@ -33,5 +33,5 @@ public interface ITranslation {
   public static final String TYPE_COLUMN_TYPE = "table_column";
   public static final String FILE_TYPE_PDF = "application/pdf";
   public static final String FILE_TYPE_PNG = "image/png";
-  public static final String FILE_TYPE_JPEG = "image/jpg";
+  public static final String FILE_TYPE_JPEG = "image/jpeg";
 }
