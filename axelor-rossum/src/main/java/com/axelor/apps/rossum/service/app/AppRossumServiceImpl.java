@@ -47,7 +47,9 @@ import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
@@ -103,137 +105,173 @@ public class AppRossumServiceImpl implements AppRossumService {
   }
 
   @Override
-  public JSONObject extractInvoiceDataJson(
-      MetaFile metaFile, Integer timeout, Queue queue, String exportTypeSelect)
+  public List<JSONObject> extractInvoiceDataJson(
+      List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException {
 
     this.login(getAppRossum());
 
-    JSONObject jsonData = submitInvoiceAndExtractData(metaFile, timeout, queue);
+    List<JSONObject> jsonDataList = submitInvoiceAndExtractData(metaFileList, timeout, queue);
 
-    String uri =
-        String.format(
-            "%s" + "%s" + "%s" + "%s" + "%s",
-            jsonData.getString("queue"),
-            "/export?format=",
-            exportTypeSelect,
-            "&id=",
-            jsonData.get("id").toString());
+    List<JSONObject> filterJSONDataList = new ArrayList<>();
 
-    HttpGet httpGet = new HttpGet(uri);
-    httpGet.addHeader("Authorization", "token " + token);
-    httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
+    for (JSONObject jsonData : jsonDataList) {
+      String uri =
+          String.format(
+              "%s" + "%s" + "%s" + "%s" + "%s",
+              jsonData.getString("queue"),
+              "/export?format=",
+              exportTypeSelect,
+              "&id=",
+              jsonData.get("id").toString());
 
-    response = httpClient.execute(httpGet);
+      HttpGet httpGet = new HttpGet(uri);
+      httpGet.addHeader("Authorization", "token " + token);
+      httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
 
-    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK
-        && response.getEntity() != null) {
+      response = httpClient.execute(httpGet);
 
-      JSONObject resultObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+      if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK
+          && response.getEntity() != null) {
 
-      jsonData = resultObject.getJSONArray("results").getJSONObject(0);
-    } else {
-      jsonData = null;
+        JSONObject resultObject = new JSONObject(EntityUtils.toString(response.getEntity()));
+
+        jsonData = resultObject.getJSONArray("results").getJSONObject(0);
+        filterJSONDataList.add(jsonData);
+      }
+      httpGet.abort();
     }
 
-    return jsonData;
+    return filterJSONDataList;
   }
 
   @Override
-  public File extractInvoiceDataMetaFile(
-      MetaFile metaFile, Integer timeout, Queue queue, String exportTypeSelect)
+  public List<File> extractInvoiceDataMetaFile(
+      List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException {
     this.login(getAppRossum());
 
-    JSONObject jsonData = submitInvoiceAndExtractData(metaFile, timeout, queue);
+    List<JSONObject> jsonDataList = submitInvoiceAndExtractData(metaFileList, timeout, queue);
+    List<File> fileList = new ArrayList<>();
 
-    String uri =
-        String.format(
-            "%s" + "%s" + "%s" + "%s" + "%s",
-            jsonData.getString("queue"),
-            "/export?format=",
-            exportTypeSelect,
-            "&id=",
-            jsonData.get("id").toString());
+    for (JSONObject jsonData : jsonDataList) {
+      String uri =
+          String.format(
+              "%s" + "%s" + "%s" + "%s" + "%s",
+              jsonData.getString("queue"),
+              "/export?format=",
+              exportTypeSelect,
+              "&id=",
+              jsonData.get("id").toString());
 
-    HttpGet httpGet = new HttpGet(uri);
-    httpGet.addHeader("Authorization", "token " + token);
+      HttpGet httpGet = new HttpGet(uri);
+      httpGet.addHeader("Authorization", "token " + token);
 
-    if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)) {
-      httpGet.addHeader(HTTP.CONTENT_TYPE, "text/csv");
-    } else if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML)) {
-      httpGet.addHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_XML.getMimeType());
+      if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)) {
+        httpGet.addHeader(HTTP.CONTENT_TYPE, "text/csv");
+      } else if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML)) {
+        httpGet.addHeader(HTTP.CONTENT_TYPE, ContentType.APPLICATION_XML.getMimeType());
+      }
+
+      response = httpClient.execute(httpGet);
+
+      File file = null;
+
+      if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK
+          && response.getEntity() != null) {
+        String content = EntityUtils.toString(response.getEntity());
+
+        String defaultPath = AppSettings.get().getPath("file.upload.dir", "");
+        String dirPath = defaultPath + "/rossum";
+
+        File dir = new File(dirPath);
+        if (!dir.isDirectory()) dir.mkdir();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMyyyyHHmm");
+        String fileName =
+            "Rossum_export_"
+                + jsonData.get("id").toString()
+                + "_"
+                + LocalDateTime.now().format(formatter)
+                + "."
+                + exportTypeSelect;
+
+        file = new File(dir.getAbsolutePath(), fileName);
+        PrintWriter pw = new PrintWriter(file);
+
+        pw.write(content);
+        pw.close();
+      }
+
+      fileList.add(file);
+      httpGet.abort();
     }
 
-    response = httpClient.execute(httpGet);
-
-    File file = null;
-
-    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK
-        && response.getEntity() != null) {
-      String content = EntityUtils.toString(response.getEntity());
-
-      String defaultPath = AppSettings.get().getPath("file.upload.dir", "");
-      String dirPath = defaultPath + "/rossum";
-
-      File dir = new File(dirPath);
-      if (!dir.isDirectory()) dir.mkdir();
-
-      DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-      String logFileName =
-          "Rossum_export_" + LocalDateTime.now().format(formatter) + "." + exportTypeSelect;
-
-      file = new File(dir.getAbsolutePath(), logFileName);
-      PrintWriter pw = new PrintWriter(file);
-
-      pw.write(content);
-      pw.close();
-    }
-
-    return file;
+    return fileList;
   }
 
-  private JSONObject submitInvoiceAndExtractData(MetaFile metaFile, Integer timeout, Queue queue)
+  private List<JSONObject> submitInvoiceAndExtractData(
+      List<MetaFile> metaFileList, Integer timeout, Queue queue)
       throws AxelorException, IOException, JSONException, InterruptedException {
-    JSONObject result = null;
 
-    if (metaFile != null
-        && (metaFile.getFileType().equals(ITranslation.FILE_TYPE_PDF)
-            || metaFile.getFileType().equals(ITranslation.FILE_TYPE_PNG)
-            || metaFile.getFileType().equals(ITranslation.FILE_TYPE_JPEG))) {
+    if (queue == null) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, "Queue is missing");
+    }
 
-      response = httpClient.execute(httpPost(metaFile, queue));
+    List<String> annotationsLinkList = new ArrayList<>();
 
-      if (response.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
-        result =
-            new JSONObject(
-                IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
-        String annotationsLink = result.getString("annotation");
-        log.debug("Submit result: " + result);
+    for (MetaFile metaFile : metaFileList) {
+      if (metaFile != null
+          && (metaFile.getFileType().equals(ITranslation.FILE_TYPE_PDF)
+              || metaFile.getFileType().equals(ITranslation.FILE_TYPE_PNG)
+              || metaFile.getFileType().equals(ITranslation.FILE_TYPE_JPEG))) {
 
-        log.debug("Annotation link: " + annotationsLink);
+        response = httpClient.execute(httpPost(metaFile, queue));
 
-        int sleepMillis = 5000;
-        timeout = (int) ((timeout * 1e3) / sleepMillis);
-        result = getDocumentWithStatus(annotationsLink, timeout, sleepMillis);
-        log.debug("Document successfully processed.");
+        if (response.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
+          JSONObject result =
+              new JSONObject(
+                  IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
+          String annotationsLink = result.getString("annotation");
+          log.debug("Submit result: " + result);
+
+          log.debug("Annotation link: " + annotationsLink);
+
+          annotationsLinkList.add(annotationsLink);
+        } else {
+          throw new AxelorException(
+              TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+              I18n.get(IExceptionMessage.DOCUMENT_PROCESS_ERROR),
+              metaFile.getFileName());
+        }
       } else {
         throw new AxelorException(
-            TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
-            I18n.get(IExceptionMessage.DOCUMENT_PROCESS_ERROR),
-            metaFile.getFileName());
+            TraceBackRepository.CATEGORY_MISSING_FIELD,
+            I18n.get(IExceptionMessage.ROSSUM_FILE_ERROR));
       }
-    } else {
-      throw new AxelorException(
-          TraceBackRepository.CATEGORY_MISSING_FIELD,
-          I18n.get(IExceptionMessage.ROSSUM_FILE_ERROR));
     }
 
-    return result;
+    int sleepMillis = 5000;
+    timeout = (int) ((timeout * 1e3) / sleepMillis);
+    List<JSONObject> jsonObjectList =
+        getDocumentWithStatus(annotationsLinkList, timeout, sleepMillis);
+    log.debug("Document successfully processed.");
+
+    return jsonObjectList;
   }
 
-  private JSONObject getDocumentWithStatus(String annotationsLink, int maxRetries, int sleepMillis)
+  private List<JSONObject> getDocumentWithStatus(
+      List<String> annotationsLinkList, int maxRetries, int sleepMillis)
       throws JSONException, AxelorException, IOException, InterruptedException {
+
+    List<JSONObject> jsonObjectList = new ArrayList<>();
+
+    Map<String, Boolean> annotationsLinkExportedMap = new HashMap<>();
+
+    for (String annotationsLink : annotationsLinkList) {
+      annotationsLinkExportedMap.put(annotationsLink, false);
+    }
 
     for (int i = 0; i < maxRetries; i++) {
       log.debug(
@@ -245,32 +283,42 @@ public class AppRossumServiceImpl implements AppRossumService {
               (maxRetries * sleepMillis * 1e-3),
               " s"));
 
-      HttpGet httpGet = new HttpGet(annotationsLink);
-      httpGet.addHeader("Authorization", "token " + token);
-      httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
+      for (String annotationsLink : annotationsLinkExportedMap.keySet()) {
+        if (Boolean.FALSE.equals(annotationsLinkExportedMap.get(annotationsLink))) {
+          HttpGet httpGet = new HttpGet(annotationsLink);
+          httpGet.addHeader("Authorization", "token " + token);
+          httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
 
-      response = httpClient.execute(httpGet);
-      JSONObject result =
-          new JSONObject(
-              IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
+          response = httpClient.execute(httpGet);
+          JSONObject result =
+              new JSONObject(
+                  IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
 
-      String status = result.getString("status");
-      switch (status) {
-        case "exported":
-          return result;
-        case "error":
-          log.debug("Result: " + result);
+          String status = result.getString("status");
+          switch (status) {
+            case "exported":
+              jsonObjectList.add(result);
+              annotationsLinkExportedMap.put(annotationsLink, true);
+              break;
+            case "error":
+              log.debug("Result: " + result);
 
-          throw new AxelorException(
-              TraceBackRepository.CATEGORY_INCONSISTENCY,
-              I18n.get(IExceptionMessage.DOCUMENT_PROCESS_ERROR),
-              result.getString("message"));
-        default:
-          log.debug("Result: " + result);
-          Thread.sleep(sleepMillis);
-          break;
+              throw new AxelorException(
+                  TraceBackRepository.CATEGORY_INCONSISTENCY,
+                  I18n.get(IExceptionMessage.DOCUMENT_PROCESS_ERROR),
+                  result.getString("message"));
+            default:
+              log.debug("Result: " + result);
+              break;
+          }
+          httpGet.abort();
+        }
       }
-      httpGet.abort();
+      if (jsonObjectList.size() == annotationsLinkList.size()) {
+        return jsonObjectList;
+      } else {
+        Thread.sleep(sleepMillis);
+      }
     }
     throw new AxelorException(
         TraceBackRepository.CATEGORY_NO_VALUE,

@@ -40,6 +40,7 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaField;
+import com.axelor.meta.db.MetaFile;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -50,6 +51,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -95,15 +97,21 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     String exportTypeSelect = invoiceOcrTemplate.getExportTypeSelect();
 
     if (!Strings.isNullOrEmpty(exportTypeSelect)) {
+      List<MetaFile> metaFileList = new ArrayList<>();
+      metaFileList.add(invoiceOcrTemplate.getTemplateFile());
+
       if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_JSON)) {
         JSONObject resultData;
         if (Strings.isNullOrEmpty(invoiceOcrTemplate.getRawData())) {
-          resultData =
+
+          List<JSONObject> jsonDataList =
               rossumApiService.extractInvoiceDataJson(
-                  invoiceOcrTemplate.getTemplateFile(),
+                  metaFileList,
                   invoiceOcrTemplate.getTimeout(),
                   invoiceOcrTemplate.getQueue(),
                   exportTypeSelect);
+
+          resultData = jsonDataList.get(0);
           resultData = rossumApiService.generateUniqueKeyFromJsonData(resultData);
           invoiceOcrTemplate.setRawData(resultData.toString());
           invoiceOcrTemplate.setName(invoiceOcrTemplate.getTemplateFile().getFileName());
@@ -118,13 +126,15 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
         filterInvoiceData(resultData, invoiceOcrTemplate);
       } else if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)
           || exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML)) {
-        File exportedFile =
+
+        List<File> fileList =
             rossumApiService.extractInvoiceDataMetaFile(
-                invoiceOcrTemplate.getTemplateFile(),
+                metaFileList,
                 invoiceOcrTemplate.getTimeout(),
                 invoiceOcrTemplate.getQueue(),
                 exportTypeSelect);
 
+        File exportedFile = fileList.get(0);
         if (exportedFile != null) {
           invoiceOcrTemplate.setExportedFile(metaFiles.upload(exportedFile));
           invoiceOcrTemplateRepository.save(invoiceOcrTemplate);

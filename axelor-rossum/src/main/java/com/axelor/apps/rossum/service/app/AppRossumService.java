@@ -23,6 +23,7 @@ import com.axelor.exception.AxelorException;
 import com.axelor.meta.db.MetaFile;
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
 
@@ -46,12 +47,12 @@ public interface AppRossumService {
    * @throws JSONException
    * @throws UnsupportedOperationException
    */
-  public JSONObject extractInvoiceDataJson(
-      MetaFile metaFile, Integer timeout, Queue queue, String exportTypeSelect)
+  public List<JSONObject> extractInvoiceDataJson(
+      List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException;
 
-  public File extractInvoiceDataMetaFile(
-      MetaFile metaFile, Integer timeout, Queue queue, String exportTypeSelect)
+  public List<File> extractInvoiceDataMetaFile(
+      List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException;
 
   /**
