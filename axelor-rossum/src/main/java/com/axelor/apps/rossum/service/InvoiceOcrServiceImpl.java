@@ -41,6 +41,7 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaField;
+import com.axelor.meta.db.MetaFile;
 import com.axelor.meta.db.repo.MetaFieldRepository;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -97,9 +98,16 @@ public class InvoiceOcrServiceImpl implements InvoiceOcrService {
     JSONObject result;
 
     if (Strings.isNullOrEmpty(invoiceOcr.getRawData())) {
-      result =
+
+      List<MetaFile> meatFileList = new ArrayList<>();
+      meatFileList.add(invoiceOcr.getInvoiceFile());
+
+      List<JSONObject> jsonDataList =
           rossumApiService.extractInvoiceDataJson(
-              invoiceOcr.getInvoiceFile(), invoiceOcr.getTimeout(), null, null);
+              meatFileList, invoiceOcr.getTimeout(), null, null);
+
+      result = jsonDataList.get(0);
+
       result = rossumApiService.generateUniqueKeyFromJsonData(result);
       invoiceOcr.setRawData(result.toString());
       invoiceOcrRepository.save(invoiceOcr);
