@@ -82,7 +82,11 @@ public class GSuiteAOSTaskServiceImpl implements GSuiteAOSTaskService {
       throws IOException, AxelorException {
 
     com.google.api.services.tasks.Tasks.TasksOperations.List list =
-        getService().tasks().list(taskList.getId()).setShowCompleted(Boolean.TRUE).setShowHidden(Boolean.TRUE);
+        getService()
+            .tasks()
+            .list(taskList.getId())
+            .setShowCompleted(Boolean.TRUE)
+            .setShowHidden(Boolean.TRUE);
     String pageToken = null;
     List<Task> tasks = new ArrayList<>();
 

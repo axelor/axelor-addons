@@ -16,12 +16,9 @@
 		<string name="eventSyncToken" />
 
 		<!-- TODO:to delete -->		
-		<string name="deletedContacts" large="true" />
 		
 		<datetime name="contactSyncToGoogleDate" title="Contact Sync To Google Date" />
 		<string name="contactSyncToGoogleLog" title="Contact Sync To Google Log" large="true" />
-		<datetime name="contactSyncFromGoogleDate" title="Contact Sync From Google Date" />
-		<string name="contactSyncFromGoogleLog" title="Contact Sync From Google Log" large="true" />
 		
 		<datetime name="eventSyncToGoogleDate" title="Event Sync To Google Date" />
 		<string name="eventSyncToGoogleLog" title="Event Sync To Google Log" large="true" />

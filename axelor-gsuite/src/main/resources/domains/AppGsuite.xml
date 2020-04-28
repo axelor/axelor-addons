@@ -24,6 +24,9 @@
 		<!-- Task configuration -->
 		<boolean name="isTaskSyncAllowed" title="Task sync allowed?"/>
 		
+		<!-- Contact configuration -->
+		<boolean name="isContactSyncAllowed" title="Contact sync allowed?"/>
+		
 	</entity>
 
 </domain-models>

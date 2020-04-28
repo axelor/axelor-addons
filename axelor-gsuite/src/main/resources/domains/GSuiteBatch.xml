@@ -24,6 +24,7 @@
 		public static final int ACTION_EMAIL_SYNC = 1;
 		public static final int ACTION_EVENT_SYNC = 2;
 		public static final int ACTION_TASK_SYNC = 3;
+		public static final int ACTION_CONTACT_SYNC = 4;
 	
 	]]></extra-code>	
 				

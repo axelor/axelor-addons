@@ -30,6 +30,7 @@
   			<button name="syncEmailBtn" showIf="actionSelect == 1" title="Batch Email synchronization" onClick="save,action-gsuite-batch-method-action-email-sync"/>
   			<button name="syncEventBtn" showIf="actionSelect == 2" title="Batch Event synchronization" onClick="save,action-gsuite-batch-method-action-event-sync"/>
   			<button name="syncTaskBtn" showIf="actionSelect == 3" title="Batch Task synchronization" onClick="save,action-gsuite-batch-method-action-task-sync"/>
+  			<button name="syncContactBtn" showIf="actionSelect == 4" title="Batch Contact synchronization" onClick="save,action-gsuite-batch-method-action-contact-sync"/>
   		</panel>
     </form>
     
@@ -48,6 +49,9 @@
 	<action-method name="action-gsuite-batch-method-action-task-sync">
 		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionTaskSyncBatch"/>
 	</action-method>
-	
+		
+	<action-method name="action-gsuite-batch-method-action-contact-sync">
+		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionContactSyncBatch"/>
+	</action-method>
 	
 </object-views>

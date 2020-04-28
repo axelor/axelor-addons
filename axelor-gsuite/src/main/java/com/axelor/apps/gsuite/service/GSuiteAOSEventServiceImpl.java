@@ -78,14 +78,9 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
       throws AxelorException {
 
     googleAccount = googleAccountRepo.find(googleAccount.getId());
-    try {
-      Credential credential = gSuiteService.getCredential(googleAccount.getId());
-      Calendar calendar = gSuiteService.getCalendar(credential);
-      syncEvents(googleAccount, calendar, startDateT, endDateT);
-
-    } catch (IOException e) {
-      throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
-    }
+    Credential credential = gSuiteService.getCredential(googleAccount.getId());
+    Calendar calendar = gSuiteService.getCalendar(credential);
+    syncEvents(googleAccount, calendar, startDateT, endDateT);
 
     return googleAccountRepo.save(googleAccount);
   }

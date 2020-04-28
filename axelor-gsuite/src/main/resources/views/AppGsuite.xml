@@ -21,6 +21,9 @@
   			<panel name="taskSyncPanel" title="Event/Task configuration">
   				<field name="isTaskSyncAllowed" widget="boolean-switch"/>
   			</panel>
+  			<panel name="contactSyncPanel" title="Contact configuration">
+  				<field name="isContactSyncAllowed" widget="boolean-switch"/>
+  			</panel>
   		</panel-tabs>
 	</form>
 	

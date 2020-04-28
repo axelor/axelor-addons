@@ -19,18 +19,13 @@ package com.axelor.apps.gsuite.service;
 
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.gdata.client.contacts.ContactsService;
 import com.google.gdata.data.contacts.ContactFeed;
-import com.google.gdata.util.ServiceException;
-import java.io.IOException;
 
 public interface GSuiteAOSContactService {
 
   GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 
-  void sync(Credential credential, GoogleAccount googleAccount)
-      throws ServiceException, IOException;
-
-  void sync(ContactFeed resultFeed, ContactsService contactsService, GoogleAccount googleAccount);
+  void sync(ContactFeed resultFeed, ContactsService contactsService, GoogleAccount googleAccount)
+      throws AxelorException;
 }

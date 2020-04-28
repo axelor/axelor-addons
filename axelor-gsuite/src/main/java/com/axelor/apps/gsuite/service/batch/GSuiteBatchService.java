@@ -48,4 +48,8 @@ public class GSuiteBatchService extends AbstractBatchService {
   public Batch taskSyncBatch(GSuiteBatch batch) {
     return Beans.get(BatchGSuiteTaskSyncService.class).run(batch);
   }
+
+  public Batch contactSyncBatch(GSuiteBatch batch) {
+    return Beans.get(BatchGSuiteContactService.class).run(batch);
+  }
 }

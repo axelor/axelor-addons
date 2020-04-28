@@ -47,6 +47,9 @@ public class GSuiteBatchController {
     if (appGsuite.getIsTaskSyncAllowed()) {
       actionSelect.add(GSuiteBatchRepository.ACTION_TASK_SYNC);
     }
+    if (appGsuite.getIsContactSyncAllowed()) {
+      actionSelect.add(GSuiteBatchRepository.ACTION_CONTACT_SYNC);
+    }
     response.setAttr("actionSelect", "selection-in", actionSelect);
   }
 
@@ -81,6 +84,19 @@ public class GSuiteBatchController {
       GSuiteBatch gSuiteBatch = request.getContext().asType(GSuiteBatch.class);
       gSuiteBatch = Beans.get(GSuiteBatchRepository.class).find(gSuiteBatch.getId());
       Batch batch = Beans.get(GSuiteBatchService.class).taskSyncBatch(gSuiteBatch);
+      response.setFlash(batch.getComments());
+    } catch (Exception e) {
+      TraceBackService.trace(response, e);
+    } finally {
+      response.setReload(true);
+    }
+  }
+
+  public void actionContactSyncBatch(ActionRequest request, ActionResponse response) {
+    try {
+      GSuiteBatch gSuiteBatch = request.getContext().asType(GSuiteBatch.class);
+      gSuiteBatch = Beans.get(GSuiteBatchRepository.class).find(gSuiteBatch.getId());
+      Batch batch = Beans.get(GSuiteBatchService.class).contactSyncBatch(gSuiteBatch);
       response.setFlash(batch.getComments());
     } catch (Exception e) {
       TraceBackService.trace(response, e);

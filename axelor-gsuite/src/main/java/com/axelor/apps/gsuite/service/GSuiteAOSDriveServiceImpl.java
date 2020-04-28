@@ -68,14 +68,11 @@ public class GSuiteAOSDriveServiceImpl implements GSuiteAOSDriveService {
     LocalDateTime syncDate = LocalDateTime.now();
     log.debug("Last sync date: {}", syncDate);
     googleAccount = googleAccountRepo.find(googleAccount.getId());
-    try {
-      drive = gSuiteService.getDrive(googleAccount.getId());
-      this.syncDocs(googleAccount);
-      googleAccount.setDocSyncFromGoogleDate(LocalDateTime.now());
-      googleAccount.setDocSyncFromGoogleLog(null);
-    } catch (IOException e) {
-      googleAccount.setDocSyncFromGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
-    }
+    drive = gSuiteService.getDrive(googleAccount.getId());
+    this.syncDocs(googleAccount);
+    googleAccount.setDocSyncFromGoogleDate(LocalDateTime.now());
+    googleAccount.setDocSyncFromGoogleLog(null);
+
     return googleAccountRepo.save(googleAccount);
   }
 

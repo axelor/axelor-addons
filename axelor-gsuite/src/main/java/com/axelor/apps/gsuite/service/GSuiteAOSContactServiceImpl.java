@@ -18,22 +18,24 @@
 package com.axelor.apps.gsuite.service;
 
 import com.axelor.apps.base.db.Address;
+import com.axelor.apps.base.db.Country;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AddressRepository;
+import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.PartnerGoogleAccountRepository;
-import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
-import com.google.api.client.auth.oauth2.Credential;
 import com.google.common.io.Files;
+import com.google.gdata.client.Service.GDataRequest;
 import com.google.gdata.client.contacts.ContactsService;
 import com.google.gdata.data.Link;
 import com.google.gdata.data.contacts.ContactEntry;
@@ -52,11 +54,12 @@ import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.time.LocalDateTime;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
+
+  private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   private static String FEED_URL =
       "https://www.google.com/m8/feeds/contacts/default/full?max-results=1000";
@@ -73,29 +76,34 @@ public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
 
   @Inject private GoogleAccountRepository googleAccountRepo;
 
-  private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  @Inject private CountryRepository countryRepo;
+
+  @Inject private AddressService addressService;
 
   @Override
   @Transactional
   public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException {
-    if (googleAccount == null) {
-      return null;
-    }
-    googleAccount.setContactSyncFromGoogleLog(null);
-    if (googleAccount.getContactSyncFromGoogleDate() != null) {
-      FEED_URL = FEED_URL + "?updated-min=" + googleAccount.getContactSyncFromGoogleDate();
-    }
+
+    // TODO to make date sync dynamic
+    FEED_URL = FEED_URL + "?updated-min=" + LocalDateTime.now();
+
     try {
-      Credential credential = gSuiteService.getCredential(googleAccount.getId());
-      if (credential == null) {
-        throw new AxelorException(
-            TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
-            String.format(I18n.get(IExceptionMessage.AUTH_EXCEPTION_1), googleAccount.getName()));
+      URL feedUrl = new URL(FEED_URL);
+
+      ContactsService service = gSuiteService.getContact(googleAccount.getId());
+      ContactFeed resultFeed = service.getFeed(feedUrl, ContactFeed.class);
+
+      if (resultFeed.getTitle() != null) {
+        log.debug(
+            "resultfeed::{} -- {}",
+            resultFeed.getTitle().getPlainText(),
+            resultFeed.getEntries().size());
       }
-      sync(credential, googleAccount);
-      googleAccount.setContactSyncFromGoogleDate(LocalDateTime.now());
-    } catch (IOException e) {
-      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+
+      sync(resultFeed, service, googleAccount);
+
+    } catch (IOException | ServiceException e) {
+      throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 
     return googleAccountRepo.save(googleAccount);
@@ -103,36 +111,19 @@ public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
 
   @Override
   @Transactional
-  public void sync(Credential credential, GoogleAccount googleAccount) {
-
-    try {
-      URL feedUrl = new URL(FEED_URL);
-      ContactsService contactsService = new ContactsService(ContactsService.CONTACTS_SERVICE);
-      contactsService.setOAuth2Credentials(credential);
-      ContactFeed resultFeed;
-      resultFeed = contactsService.getFeed(feedUrl, ContactFeed.class);
-      if (resultFeed.getTitle() != null) {
-        log.debug(
-            "resultfeed::{} -- {}",
-            resultFeed.getTitle().getPlainText(),
-            resultFeed.getEntries().size());
-      }
-      sync(resultFeed, contactsService, googleAccount);
-    } catch (IOException | ServiceException e) {
-      googleAccount.setContactSyncFromGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
-    }
-  }
-
-  @Override
-  @Transactional
   public void sync(
-      ContactFeed resultFeed, ContactsService contactsService, GoogleAccount googleAccount) {
-    for (ContactEntry entry : resultFeed.getEntries()) {
-      if (entry.getName() == null) {
+      ContactFeed resultFeed, ContactsService contactsService, GoogleAccount googleAccount)
+      throws AxelorException {
+    for (ContactEntry gsuiteContact : resultFeed.getEntries()) {
+
+      if (gsuiteContact.getName() == null) {
         continue;
       }
-      String googleContactId =
-          entry.getId().substring(entry.getId().lastIndexOf("/") + 1, entry.getId().length());
+
+      String googleContactId = gsuiteContact.getId();
+      googleContactId =
+          googleContactId.substring(googleContactId.lastIndexOf("/") + 1, googleContactId.length());
+
       PartnerGoogleAccount partnerGoogleAccount =
           partnerGoogleAccountRepo.findByGoogleContactId(googleContactId);
       Partner contact = partnerGoogleAccount != null ? partnerGoogleAccount.getPartner() : null;
@@ -141,18 +132,23 @@ public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
         contact.setIsContact(true);
         contact.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_INDIVIDUAL);
       }
-      setName(contact, entry);
+
+      setName(contact, gsuiteContact);
       if (contact.getName() == null) {
         continue;
       }
-      setPhoneNumber(contact, entry);
-      setAddress(contact, entry);
-      setEmail(contact, entry);
-      setPicture(contact, entry, contactsService, googleAccount);
+
+      setPhoneNumber(contact, gsuiteContact);
+      setAddress(contact, gsuiteContact);
+      setEmail(contact, gsuiteContact);
+      setPicture(contact, gsuiteContact, contactsService, googleAccount);
+
       partnerRepo.save(contact);
+
       if (partnerGoogleAccount == null) {
         partnerGoogleAccount = new PartnerGoogleAccount();
       }
+
       partnerGoogleAccount.setGoogleAccount(googleAccount);
       partnerGoogleAccount.setGoogleContactId(googleContactId);
       partnerGoogleAccount.setPartner(contact);
@@ -160,28 +156,39 @@ public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
     }
   }
 
-  @SuppressWarnings("deprecation")
-  public void setPicture(
+  protected void setPicture(
       Partner contact,
-      ContactEntry entry,
-      ContactsService contactsService,
-      GoogleAccount googleAccount) {
-    Link photoLink = entry.getContactPhotoLink();
-    if (photoLink != null) {
-      try {
-        InputStream inputStream = contactsService.getStreamFromLink(photoLink);
-        File tempDir = Files.createTempDir();
-        File file = new File(tempDir, contact.getName() + ".jpg");
-        FileUtils.copyInputStreamToFile(inputStream, file);
-        MetaFile metaFile = metaFiles.upload(file);
-        contact.setPicture(metaFile);
-      } catch (IOException | ServiceException e) {
-        googleAccount.setContactSyncFromGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
+      ContactEntry gsuiteContact,
+      ContactsService service,
+      GoogleAccount googleAccount)
+      throws AxelorException {
+
+    try {
+      Link photoLink = gsuiteContact.getContactPhotoLink();
+      if (photoLink == null) {
+        return;
+      }
+      GDataRequest request = service.createLinkQueryRequest(photoLink);
+      request.execute();
+      if (request.getResponseContentType() == null) {
+        return;
+      }
+      InputStream inputStream = request.getResponseStream();
+      File tempDir = Files.createTempDir();
+      File file = new File(tempDir, contact.getName() + ".jpg");
+      FileUtils.copyInputStreamToFile(inputStream, file);
+      MetaFile metaFile = metaFiles.upload(file);
+      contact.setPicture(metaFile);
+    } catch (IOException | ServiceException e) {
+      if ("Not Found".equals(e.getMessage())) {
+        log.info("Image not found on entry {}", gsuiteContact.getName().getFullName().getValue());
+      } else {
+        throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
       }
     }
   }
 
-  public void setEmail(Partner contact, ContactEntry entry) {
+  protected void setEmail(Partner contact, ContactEntry entry) {
     for (Email email : entry.getEmailAddresses()) {
       if (email != null) {
         EmailAddress emailAddress = new EmailAddress();
@@ -192,24 +199,34 @@ public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
   }
 
   @Transactional
-  public void setAddress(Partner contact, ContactEntry entry) {
+  protected void setAddress(Partner contact, ContactEntry entry) {
     for (StructuredPostalAddress postalAddress : entry.getStructuredPostalAddresses()) {
       if (postalAddress.getFormattedAddress() != null) {
-        Address address = new Address();
+        Address address =
+            contact.getMainAddress() == null ? new Address() : contact.getMainAddress();
         address.setAddressL4(
             postalAddress.getStreet() != null ? postalAddress.getStreet().getValue() : null);
-        address.setAddressL6(
+        if (ObjectUtils.isEmpty(address.getAddressL4())) {
+          continue;
+        }
+        address.setZip(
             postalAddress.getPostcode() != null ? postalAddress.getPostcode().getValue() : null);
-        com.axelor.apps.base.db.Country country =
-            new com.axelor.apps.base.db.Country(postalAddress.getCountry().getValue());
+        Country country =
+            countryRepo
+                .all()
+                .filter("self.alpha2Code = ?1", postalAddress.getCountry().getCode())
+                .fetchOne();
         address.setAddressL7Country(country);
-        address = addressRepo.find(addressRepo.save(address).getId());
+        address.setAddressL5(
+            postalAddress.getPobox() != null ? postalAddress.getPobox().getValue() : null);
+        addressService.autocompleteAddress(address);
+        address = addressRepo.save(address);
         contact.setMainAddress(address);
       }
     }
   }
 
-  public void setPhoneNumber(Partner contact, ContactEntry entry) {
+  protected void setPhoneNumber(Partner contact, ContactEntry entry) {
     for (PhoneNumber phonenumber : entry.getPhoneNumbers()) {
       if (phonenumber.getPhoneNumber() != null && phonenumber.getPrimary()) {
         contact.setFixedPhone(phonenumber.getPhoneNumber());
@@ -219,9 +236,8 @@ public class GSuiteAOSContactServiceImpl implements GSuiteAOSContactService {
     }
   }
 
-  public void setName(Partner contact, ContactEntry entry) {
-    Name name = null;
-    name = entry.getName();
+  protected void setName(Partner contact, ContactEntry entry) {
+    Name name = entry.getName();
     if (name.hasFullName()) {
       String fullName = name.getFullName().getValue();
       if (name.getFullName().hasYomi()) {

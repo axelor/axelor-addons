@@ -13,7 +13,6 @@ dependencies {
 
 	compile project(":modules:axelor-crm")
 	compile project(":modules:axelor-account")
-	compile 'com.google.apis:google-api-services-people:v1-rev506-1.25.0'
 	compile 'com.google.gdata:core:1.47.1'
 	compile 'com.google.apis:google-api-services-drive:v3-rev188-1.25.0'
 	compile 'com.google.apis:google-api-services-calendar:v3-rev401-1.25.0'
