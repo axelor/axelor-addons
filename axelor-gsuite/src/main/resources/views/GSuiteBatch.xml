@@ -14,9 +14,6 @@
     	<panel name="mainPanel">
 		    <field name="actionSelect" />
 		    <field name="code" x-bind="{{code|unaccent|uppercase}}"/>
-		    <panel name="emailBatchPanel">
-		    	<field name="emailFromDate" showIf="actionSelect == 1"/>
-		    </panel>
 		</panel>
 	  	<panel-tabs name="mainPanelTab">
 	    	<panel name="informationPanel" title="Information">
@@ -31,6 +28,7 @@
   			<button name="syncEventBtn" showIf="actionSelect == 2" title="Batch Event synchronization" onClick="save,action-gsuite-batch-method-action-event-sync"/>
   			<button name="syncTaskBtn" showIf="actionSelect == 3" title="Batch Task synchronization" onClick="save,action-gsuite-batch-method-action-task-sync"/>
   			<button name="syncContactBtn" showIf="actionSelect == 4" title="Batch Contact synchronization" onClick="save,action-gsuite-batch-method-action-contact-sync"/>
+  			<button name="syncDriveBtn" showIf="actionSelect == 5" title="Batch Drive synchronization" onClick="save,action-gsuite-batch-method-action-drive-sync"/>
   		</panel>
     </form>
     
@@ -52,6 +50,10 @@
 		
 	<action-method name="action-gsuite-batch-method-action-contact-sync">
 		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionContactSyncBatch"/>
+	</action-method>
+	
+	<action-method name="action-gsuite-batch-method-action-drive-sync">
+		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionDriveSyncBatch"/>
 	</action-method>
 	
 </object-views>

@@ -31,6 +31,8 @@ import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.http.HttpRequest;
+import com.google.api.client.http.HttpRequestInitializer;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -197,6 +199,15 @@ public class GSuiteService {
     Credential credential = getCredential(accountId);
 
     return new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+        .setHttpRequestInitializer(
+            new HttpRequestInitializer() {
+              @Override
+              public void initialize(HttpRequest request) throws IOException {
+                credential.initialize(request);
+                request.setConnectTimeout(300 * 60000); // 300 minutes connect timeout
+                request.setReadTimeout(300 * 60000); // 300 minutes read timeout
+              }
+            })
         .setApplicationName(APP_NAME)
         .build();
   }

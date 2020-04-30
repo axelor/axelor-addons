@@ -8,6 +8,7 @@
 		<option value="2">Event batch</option>
 		<option value="3">Task batch</option>
 		<option value="4">Contact batch</option>
+		<option value="5">Drive batch</option>
 	</selection>
 	
 </object-views>

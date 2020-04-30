@@ -24,6 +24,9 @@
   			<panel name="contactSyncPanel" title="Contact configuration">
   				<field name="isContactSyncAllowed" widget="boolean-switch"/>
   			</panel>
+ 			 <panel name="driveSyncPanel" title="Drive configuration">
+ 				<field name="isDriveSyncAllowed" widget="boolean-switch"/>
+ 			</panel>
   		</panel-tabs>
 	</form>
 	

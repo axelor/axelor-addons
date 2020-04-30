@@ -27,6 +27,9 @@
 		<!-- Contact configuration -->
 		<boolean name="isContactSyncAllowed" title="Contact sync allowed?"/>
 		
+		<!-- Drive Configuration -->
+		<boolean name="isDriveSyncAllowed" title="Drive sync allowed?"/>
+				
 	</entity>
 
 </domain-models>
