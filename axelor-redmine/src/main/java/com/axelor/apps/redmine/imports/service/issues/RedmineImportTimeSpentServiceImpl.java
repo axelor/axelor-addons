@@ -466,8 +466,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setActivityTypeSelect(
         activityType != null && !activityType.isEmpty() ? selectionMap.get(activityType) : null);
 
-    if (!timesheetLine.getInvoiced()) {
-      timesheetLine.setInvoiced(teamTask != null ? teamTask.getInvoiced() : false);
+    if (teamTask != null && !timesheetLine.getInvoiced()) {
+      timesheetLine.setInvoiced(teamTask.getInvoiced());
       timesheetLine.setToInvoice(false);
     }
 
