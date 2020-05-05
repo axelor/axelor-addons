@@ -20,6 +20,8 @@ package com.axelor.apps.gsuite.db.repo;
 import com.axelor.apps.gsuite.db.EventGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
+import com.axelor.auth.db.User;
+import com.axelor.auth.db.repo.UserRepository;
 import com.google.inject.Inject;
 import java.util.List;
 
@@ -28,6 +30,17 @@ public class GoogleAccountManagementRepository extends GoogleAccountRepository {
   @Inject private EventGoogleAccountRepository eventGoogleAccountRepo;
 
   @Inject private PartnerGoogleAccountRepository partnerGoogleAccountRepo;
+
+  @Inject private UserRepository userRepo;
+
+  @Override
+  public GoogleAccount save(GoogleAccount entity) {
+    GoogleAccount account = super.save(entity);
+    User user = account.getOwnerUser();
+    user.setGoogleAccount(account);
+    userRepo.save(user);
+    return account;
+  }
 
   @Override
   public void remove(GoogleAccount account) {
@@ -42,6 +55,9 @@ public class GoogleAccountManagementRepository extends GoogleAccountRepository {
     for (EventGoogleAccount eventAccount : eventAccounts) {
       eventGoogleAccountRepo.remove(eventAccount);
     }
+    User user = account.getOwnerUser();
+    user.setGoogleAccount(null);
+    userRepo.save(user);
     super.remove(account);
   }
 }
