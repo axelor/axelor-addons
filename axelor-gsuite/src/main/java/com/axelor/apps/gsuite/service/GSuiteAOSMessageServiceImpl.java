@@ -52,6 +52,7 @@ import com.google.inject.persist.Transactional;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -87,9 +88,14 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
   @Override
   @Transactional
   public GoogleAccount sync(GoogleAccount account) throws AxelorException {
+    return sync(account, null);
+  }
+
+  @Override
+  public GoogleAccount sync(GoogleAccount account, LocalDate fromDate) throws AxelorException {
     try {
       service = gSuiteService.getGmail(account.getId());
-      String query = getFilterQuery(account);
+      String query = getFilterQuery(fromDate);
       syncMessages(service, service.users().getProfile("me").getUserId(), query, account);
     } catch (IOException | AxelorException | MessagingException e) {
       throw new AxelorException(
@@ -105,7 +111,7 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
     return googleAccountRepo.save(account);
   }
 
-  private String getFilterQuery(GoogleAccount account) {
+  protected String getFilterQuery(LocalDate fromDate) {
     Set<String> addressSet = appGSuiteService.getRelatedEmailAddressSet();
     String leadEmailsQuery =
         addressSet
@@ -117,11 +123,10 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
         String.format(
             "(from:{%s} OR to:{%s}) (%s)", leadEmailsQuery, leadEmailsQuery, "in:inbox OR in:sent");
 
-    if (account.getGmailSyncFromGoogleDate() != null) {
-      query =
-          String.format(
-              "%s (after:%s)", query, account.getGmailSyncFromGoogleDate().format(DATE_FORMAT));
+    if (fromDate != null) {
+      query = String.format("%s (after:%s)", query, fromDate.format(DATE_FORMAT));
     }
+
     log.debug(query);
     return query;
   }
@@ -133,7 +138,9 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
       throws IOException, MessagingException {
 
     // TODO fetch all Email at once in raw format
-    ListMessagesResponse response = service.users().messages().list(userId).setQ(query).execute();
+    com.google.api.services.gmail.Gmail.Users.Messages.List list =
+        service.users().messages().list(userId).setQ(query);
+    ListMessagesResponse response = list.execute();
 
     List<com.google.api.services.gmail.model.Message> gmailMessages = new ArrayList<>();
     List<Message> messages = new ArrayList<>();
@@ -141,8 +148,7 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
       gmailMessages.addAll(response.getMessages());
       if (response.getNextPageToken() != null) {
         String pageToken = response.getNextPageToken();
-        response =
-            service.users().messages().list(userId).setQ(query).setPageToken(pageToken).execute();
+        response = list.setPageToken(pageToken).execute();
       } else {
         break;
       }

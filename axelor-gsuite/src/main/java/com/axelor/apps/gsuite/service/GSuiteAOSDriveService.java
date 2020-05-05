@@ -22,14 +22,13 @@ import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.drive.model.File;
-import java.io.IOException;
 import java.util.List;
 
 public interface GSuiteAOSDriveService {
 
   GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 
-  void syncDocs(GoogleAccount googleAccount);
+  void syncDocs(GoogleAccount googleAccount) throws AxelorException;
 
   void createFolders(List<File> folders, GoogleAccount googleAccount);
 
@@ -39,7 +38,7 @@ public interface GSuiteAOSDriveService {
       File file,
       DriveGoogleAccount driveGoogleAccount);
 
-  void createFiles(List<File> files, GoogleAccount googleAccount) throws IOException;
+  void createFiles(List<File> files, GoogleAccount googleAccount) throws AxelorException;
 
   void updateParent(List<File> allData, GoogleAccount googleAccount);
 }

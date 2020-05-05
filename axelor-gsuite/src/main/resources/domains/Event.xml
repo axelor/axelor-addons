@@ -8,7 +8,10 @@
 	<entity name="Event" lang="java" extends="com.axelor.apps.base.db.ICalendarEvent">
 
 		<one-to-many name="eventGoogleAccounts" ref="com.axelor.apps.gsuite.db.EventGoogleAccount" mappedBy="event" />
-
+		<string name="googleTaskId"/>
+		
+		<finder-method name="findByGoogleTaskId" using="googleTaskId"/>
+		
 	</entity>
 
 </domain-models>

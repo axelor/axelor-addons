@@ -18,6 +18,15 @@
   			<panel name="emailSyncPanel" title="Email configuration">
   				<field name="isEmailSyncAllowed" widget="boolean-switch"/>
   			</panel>
+  			<panel name="taskSyncPanel" title="Event/Task configuration">
+  				<field name="isTaskSyncAllowed" widget="boolean-switch"/>
+  			</panel>
+  			<panel name="contactSyncPanel" title="Contact configuration">
+  				<field name="isContactSyncAllowed" widget="boolean-switch"/>
+  			</panel>
+ 			 <panel name="driveSyncPanel" title="Drive configuration">
+ 				<field name="isDriveSyncAllowed" widget="boolean-switch"/>
+ 			</panel>
   		</panel-tabs>
 	</form>
 	

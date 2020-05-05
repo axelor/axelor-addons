@@ -15,15 +15,14 @@
 		<string name="description" title="Description" large="true" />
 		<one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch" mappedBy="gSuiteBatch" title="Batchs" />
 		
-		<!-- EMAIL BATCH -->
-		<date name="emailFromDate"/>
-	
 	  	<extra-code><![CDATA[
 	
 	   	// ACTION TYPE
 		public static final int ACTION_EMAIL_SYNC = 1;
 		public static final int ACTION_EVENT_SYNC = 2;
 		public static final int ACTION_TASK_SYNC = 3;
+		public static final int ACTION_CONTACT_SYNC = 4;
+		public static final int ACTION_DRIVE_SYNC = 5;
 	
 	]]></extra-code>	
 				

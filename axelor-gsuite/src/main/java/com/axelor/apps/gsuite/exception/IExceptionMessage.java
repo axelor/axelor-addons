@@ -38,11 +38,14 @@ public interface IExceptionMessage {
       "No google configuration found" /*)*/;
 
   public static final String GMAIL_SYNC_FAILURE = /*$$(*/
-      "Gmail sync failed.Please check tacebaack for detailed log." /*)*/;
+      "Gmail sync failed.Please check taceback for detailed log." /*)*/;
 
   public static final String GMAIL_SYNC_SUCCESS = /*$$(*/
       "Mails from google synchronized successfully." /*)*/;
 
   public static final String GSUITE_BATCH_1 = /*$$(*/
       "Unknown action %s for the %s treatment" /*)*/;
+
+  public static final String CONTACT_IMAGE_EXCEPTION = /*$$(*/
+      "Error in image sync of contact" /*)*/;
 }

@@ -21,6 +21,15 @@
 		<!-- Email configuration -->
 		<boolean name="isEmailSyncAllowed" title="Email sync allowed?"/>
 		
+		<!-- Task configuration -->
+		<boolean name="isTaskSyncAllowed" title="Task sync allowed?"/>
+		
+		<!-- Contact configuration -->
+		<boolean name="isContactSyncAllowed" title="Contact sync allowed?"/>
+		
+		<!-- Drive Configuration -->
+		<boolean name="isDriveSyncAllowed" title="Drive sync allowed?"/>
+				
 	</entity>
 
 </domain-models>

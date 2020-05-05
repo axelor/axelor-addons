@@ -22,12 +22,15 @@ import com.axelor.apps.message.db.Message;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.gmail.Gmail;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 import javax.mail.MessagingException;
 
 public interface GSuiteAOSMessageService {
 
   public GoogleAccount sync(GoogleAccount account) throws AxelorException;
+
+  public GoogleAccount sync(GoogleAccount account, LocalDate fromDate) throws AxelorException;
 
   public List<Message> syncMessages(
       Gmail service, String userId, String query, GoogleAccount googleAccount)
