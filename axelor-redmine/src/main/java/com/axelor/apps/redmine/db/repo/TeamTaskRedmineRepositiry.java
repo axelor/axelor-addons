@@ -27,7 +27,7 @@ public class TeamTaskRedmineRepositiry extends TeamTaskBusinessSupportRepository
 
     super.save(teamTask);
 
-    if (teamTask.getRedmineId() != null) {
+    if (teamTask.getRedmineId() != 0) {
       teamTask.setFullName(teamTask.getName());
     }
 
