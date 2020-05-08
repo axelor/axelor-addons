@@ -127,14 +127,14 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
       } else if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)
           || exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML)) {
 
-        List<File> fileList =
+        Map<MetaFile, File> metaFileFileMap =
             rossumApiService.extractInvoiceDataMetaFile(
                 metaFileList,
                 invoiceOcrTemplate.getTimeout(),
                 invoiceOcrTemplate.getQueue(),
                 exportTypeSelect);
 
-        File exportedFile = fileList.get(0);
+        File exportedFile = metaFileFileMap.entrySet().iterator().next().getValue();
         if (exportedFile != null) {
           invoiceOcrTemplate.setExportedFile(metaFiles.upload(exportedFile));
           invoiceOcrTemplateRepository.save(invoiceOcrTemplate);

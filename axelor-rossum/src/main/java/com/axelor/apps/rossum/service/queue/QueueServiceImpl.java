@@ -7,11 +7,16 @@ import com.axelor.apps.rossum.db.repo.SchemaRepository;
 import com.axelor.apps.rossum.db.repo.WorkspaceRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.exception.AxelorException;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -49,11 +54,13 @@ public class QueueServiceImpl implements QueueService {
   public void updateJsonData(Queue queue) throws JSONException {
     String queueResult = queue.getQueueResult();
 
-    JSONObject queueObject = new JSONObject(queueResult);
-    queueObject.put("name", queue.getQueueName());
-    queueObject.put("automation_level", queue.getAutomationLevelSelect());
+    if (!Strings.isNullOrEmpty(queueResult)) {
+      JSONObject queueObject = new JSONObject(queueResult);
+      queueObject.put("name", queue.getQueueName());
+      queueObject.put("automation_level", queue.getAutomationLevelSelect());
 
-    queue.setQueueResult(queueObject.toString());
+      queue.setQueueResult(queueObject.toString());
+    }
   }
 
   @Override
@@ -78,7 +85,7 @@ public class QueueServiceImpl implements QueueService {
   }
 
   @Override
-  @Transactional
+  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
   public void getQueues(AppRossum appRossum) throws IOException, JSONException, AxelorException {
     appRossumService.login(appRossum);
 
@@ -114,6 +121,51 @@ public class QueueServiceImpl implements QueueService {
         queue.setAutomationLevelSelect(automationLevelSelect);
         queueRepo.save(queue);
       }
+    }
+  }
+
+  @Override
+  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
+  public void createQueue(Queue queue) throws IOException, JSONException, AxelorException {
+    AppRossum appRossum = appRossumService.getAppRossum();
+
+    appRossumService.login(appRossum);
+
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("name", queue.getQueueName());
+    jsonObject.put("workspace", queue.getWorkspaceUrl().getWorkspaceUrl());
+    jsonObject.put("schema", queue.getSchemaUrl().getSchemaUrl());
+
+    HttpPost httpPost = new HttpPost(String.format(API_URL + "%s", "/v1/queues"));
+    httpPost.addHeader("Authorization", "token " + appRossum.getToken());
+    httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
+
+    StringEntity stringEntity = new StringEntity(jsonObject.toString());
+    httpPost.setEntity(stringEntity);
+
+    response = httpClient.execute(httpPost);
+
+    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
+      JSONObject resultObject =
+          new JSONObject(
+              IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
+
+      String queueUrl = resultObject.getString("url");
+
+      Integer queueId = resultObject.getInt("id");
+      String queueName = resultObject.getString("name");
+      String workspaceUrl = resultObject.getString("workspace");
+      String schemaUrl = resultObject.getString("schema");
+      String automationLevelSelect = resultObject.getString("automation_level");
+
+      queue.setQueueId(queueId);
+      queue.setQueueName(queueName);
+      queue.setQueueUrl(queueUrl);
+      queue.setWorkspaceUrl(workspaceRepo.findByUrl(workspaceUrl));
+      queue.setSchemaUrl(schemaRepo.findByUrl(schemaUrl));
+      queue.setQueueResult(resultObject.toString());
+      queue.setAutomationLevelSelect(automationLevelSelect);
+      queueRepo.save(queue);
     }
   }
 }

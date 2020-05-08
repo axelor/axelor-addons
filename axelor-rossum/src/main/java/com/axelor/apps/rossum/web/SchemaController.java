@@ -1,6 +1,7 @@
 package com.axelor.apps.rossum.web;
 
 import com.axelor.apps.rossum.db.Schema;
+import com.axelor.apps.rossum.db.repo.SchemaRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.service.schema.SchemaService;
 import com.axelor.exception.AxelorException;
@@ -35,6 +36,32 @@ public class SchemaController {
 
       response.setReload(true);
     } catch (IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+
+  public void createSchema(ActionRequest request, ActionResponse response) {
+
+    try {
+      Schema schema = request.getContext().asType(Schema.class);
+      Beans.get(SchemaService.class).createSchema(schema);
+      response.setReload(true);
+    } catch (IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+
+  public void updateSchemaContent(ActionRequest request, ActionResponse response) {
+
+    try {
+
+      Beans.get(SchemaService.class)
+          .updateSchemaContent(
+              Beans.get(SchemaRepository.class)
+                  .find(request.getContext().asType(Schema.class).getId()));
+
+      response.setReload(true);
+    } catch (JSONException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }

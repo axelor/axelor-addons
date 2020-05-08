@@ -41,4 +41,16 @@ public class QueueController {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }
+
+  public void createQueue(ActionRequest request, ActionResponse response) {
+    try {
+      Queue queue =
+          Beans.get(QueueRepository.class).find(request.getContext().asType(Queue.class).getId());
+
+      Beans.get(QueueService.class).createQueue(queue);
+      response.setReload(true);
+    } catch (IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
 }

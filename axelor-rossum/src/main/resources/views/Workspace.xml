@@ -3,14 +3,14 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
-   <grid model="com.axelor.apps.rossum.db.Workspace" title="Workspaces" name="workspace-grid">
+   <grid model="com.axelor.apps.rossum.db.Workspace" title="Workspaces" name="workspace-grid" canNew="false">
       <field name="workspaceName"/>
       <field name="workspaceUrl"/>
       <field name="workspaceId"/>
       <field name="organisationUrl"/>
    </grid>
 
-   <form model="com.axelor.apps.rossum.db.Workspace" title="Workspace" name="workspace-form" width="large">
+   <form model="com.axelor.apps.rossum.db.Workspace" title="Workspace" name="workspace-form" width="large" canNew="false">
       <panel name="mainPanel">
          <field name="workspaceName" onChange="action-rossum-workspace-method-update-json-data"/>
          <field name="workspaceUrl"/>

@@ -1,5 +1,5 @@
 /*
- * Axelor Business Solutions
+// * Axelor Business Solutions
  *
  * Copyright (C) 2019 Axelor (<http://axelor.com>).
  *
@@ -48,9 +48,11 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -111,11 +113,14 @@ public class AppRossumServiceImpl implements AppRossumService {
 
     this.login(getAppRossum());
 
-    List<JSONObject> jsonDataList = submitInvoiceAndExtractData(metaFileList, timeout, queue);
+    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+        submitInvoiceAndExtractData(metaFileList, timeout, queue);
 
     List<JSONObject> filterJSONDataList = new ArrayList<>();
 
-    for (JSONObject jsonData : jsonDataList) {
+    Set<MetaFile> metaFileSet = metaFileJSONObjectMap.keySet();
+    for (MetaFile metaFile : metaFileSet) {
+      JSONObject jsonData = metaFileJSONObjectMap.get(metaFile);
       String uri =
           String.format(
               "%s" + "%s" + "%s" + "%s" + "%s",
@@ -146,15 +151,20 @@ public class AppRossumServiceImpl implements AppRossumService {
   }
 
   @Override
-  public List<File> extractInvoiceDataMetaFile(
+  public Map<MetaFile, File> extractInvoiceDataMetaFile(
       List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException {
     this.login(getAppRossum());
 
-    List<JSONObject> jsonDataList = submitInvoiceAndExtractData(metaFileList, timeout, queue);
-    List<File> fileList = new ArrayList<>();
+    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+        submitInvoiceAndExtractData(metaFileList, timeout, queue);
 
-    for (JSONObject jsonData : jsonDataList) {
+    Map<MetaFile, File> metaFileFileMap = new HashMap<>();
+
+    Set<MetaFile> metaFileSet = metaFileJSONObjectMap.keySet();
+
+    for (MetaFile metaFile : metaFileSet) {
+      JSONObject jsonData = metaFileJSONObjectMap.get(metaFile);
       String uri =
           String.format(
               "%s" + "%s" + "%s" + "%s" + "%s",
@@ -203,14 +213,14 @@ public class AppRossumServiceImpl implements AppRossumService {
         pw.close();
       }
 
-      fileList.add(file);
+      metaFileFileMap.put(metaFile, file);
       httpGet.abort();
     }
 
-    return fileList;
+    return metaFileFileMap;
   }
 
-  private List<JSONObject> submitInvoiceAndExtractData(
+  private Map<MetaFile, JSONObject> submitInvoiceAndExtractData(
       List<MetaFile> metaFileList, Integer timeout, Queue queue)
       throws AxelorException, IOException, JSONException, InterruptedException {
 
@@ -219,7 +229,7 @@ public class AppRossumServiceImpl implements AppRossumService {
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR, "Queue is missing");
     }
 
-    List<String> annotationsLinkList = new ArrayList<>();
+    Map<String, MetaFile> annotationsLinkMetaFileMap = new HashMap<>();
 
     for (MetaFile metaFile : metaFileList) {
       if (metaFile != null
@@ -238,7 +248,7 @@ public class AppRossumServiceImpl implements AppRossumService {
 
           log.debug("Annotation link: " + annotationsLink);
 
-          annotationsLinkList.add(annotationsLink);
+          annotationsLinkMetaFileMap.put(annotationsLink, metaFile);
         } else {
           throw new AxelorException(
               TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
@@ -254,20 +264,23 @@ public class AppRossumServiceImpl implements AppRossumService {
 
     int sleepMillis = 5000;
     timeout = (int) ((timeout * 1e3) / sleepMillis);
-    List<JSONObject> jsonObjectList =
-        getDocumentWithStatus(annotationsLinkList, timeout, sleepMillis);
+
+    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+        getDocumentWithStatus(annotationsLinkMetaFileMap, timeout, sleepMillis);
     log.debug("Document successfully processed.");
 
-    return jsonObjectList;
+    return metaFileJSONObjectMap;
   }
 
-  private List<JSONObject> getDocumentWithStatus(
-      List<String> annotationsLinkList, int maxRetries, int sleepMillis)
+  private Map<MetaFile, JSONObject> getDocumentWithStatus(
+      Map<String, MetaFile> annotationsLinkMetaFileMap, int maxRetries, int sleepMillis)
       throws JSONException, AxelorException, IOException, InterruptedException {
 
-    List<JSONObject> jsonObjectList = new ArrayList<>();
+    Map<MetaFile, JSONObject> metaFileJSONObjectMap = new HashMap<>();
 
     Map<String, Boolean> annotationsLinkExportedMap = new HashMap<>();
+
+    Collection<String> annotationsLinkList = annotationsLinkMetaFileMap.keySet();
 
     for (String annotationsLink : annotationsLinkList) {
       annotationsLinkExportedMap.put(annotationsLink, false);
@@ -297,7 +310,7 @@ public class AppRossumServiceImpl implements AppRossumService {
           String status = result.getString("status");
           switch (status) {
             case "exported":
-              jsonObjectList.add(result);
+              metaFileJSONObjectMap.put(annotationsLinkMetaFileMap.get(annotationsLink), result);
               annotationsLinkExportedMap.put(annotationsLink, true);
               break;
             case "error":
@@ -314,8 +327,8 @@ public class AppRossumServiceImpl implements AppRossumService {
           httpGet.abort();
         }
       }
-      if (jsonObjectList.size() == annotationsLinkList.size()) {
-        return jsonObjectList;
+      if (metaFileJSONObjectMap.size() == annotationsLinkList.size()) {
+        return metaFileJSONObjectMap;
       } else {
         Thread.sleep(sleepMillis);
       }
