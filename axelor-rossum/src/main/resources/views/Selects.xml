@@ -14,4 +14,11 @@
       <option value="csv">CSV</option>
       <option value="xml">XML</option>
    </selection>
+
+   <selection name="rossum.schema.template.select">
+      <option value="EU Demo Template">EU Demo Template</option>
+      <option value="US Demo Template">US Demo Template</option>
+      <option value="UK Demo Template">UK Demo Template</option>
+      <option value="CZ Demo Template">CZ Demo Template</option>
+   </selection>
 </object-views>

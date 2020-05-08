@@ -5,7 +5,7 @@
   
   <module name="base" package="com.axelor.apps.base.db"/>
 
-  <entity name="AppRossum" cachable="true" lang="java"  extends="App">
+  <entity name="AppRossum" cacheable="true" lang="java"  extends="App">
     <string name="rossumUrl" title="Rossum base Url"/>
     <string name="rossumApiKey" title="Rossum API Key"/>
     <string name="username" title="User name"/>

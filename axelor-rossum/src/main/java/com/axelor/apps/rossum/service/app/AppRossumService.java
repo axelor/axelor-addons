@@ -24,6 +24,7 @@ import com.axelor.meta.db.MetaFile;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
 
@@ -51,7 +52,7 @@ public interface AppRossumService {
       List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException;
 
-  public List<File> extractInvoiceDataMetaFile(
+  public Map<MetaFile, File> extractInvoiceDataMetaFile(
       List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException;
 

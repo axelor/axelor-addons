@@ -28,6 +28,8 @@ import com.axelor.apps.rossum.service.organisation.OrganisationService;
 import com.axelor.apps.rossum.service.organisation.OrganisationServiceImpl;
 import com.axelor.apps.rossum.service.queue.QueueService;
 import com.axelor.apps.rossum.service.queue.QueueServiceImpl;
+import com.axelor.apps.rossum.service.schema.SchemaFieldService;
+import com.axelor.apps.rossum.service.schema.SchemaFieldServiceImpl;
 import com.axelor.apps.rossum.service.schema.SchemaService;
 import com.axelor.apps.rossum.service.schema.SchemaServiceImpl;
 import com.axelor.apps.rossum.service.workspace.WorkspaceService;
@@ -44,5 +46,6 @@ public class RossumModule extends AxelorModule {
     bind(WorkspaceService.class).to(WorkspaceServiceImpl.class);
     bind(SchemaService.class).to(SchemaServiceImpl.class);
     bind(QueueService.class).to(QueueServiceImpl.class);
+    bind(SchemaFieldService.class).to(SchemaFieldServiceImpl.class);
   }
 }

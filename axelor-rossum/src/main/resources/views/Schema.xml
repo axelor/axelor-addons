@@ -9,12 +9,25 @@
       <field name="schemaId"/>
    </grid>
 
-   <form model="com.axelor.apps.rossum.db.Schema" title="Schema" name="schema-form" width="large">
+   <form model="com.axelor.apps.rossum.db.Schema" title="Schema" name="schema-form" width="large"
+      onSave="save,action-rossum-schema-method-update-schema-content">
       <panel name="mainPanel">
-			<field name="schemaName" onChange="action-rossum-schema-method-update-json-data"/>
+			<field name="schemaName" onChange="action-rossum-schema-method-update-json-data" required="true"/>
+         <field name="schemaTemplateSelect" showIf="schemaId == 0" requiredIf="schemaId == 0"/>
 			<field name="schemaUrl"/>
          <field name="schemaId"/>
 
+         <panel name="schemaFieldPanel" title="Schema fields" colSpan="12">
+            <field name="schemaFieldList" colSpan="12" form-view="schema-field-form" grid-view="schema-field-grid" showTitle="false" 
+               canNew="false" canRemove="false" x-can-reload="true">
+	            <editor x-show-titles="false" x-viewer="true" x-layout="table" colSpan="12">
+	               <field name="label" colSpan="3"/>
+	               <field name="schemaFieldId" colSpan="3"/>
+	               <field name="parentSchemaFieldId" colSpan="3"/>
+	               <field name="canExport" colSpan="3"/>
+	            </editor>
+            </field>
+         </panel>
          <panel-related field="queueList" grid-view="queue-grid" form-view="queue-form" colSpan="12"/>
       </panel>
       <panel name="jsonDataPanel" title="Json Data">
@@ -22,9 +35,16 @@
       </panel>
       
       <panel name="buttonPanel" sidebar="true">
-         <button name="updateSchemaBtn" title="Update Schema" onClick="save,action-rossum-schema-method-update-schema"/>
+         <button name="createSchemaBtn" title="Create schema" onClick="save,action-rossum-schema-method-create-schema" showIf="schemaId == 0"/>
+         <button name="updateSchemaBtn" title="Update schema" onClick="action-rossum-schmea-group-update-schema-onclick" showIf="schemaId != 0"/>
       </panel>
    </form>
+
+   <action-group name="action-rossum-schmea-group-update-schema-onclick">
+      <action name="save"/>
+      <action name="action-rossum-schema-method-update-schema-content"/>
+      <action name="action-rossum-schema-method-update-schema"/>
+   </action-group>
 
    <action-method name="action-rossum-schema-method-update-json-data">
       <call class="com.axelor.apps.rossum.web.SchemaController" method="updateJsonData"/>
@@ -32,5 +52,13 @@
 
    <action-method name="action-rossum-schema-method-update-schema">
       <call class="com.axelor.apps.rossum.web.SchemaController" method="updateSchema"/>
+   </action-method>
+
+   <action-method name="action-rossum-schema-method-create-schema">
+      <call class="com.axelor.apps.rossum.web.SchemaController" method="createSchema"/>
+   </action-method>
+
+   <action-method name="action-rossum-schema-method-update-schema-content">
+      <call method="updateSchemaContent" class="com.axelor.apps.rossum.web.SchemaController"/>
    </action-method>
 </object-views>

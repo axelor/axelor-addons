@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+   <grid model="com.axelor.apps.rossum.db.SchemaField" title="Schema fields" name="schema-field-grid">
+      <field name="label"/>
+      <field name="schemaFieldId"/>
+      <field name="parentSchemaFieldId"/>
+      <field name="canExport"/>
+      <field name="schemaUrl"/>
+   </grid>
+
+   <form model="com.axelor.apps.rossum.db.SchemaField" title="Schema field" name="schema-field-form" width="large"
+      onSave="save,action-rossum-schema-field-method-update-schema-content">
+      <panel name="mainPanel">
+         <field name="label"/>
+         <field name="schemaFieldId"/>
+         <field name="parentSchemaFieldId"/>
+         <field name="canExport"/>
+         <field name="schemaUrl"/>
+      </panel>
+   </form>
+
+   <action-method name="action-rossum-schema-field-method-update-schema-content">
+      <call class="com.axelor.apps.rossum.web.SchemaFieldController" method="updateSchmeaContent"/>
+   </action-method>
+
+</object-views>

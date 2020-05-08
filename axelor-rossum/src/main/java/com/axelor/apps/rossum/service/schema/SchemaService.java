@@ -14,4 +14,8 @@ public interface SchemaService {
 
   public void updateSchema(AppRossum appRossum, Schema schema)
       throws IOException, JSONException, AxelorException;
+
+  public void createSchema(Schema schema) throws IOException, JSONException, AxelorException;
+
+  public void updateSchemaContent(Schema schema) throws JSONException;
 }

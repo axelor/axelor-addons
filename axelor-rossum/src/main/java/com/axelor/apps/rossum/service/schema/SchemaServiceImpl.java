@@ -2,15 +2,22 @@ package com.axelor.apps.rossum.service.schema;
 
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Schema;
+import com.axelor.apps.rossum.db.SchemaField;
 import com.axelor.apps.rossum.db.repo.SchemaRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.exception.AxelorException;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.util.List;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -29,25 +36,34 @@ public class SchemaServiceImpl implements SchemaService {
 
   protected SchemaRepository schemaRepo;
   protected AppRossumService appRossumService;
+  protected SchemaFieldService schemaFieldService;
+
+  protected static final String SCHEMA_CHILDREN = "children";
 
   @Inject
-  public SchemaServiceImpl(SchemaRepository schemaRepo, AppRossumService appRossumService) {
+  public SchemaServiceImpl(
+      SchemaRepository schemaRepo,
+      AppRossumService appRossumService,
+      SchemaFieldService schemaFieldService) {
     this.schemaRepo = schemaRepo;
     this.appRossumService = appRossumService;
+    this.schemaFieldService = schemaFieldService;
   }
 
   @Override
   public void updateJsonData(Schema schema) throws JSONException {
     String schemeResult = schema.getSchemaResult();
 
-    JSONObject schemaObject = new JSONObject(schemeResult);
-    schemaObject.put("name", schema.getSchemaName());
+    if (!Strings.isNullOrEmpty(schemeResult)) {
+      JSONObject schemaObject = new JSONObject(schemeResult);
+      schemaObject.put("name", schema.getSchemaName());
 
-    schema.setSchemaResult(schemaObject.toString());
+      schema.setSchemaResult(schemaObject.toString());
+    }
   }
 
   @Override
-  @Transactional
+  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
   public void getSchemas(AppRossum appRossum) throws IOException, JSONException, AxelorException {
     appRossumService.login(appRossum);
 
@@ -89,6 +105,7 @@ public class SchemaServiceImpl implements SchemaService {
           schema.setSchemaUrl(schemaUrl);
           schema.setSchemaResult(resultObject.toString());
           schemaRepo.save(schema);
+          this.generateSchemaFields(schema);
         }
       }
     }
@@ -109,5 +126,96 @@ public class SchemaServiceImpl implements SchemaService {
 
     response = httpClient.execute(httpPut);
     this.getSchemas(appRossum);
+  }
+
+  @Override
+  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
+  public void createSchema(Schema schema) throws IOException, JSONException, AxelorException {
+    AppRossum appRossum = appRossumService.getAppRossum();
+    appRossumService.login(appRossum);
+
+    JSONObject jsonObject = new JSONObject();
+    jsonObject.put("name", schema.getSchemaName());
+    jsonObject.put("template_name", schema.getSchemaTemplateSelect());
+
+    HttpPost httpPost = new HttpPost(String.format(API_URL + "%s", "/v1/schemas/from_template"));
+    httpPost.addHeader("Authorization", "token " + appRossum.getToken());
+    httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
+
+    StringEntity stringEntity = new StringEntity(jsonObject.toString());
+    httpPost.setEntity(stringEntity);
+
+    response = httpClient.execute(httpPost);
+
+    if (response.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
+      JSONObject resultObject =
+          new JSONObject(
+              IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
+
+      String schemaUrl = resultObject.getString("url");
+      Integer schemaId = resultObject.getInt("id");
+      String schemaName = resultObject.getString("name");
+
+      schema = schemaRepo.find(schema.getId());
+      schema.setSchemaId(schemaId);
+      schema.setSchemaName(schemaName);
+      schema.setSchemaUrl(schemaUrl);
+      schema.setSchemaResult(resultObject.toString());
+      schemaRepo.save(schema);
+    }
+  }
+
+  public void generateSchemaFields(Schema schema) throws JSONException {
+
+    JSONObject jsonObject = new JSONObject(schema.getSchemaResult());
+    JSONArray contentArray = jsonObject.getJSONArray("content");
+
+    for (int i = 0; i < contentArray.size(); i++) {
+      JSONObject contentObject = contentArray.getJSONObject(i);
+      JSONArray childrenArray = contentObject.getJSONArray(SCHEMA_CHILDREN);
+
+      for (int j = 0; j < childrenArray.size(); j++) {
+        JSONObject childObject = childrenArray.getJSONObject(j);
+        String schemaFieldId = childObject.getString("id");
+
+        if (!Strings.isNullOrEmpty(schemaFieldId)) {
+          if (schemaFieldId.equals("tax_details") || schemaFieldId.equals("line_items")) {
+
+            JSONArray subChildArray =
+                childObject.getJSONObject(SCHEMA_CHILDREN).getJSONArray(SCHEMA_CHILDREN);
+
+            for (int k = 0; k < subChildArray.size(); k++) {
+              JSONObject subChildObject = subChildArray.getJSONObject(k);
+              schemaFieldService.findAndUpdateSchemaField(schema, subChildObject, schemaFieldId);
+            }
+
+          } else {
+            schemaFieldService.findAndUpdateSchemaField(schema, childObject, null);
+          }
+        }
+      }
+    }
+  }
+
+  @Override
+  @Transactional(rollbackOn = {JSONException.class})
+  public void updateSchemaContent(Schema schema) throws JSONException {
+    List<SchemaField> schemaFieldList = schema.getSchemaFieldList();
+
+    if (CollectionUtils.isNotEmpty(schemaFieldList)) {
+      JSONObject resultObject = new JSONObject(schema.getSchemaResult());
+
+      for (SchemaField schemaField : schemaFieldList) {
+        resultObject =
+            schemaFieldService.findAndUpdateSchemaContent(
+                schemaField.getSchemaFieldId(),
+                schemaField.getCanExport(),
+                resultObject,
+                schemaField.getParentSchemaFieldId());
+      }
+
+      schema.setSchemaResult(resultObject.toString());
+      schemaRepo.save(schema);
+    }
   }
 }

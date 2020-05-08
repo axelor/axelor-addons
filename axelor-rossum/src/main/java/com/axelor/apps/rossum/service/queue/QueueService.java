@@ -14,4 +14,6 @@ public interface QueueService {
       throws IOException, JSONException, AxelorException;
 
   public void getQueues(AppRossum appRossum) throws IOException, JSONException, AxelorException;
+
+  public void createQueue(Queue queue) throws IOException, JSONException, AxelorException;
 }
