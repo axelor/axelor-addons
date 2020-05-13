@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid name="date-format-grid" title="Date formats" model="com.axelor.apps.invoice.extractor.db.DateFormat">
+		<field name="dateFormat"/>
+	</grid>
+
+	<form name="date-format-form" title="Date format" model="com.axelor.apps.invoice.extractor.db.DateFormat">
+		<panel name="mainPanel">
+			<field name="dateFormat"/>
+		</panel>
+		<panel name="tipsPanel" title="Tips" sidebar="true" itemSpan="12">
+			<label name="usage" title="The tags below can be used as a Date Format" />
+			<label name="fullYearLabel" title="%YYYY : Full Year (2017)" />
+			<label name="YYLabel" title="%YY : Year (17)" />
+			<label name="MLabel" title="%M : Month (1, 2, 3, ...)" />
+			<label name="FMLabel" title="%FM : Full Month (01, 02, 03, ...)" />
+			<label name="DLabel" title="%D : Day" />
+			<label name="WYLabel" title="%WY : Week number" />
+		</panel>
+	</form>
+
+</object-views>

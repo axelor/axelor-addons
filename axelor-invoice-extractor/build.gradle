@@ -1,0 +1,15 @@
+apply plugin: "com.axelor.app-module"
+
+apply {
+	version = "5.0.0-SNAPSHOT"
+}
+
+axelor {
+	title "Axelor :: Axelor Invoice Extractor"
+	description "Axelor Invoice extractor"
+}
+
+dependencies {
+	compile project(":modules:axelor-account")
+	compile group: 'org.apache.clerezza.ext', name: 'org.json.simple', version: '0.4'
+}
