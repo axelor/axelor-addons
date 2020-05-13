@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views
+  http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<menuitem name="invoice-extractor-root" title="Invoice extractor" if="__config__.app.isApp('invoice-extractor')" order="-79" icon="fa-file-pdf-o" icon-background="#c40b0e" />
+
+	<menuitem name="invoice-extractor-root-invoice-extractor" title="Invoice extractors" order="1" parent="invoice-extractor-root" action="invoice.extractor.root.invoice.extractor"/>
+	<action-view name="invoice.extractor.root.invoice.extractor" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor" title="Invoice extractors">
+		<view type="grid" name="invoice-extractor-grid"/>
+		<view type="form" name="invoice-extractor-form"/>
+	</action-view>
+	
+	<menuitem name="invoice-extractor-root-extractor-template" title="Extractor templates" order="2" parent="invoice-extractor-root" action="invoice.extractor.root.extractor.template"/>
+	<action-view name="invoice.extractor.root.extractor.template" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate" title="Extractor templates">
+		<view type="grid" name="invoice-extractor-template-grid"/>
+		<view type="form" name="invoice-extractor-template-form"/>
+	</action-view>
+
+	<menuitem name="invoice-extractor-root-configuration" title="Configurations" parent="invoice-extractor-root" order="15" icon="fa-cog"/>
+
+	<menuitem name="invoice-extractor-root-configuration-date-format" title="Date formats" parent="invoice-extractor-root-configuration" action="invoice.extractor.root.configuration.date.format"/>
+	<action-view name="invoice.extractor.root.configuration.date.format" title="Date formats" model="com.axelor.apps.invoice.extractor.db.DateFormat">
+		<view type="grid" name="date-format-grid"/>
+		<view type="form" name="date-format-form"/>
+	</action-view>
+
+ </object-views>

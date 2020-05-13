@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid name="invoice-extractor-template-grid" title="Extractor templates" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate">
+		<field name="name"/>
+		<field name="templateFile"/>
+		<field name="pdfFile"/>
+	</grid>
+
+	<form name="invoice-extractor-template-form" title="Extractor template" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate">
+		<panel name="generateFieldPanel">
+			<field name="name" required="true" />
+			<field name="templateFile" widget="binary-link" onChange="action-invoice-extractor-template-validate-check-yml-file"/>
+			<field name="pdfFile" widget="binary-link" onChange="action-invoice-extractor-template-validate-check-pdf-file"/>
+		</panel>
+		<panel-related name="fieldListPanel" field="invoiceFieldList"/>
+		<panel name="btnPanel" sidebar="true">
+			<button name="generateFieldBtn" onClick="save,action-invoice-extractor-template-method-generate-field" title="Generate fields" prompt="Are you sure you want to generate field?" />
+		</panel>
+	</form>
+
+	<action-method name="action-invoice-extractor-template-method-generate-field">
+		<call class="com.axelor.apps.invoice.extractor.web.InvoiceExtractorTemplateController" method="generateField"/>
+	</action-method>
+	
+	<action-validate name="action-invoice-extractor-template-validate-check-yml-file">
+		<error message="Please upload yml file." if="templateFile != null  &amp;&amp; !com.google.common.io.Files.getFileExtension(templateFile.fileName).equals('yml')" 
+			action="action-invoice-extractor-template-record-reset-yml-file" />
+	</action-validate>
+	
+	<action-validate name="action-invoice-extractor-template-validate-check-pdf-file">
+		<error message="Please upload pdf file." if="pdfFile != null &amp;&amp; !com.google.common.io.Files.getFileExtension(pdfFile.fileName).equals('pdf')" 
+			action="action-invoice-extractor-template-record-reset-pdf-file" />
+	</action-validate>
+	
+	<action-record name="action-invoice-extractor-template-record-reset-yml-file"  model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate">
+		<field name="templateFile" expr="eval: null"/>
+	</action-record>
+	
+	<action-record name="action-invoice-extractor-template-record-reset-pdf-file" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate">
+		<field name="pdfFile" expr="eval: null"/>
+	</action-record>
+
+</object-views>

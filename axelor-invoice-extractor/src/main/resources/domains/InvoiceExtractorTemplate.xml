@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+
+	<module name="invoice-extractor" package="com.axelor.apps.invoice.extractor.db"/>
+
+	<entity name="InvoiceExtractorTemplate" lang="java">
+        <string name="name"/>
+		<many-to-one name="templateFile" ref="com.axelor.meta.db.MetaFile" title="Template" required="true"/>
+		<many-to-one name="pdfFile" ref="com.axelor.meta.db.MetaFile" title="Invoice file" required="true"/>
+		<one-to-many name="invoiceFieldList" ref="InvoiceField" title="Invoice fields" required="true"/>
+	</entity>
+
+</domain-models>

@@ -1,0 +1,2 @@
+"name";"code";"installOrder";"description";"imagePath";"modules";"dependsOn";"sequence"
+"Invoice Extractor";"invoice-extractor";28;"Invoice extractor configuration";"app-invoice-converter.png";"axelor-invoice-extractor";"account";36

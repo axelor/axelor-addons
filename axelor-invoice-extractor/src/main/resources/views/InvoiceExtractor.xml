@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<grid name="invoice-extractor-grid" title="Invoice extractors" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor">
+		<field name="invoiceFile"/>
+		<field name="invoiceExtractorTemplate"/>
+	</grid>
+
+	<form name="invoice-extractor-form" title="Invoice extractor" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor">
+		<panel name="generateInvoicePanel">
+			<field name="invoiceFile" widget="binary-link" onChange="action-invoice-extractor-validate-check-pdf-file"/>
+			<field name="invoiceExtractorTemplate" canEdit="true"/>
+			<button name="generateInvoiceBtn" title="Generate invoice" onClick="save,action-invoice-extractor-method-generate-invoice" />
+		</panel>
+	</form>
+
+	<action-validate name="action-invoice-extractor-validate-check-pdf-file">
+		<error message="Please upload pdf file." if="invoiceFile != null &amp;&amp; !com.google.common.io.Files.getFileExtension(invoiceFile.fileName).equals('pdf')" 
+			action="action-invoice-extractor-record-reset-pdf-file" />
+	</action-validate>
+	
+	<action-record name="action-invoice-extractor-record-reset-pdf-file" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor">
+		<field name="invoiceFile" expr="eval: null"/>
+	</action-record>
+	
+	<action-method name="action-invoice-extractor-method-generate-invoice">
+		<call class="com.axelor.apps.invoice.extractor.web.InvoiceExtractorController" method="generateInvoice"/>
+	</action-method>
+	
+</object-views>
