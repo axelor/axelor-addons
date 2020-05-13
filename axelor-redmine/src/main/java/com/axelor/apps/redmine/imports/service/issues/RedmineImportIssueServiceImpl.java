@@ -34,7 +34,6 @@ import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.apps.redmine.message.IMessage;
-import com.axelor.apps.tool.StringTool;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -398,9 +397,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       teamTask.setRedmineId(redmineIssue.getId());
       teamTask.setProject(project);
       teamTask.setTeamTaskCategory(projectCategory);
-      teamTask.setName(
-          StringTool.cutTooLongString(
-              "#" + redmineIssue.getId() + " " + redmineIssue.getSubject()));
+      teamTask.setName("#" + redmineIssue.getId() + " " + redmineIssue.getSubject());
       teamTask.setDescription(getHtmlFromTextile(redmineIssue.getDescription()));
 
       Integer assigneeId = redmineIssue.getAssigneeId();
