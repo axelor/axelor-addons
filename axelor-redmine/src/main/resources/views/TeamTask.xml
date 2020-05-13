@@ -50,6 +50,14 @@
 			</insert>
 		</extend>
 
+		<extend target="//field[@name='name']">
+			<attribute name="widget" value="string"/>
+		</extend>
+
+		<extend target="//field[@name='fullName']">
+			<attribute name="widget" value="string"/>
+		</extend>
+
 	</form>
 
 	<action-view name="action-team-task-dashlet-timesheet-line"
