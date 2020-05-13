@@ -58,7 +58,9 @@ public class QueueServiceImpl implements QueueService {
       JSONObject queueObject = new JSONObject(queueResult);
       queueObject.put("name", queue.getQueueName());
       queueObject.put("automation_level", queue.getAutomationLevelSelect());
-
+      queueObject.put(
+          "automation_enabled",
+          queue.getAutomationLevelSelect().equals("never") ? Boolean.FALSE : Boolean.TRUE);
       queue.setQueueResult(queueObject.toString());
     }
   }
