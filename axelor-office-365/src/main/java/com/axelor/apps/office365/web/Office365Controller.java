@@ -21,19 +21,30 @@ import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
+import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.crm.db.Lead;
+import com.axelor.apps.crm.db.repo.LeadRepository;
+import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.apps.office365.translation.ITranslation;
+import com.axelor.exception.AxelorException;
+import com.axelor.exception.db.repo.TraceBackRepository;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.schema.actions.ActionView;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.rpc.Context;
 import com.github.scribejava.apis.MicrosoftAzureActiveDirectory20Api;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.oauth.OAuth20Service;
 import com.google.inject.Inject;
+
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Office365Controller {
@@ -103,7 +114,47 @@ public class Office365Controller {
 
     AppOffice365 appOffice365 = request.getContext().asType(AppOffice365.class);
     appOffice365 = Beans.get(AppOffice365Repository.class).find(appOffice365.getId());
-    office365Service.syncMail(appOffice365);
+    office365Service.syncMail(appOffice365, Office365Service.MAIL_URL);
+    response.setView(
+        ActionView.define(I18n.get(ITranslation.OFFICE365_MAIL_TITLE))
+            .model(Message.class.getName())
+            .add("grid", "message-grid")
+            .add("form", "message-form")
+            .domain("self.office365Id IS NOT NULL")
+            .map());
+  }
+
+  @SuppressWarnings("unchecked")
+  public void syncUserMail(ActionRequest request, ActionResponse response) throws Exception {
+
+    Context context = request.getContext();
+
+    EmailAddress emailAddress = null;
+    if (context.containsKey("partner")) {
+      Long partnerId = Long.parseLong(context.get("partner").toString());
+      Partner partner = Beans.get(PartnerRepository.class).find(partnerId);
+      emailAddress = partner != null ? partner.getEmailAddress() : null;
+    }
+    if (context.containsKey("lead")) {
+      Long leadId = Long.parseLong(context.get("lead").toString());
+      Lead lead = Beans.get(LeadRepository.class).find(leadId);
+      emailAddress = lead != null ? lead.getEmailAddress() : null;
+    }
+    if (emailAddress == null) {
+      TraceBackService.trace(
+          new AxelorException(
+              TraceBackRepository.CATEGORY_NO_VALUE,
+              String.format(
+                  I18n.get(ITranslation.OFFICE365_EMAIL_ADDRESS_NOT_EXIST), emailAddress)));
+      return;
+    }
+
+    List<String> emailIds = new ArrayList<>();
+    if (context.containsKey("emails")) {
+      emailIds = (ArrayList<String>) context.get("emails");
+    }
+    office365Service.syncUserMail(emailAddress, emailIds);
+
     response.setView(
         ActionView.define(I18n.get(ITranslation.OFFICE365_MAIL_TITLE))
             .model(Message.class.getName())

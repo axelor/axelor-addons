@@ -8,4 +8,6 @@ public interface ITranslation {
   public static final String OFFICE365_MAIL_TITLE = /*$$(*/ "Office365 mails" /*)*/;
 
   public static final String OFFICE365_TOKEN_ERROR = /*$$(*/ "Token doesn't exist"; /*)*/
+  public static final String OFFICE365_EMAIL_ADDRESS_NOT_EXIST = /*$$(*/
+      "%s : EmailAddress not exist"; /*)*/
 }
