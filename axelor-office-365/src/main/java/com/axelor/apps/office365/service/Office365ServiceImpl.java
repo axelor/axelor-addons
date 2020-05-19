@@ -20,6 +20,7 @@ package com.axelor.apps.office365.service;
 import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
+import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
@@ -37,7 +38,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.apache.commons.collections4.CollectionUtils;
 import wslite.http.HTTPClient;
 import wslite.http.HTTPMethod;
 import wslite.http.HTTPRequest;
@@ -46,11 +49,6 @@ import wslite.json.JSONArray;
 import wslite.json.JSONObject;
 
 public class Office365ServiceImpl implements Office365Service {
-
-  private static final String CONTACT_URL = "https://graph.microsoft.com/v1.0/me/contacts";
-  private static final String CALENDAR_URL = "https://graph.microsoft.com/v1.0/me/calendars";
-  private static final String EVENT_URL = "https://graph.microsoft.com/v1.0/me/calendars/%s/events";
-  private static final String MAIL_URL = "https://graph.microsoft.com/v1.0/me/messages";
 
   @Inject Office365ContactService contactService;
   @Inject Office365CalendarService calendarService;
@@ -110,7 +108,7 @@ public class Office365ServiceImpl implements Office365Service {
   public void syncContact(AppOffice365 appOffice365) throws AxelorException, MalformedURLException {
 
     String accessToken = getAccessTocken(appOffice365);
-    URL url = new URL(CONTACT_URL);
+    URL url = new URL(Office365Service.CONTACT_URL);
     JSONObject jsonObject = fetchData(url, accessToken);
     @SuppressWarnings("unchecked")
     JSONArray jsonArray = (JSONArray) jsonObject.getOrDefault("value", new ArrayList<>());
@@ -125,7 +123,7 @@ public class Office365ServiceImpl implements Office365Service {
       throws AxelorException, MalformedURLException {
 
     String accessToken = getAccessTocken(appOffice365);
-    URL url = new URL(CALENDAR_URL);
+    URL url = new URL(Office365Service.CALENDAR_URL);
     JSONObject jsonObject = fetchData(url, accessToken);
     JSONArray calendarArray = (JSONArray) jsonObject.getOrDefault("value", new ArrayList<>());
     if (calendarArray != null) {
@@ -143,7 +141,7 @@ public class Office365ServiceImpl implements Office365Service {
       return;
     }
 
-    String eventUrl = String.format(EVENT_URL, iCalendar.getOffice365Id());
+    String eventUrl = String.format(Office365Service.EVENT_URL, iCalendar.getOffice365Id());
     URL url = new URL(eventUrl);
 
     JSONObject jsonObject = fetchData(url, accessToken);
@@ -158,10 +156,11 @@ public class Office365ServiceImpl implements Office365Service {
   }
 
   @SuppressWarnings("unchecked")
-  public void syncMail(AppOffice365 appOffice365) throws AxelorException, MalformedURLException {
+  public void syncMail(AppOffice365 appOffice365, String urlStr)
+      throws AxelorException, MalformedURLException {
 
     String accessToken = getAccessTocken(appOffice365);
-    URL url = new URL(MAIL_URL);
+    URL url = new URL(urlStr);
     JSONObject jsonObject = fetchData(url, accessToken);
     JSONArray messageArray = (JSONArray) jsonObject.getOrDefault("value", new ArrayList<>());
     if (messageArray != null) {
@@ -170,5 +169,41 @@ public class Office365ServiceImpl implements Office365Service {
         mailService.createMessage(jsonObject);
       }
     }
+  }
+
+  @Override
+  public void syncUserMail(EmailAddress emailAddress, List<String> emailIds) {
+
+    AppOffice365 appOffice365 = Beans.get(AppOffice365Repository.class).all().fetchOne();
+    if (CollectionUtils.isNotEmpty(emailIds)) {
+      for (String emailId : emailIds) {
+        try {
+          this.createUserMail(
+              appOffice365,
+              String.format(Office365Service.MAIL_ID_URL, emailAddress.getAddress(), emailId));
+        } catch (MalformedURLException | AxelorException e) {
+          TraceBackService.trace(e);
+        }
+      }
+      return;
+    }
+
+    try {
+      Beans.get(Office365Service.class)
+          .syncMail(
+              appOffice365,
+              String.format(Office365Service.MAIL_USER_URL, emailAddress.getAddress()));
+    } catch (MalformedURLException | AxelorException e) {
+      TraceBackService.trace(e);
+    }
+  }
+
+  private void createUserMail(AppOffice365 appOffice365, String urlStr)
+      throws AxelorException, MalformedURLException {
+
+    String accessToken = getAccessTocken(appOffice365);
+    URL url = new URL(urlStr);
+    JSONObject jsonObject = fetchData(url, accessToken);
+    mailService.createMessage(jsonObject);
   }
 }

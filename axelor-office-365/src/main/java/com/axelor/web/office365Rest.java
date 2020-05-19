@@ -19,6 +19,7 @@ package com.axelor.web;
 
 import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
+import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.exception.service.TraceBackService;
 import com.github.scribejava.apis.MicrosoftAzureActiveDirectory20Api;
 import com.github.scribejava.core.builder.ServiceBuilder;
@@ -40,8 +41,6 @@ public class office365Rest {
   private static final String APP_VIEW_SUFFIX = "/#/ds/admin.root.app.management/cards";
   private static final String ERROR_VIEW_SUFFIX = "/#/ds/admin.root.maintenance.trace.back/list/1";
   private static final String WEB_SERVICE_SUFFIX = "/ws/";
-  private static final String SCOPE =
-      "openid offline_access Contacts.ReadWrite Calendars.ReadWrite";
 
   @Inject private AppOffice365Repository appOffice365Repo;
 
@@ -66,7 +65,7 @@ public class office365Rest {
             new ServiceBuilder(appOffice365.getClientId())
                 .apiSecret(appOffice365.getClientSecret())
                 .callback(appOffice365.getRedirectUri())
-                .defaultScope(SCOPE)
+                .defaultScope(Office365Service.SCOPE)
                 .build(MicrosoftAzureActiveDirectory20Api.instance());
         OAuth2AccessToken accessToken = authService.getAccessToken(code);
         appOffice365.setRefreshToken(accessToken.getRefreshToken());

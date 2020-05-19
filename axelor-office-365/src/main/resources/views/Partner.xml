@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+
+	<form name="partner-form" id="office365-partner-form" title="Partner" model="com.axelor.apps.base.db.Partner" extension="true">
+		<extend target="/*[last()]">
+			<insert position="after">
+				<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail"/>
+			</insert>
+		</extend>
+	</form>
+
+	<form name="partner-contact-form" id="office365-partner-contact-form" title="Contact" model="com.axelor.apps.base.db.Partner" extension="true">
+		<extend target="/panel[@name='contactAttrsPanel']">
+			<insert position="after">
+				<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail"/>
+			</insert>
+		</extend>
+	</form>
+
+</object-views>
