@@ -428,9 +428,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setUser(user);
     timesheetLine.setRedmineId(redmineTimeEntry.getId());
     timesheetLine.setProject(projectRepo.find(projectId));
-
-    TeamTask teamTask = teamTaskRepo.find(teamTaskId);
-    timesheetLine.setTeamTask(teamTask);
+    timesheetLine.setTeamTask(teamTaskRepo.find(teamTaskId));
 
     timesheetLine.setProduct(productRepo.find(productId));
     timesheetLine.setComments(redmineTimeEntry.getComment());
@@ -465,11 +463,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     String activityType = redmineTimeEntry.getActivityName();
     timesheetLine.setActivityTypeSelect(
         activityType != null && !activityType.isEmpty() ? selectionMap.get(activityType) : null);
-
-    if (teamTask != null && !timesheetLine.getInvoiced()) {
-      timesheetLine.setInvoiced(teamTask.getInvoiced());
-      timesheetLine.setToInvoice(false);
-    }
 
     Timesheet timesheet =
         timesheetRepo
