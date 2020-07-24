@@ -18,6 +18,7 @@
 package com.axelor.apps.redmine.service;
 
 import com.axelor.apps.base.service.PriceListService;
+import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businessproduction.service.TimesheetBusinessProductionServiceImpl;
@@ -53,6 +54,7 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
       TimesheetLineService timesheetLineService,
       ProjectPlanningTimeRepository projectPlanningTimeRepository,
       TeamTaskRepository teamTaskRepository,
+      ProductCompanyService productCompanyService,
       TimesheetLineRepository timesheetLineRepo,
       TimesheetRepository timeSheetRepository) {
     super(
@@ -66,6 +68,7 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
         timesheetLineService,
         projectPlanningTimeRepository,
         teamTaskRepository,
+        productCompanyService,
         timesheetLineRepo,
         timeSheetRepository);
   }
