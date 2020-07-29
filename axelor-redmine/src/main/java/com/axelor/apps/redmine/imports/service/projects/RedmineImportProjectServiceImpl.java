@@ -44,7 +44,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineException;
-import com.taskadapter.redmineapi.bean.CustomField;
 import com.taskadapter.redmineapi.bean.Membership;
 import com.taskadapter.redmineapi.bean.Tracker;
 import java.time.LocalDateTime;
@@ -276,24 +275,21 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     project.setDescription(getHtmlFromTextile(redmineProject.getDescription()));
     project.setCompany(companyRepo.find(defaultCompanyId));
 
-    CustomField customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectInvoiceable);
-    String value = customField != null ? customField.getValue() : null;
+    String value = redmineCustomFieldsMap.get(redmineProjectInvoiceable);
 
     boolean invoiceable = value != null ? (value.equals("1") ? true : false) : false;
     project.setToInvoice(invoiceable);
     project.setIsBusinessProject(invoiceable);
 
-    customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectAssignedTo);
-    value = customField != null ? customField.getValue() : null;
+    value = redmineCustomFieldsMap.get(redmineProjectAssignedTo);
     project.setAssignedTo(
         StringUtils.isNotEmpty(value) ? getOsUser(Integer.parseInt(value)) : null);
 
     // ERROR AND IMPORT IF CLIENT PARTNER NOT FOUND
 
-    customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectClientPartner);
     value =
-        customField != null && customField.getValue() != null && !customField.getValue().equals("")
-            ? customField.getValue()
+        StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineProjectClientPartner))
+            ? redmineCustomFieldsMap.get(redmineProjectClientPartner)
             : redmineProjectClientPartnerDefault;
 
     if (value != null) {
@@ -302,13 +298,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       if (partner != null) {
         project.setClientPartner(partner);
       } else {
-        errors =
-            errors.length == 0
-                ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND)}
-                : ObjectArrays.concat(
-                    errors,
-                    new Object[] {I18n.get(IMessage.REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND)},
-                    Object.class);
+        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND)};
       }
     } else {
       project.setClientPartner(null);
@@ -326,9 +316,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
 
         for (Membership membership : redmineProjectMembers) {
-
-          Integer userId = membership.getUserId();
-          User user = getOsUser(userId);
+          User user = getOsUser(membership.getUserId());
 
           if (user != null) {
             project.addMembersUserSetItem(user);
@@ -346,8 +334,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     if (redmineTrackers != null && !redmineTrackers.isEmpty()) {
 
       for (Tracker tracker : redmineTrackers) {
-        String name = fieldMap.get(tracker.getName());
-        TeamTaskCategory projectCategory = projectCategoryRepo.findByName(name);
+        TeamTaskCategory projectCategory =
+            projectCategoryRepo.findByName(fieldMap.get(tracker.getName()));
 
         if (projectCategory != null) {
           project.addTeamTaskCategorySetItem(projectCategory);
@@ -363,10 +351,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     // ERROR AND IMPORT IF INVOICING TYPE NOT FOUND
 
-    customField = (CustomField) redmineCustomFieldsMap.get(redmineProjectInvoicingSequenceSelect);
     value =
-        customField != null && customField.getValue() != null && !customField.getValue().equals("")
-            ? customField.getValue()
+        StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineProjectInvoicingSequenceSelect))
+            ? redmineCustomFieldsMap.get(redmineProjectInvoicingSequenceSelect)
             : redmineProjectInvoicingSequenceSelectDefault;
 
     if (value != null) {
