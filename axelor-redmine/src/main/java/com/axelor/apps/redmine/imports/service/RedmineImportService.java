@@ -47,6 +47,7 @@ import java.util.function.Consumer;
 import net.java.textilej.parser.MarkupParser;
 import net.java.textilej.parser.builder.HtmlDocumentBuilder;
 import net.java.textilej.parser.markup.textile.TextileDialect;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 public class RedmineImportService {
@@ -89,14 +90,14 @@ public class RedmineImportService {
   protected Batch batch;
   protected ProjectManager redmineProjectManager;
   protected List<Object[]> errorObjList;
-  protected Map<String, Object> redmineCustomFieldsMap;
+  protected Map<String, String> redmineCustomFieldsMap;
   protected LocalDateTime lastBatchUpdatedOn;
   protected HashMap<String, String> selectionMap;
   protected HashMap<String, String> fieldMap;
 
   protected HashMap<Integer, String> redmineUserMap;
-  protected HashMap<Long, Integer> parentMap = new HashMap<Long, Integer>();
-  protected HashMap<Long, LocalDateTime> updatedOnMap = new HashMap<Long, LocalDateTime>();
+  protected HashMap<Long, Integer> parentMap = new HashMap<>();
+  protected HashMap<Long, LocalDateTime> updatedOnMap = new HashMap<>();
   protected Object[] errors;
 
   public static final Integer REDMINE_PROJECT_STATUS_CLOSED = 5;
@@ -143,12 +144,12 @@ public class RedmineImportService {
 
   public void setRedmineCustomFieldsMap(Collection<CustomField> customFieldSet) {
 
-    this.redmineCustomFieldsMap = new HashMap<>();
+    redmineCustomFieldsMap = new HashMap<>();
 
-    if (customFieldSet != null && !customFieldSet.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(customFieldSet)) {
 
       for (CustomField customField : customFieldSet) {
-        redmineCustomFieldsMap.put(customField.getName(), customField);
+        redmineCustomFieldsMap.put(customField.getName(), customField.getValue());
       }
     }
   }
