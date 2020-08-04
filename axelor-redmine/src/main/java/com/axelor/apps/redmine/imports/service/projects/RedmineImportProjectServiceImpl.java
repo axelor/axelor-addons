@@ -135,7 +135,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       this.importProjectsFromList(redmineProjectList);
 
       // SET PROJECTS PARENTS
-      this.setParentProjects();
+
+      if (!parentMap.isEmpty()) {
+        this.setParentProjects();
+      }
 
       if (!updatedOnMap.isEmpty()) {
         String values =
@@ -252,16 +255,23 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   @Transactional
   public void setParentProjects() {
 
-    if (!parentMap.isEmpty()) {
-      Project project;
+    Project project;
+    Project parentProject;
+    HashMap<Integer, Project> parentProjectMap = new HashMap<>();
 
-      for (Map.Entry<Long, Integer> entry : parentMap.entrySet()) {
+    for (Map.Entry<Long, Integer> entry : parentMap.entrySet()) {
+
+      if (parentProjectMap.containsKey(entry.getValue())) {
+        parentProject = parentProjectMap.get(entry.getValue());
+      } else {
+        parentProject = projectRepo.findByRedmineId(entry.getValue());
+        parentProjectMap.put(entry.getValue(), parentProject);
+      }
+
+      if (parentProject != null) {
         project = projectRepo.find(entry.getKey());
-
-        if (project != null) {
-          project.setParentProject(projectRepo.findByRedmineId(entry.getValue()));
-          projectRepo.save(project);
-        }
+        project.setParentProject(parentProject);
+        projectRepo.save(project);
       }
     }
   }
