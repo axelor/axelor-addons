@@ -57,6 +57,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -170,19 +171,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       // SET ISSUES PARENTS
 
       if (!parentMap.isEmpty()) {
-        String values =
-            parentMap
-                .entrySet()
-                .stream()
-                .map(entry -> "(" + entry.getKey() + "," + entry.getValue() + ")")
-                .collect(Collectors.joining(","));
-
-        String query =
-            String.format(
-                "UPDATE team_task as teamtask SET parent_task = (SELECT id from team_task where team_task.redmine_id = v.redmine_id) from (values %s) as v(id,redmine_id) where teamtask.id = v.id",
-                values);
-
-        JPA.em().createNativeQuery(query).executeUpdate();
+        this.setParentTasks();
       }
 
       if (!updatedOnMap.isEmpty()) {
@@ -362,6 +351,43 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       onError.accept(e);
       fail++;
       TraceBackService.trace(e, "", batch.getId());
+    }
+  }
+
+  @Transactional
+  public void setParentTasks() {
+
+    TeamTask task;
+    TeamTask parentTask;
+    TeamTaskCategory parentCategory;
+    String categoryName = fieldMap.get("Intervention/assistance");
+    HashMap<Integer, TeamTask> parentTaskMap = new HashMap<>();
+
+    for (Map.Entry<Long, Integer> entry : parentMap.entrySet()) {
+
+      if (parentTaskMap.containsKey(entry.getValue())) {
+        parentTask = parentTaskMap.get(entry.getValue());
+      } else {
+        parentTask = teamTaskRepo.findByRedmineId(entry.getValue());
+        parentTaskMap.put(entry.getValue(), parentTask);
+      }
+
+      if (parentTask != null) {
+        task = teamTaskRepo.find(entry.getKey());
+        task.setParentTask(parentTask);
+
+        parentCategory = parentTask.getTeamTaskCategory();
+
+        if (parentCategory != null
+            && StringUtils.isNotEmpty(categoryName)
+            && parentCategory.getName().equals(categoryName)
+            && !task.getToInvoice()) {
+          task.setToInvoice(true);
+          task.setInvoicingType(TeamTaskRepository.INVOICING_TYPE_TIME_SPENT);
+        }
+
+        teamTaskRepo.save(task);
+      }
     }
   }
 
