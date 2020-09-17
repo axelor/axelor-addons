@@ -114,8 +114,7 @@ public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
   protected String getFilterQuery(LocalDate fromDate) {
     Set<String> addressSet = appGSuiteService.getRelatedEmailAddressSet();
     String leadEmailsQuery =
-        addressSet
-            .stream()
+        addressSet.stream()
             .map(address -> String.format("%s", address))
             .collect(Collectors.joining(" "))
             .trim();

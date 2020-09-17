@@ -29,6 +29,7 @@ import com.axelor.apps.rossum.db.repo.WorkspaceRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
 import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.apps.tool.date.DurationTool;
+import com.axelor.common.StringUtils;
 import com.axelor.db.Query;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.exception.AxelorException;
@@ -37,7 +38,6 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
-import com.beust.jcommander.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.File;
@@ -425,7 +425,7 @@ public class AppRossumServiceImpl implements AppRossumService {
             ? appRossum.getToken()
             : null;
 
-    if (Strings.isStringEmpty(token)) {
+    if (StringUtils.isEmpty(token)) {
       username = appRossum.getUsername();
       password = appRossum.getPassword();
 

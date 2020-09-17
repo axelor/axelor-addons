@@ -195,8 +195,7 @@ public class InvoiceOcrServiceImpl implements InvoiceOcrService {
 
   protected InvoiceField getInvoiceField(
       List<InvoiceField> invoiceFieldList, String templateField) {
-    return invoiceFieldList
-        .stream()
+    return invoiceFieldList.stream()
         .filter(
             line ->
                 line.getMetaField() != null

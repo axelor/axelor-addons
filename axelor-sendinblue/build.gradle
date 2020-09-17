@@ -1,5 +1,7 @@
 apply plugin: "com.axelor.app-module"
 
+apply from: "../libs.gradle"
+
 apply {
 	version = "5.0.0-SNAPSHOT"
 }
@@ -10,8 +12,9 @@ axelor {
 }
 
 dependencies {
-    compile project(":modules:axelor-marketing")
+    api project(":modules:axelor-marketing")
 
-    compile "com.sendinblue:sib-api-v3-sdk:3.0.1"
+    implementation libs.commons_lang3
+    implementation libs.sendinblue
 }
 
