@@ -1,0 +1,19 @@
+def libs = ext.libs = [:]
+
+libs.commons_lang3 = 'org.apache.commons:commons-lang3:3.11'
+libs.commons_collections4 = 'org.apache.commons:commons-collections4:4.4'
+libs.jsoup = 'org.jsoup:jsoup:1.10.2'
+libs.commons_httpclient = 'commons-httpclient:commons-httpclient:3.1'
+
+libs.goggle_gdata = 'com.google.gdata:core:1.47.1'
+libs.goggle_apis_drive = 'com.google.apis:google-api-services-drive:v3-rev197-1.25.0'
+libs.goggle_apis_calendar = 'com.google.apis:google-api-services-calendar:v3-rev401-1.25.0'
+libs.goggle_apis_gmail = 'com.google.apis:google-api-services-gmail:v1-rev109-1.25.0'
+libs.goggle_apis_tasks = 'com.google.apis:google-api-services-tasks:v1-rev71-1.25.0'
+
+libs.apache_httpcomponents = 'org.apache.httpcomponents:httpmime:4.5.3'
+
+libs.sendinblue = 'com.sendinblue:sib-api-v3-sdk:3.0.1'
+
+libs.json = 'org.json:json:20090211'
+libs.java_textile = 'net.java:textile-j:2.2'
