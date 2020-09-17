@@ -239,11 +239,7 @@ public class ExportProductServiceImpl implements ExportProductService {
           }
 
           final int defaultCategoryId = remoteProduct.getDefaultCategoryId();
-          if (remoteProduct
-                  .getAssociations()
-                  .getCategories()
-                  .getAssociations()
-                  .stream()
+          if (remoteProduct.getAssociations().getCategories().getAssociations().stream()
                   .anyMatch(c -> c.getId() == defaultCategoryId)
               == false) {
             Associations.CategoriesAssociationElement e =

@@ -138,8 +138,7 @@ public class RedmineIssueFetchDataService {
 
     if (failedRedmineTimeEntriesIds != null) {
       int[] failedIds =
-          Arrays.asList(failedRedmineTimeEntriesIds.split(","))
-              .stream()
+          Arrays.asList(failedRedmineTimeEntriesIds.split(",")).stream()
               .map(String::trim)
               .mapToInt(Integer::parseInt)
               .toArray();

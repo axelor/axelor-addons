@@ -66,7 +66,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -306,9 +306,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
 
       if (!updatedOnMap.isEmpty()) {
         String values =
-            updatedOnMap
-                .entrySet()
-                .stream()
+            updatedOnMap.entrySet().stream()
                 .map(
                     entry ->
                         "("

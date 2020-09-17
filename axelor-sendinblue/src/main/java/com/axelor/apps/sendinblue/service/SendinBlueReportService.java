@@ -169,8 +169,7 @@ public class SendinBlueReportService {
     SendinBlueReport sendinBlueReport = null;
     LocalDate reportDate = LocalDate.parse(report.getDate().toString());
     Optional<SendinBlueReport> optSendinBlueReport =
-        sendinBlueReportList
-            .stream()
+        sendinBlueReportList.stream()
             .filter(rpt -> rpt.getReportDate().compareTo(reportDate) == 0)
             .findFirst();
     if (optSendinBlueReport.isPresent()) {
@@ -254,8 +253,7 @@ public class SendinBlueReportService {
         Beans.get(EmailAddressRepository.class).findByAddress(event.getEmail());
     SendinBlueEvent sendinBlueEvent = null;
     Optional<SendinBlueEvent> optSendinBlueEvent =
-        sendinBlueEventList
-            .stream()
+        sendinBlueEventList.stream()
             .filter(
                 evnt ->
                     evnt.getEventDate().compareTo(eventDate) == 0
@@ -431,8 +429,7 @@ public class SendinBlueReportService {
           for (GetExtendedContactDetailsStatisticsLinks clickedLink : clickedLinklist) {
             SendinBlueContactStat contactStat = null;
             Optional<SendinBlueContactStat> optContactStat =
-                sendinBlueContactStatList
-                    .stream()
+                sendinBlueContactStatList.stream()
                     .filter(
                         conStat ->
                             conStat.getEventType().equals(SendinBlueEventRepository.CLICKS)
@@ -475,8 +472,7 @@ public class SendinBlueReportService {
         if (sendinBlueCampaign != null) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat.getEventType().equals(SendinBlueEventRepository.COMPLAINTS)
@@ -514,8 +510,7 @@ public class SendinBlueReportService {
         if (sendinBlueCampaign != null) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat.getEventType().equals(SendinBlueEventRepository.HARD_BOUNCES)
@@ -554,8 +549,7 @@ public class SendinBlueReportService {
         if (sendinBlueCampaign != null) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat.getEventType().equals(SendinBlueEventRepository.MESSAGE_SENT)
@@ -593,8 +587,7 @@ public class SendinBlueReportService {
         if (sendinBlueCampaign != null) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat.getEventType().equals(SendinBlueEventRepository.OPENED)
@@ -634,8 +627,7 @@ public class SendinBlueReportService {
         if (sendinBlueCampaign != null) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat.getEventType().equals(SendinBlueEventRepository.SOFT_BOUNCES)
@@ -674,8 +666,7 @@ public class SendinBlueReportService {
             adminUnsubscriptionObj : adminUnsubscriptionList) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat
@@ -706,8 +697,7 @@ public class SendinBlueReportService {
             userUnsubscriptionObj : userUnsubscriptionList) {
           SendinBlueContactStat contactStat = null;
           Optional<SendinBlueContactStat> optContactStat =
-              sendinBlueContactStatList
-                  .stream()
+              sendinBlueContactStatList.stream()
                   .filter(
                       conStat ->
                           conStat

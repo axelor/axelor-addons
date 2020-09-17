@@ -1,5 +1,6 @@
 apply plugin: "com.axelor.app-module"
 
+apply from: "../libs.gradle"
 apply {
 	version = "5.0.0-SNAPSHOT"
 }
@@ -12,10 +13,13 @@ axelor {
 }
 
 dependencies {
-	compile project(":modules:axelor-business-support")
-  compile project(":modules:axelor-business-production")
-	compile ('org.json:json:20090211')
+	api project(":modules:axelor-business-support")
+   api project(":modules:axelor-business-production")
+
+	implementation libs.commons_lang3
+	implementation libs.json
+	implementation libs.java_textile
+	
 	compile fileTree(dir: 'libs', include: ['*.jar'])
 	compile 'com.squareup.okhttp3:okhttp:3.14.1'
-	compile 'net.java:textile-j:2.2'
 }

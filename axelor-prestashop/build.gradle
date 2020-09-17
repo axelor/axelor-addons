@@ -1,5 +1,7 @@
 apply plugin: "com.axelor.app-module"
 
+apply from: "../libs.gradle"
+
 apply {
 	version = "5.0.0-SNAPSHOT"
 }
@@ -10,6 +12,8 @@ axelor {
 }
 
 dependencies {
-	compile project(":modules:axelor-supplychain")
-	compile group: 'org.apache.httpcomponents', name: 'httpmime', version: '4.5.3'
+	api project(":modules:axelor-supplychain")
+
+	implementation libs.commons_httpclient
+   implementation libs.apache_httpcomponents
 }

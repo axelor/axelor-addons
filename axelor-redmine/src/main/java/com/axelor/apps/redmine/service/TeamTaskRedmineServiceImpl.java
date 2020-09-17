@@ -20,6 +20,7 @@ package com.axelor.apps.redmine.service;
 import com.axelor.apps.base.db.AppBusinessProject;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.PriceListService;
+import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.businesssupport.service.TeamTaskBusinessSupportServiceImpl;
 import com.axelor.exception.AxelorException;
 import com.axelor.team.db.TeamTask;
@@ -33,13 +34,15 @@ public class TeamTaskRedmineServiceImpl extends TeamTaskBusinessSupportServiceIm
   public TeamTaskRedmineServiceImpl(
       TeamTaskRepository teamTaskRepo,
       PriceListLineRepository priceListLineRepository,
-      PriceListService priceListService) {
-    super(teamTaskRepo, priceListLineRepository, priceListService);
+      PriceListService priceListService,
+      ProductCompanyService productCompanyService) {
+    super(teamTaskRepo, priceListLineRepository, priceListService, productCompanyService);
   }
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
   @Override
-  public TeamTask updateTask(TeamTask teamTask, AppBusinessProject appBusinessProject) {
+  public TeamTask updateTask(TeamTask teamTask, AppBusinessProject appBusinessProject)
+      throws AxelorException {
     if (!teamTask.getIsOffered()) {
       return super.updateTask(teamTask, appBusinessProject);
     }
