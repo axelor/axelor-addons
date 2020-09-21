@@ -3,15 +3,14 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
 
-	<form name="project-form" title="Project" id="redmine-project-form"
-		model="com.axelor.apps.project.db.Project" onLoad="action-project-on-load-group"
-		onNew="action-project-group-on-new-project">
-
-		<panel-include view="project-form" from="axelor-project" />
-		<panel name="redminePanel" title="Redmine">
-			<field name="redmineId" />
-		</panel>
-
+	<form name="project-form" title="Project" id="redmine-project-form" model="com.axelor.apps.project.db.Project" extension="true">
+		<extend target="panel-tabs[@name='mainPanelTab']">
+			<insert position="after">
+				<panel name="redminePanel" title="Redmine">
+					<field name="redmineId" />
+				</panel>
+			</insert>
+		</extend>
 	</form>
 
 </object-views>
