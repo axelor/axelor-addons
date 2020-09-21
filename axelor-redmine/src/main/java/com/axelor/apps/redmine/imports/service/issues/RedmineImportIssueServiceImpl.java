@@ -359,8 +359,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
     TeamTask task;
     TeamTask parentTask;
-    TeamTaskCategory parentCategory;
-    String categoryName = fieldMap.get("Intervention/assistance");
     HashMap<Integer, TeamTask> parentTaskMap = new HashMap<>();
 
     for (Map.Entry<Long, Integer> entry : parentMap.entrySet()) {
@@ -375,16 +373,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       if (parentTask != null) {
         task = teamTaskRepo.find(entry.getKey());
         task.setParentTask(parentTask);
-
-        parentCategory = parentTask.getTeamTaskCategory();
-
-        if (parentCategory != null
-            && StringUtils.isNotEmpty(categoryName)
-            && parentCategory.getName().equals(categoryName)
-            && !task.getToInvoice()) {
-          task.setToInvoice(true);
-          task.setInvoicingType(TeamTaskRepository.INVOICING_TYPE_TIME_SPENT);
-        }
 
         teamTaskRepo.save(task);
       }
