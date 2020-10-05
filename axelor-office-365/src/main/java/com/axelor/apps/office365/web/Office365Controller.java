@@ -41,7 +41,6 @@ import com.github.scribejava.apis.MicrosoftAzureActiveDirectory20Api;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.oauth.OAuth20Service;
 import com.google.inject.Inject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
