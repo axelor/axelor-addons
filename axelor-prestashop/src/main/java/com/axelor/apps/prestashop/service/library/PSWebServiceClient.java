@@ -37,12 +37,12 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.Consts;
 import org.apache.http.Header;
+import org.apache.http.HttpStatus;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.Credentials;
@@ -142,7 +142,7 @@ public class PSWebServiceClient {
             "An underlying call to the Prestashop API failed with status code %d: %s (%s)\n=== Response body ===\n%s\n=== End of response body ===",
             statusCode,
             response.getStatusLine().getReasonPhrase(),
-            HttpStatus.getStatusText(statusCode),
+            // HttpStatus.getStatusText(statusCode),
             body));
   }
 
