@@ -21,6 +21,7 @@ import com.axelor.apps.base.db.AppBusinessProject;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.PriceListService;
 import com.axelor.apps.base.service.ProductCompanyService;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.service.TeamTaskBusinessSupportServiceImpl;
 import com.axelor.exception.AxelorException;
 import com.axelor.team.db.TeamTask;
@@ -35,8 +36,14 @@ public class TeamTaskRedmineServiceImpl extends TeamTaskBusinessSupportServiceIm
       TeamTaskRepository teamTaskRepo,
       PriceListLineRepository priceListLineRepository,
       PriceListService priceListService,
-      ProductCompanyService productCompanyService) {
-    super(teamTaskRepo, priceListLineRepository, priceListService, productCompanyService);
+      ProductCompanyService productCompanyService,
+      AppBaseService appBaseService) {
+    super(
+        teamTaskRepo,
+        priceListLineRepository,
+        priceListService,
+        productCompanyService,
+        appBaseService);
   }
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
