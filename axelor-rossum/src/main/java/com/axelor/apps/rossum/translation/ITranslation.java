@@ -19,18 +19,6 @@ package com.axelor.apps.rossum.translation;
 
 public interface ITranslation {
 
-  public static final String GET_FIELDS = "fields";
-  public static final String GET_TABLES = "tables";
-  public static final String GET_COLUMN_TYPES = "column_types";
-  public static final String GET_NAME = "name";
-  public static final String GET_CONTENT = "content";
-  public static final String GET_ROWS = "rows";
-  public static final String GET_CELLS = "cells";
-  public static final String GET_TYPE = "type";
-  public static final String GET_HEADER = "header";
-  public static final String GET_VALUE = "value";
-
-  public static final String TYPE_COLUMN_TYPE = "table_column";
   public static final String FILE_TYPE_PDF = "application/pdf";
   public static final String FILE_TYPE_PNG = "image/png";
   public static final String FILE_TYPE_JPEG = "image/jpeg";

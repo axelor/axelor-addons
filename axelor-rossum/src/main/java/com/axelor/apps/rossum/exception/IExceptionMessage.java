@@ -21,17 +21,24 @@ public interface IExceptionMessage {
 
   public static final String INVALID_USERNAME_OR_PASSWORD = /*$$(*/
       "Invalid Rossum Username or password. Please enter correct Rossum username and password." /*)*/;
+
   public static final String ROSSUM_FILE_ERROR = /*$$(*/
       "Please Upload PDF or PNG or JPEG file only!" /*)*/;
+
   public static final String INVOICE_SUBMISSION_ERROR = /*$$(*/
       "Could not submit invoice: %s" /*)*/;
+
   public static final String DOCUMENT_PROCESS_ERROR = /*$$(*/
       "Could not process document: %s" /*)*/;
+
   public static final String TIMEOUT_ERROR = /*$$(*/
       "Time out after %d seconds. Please check 'Traceback' for details" /*)*/;
+
   public static final String INVOICE_GENERATION_ERROR = /*$$(*/
       "Error generating invoice. Please check 'Traceback' for details." /*)*/;
+
   public static final String INVOICE_ID_EXIST_ERROR = /*$$(*/ "Invoice Id %s already exists!" /*)*/;
+
   public static final String REQUIRED_FIELD_MISSING = /*$$(*/
       "Required Fields are missing for %s Model. Please check 'Traceback' for details" /*)*/;
 }

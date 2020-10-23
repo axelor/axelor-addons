@@ -6,8 +6,6 @@
   <form model="com.axelor.apps.base.db.AppRossum" title="App Rossum" name="app-rossum-config-form" 
       canDelete="false" canNew="false" width="large">
       <panel name="configPanel">
-		<!--       <field name="rossumUrl"/> -->
-		<!--       <field name="rossumApiKey"/> -->
 			<field name="username" required="true" readonlyIf="isValid"/>
 			<field name="password" required="true" readonlyIf="isValid" widget="password"/>
 			<field name="token" readonly="true"/>
