@@ -61,6 +61,7 @@ public class QueueServiceImpl implements QueueService {
       queueObject.put(
           "automation_enabled",
           queue.getAutomationLevelSelect().equals("never") ? Boolean.FALSE : Boolean.TRUE);
+      queueObject.put("use_confirmed_state", queue.getUseConfirmedState());
       queue.setQueueResult(queueObject.toString());
     }
   }
@@ -111,6 +112,7 @@ public class QueueServiceImpl implements QueueService {
         String workspaceUrl = resultObject.getString("workspace");
         String schemaUrl = resultObject.getString("schema");
         String automationLevelSelect = resultObject.getString("automation_level");
+        Boolean useConfirmedState = resultObject.getBoolean("use_confirmed_state");
 
         Queue queue =
             queueRepo.findByUrl(queueUrl) != null ? queueRepo.findByUrl(queueUrl) : new Queue();
@@ -121,6 +123,7 @@ public class QueueServiceImpl implements QueueService {
         queue.setSchemaUrl(schemaRepo.findByUrl(schemaUrl));
         queue.setQueueResult(resultObject.toString());
         queue.setAutomationLevelSelect(automationLevelSelect);
+        queue.setUseConfirmedState(useConfirmedState);
         queueRepo.save(queue);
       }
     }
@@ -159,6 +162,7 @@ public class QueueServiceImpl implements QueueService {
       String workspaceUrl = resultObject.getString("workspace");
       String schemaUrl = resultObject.getString("schema");
       String automationLevelSelect = resultObject.getString("automation_level");
+      Boolean useConfirmedState = resultObject.getBoolean("use_confirmed_state");
 
       queue.setQueueId(queueId);
       queue.setQueueName(queueName);
@@ -167,6 +171,7 @@ public class QueueServiceImpl implements QueueService {
       queue.setSchemaUrl(schemaRepo.findByUrl(schemaUrl));
       queue.setQueueResult(resultObject.toString());
       queue.setAutomationLevelSelect(automationLevelSelect);
+      queue.setUseConfirmedState(useConfirmedState);
       queueRepo.save(queue);
     }
   }

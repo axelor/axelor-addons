@@ -28,15 +28,11 @@ import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.readers.DataReaderFactory;
-import com.axelor.apps.rossum.db.InvoiceField;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
-import com.axelor.apps.rossum.db.repo.InvoiceFieldRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
-import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.auth.AuthUtils;
 import com.axelor.exception.AxelorException;
-import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaField;
@@ -53,19 +49,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import wslite.json.JSONArray;
 import wslite.json.JSONException;
-import wslite.json.JSONObject;
 
 public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService {
 
   protected AppRossumService rossumApiService;
   protected InvoiceOcrTemplateRepository invoiceOcrTemplateRepository;
-  protected InvoiceFieldRepository invoiceFieldRepository;
   protected AppRossumRepository appRossumRepository;
   protected MetaFiles metaFiles;
   protected MetaField metaField;
@@ -75,14 +66,12 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   public InvoiceOcrTemplateServiceImpl(
       AppRossumService rossumApiService,
       InvoiceOcrTemplateRepository invoiceOcrTemplateRepository,
-      InvoiceFieldRepository invoiceFieldRepository,
       AppRossumRepository appRossumRepository,
       MetaFiles metaFiles,
       MetaField metaField,
       DataReaderFactory dataReaderFactory) {
     this.rossumApiService = rossumApiService;
     this.invoiceOcrTemplateRepository = invoiceOcrTemplateRepository;
-    this.invoiceFieldRepository = invoiceFieldRepository;
     this.appRossumRepository = appRossumRepository;
     this.metaFiles = metaFiles;
     this.metaField = metaField;
@@ -96,138 +85,26 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
 
     String exportTypeSelect = invoiceOcrTemplate.getExportTypeSelect();
 
-    if (!Strings.isNullOrEmpty(exportTypeSelect)) {
-      List<MetaFile> metaFileList = new ArrayList<>();
-      metaFileList.add(invoiceOcrTemplate.getTemplateFile());
+    List<MetaFile> metaFileList = new ArrayList<>();
+    metaFileList.add(invoiceOcrTemplate.getTemplateFile());
 
-      if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_JSON)) {
-        JSONObject resultData;
-        if (Strings.isNullOrEmpty(invoiceOcrTemplate.getRawData())) {
+    if (!Strings.isNullOrEmpty(exportTypeSelect)
+        && (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)
+            || exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML))) {
 
-          List<JSONObject> jsonDataList =
-              rossumApiService.extractInvoiceDataJson(
-                  metaFileList,
-                  invoiceOcrTemplate.getTimeout(),
-                  invoiceOcrTemplate.getQueue(),
-                  exportTypeSelect);
+      Map<MetaFile, File> metaFileFileMap =
+          rossumApiService.extractInvoiceDataMetaFile(
+              metaFileList,
+              invoiceOcrTemplate.getTimeout(),
+              invoiceOcrTemplate.getQueue(),
+              exportTypeSelect);
 
-          resultData = jsonDataList.get(0);
-          resultData = rossumApiService.generateUniqueKeyFromJsonData(resultData);
-          invoiceOcrTemplate.setRawData(resultData.toString());
-          invoiceOcrTemplate.setName(invoiceOcrTemplate.getTemplateFile().getFileName());
-          metaFiles.attach(
-              invoiceOcrTemplate.getTemplateFile(),
-              invoiceOcrTemplate.getTemplateFile().getFileName(),
-              invoiceOcrTemplate);
-          invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
-        } else {
-          resultData = new JSONObject(invoiceOcrTemplate.getRawData());
-        }
-        filterInvoiceData(resultData, invoiceOcrTemplate);
-      } else if (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)
-          || exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML)) {
-
-        Map<MetaFile, File> metaFileFileMap =
-            rossumApiService.extractInvoiceDataMetaFile(
-                metaFileList,
-                invoiceOcrTemplate.getTimeout(),
-                invoiceOcrTemplate.getQueue(),
-                exportTypeSelect);
-
-        File exportedFile = metaFileFileMap.entrySet().iterator().next().getValue();
-        if (exportedFile != null) {
-          invoiceOcrTemplate.setExportedFile(metaFiles.upload(exportedFile));
-          invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
-        }
+      File exportedFile = metaFileFileMap.entrySet().iterator().next().getValue();
+      if (exportedFile != null) {
+        invoiceOcrTemplate.setExportedFile(metaFiles.upload(exportedFile));
+        invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
       }
     }
-  }
-
-  @Override
-  public void filterInvoiceData(JSONObject resultObject, InvoiceOcrTemplate invoiceOcrTemplate)
-      throws IOException, JSONException {
-
-    JSONArray fieldsArray = resultObject.getJSONArray(ITranslation.GET_FIELDS);
-    generateInvoiceFields(invoiceOcrTemplate, null, fieldsArray);
-
-    JSONArray tablesArray = resultObject.getJSONArray(ITranslation.GET_TABLES);
-    if (tablesArray != null) {
-      /** Just to take first object from tables Array as Rossum doesn't support multiple invoices */
-      JSONObject object = tablesArray.getJSONObject(0);
-      JSONArray columnTypesArray = object.getJSONArray(ITranslation.GET_COLUMN_TYPES);
-      JSONArray headerCellArray =
-          object
-              .getJSONArray(ITranslation.GET_ROWS)
-              .getJSONObject(0)
-              .getJSONArray(ITranslation.GET_CELLS);
-
-      InvoiceField field =
-          setInvoiceField(
-              invoiceOcrTemplate,
-              null,
-              ITranslation.TYPE_COLUMN_TYPE,
-              ITranslation.GET_COLUMN_TYPES);
-
-      /**
-       * For some files, extraction of tables contains two same key i.e. table_column_quantity. As
-       * per API Documentation, it should be table_column_quantity and table_column_uom (i.e. Unit
-       * of measure). So, this code is for changing duplicate table_column_quantity to
-       * table_column_uom.
-       */
-      Set<String> columnKeyset = new HashSet<>();
-      for (int i = 0; i < columnTypesArray.length(); i++) {
-        String keyname = columnTypesArray.getString(i);
-        if (columnKeyset != null
-            && columnKeyset.contains(keyname)
-            && keyname.endsWith("_quantity")) {
-          keyname = keyname.replace("_quantity", "_uom");
-        }
-        columnKeyset.add(keyname);
-        setInvoiceField(
-            null,
-            field,
-            keyname,
-            headerCellArray.getJSONObject(i).getString(ITranslation.GET_VALUE));
-      }
-    }
-  }
-
-  protected void generateInvoiceFields(
-      InvoiceOcrTemplate invoiceOcrTemplate, InvoiceField invoiceField, JSONArray jsonArray)
-      throws JSONException {
-
-    if (jsonArray != null) {
-      for (int i = 0; i < jsonArray.length(); i++) {
-        JSONObject fieldsObject = (JSONObject) jsonArray.get(i);
-
-        Object content = fieldsObject.get(ITranslation.GET_CONTENT);
-        String keyName = fieldsObject.getString(ITranslation.GET_NAME);
-
-        if (content.getClass().equals(String.class)) {
-          setInvoiceField(invoiceOcrTemplate, invoiceField, I18n.get(keyName), content.toString());
-        } else if (content.getClass().equals(JSONArray.class)) {
-          JSONArray contentArray = (JSONArray) content;
-          InvoiceField invField =
-              setInvoiceField(invoiceOcrTemplate, null, I18n.get(keyName), I18n.get(keyName));
-          generateInvoiceFields(null, invField, contentArray);
-        }
-      }
-    }
-  }
-
-  @Transactional(rollbackOn = {AxelorException.class, Exception.class})
-  public InvoiceField setInvoiceField(
-      InvoiceOcrTemplate invoiceOcrTemplate,
-      InvoiceField invoiceField,
-      String keyName,
-      String content) {
-    InvoiceField invField = new InvoiceField();
-    invField.setTemplateField(keyName);
-    invField.setTemplateValue(content);
-    invField.setIsbindWithTemplateField(true);
-    invField.setInvoiceOcrTemplate(invoiceOcrTemplate);
-    invField.setParentInvoiceField(invoiceField);
-    return invoiceFieldRepository.save(invField);
   }
 
   /**

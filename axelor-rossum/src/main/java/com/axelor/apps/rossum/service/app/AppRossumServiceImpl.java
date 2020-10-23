@@ -21,6 +21,7 @@ import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
 import com.axelor.apps.rossum.db.Queue;
+import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
 import com.axelor.apps.rossum.db.repo.OrganisationRepository;
 import com.axelor.apps.rossum.db.repo.QueueRepository;
@@ -31,7 +32,6 @@ import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.common.StringUtils;
 import com.axelor.db.Query;
-import com.axelor.db.mapper.Mapper;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
@@ -47,7 +47,6 @@ import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -67,7 +66,6 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import wslite.json.JSONArray;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
 
@@ -78,6 +76,7 @@ public class AppRossumServiceImpl implements AppRossumService {
   protected WorkspaceRepository workspaceRepo;
   protected QueueRepository queueRepo;
   protected SchemaRepository schemaRepo;
+  protected AnnotationRepository annotationRepo;
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   protected static final String API_URL = "https://api.elis.rossum.ai";
@@ -93,61 +92,19 @@ public class AppRossumServiceImpl implements AppRossumService {
       OrganisationRepository organisationRepo,
       WorkspaceRepository workspaceRepo,
       QueueRepository queueRepo,
-      SchemaRepository schemaRepo) {
+      SchemaRepository schemaRepo,
+      AnnotationRepository annotationRepo) {
     this.appRossumRepository = appRossumRepository;
     this.organisationRepo = organisationRepo;
     this.workspaceRepo = workspaceRepo;
     this.queueRepo = queueRepo;
     this.schemaRepo = schemaRepo;
+    this.annotationRepo = annotationRepo;
   }
 
   @Override
   public AppRossum getAppRossum() {
     return Query.of(AppRossum.class).cacheable().fetchOne();
-  }
-
-  @Override
-  public List<JSONObject> extractInvoiceDataJson(
-      List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
-      throws AxelorException, IOException, InterruptedException, JSONException {
-
-    this.login(getAppRossum());
-
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
-        submitInvoiceAndExtractData(metaFileList, timeout, queue);
-
-    List<JSONObject> filterJSONDataList = new ArrayList<>();
-
-    Set<MetaFile> metaFileSet = metaFileJSONObjectMap.keySet();
-    for (MetaFile metaFile : metaFileSet) {
-      JSONObject jsonData = metaFileJSONObjectMap.get(metaFile);
-      String uri =
-          String.format(
-              "%s" + "%s" + "%s" + "%s" + "%s",
-              jsonData.getString("queue"),
-              "/export?format=",
-              exportTypeSelect,
-              "&id=",
-              jsonData.get("id").toString());
-
-      HttpGet httpGet = new HttpGet(uri);
-      httpGet.addHeader("Authorization", "token " + token);
-      httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
-
-      response = httpClient.execute(httpGet);
-
-      if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK
-          && response.getEntity() != null) {
-
-        JSONObject resultObject = new JSONObject(EntityUtils.toString(response.getEntity()));
-
-        jsonData = resultObject.getJSONArray("results").getJSONObject(0);
-        filterJSONDataList.add(jsonData);
-      }
-      httpGet.abort();
-    }
-
-    return filterJSONDataList;
   }
 
   @Override
@@ -362,52 +319,6 @@ public class AppRossumServiceImpl implements AppRossumService {
   }
 
   @Override
-  public JSONObject generateUniqueKeyFromJsonData(JSONObject jsonObject) throws JSONException {
-    Integer keyOccurance = 0;
-    Map<String, Object> jsonObjectMap = Mapper.toMap(jsonObject);
-
-    JSONArray fieldsArray = jsonObject.getJSONArray(ITranslation.GET_FIELDS);
-    if (fieldsArray != null) {
-      Map<String, Integer> fieldsArrayKeyMap = new HashMap<>();
-
-      for (int i = 0; i < fieldsArray.length(); i++) {
-        String name = fieldsArray.getJSONObject(i).getString(ITranslation.GET_NAME);
-        if (fieldsArrayKeyMap != null && name != null && fieldsArrayKeyMap.containsKey(name)) {
-          Integer newKeyOccurance = (Integer) fieldsArrayKeyMap.get(name) + 1;
-          fieldsArray.getJSONObject(i).put(ITranslation.GET_NAME, name + "_" + newKeyOccurance);
-          fieldsArrayKeyMap.put(name, newKeyOccurance);
-        } else {
-          fieldsArrayKeyMap.put(name, keyOccurance);
-        }
-      }
-      jsonObjectMap.put(ITranslation.GET_FIELDS, fieldsArray);
-    }
-
-    JSONArray tablesArray = jsonObject.getJSONArray(ITranslation.GET_TABLES);
-    if (tablesArray != null
-        && tablesArray.getJSONObject(0).getJSONArray(ITranslation.GET_COLUMN_TYPES) != null) {
-      JSONArray columnTypesArray =
-          tablesArray.getJSONObject(0).getJSONArray(ITranslation.GET_COLUMN_TYPES);
-      Map<String, Integer> columnTypesArrayKeyMap = new HashMap<>();
-
-      for (Integer i = 0; i < columnTypesArray.length(); i++) {
-        String name = columnTypesArray.getString(i);
-        if (columnTypesArrayKeyMap != null
-            && name != null
-            && columnTypesArrayKeyMap.containsKey(name)) {
-          columnTypesArray.set(i, name + "_" + columnTypesArrayKeyMap.get(name));
-        } else {
-          columnTypesArrayKeyMap.put(name, keyOccurance);
-        }
-      }
-      jsonObjectMap.put(ITranslation.GET_TABLES, tablesArray);
-    }
-
-    jsonObject.putAll(jsonObjectMap);
-    return jsonObject;
-  }
-
-  @Override
   @Transactional
   public void login(AppRossum appRossum) throws IOException, JSONException, AxelorException {
 
@@ -466,6 +377,7 @@ public class AppRossumServiceImpl implements AppRossumService {
 
     appRossumRepository.save(appRossum);
     Beans.get(InvoiceOcrTemplateRepository.class).all().update("queue", null);
+    annotationRepo.all().remove();
     queueRepo.all().remove();
     schemaRepo.all().remove();
     workspaceRepo.all().remove();

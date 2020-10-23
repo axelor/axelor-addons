@@ -2,6 +2,7 @@ package com.axelor.apps.rossum.web;
 
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
+import com.axelor.apps.rossum.service.annotation.AnnotationService;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.service.organisation.OrganisationService;
 import com.axelor.apps.rossum.service.queue.QueueService;
@@ -30,6 +31,7 @@ public class AppRossumController {
       Beans.get(WorkspaceService.class).getWorkspaces(appRossum);
       Beans.get(SchemaService.class).getSchemas(appRossum);
       Beans.get(QueueService.class).getQueues(appRossum);
+      Beans.get(AnnotationService.class).getAnnotations(appRossum);
 
       response.setReload(true);
     } catch (ParseException | IOException | JSONException | AxelorException e) {

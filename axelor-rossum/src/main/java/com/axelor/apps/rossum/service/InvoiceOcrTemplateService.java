@@ -22,7 +22,6 @@ import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.exception.AxelorException;
 import java.io.IOException;
 import wslite.json.JSONException;
-import wslite.json.JSONObject;
 
 public interface InvoiceOcrTemplateService {
 
@@ -37,17 +36,6 @@ public interface InvoiceOcrTemplateService {
    */
   public void createTemplate(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, InterruptedException, JSONException;
-
-  /**
-   * Filter data from JSON object extracted using API
-   *
-   * @param invoiceResult
-   * @param invoiceOcrTemplate
-   * @throws IOException
-   * @throws JSONException
-   */
-  public void filterInvoiceData(JSONObject invoiceResult, InvoiceOcrTemplate invoiceOcrTemplate)
-      throws IOException, JSONException;
 
   public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate) throws IOException;
 }

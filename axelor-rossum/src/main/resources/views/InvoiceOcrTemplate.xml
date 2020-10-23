@@ -3,60 +3,54 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
-  <grid model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-grid">
-    <field name="name"/>
-  </grid>
+	<grid model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-grid">
+      <field name="name"/>
+	</grid>
   
-  <form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-form" width="large" 
-      onLoad="action-invoice-ocr-template-attrs-hide-list-field">
-    <panel name="namePanel">
-      <field name="name" requiredIf="invoiceFieldList.length > 0"/>
-    </panel>
-    <panel name="generalPanel" hideIf="invoiceFieldList != null &amp;&amp; invoiceFieldList.length > 0">
-      <field name="templateFile" widget="binary-link" onSelect="action-invoice-ocr-template-group-onchange-template-file"/>
-      <field name="timeout" min="0"/>
-      <field name="queue"/>
-      <field name="exportTypeSelect" required="true" selection-in="['csv']"/>
-      <button name="createTemplateBtn" title="Generate Template" onClick="save,action-invoice-ocr-template-method-onclick-create-template" 
-         readonlyIf="!templateFile"/>
-      <field name="documentId" hidden="true"/>
-    </panel>
-    <panel name="rawDataPanel" title="Raw Data From Ocr" showIf="rawData || exportedFile != null">
-      <field name="rawData" readonly="true" colSpan="12" showIf="rawData" widget="json-raw"/>
-      <field name="exportedFile" showIf="exportTypeSelect != 'json'"/>
-    </panel>
-    <panel name="generateInvoicePanel" title="Invoice details" showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null">
-      <field name="invoiceOperationTypeSelect" requiredIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
-      <field name="invoiceOperationSubTypeSelect" requiredIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
-      <button name="generateInvoice" title="Generate Invoice" onClick="save,action-invoice-ocr-template-method-onclick-generate-invoice" 
-         showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
-    </panel>
-    <panel name="mainPanel" showIf="invoiceFieldList != null &amp;&amp; invoiceFieldList.length > 0">
-	    <panel-related name="invoiceFieldListPanel" field="invoiceFieldList" colSpan="12" canNew="false" canRemove="false"
-	       grid-view="ocr-invoice-field-grid" form-view="ocr-invoice-field-form"/>
-    </panel>
-  </form>  
+	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-form" width="large">
+		<panel name="generalPanel">
+			<field name="name"/>
+			<field name="templateFile" widget="binary-link" onChange="action-invoice-ocr-template-group-onchange-template-file"/>
+			<field name="timeout" min="0"/>
+			<field name="queue"/>
+			<field name="exportTypeSelect" required="true" selection-in="['csv']"/>
+			<button name="createTemplateBtn" title="Generate Template" onClick="save,action-invoice-ocr-template-method-onclick-create-template"
+			   readonlyIf="!templateFile" showIf="exportedFile == null"/>
+		</panel>
+		<panel name="ecportedDataPanel" title="Exported Data From Ocr" showIf="exportedFile != null">
+         <field name="exportedFile" readonly="true"/>
+		</panel>
+		<panel name="generateInvoicePanel" title="Invoice details" showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null">
+         <field name="invoiceOperationTypeSelect" requiredIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
+         <field name="invoiceOperationSubTypeSelect" requiredIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
+         <button name="generateInvoice" title="Generate Invoice" onClick="save,action-invoice-ocr-template-method-onclick-generate-invoice"
+            showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
+		</panel>
+		<panel name="mainPanel" showIf="invoiceFieldList != null &amp;&amp; invoiceFieldList.length > 0">
+         <panel-related name="invoiceFieldListPanel" field="invoiceFieldList" colSpan="12" canNew="false" canRemove="false"
+            grid-view="ocr-invoice-field-grid" form-view="ocr-invoice-field-form"/>
+      </panel>
+   </form>
 
-  <action-group name="action-invoice-ocr-template-group-onchange-template-file">
-    <action name="action-invoice-ocr-validate-invoice-file" if="templateFile"/>
-    <action name="action-invoice-ocr-template-record-reset-raw-data" if="templateFile"/>
-  </action-group>
+   <action-group name="action-invoice-ocr-template-group-onchange-template-file">
+      <action name="action-invoice-ocr-template-validate-template-file" if="templateFile == null"/>
+      <action name="action-invoice-ocr-template-record-reset-exported-data"/>
+   </action-group>
 
-  <action-record name="action-invoice-ocr-template-record-reset-raw-data" model="com.axelor.apps.rossum.db.InvoiceOcrTemplate">
-    <field name="rawData" expr="eval: null"/>
-  </action-record>
+   <action-validate name="action-invoice-ocr-template-validate-template-file">
+      <alert message="Warning, existing exported data will be deleted, do you wish to continue?"/>
+   </action-validate>
 
-  <action-method name="action-invoice-ocr-template-method-onclick-create-template">
-    <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="createTemplate"/>
-  </action-method>
+   <action-record name="action-invoice-ocr-template-record-reset-exported-data" model="com.axelor.apps.rossum.db.InvoiceOcrTemplate">
+      <field name="exportedFile" expr="eval: null"/>
+   </action-record>
+
+   <action-method name="action-invoice-ocr-template-method-onclick-create-template">
+      <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="createTemplate"/>
+   </action-method>
 
    <action-method name="action-invoice-ocr-template-method-onclick-generate-invoice">
       <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="generateInvoice"/>
    </action-method>
-
-  <action-attrs name="action-invoice-ocr-template-attrs-hide-list-field">
-    <attribute name="hidden" for="invoiceFieldList.defaultValue" expr="eval: true"/>
-    <attribute name="hidden" for="invoiceFieldList.isbindWithTemplateField" expr="eval: true"/>
-  </action-attrs>
 
 </object-views>

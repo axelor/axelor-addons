@@ -21,4 +21,12 @@
       <option value="UK Demo Template">UK Demo Template</option>
       <option value="CZ Demo Template">CZ Demo Template</option>
    </selection>
+
+   <selection name="rossum.annotation.status.select">
+      <option value="to_review">To review</option>
+      <option value="postponed">Postponed</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="exported">Exported</option>
+      <option value="deleted">Deleted</option>
+   </selection>
 </object-views>

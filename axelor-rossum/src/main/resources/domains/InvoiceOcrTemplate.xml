@@ -8,15 +8,12 @@
 		<many-to-one name="templateFile" ref="com.axelor.meta.db.MetaFile" title="Template" help="Please upload file with max. 32 pages"/>
 		<integer name="timeout" title="Timeout (Sec.)" default="60" help="Please enter seconds in multiple of 5"/>
 		<string name="name" title="Template Name"/>
-		<string name="rawData" title="Raw Data" large="true"/>
       <string name="exportTypeSelect" title="Export type" selection="rossum.export.type.select" default="csv"/>
       <integer name="invoiceOperationTypeSelect" title="Invoice document Type" selection="iinvoice.operation.type.select"/>
       <integer name="invoiceOperationSubTypeSelect" title="Invoice document Subtype" default="1" selection="iinvoice.operation.sub.type.select"/>
 
-      
       <many-to-one name="queue" ref="com.axelor.apps.rossum.db.Queue" title="Queue"/>
       <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV or XML file"/>
-      <one-to-many name="invoiceFieldList" ref="com.axelor.apps.rossum.db.InvoiceField" title="Invoice fields" mappedBy="invoiceOcrTemplate"/>
    
       <extra-code>
          <![CDATA[

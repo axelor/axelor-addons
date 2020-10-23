@@ -6,8 +6,6 @@
   <module name="base" package="com.axelor.apps.base.db"/>
 
   <entity name="AppRossum" cacheable="true" lang="java"  extends="App">
-    <string name="rossumUrl" title="Rossum base Url"/>
-    <string name="rossumApiKey" title="Rossum API Key"/>
     <string name="username" title="User name"/>
     <string name="password" title="Password"/>
     <string name="token" title="Token" help="It lasts upto 162 hours unless user logouts"/>
