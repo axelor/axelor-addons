@@ -6,9 +6,11 @@ import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.QueueRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.exception.AxelorException;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -35,45 +37,68 @@ public class AnnotaionServiceImpl implements AnnotationService {
 
   @SuppressWarnings("static-access")
   @Override
-  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
   public void getAnnotations(AppRossum appRossum)
       throws IOException, JSONException, AxelorException {
     appRossumService.login(appRossum);
 
-    HttpGet httpGet =
-        new HttpGet(String.format(appRossumService.API_URL + "%s", "/v1/annotations"));
-    httpGet.addHeader("Authorization", "token " + appRossum.getToken());
-    httpGet.addHeader("Accept", "application/json");
+    String uri = String.format(appRossumService.API_URL + "%s", "/v1/annotations");
+    String token = appRossum.getToken();
 
     CloseableHttpClient httpClient = appRossumService.httpClient;
 
-    CloseableHttpResponse response = httpClient.execute(httpGet);
+    this.checkNext(uri, token, null, httpClient);
+  }
 
-    if (response.getEntity() != null) {
+  protected void checkNext(
+      String uri, String token, JSONObject object, CloseableHttpClient httpClient)
+      throws JSONException, ClientProtocolException, IOException {
 
-      JSONObject obj = new JSONObject(EntityUtils.toString(response.getEntity()));
-      JSONArray resultsArray = obj.getJSONArray("results");
+    uri =
+        Strings.isNullOrEmpty(uri)
+            ? object.getJSONObject("pagination").isNull("next")
+                ? null
+                : object.getJSONObject("pagination").getString("next")
+            : uri;
 
-      for (Integer i = 0; i < resultsArray.length(); i++) {
-        JSONObject resultObject = resultsArray.getJSONObject(i);
-        String annotationUrl = resultObject.getString("url");
+    if (!Strings.isNullOrEmpty(uri)) {
 
-        Integer annotationId = resultObject.getInt("id");
-        String statusSelect = resultObject.getString("status");
-        String queueUrl = resultObject.getString("queue");
+      HttpGet httpGet = new HttpGet(uri);
+      httpGet.addHeader("Authorization", "token " + token);
+      httpGet.addHeader("Accept", "application/json");
+      CloseableHttpResponse response = httpClient.execute(httpGet);
 
-        Annotation annotation =
-            annotationRepo.findByUrl(annotationUrl) != null
-                ? annotationRepo.findByUrl(annotationUrl)
-                : new Annotation();
-
-        annotation.setAnnotationId(annotationId);
-        annotation.setAnnotationUrl(annotationUrl);
-        annotation.setStatusSelect(statusSelect);
-        annotation.setQueueUrl(queueRepo.findByUrl(queueUrl));
-        annotation.setAnnotationResult(resultObject.toString());
-        annotationRepo.save(annotation);
+      if (response.getEntity() != null) {
+        JSONObject obj = new JSONObject(EntityUtils.toString(response.getEntity()));
+        this.createOrUpdateAnnotations(obj);
+        this.checkNext(null, token, obj, httpClient);
       }
+      httpGet.completed();
+    }
+  }
+
+  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
+  protected void createOrUpdateAnnotations(JSONObject obj) throws JSONException {
+    JSONArray resultsArray = obj.getJSONArray("results");
+
+    for (Integer i = 0; i < resultsArray.length(); i++) {
+      JSONObject resultObject = resultsArray.getJSONObject(i);
+      String annotationUrl = resultObject.getString("url");
+
+      Integer annotationId = resultObject.getInt("id");
+      String statusSelect = resultObject.getString("status");
+      String queueUrl = resultObject.getString("queue");
+
+      Annotation annotation =
+          annotationRepo.findByUrl(annotationUrl) != null
+              ? annotationRepo.findByUrl(annotationUrl)
+              : new Annotation();
+
+      annotation.setAnnotationId(annotationId);
+      annotation.setAnnotationUrl(annotationUrl);
+      annotation.setStatusSelect(statusSelect);
+      annotation.setQueueUrl(queueRepo.findByUrl(queueUrl));
+      annotation.setAnnotationResult(resultObject.toString());
+      annotationRepo.save(annotation);
     }
   }
 }

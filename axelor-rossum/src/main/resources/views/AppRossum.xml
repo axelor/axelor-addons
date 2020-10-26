@@ -13,8 +13,8 @@
 		</panel>
 		<panel name="buttonPanel" sidebar="true">
          <field name="isValid" readonly="true"/>
-         <button name="loginButton" title="Login" onClick="save,action-app-rossum-method-login-onclick"/>
-         <button name="resetButton" title="Reset" onClick="save,action-app-rossum-method-reset-onclick"/>
+         <button name="loginButton" title="Login" onClick="save,action-app-rossum-method-login-onclick" showIf="!isValid"/>
+         <button name="resetButton" title="Reset" onClick="save,action-app-rossum-method-reset-onclick" showIf="isValid"/>
 		</panel>
    </form>
 

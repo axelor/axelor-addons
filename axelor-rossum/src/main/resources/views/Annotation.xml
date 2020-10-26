@@ -5,9 +5,9 @@
 
    <grid model="com.axelor.apps.rossum.db.Annotation" title="Annotations" name="annotation-grid" canNew="false" canDelete="false"
       groupBy="queueUrl">
-      <field name="annotationId"/>
       <field name="annotationUrl"/>
       <field name="statusSelect"/>
+      <field name="annotationId"/>
       <field name="queueUrl" hidden="true"/>
    </grid>
 
