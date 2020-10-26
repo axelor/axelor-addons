@@ -42,5 +42,6 @@
    <action-view name="rossum.root.config.rossum.annotaion" title="Annotations" model="com.axelor.apps.rossum.db.Annotation">
       <view type="grid" name="annotation-grid"/>
       <view type="form" name="annotation-form"/>
+      <view-param name="limit" value="100"/>
    </action-view>
 </object-views>

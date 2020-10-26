@@ -12,8 +12,8 @@
 			<field name="name"/>
 			<field name="templateFile" widget="binary-link" onChange="action-invoice-ocr-template-group-onchange-template-file"/>
 			<field name="timeout" min="0"/>
-			<field name="queue"/>
-			<field name="exportTypeSelect" required="true" selection-in="['csv']"/>
+			<field name="queue" readonlyIf="exportedFile != null"/>
+			<field name="exportTypeSelect" required="true" readonlyIf="exportedFile != null" selection-in="['csv']"/>
 			<button name="createTemplateBtn" title="Generate Template" onClick="save,action-invoice-ocr-template-method-onclick-create-template"
 			   readonlyIf="!templateFile" showIf="exportedFile == null"/>
 		</panel>
@@ -26,10 +26,6 @@
          <button name="generateInvoice" title="Generate Invoice" onClick="save,action-invoice-ocr-template-method-onclick-generate-invoice"
             showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
 		</panel>
-		<panel name="mainPanel" showIf="invoiceFieldList != null &amp;&amp; invoiceFieldList.length > 0">
-         <panel-related name="invoiceFieldListPanel" field="invoiceFieldList" colSpan="12" canNew="false" canRemove="false"
-            grid-view="ocr-invoice-field-grid" form-view="ocr-invoice-field-form"/>
-      </panel>
    </form>
 
    <action-group name="action-invoice-ocr-template-group-onchange-template-file">
