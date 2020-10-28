@@ -9,7 +9,7 @@
       <string name="statusSelect" selection="rossum.annotation.status.select" readonly="true" title="Status" initParam="true"/>
       <integer name="annotationId" title="Annotation id" readonly="true" initParam="true"/>
 
-      <string name="annotationUrl" title="Annotation url" readonly="true" initParam="true"/>
+      <string name="annotationUrl" title="Annotation url" readonly="true" initParam="true" namecolumn="true"/>
       <string name="annotationResult" title="Annotation result" large="true" json="true"/>
 
       <many-to-one name="queueUrl" ref="com.axelor.apps.rossum.db.Queue" title="Queue" initParam="true"/>

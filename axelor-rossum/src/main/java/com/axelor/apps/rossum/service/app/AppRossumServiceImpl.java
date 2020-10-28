@@ -1,4 +1,21 @@
 /*
+ * Axelor Business Solutions
+ *
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ *
+ * This program is free software: you can redistribute it and/or  modify
+ * it under the terms of the GNU Affero General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+/*
 // * Axelor Business Solutions
  *
  * Copyright (C) 2019 Axelor (<http://axelor.com>).
@@ -20,6 +37,7 @@ package com.axelor.apps.rossum.service.app;
 import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
+import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.Queue;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
@@ -30,6 +48,7 @@ import com.axelor.apps.rossum.db.repo.WorkspaceRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
 import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.apps.tool.date.DurationTool;
+import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
 import com.axelor.db.Query;
 import com.axelor.exception.AxelorException;
@@ -177,6 +196,13 @@ public class AppRossumServiceImpl implements AppRossumService {
     return metaFileFileMap;
   }
 
+  @Transactional(
+      rollbackOn = {
+        AxelorException.class,
+        IOException.class,
+        JSONException.class,
+        InterruptedException.class
+      })
   private Map<MetaFile, JSONObject> submitInvoiceAndExtractData(
       List<MetaFile> metaFileList, Integer timeout, Queue queue)
       throws AxelorException, IOException, JSONException, InterruptedException {
@@ -202,6 +228,12 @@ public class AppRossumServiceImpl implements AppRossumService {
                   IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
           String annotationsLink = result.getString("annotation");
           log.debug("Submit result: " + result);
+
+          if (ObjectUtils.isEmpty(annotationRepo.findByUrl(annotationsLink))) {
+            Annotation annotation = new Annotation();
+            annotation.setAnnotationUrl(annotationsLink);
+            annotationRepo.save(annotation);
+          }
 
           log.debug("Annotation link: " + annotationsLink);
 
@@ -264,22 +296,11 @@ public class AppRossumServiceImpl implements AppRossumService {
               new JSONObject(
                   IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
 
-          String status = result.getString("status");
-          switch (status) {
-            case "exported":
-              metaFileJSONObjectMap.put(annotationsLinkMetaFileMap.get(annotationsLink), result);
-              annotationsLinkExportedMap.put(annotationsLink, true);
-              break;
-            case "error":
-              log.debug("Result: " + result);
-
-              throw new AxelorException(
-                  TraceBackRepository.CATEGORY_INCONSISTENCY,
-                  I18n.get(IExceptionMessage.DOCUMENT_PROCESS_ERROR),
-                  result.getString("message"));
-            default:
-              log.debug("Result: " + result);
-              break;
+          if (result.getString("status").equals("exported")) {
+            metaFileJSONObjectMap.put(annotationsLinkMetaFileMap.get(annotationsLink), result);
+            annotationsLinkExportedMap.put(annotationsLink, true);
+          } else {
+            log.debug("Result: " + result);
           }
           httpGet.abort();
         }
