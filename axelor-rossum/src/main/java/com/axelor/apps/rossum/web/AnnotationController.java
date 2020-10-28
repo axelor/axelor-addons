@@ -17,27 +17,38 @@
  */
 package com.axelor.apps.rossum.web;
 
-import com.axelor.apps.rossum.db.SchemaField;
-import com.axelor.apps.rossum.db.repo.SchemaFieldRepository;
-import com.axelor.apps.rossum.service.schema.SchemaFieldService;
+import com.axelor.apps.rossum.db.Annotation;
+import com.axelor.apps.rossum.db.repo.AnnotationRepository;
+import com.axelor.apps.rossum.service.annotation.AnnotationService;
+import com.axelor.exception.AxelorException;
 import com.axelor.exception.ResponseMessageType;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.rpc.Context;
+import java.io.IOException;
+import java.util.Map;
 import wslite.json.JSONException;
 
-public class SchemaFieldController {
+public class AnnotationController {
 
-  public void updateSchmeaContent(ActionRequest request, ActionResponse response) {
+  @SuppressWarnings("unchecked")
+  public void exportAnnotation(ActionRequest request, ActionResponse response) {
+
     try {
-      SchemaField schemaField =
-          Beans.get(SchemaFieldRepository.class)
-              .find(request.getContext().asType(SchemaField.class).getId());
-      Beans.get(SchemaFieldService.class).updateSchemaContent(schemaField);
+      Context context = request.getContext();
 
-      response.setReload(true);
-    } catch (JSONException e) {
+      Annotation annotation =
+          Beans.get(AnnotationRepository.class)
+              .find(
+                  Long.valueOf(
+                      ((Map<String, Object>) context.get("annotation")).get("id").toString()));
+
+      String invOcrTemplateName = context.get("invoiceOcrTemplateName").toString();
+
+      Beans.get(AnnotationService.class).exportAnnotation(annotation, invOcrTemplateName);
+    } catch (IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }
