@@ -6,23 +6,7 @@
 	<form id="redmine-employee-form" name="employee-form" title="Employee"
 		model="com.axelor.apps.hr.db.Employee" extension="true">
 
-		<!-- Make product field required in timesheetsSBSPanel and timesheetsPanel -->
-
-		<extend target="//panel[@name='timesheetsSBSPanel']">
-			<replace>
-				<panel name="timesheetsSBSPanel" title="Timesheets"
-					if="__config__.app.isApp('timesheet')" showIf="stepByStepSelect == 3">
-					<field name="timeLoggingPreferenceSelect" colSpan="3" />
-					<field name="product" canEdit="false" colSpan="3"
-						domain="self.isActivity = true" form-view="product-form"
-						grid-view="product-grid" required="true" />
-					<field name="timesheetReminder" colSpan="3" />
-					<field name="timesheetImputationSelect" colSpan="3"
-						if="__config__.app.getApp('production')?.getEnableTimesheetOnManufOrder()"
-						if-module="axelor-business-production" />
-				</panel>
-			</replace>
-		</extend>
+		<!-- Make product field required in timesheetsPanel -->
 
 		<extend target="//panel[@name='timesheetsPanel']">
 			<replace>
@@ -31,7 +15,7 @@
 					<field name="timeLoggingPreferenceSelect" colSpan="3" />
 					<field name="product" canEdit="false" colSpan="3"
 						domain="self.isActivity = true" form-view="product-form"
-						grid-view="product-grid" required="true" />
+						grid-view="product-grid" requiredIf="stepByStepSelect == 5" />
 					<field name="timesheetReminder" colSpan="3" />
 					<field name="timesheetImputationSelect" colSpan="3"
 						if="__config__.app.getApp('production')?.getEnableTimesheetOnManufOrder()"
