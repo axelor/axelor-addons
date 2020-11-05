@@ -18,8 +18,10 @@
 package com.axelor.apps.sendinblue.service;
 
 import com.axelor.apps.base.service.user.UserService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.Template;
 import com.axelor.apps.message.db.repo.TemplateRepository;
+import com.axelor.apps.message.service.MailAccountService;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.translation.ITranslation;
@@ -53,7 +55,6 @@ import sibModel.CreateModel;
 import sibModel.CreateSmtpTemplate;
 import sibModel.CreateSmtpTemplateSender;
 import sibModel.GetSmtpTemplateOverview;
-import sibModel.GetSmtpTemplateOverviewSender;
 import sibModel.GetSmtpTemplates;
 import sibModel.UpdateSmtpTemplate;
 import sibModel.UpdateSmtpTemplateSender;
@@ -94,6 +95,7 @@ public class SendinBlueTemplateService {
       int totalTemplate = (int) templateQuery.count();
       List<Template> templates;
       int offset = 0;
+      EmailAccount emailAccount = getSenderEmailAccount();
       while (totalTemplate > 0) {
         templates = templateQuery.fetch(DATA_FETCH_LIMIT, offset);
         if (templates != null) {
@@ -101,15 +103,9 @@ public class SendinBlueTemplateService {
           if (!templates.isEmpty()) {
             offset += totalTemplate;
             for (Template dataObject : templates) {
-              if (StringUtils.isBlank(dataObject.getFromAdress())) {
-                TraceBackService.trace(
-                    new AxelorException(
-                        TraceBackRepository.CATEGORY_NO_VALUE,
-                        I18n.get(ITranslation.TEMPLATE_SENDER_ERROR)));
-                continue;
-              } else if (!senderEmails.stream()
-                  .anyMatch(email -> email.equals(dataObject.getFromAdress()))) {
-                sendinBlueCampaignService.createSender(dataObject.getFromAdress());
+              if (!senderEmails.stream()
+                  .anyMatch(email -> email.equals(emailAccount.getFromAddress()))) {
+                sendinBlueCampaignService.createSender(emailAccount.getFromAddress());
               }
               exportTemplateDataObject(dataObject);
             }
@@ -118,6 +114,18 @@ public class SendinBlueTemplateService {
       }
       logWriter.append(String.format("%nTotal Template Exported : %s", totalExportRecord));
     }
+  }
+
+  private EmailAccount getSenderEmailAccount() {
+
+    EmailAccount emailAccount = Beans.get(MailAccountService.class).getDefaultSender();
+    if (emailAccount == null || emailAccount.getFromAddress() == null) {
+      TraceBackService.trace(
+          new AxelorException(
+              TraceBackRepository.CATEGORY_NO_VALUE, I18n.get(ITranslation.TEMPLATE_SENDER_ERROR)));
+    }
+
+    return emailAccount;
   }
 
   private void exportTemplateDataObject(Template dataObject) {
@@ -144,8 +152,9 @@ public class SendinBlueTemplateService {
   public void createTemplate(Template dataObject) {
     SmtpApi smtpApiInstance = new SmtpApi();
     CreateSmtpTemplateSender sender = new CreateSmtpTemplateSender();
-    sender = sender.name(dataObject.getFromAdress());
-    sender = sender.email(dataObject.getFromAdress());
+    EmailAccount emailAccount = getSenderEmailAccount();
+    sender = sender.name(emailAccount.getFromName());
+    sender = sender.email(emailAccount.getFromAddress());
 
     CreateSmtpTemplate smtpTemplate = new CreateSmtpTemplate();
 
@@ -175,8 +184,9 @@ public class SendinBlueTemplateService {
   private void updateTemplate(Template dataObject) {
     SmtpApi smtpApiInstance = new SmtpApi();
     UpdateSmtpTemplateSender sender = new UpdateSmtpTemplateSender();
-    sender.setEmail(dataObject.getFromAdress());
-    sender.setName(dataObject.getFromAdress());
+    EmailAccount emailAccount = getSenderEmailAccount();
+    sender.setEmail(emailAccount.getFromAddress());
+    sender.setName(emailAccount.getName());
 
     UpdateSmtpTemplate smtpTemplate = new UpdateSmtpTemplate();
     smtpTemplate.setTemplateName(
@@ -295,8 +305,6 @@ public class SendinBlueTemplateService {
     messageTemplate.setSubject(template.getSubject());
     messageTemplate.setMediaTypeSelect(TemplateRepository.MEDIA_TYPE_EMAILING);
     messageTemplate.setReplyToRecipients(template.getReplyTo());
-    GetSmtpTemplateOverviewSender sender = template.getSender();
-    messageTemplate.setFromAdress(sender.getEmail());
     messageTemplate.setToRecipients(template.getToField());
     String content = getABSContent(messageTemplate, template.getHtmlContent());
     messageTemplate.setContent(content);

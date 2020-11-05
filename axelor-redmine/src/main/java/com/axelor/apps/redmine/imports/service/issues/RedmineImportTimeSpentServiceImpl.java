@@ -118,7 +118,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
   protected Project project;
   protected TeamTask teamTask;
   protected User user;
-  protected Product product;
   protected String unitHoursName = null;
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
@@ -254,37 +253,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
           teamTask = null;
         }
 
-        // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
-
-        String value =
-            StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineTimeSpentProduct))
-                ? redmineCustomFieldsMap.get(redmineTimeSpentProduct)
-                : (user.getEmployee() != null && user.getEmployee().getProduct() != null
-                    ? user.getEmployee().getProduct().getCode()
-                    : redmineTimeSpentProductDefault);
-
-        if (value != null) {
-          product = productRepo.findByCode(value);
-
-          if (product == null) {
-            errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)};
-
-            redmineBatch.setFailedRedmineTimeEntriesIds(
-                failedRedmineTimeEntriesIds == null
-                    ? redmineTimeEntry.getId().toString()
-                    : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
-
-            setErrorLog(
-                I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
-                redmineTimeEntry.getId().toString());
-
-            fail++;
-            continue;
-          }
-        } else {
-          product = null;
-        }
-
         try {
           this.createOpenSuiteTimesheetLine(redmineTimeEntry);
         } finally {
@@ -382,8 +350,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     timesheetLine.setRedmineId(redmineTimeEntry.getId());
     timesheetLine.setProject(project);
     timesheetLine.setTeamTask(teamTask);
-
-    timesheetLine.setProduct(product);
     timesheetLine.setComments(redmineTimeEntry.getComment());
 
     BigDecimal duration = BigDecimal.valueOf(redmineTimeEntry.getHours());
@@ -405,6 +371,24 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       unit = unitRepo.findByName(value);
     }
 
+    value =
+        StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineTimeSpentProduct))
+            ? redmineCustomFieldsMap.get(redmineTimeSpentProduct)
+            : (user.getEmployee() != null && user.getEmployee().getProduct() != null
+                ? user.getEmployee().getProduct().getCode()
+                : redmineTimeSpentProductDefault);
+
+    Product product = StringUtils.isNotEmpty(value) ? productRepo.findByCode(value) : null;
+
+    if (product == null) {
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)};
+      setErrorLog(
+          I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
+          redmineTimeEntry.getId().toString());
+    }
+
+    timesheetLine.setProduct(product);
+
     if (unit != null) {
       timesheetLine.setDurationUnit(unit);
     } else {
@@ -415,10 +399,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     String activityType = redmineTimeEntry.getActivityName();
     timesheetLine.setActivityTypeSelect(
         activityType != null && !activityType.isEmpty() ? selectionMap.get(activityType) : null);
-
-    if (teamTask != null && !timesheetLine.getToInvoice()) {
-      timesheetLine.setToInvoice(teamTask.getToInvoice());
-    }
 
     Timesheet timesheet =
         timesheetRepo
