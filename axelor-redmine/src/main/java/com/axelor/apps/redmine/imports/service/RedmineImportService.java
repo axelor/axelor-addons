@@ -92,7 +92,7 @@ public class RedmineImportService {
   protected List<Object[]> errorObjList;
   protected Map<String, String> redmineCustomFieldsMap;
   protected LocalDateTime lastBatchUpdatedOn;
-  protected HashMap<String, String> selectionMap;
+  protected HashMap<String, Object> selectionMap;
   protected HashMap<String, String> fieldMap;
 
   protected HashMap<Integer, String> redmineUserMap;

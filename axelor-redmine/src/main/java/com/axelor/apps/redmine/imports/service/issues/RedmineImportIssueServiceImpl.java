@@ -20,25 +20,32 @@ package com.axelor.apps.redmine.imports.service.issues;
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
+import com.axelor.apps.base.db.repo.AppBusinessSupportRepository;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.businesssupport.db.ProjectVersion;
+import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.TeamTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
+import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.apps.redmine.message.IMessage;
+import com.axelor.apps.redmine.service.TeamTaskRedmineService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.inject.Beans;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
 import com.axelor.team.db.TeamTask;
@@ -61,6 +68,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,6 +77,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     implements RedmineImportIssueService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
+  protected ProjectVersionRepository projectVersionRepository;
+  protected AppBaseService appBaseService;
+  protected TeamTaskRedmineService teamTaskRedmineService;
 
   @Inject
   public RedmineImportIssueServiceImpl(
@@ -80,7 +91,10 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       PartnerRepository partnerRepo,
       RedmineImportMappingRepository redmineImportMappingRepository,
       AppRedmineRepository appRedmineRepo,
-      CompanyRepository companyRepo) {
+      CompanyRepository companyRepo,
+      ProjectVersionRepository projectVersionRepository,
+      AppBaseService appBaseService,
+      TeamTaskRedmineService teamTaskRedmineService) {
 
     super(
         userRepo,
@@ -92,6 +106,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         appRedmineRepo,
         companyRepo);
     this.redmineImportMappingRepository = redmineImportMappingRepository;
+    this.projectVersionRepository = projectVersionRepository;
+    this.appBaseService = appBaseService;
+    this.teamTaskRedmineService = teamTaskRedmineService;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -111,6 +128,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected String redmineIssueIsOffered;
   protected String redmineIssueUnitPrice;
 
+  protected List<Long> projectVersionIdList = new ArrayList<>();
+  protected boolean isAppBusinessSupport;
+
   @Override
   @SuppressWarnings("unchecked")
   public void importIssue(List<Issue> redmineIssueList, HashMap<String, Object> paramsMap) {
@@ -126,6 +146,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       this.fieldMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+      isAppBusinessSupport = appBaseService.isApp("business-support");
 
       this.redmineIssueProduct = appRedmine.getRedmineIssueProduct();
       this.redmineIssueDueDate = appRedmine.getRedmineIssueDueDate();
@@ -155,7 +176,14 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       }
 
       List<RedmineImportMapping> redmineImportMappingList =
-          redmineImportMappingRepository.all().fetch();
+          redmineImportMappingRepository
+              .all()
+              .filter(
+                  "self.redmineImportConfig.redmineMappingFieldSelect in (?1, ?2, ?3)",
+                  RedmineImportConfigRepository.MAPPING_FIELD_PROJECT_TRACKER,
+                  RedmineImportConfigRepository.MAPPING_FIELD_TASK_PRIORITY,
+                  RedmineImportConfigRepository.MAPPING_FIELD_TASK_STATUS)
+              .fetch();
 
       for (RedmineImportMapping redmineImportMapping : redmineImportMappingList) {
         fieldMap.put(redmineImportMapping.getRedmineValue(), redmineImportMapping.getOsValue());
@@ -171,8 +199,11 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       // SET ISSUES PARENTS
 
       if (!parentMap.isEmpty()) {
+        LOG.debug("Setting parent tasks on imported tasks..");
         this.setParentTasks();
       }
+
+      LOG.debug("Setting updateOn datetime on imported tasks..");
 
       if (!updatedOnMap.isEmpty()) {
         String values =
@@ -192,6 +223,11 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
                 values);
 
         JPA.em().createNativeQuery(query).executeUpdate();
+      }
+
+      if (CollectionUtils.isNotEmpty(projectVersionIdList)) {
+        LOG.debug("Setting project versions total progress..");
+        this.updateProjectVersionsProgress();
       }
     }
 
@@ -377,6 +413,18 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     }
   }
 
+  @Transactional
+  public void updateProjectVersionsProgress() {
+
+    String taskClosedStatusSelect =
+        Beans.get(AppBusinessSupportRepository.class).all().fetchOne().getTaskClosedStatusSelect();
+
+    for (Long id : projectVersionIdList) {
+      teamTaskRedmineService.updateProjectVersionProgress(
+          projectVersionRepository.find(id), taskClosedStatusSelect);
+    }
+  }
+
   public void setTeamTaskFields(TeamTask teamTask, Issue redmineIssue) {
 
     try {
@@ -413,6 +461,26 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       Version targetVersion = redmineIssue.getTargetVersion();
       teamTask.setFixedVersion(targetVersion != null ? targetVersion.getName() : null);
+
+      if (isAppBusinessSupport) {
+
+        if (teamTask.getTargetVersion() != null
+            && !projectVersionIdList.contains(teamTask.getTargetVersion().getId())) {
+          projectVersionIdList.add(teamTask.getTargetVersion().getId());
+        }
+
+        if (targetVersion != null) {
+          ProjectVersion projectVersion =
+              projectVersionRepository.findByRedmineId(targetVersion.getId());
+          teamTask.setTargetVersion(projectVersion);
+
+          if (!projectVersionIdList.contains(projectVersion.getId())) {
+            projectVersionIdList.add(projectVersion.getId());
+          }
+        } else {
+          teamTask.setTargetVersion(null);
+        }
+      }
 
       String value = redmineCustomFieldsMap.get(redmineIssueDueDate);
       teamTask.setDueDate(
@@ -457,7 +525,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       // ERROR AND IMPORT WITH DEFAULT IF STATUS NOT FOUND
 
       String status = fieldMap.get(redmineIssue.getStatusName());
-      value = selectionMap.get(status);
+      value = (String) selectionMap.get(status);
 
       if (status != null && value != null) {
         teamTask.setStatus(value);
@@ -469,7 +537,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       // ERROR AND IMPORT WITH DEFAULT IF PRIORITY NOT FOUND
 
       String priority = fieldMap.get(redmineIssue.getPriorityText());
-      value = selectionMap.get(priority);
+      value = (String) selectionMap.get(priority);
 
       if (priority != null && value != null) {
         teamTask.setPriority(value);

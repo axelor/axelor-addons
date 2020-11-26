@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.imports.service;
 
+import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;
 import com.taskadapter.redmineapi.IssueManager;
 import com.taskadapter.redmineapi.Params;
@@ -80,11 +81,17 @@ public class RedmineIssueFetchDataService {
           .add("op[updated_on]", ">=")
           .add("v[updated_on][]", endOn.toString());
 
-      errorIdsParams
-          .add("set_filter", "1")
-          .add("f[]", "issue_id")
-          .add("op[issue_id]", "=")
-          .add("v[issue_id][]", failedRedmineIssuesIds);
+      if (!StringUtils.isEmpty(failedRedmineIssuesIds)) {
+        params
+            .add("f[]", "issue_id")
+            .add("op[issue_id]", "!=")
+            .add("v[issue_id][]", failedRedmineIssuesIds);
+        errorIdsParams
+            .add("set_filter", "1")
+            .add("f[]", "issue_id")
+            .add("op[issue_id]", "=")
+            .add("v[issue_id][]", failedRedmineIssuesIds);
+      }
     } else {
       params.add("status_id", "*");
     }
@@ -98,7 +105,7 @@ public class RedmineIssueFetchDataService {
         importIssueList.addAll(tempIssueList);
         TOTAL_FETCH_COUNT += tempIssueList.size();
       } else {
-        params = failedRedmineIssuesIds != null ? errorIdsParams : null;
+        params = !StringUtils.isEmpty(failedRedmineIssuesIds) ? errorIdsParams : null;
         errorIdsParams = null;
       }
     } while (params != null);

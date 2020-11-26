@@ -19,6 +19,7 @@
 		<option value="Tracker">Tracker</option>
 		<option value="Priority">Priority</option>
 		<option value="Activity">Activity</option>
+		<option value="VersionStatus">Version Status</option>
 	</selection>
 
 	<selection name="redmine.batch.action.select">

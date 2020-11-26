@@ -20,6 +20,7 @@
 		<string name="redmineProjectClientPartner" />
 		<string name="redmineProjectInvoicingSequenceSelect" />
 		<string name="redmineProjectAssignedTo" />
+		<string name="redmineVersionDeliveryDate" />
 		<string name="redmineIssueProduct" />
 		<string name="redmineIssueDueDate" />
 		<string name="redmineIssueEstimatedTime" />
