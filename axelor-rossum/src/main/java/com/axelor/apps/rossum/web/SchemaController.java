@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.rossum.web;
 
+import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Schema;
 import com.axelor.apps.rossum.db.repo.SchemaRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
@@ -28,6 +29,7 @@ import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import java.io.IOException;
+import org.apache.http.ParseException;
 import wslite.json.JSONException;
 
 public class SchemaController {
@@ -79,6 +81,18 @@ public class SchemaController {
 
       response.setReload(true);
     } catch (JSONException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+
+  public void getSchemas(ActionRequest request, ActionResponse response) {
+    try {
+      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
+      Beans.get(AppRossumService.class).login(appRossum);
+      Beans.get(SchemaService.class).getSchemas(appRossum);
+
+      response.setReload(true);
+    } catch (ParseException | IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }

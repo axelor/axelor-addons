@@ -17,9 +17,11 @@
  */
 package com.axelor.apps.rossum.web;
 
+import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.service.annotation.AnnotationService;
+import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.ResponseMessageType;
 import com.axelor.exception.service.TraceBackService;
@@ -29,6 +31,7 @@ import com.axelor.rpc.ActionResponse;
 import com.axelor.rpc.Context;
 import java.io.IOException;
 import java.util.Map;
+import org.apache.http.ParseException;
 import wslite.json.JSONException;
 
 public class AnnotationController {
@@ -49,6 +52,19 @@ public class AnnotationController {
 
       Beans.get(AnnotationService.class).exportAnnotation(annotation, invOcrTemplateName);
     } catch (IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+
+  public void getAnnotations(ActionRequest request, ActionResponse response) {
+
+    try {
+      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
+      Beans.get(AppRossumService.class).login(appRossum);
+      Beans.get(AnnotationService.class).getAnnotations(appRossum);
+
+      response.setReload(true);
+    } catch (ParseException | IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }

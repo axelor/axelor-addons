@@ -4,6 +4,9 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
    <grid model="com.axelor.apps.rossum.db.Queue" title="Queues" name="queue-grid">
+      <toolbar>
+         <button name="getQueuesBtn" title="Get queue from Rossum" onClick="action-rossum-queue-method-get-queues"/>
+      </toolbar>
      <field name="queueName"/>
      <field name="queueUrl"/>
      <field name="queueId"/>
@@ -41,6 +44,10 @@
 
    <action-method name="action-rossum-queue-method-update-queue">
       <call class="com.axelor.apps.rossum.web.QueueController" method="updateQueue"/>
+   </action-method>
+
+   <action-method name="action-rossum-queue-method-get-queues">
+      <call class="com.axelor.apps.rossum.web.QueueController" method="getQueues"/>
    </action-method>
 
 </object-views>

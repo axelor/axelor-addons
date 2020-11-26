@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.rossum.web;
 
+import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Workspace;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.service.workspace.WorkspaceService;
@@ -27,6 +28,7 @@ import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import java.io.IOException;
+import org.apache.http.ParseException;
 import wslite.json.JSONException;
 
 public class WorkspaceController {
@@ -53,6 +55,18 @@ public class WorkspaceController {
 
       response.setReload(true);
     } catch (IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+
+  public void getWorkspaces(ActionRequest request, ActionResponse response) {
+    try {
+      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
+      Beans.get(AppRossumService.class).login(appRossum);
+      Beans.get(WorkspaceService.class).getWorkspaces(appRossum);
+
+      response.setReload(true);
+    } catch (ParseException | IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }

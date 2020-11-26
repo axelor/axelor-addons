@@ -17,4 +17,30 @@
  */
 package com.axelor.apps.rossum.web;
 
-public class OrganisationController {}
+import com.axelor.apps.base.db.AppRossum;
+import com.axelor.apps.rossum.service.app.AppRossumService;
+import com.axelor.apps.rossum.service.organisation.OrganisationService;
+import com.axelor.exception.AxelorException;
+import com.axelor.exception.ResponseMessageType;
+import com.axelor.exception.service.TraceBackService;
+import com.axelor.inject.Beans;
+import com.axelor.rpc.ActionRequest;
+import com.axelor.rpc.ActionResponse;
+import java.io.IOException;
+import org.apache.http.ParseException;
+import wslite.json.JSONException;
+
+public class OrganisationController {
+
+  public void getOrganisations(ActionRequest request, ActionResponse response) {
+    try {
+      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
+      Beans.get(AppRossumService.class).login(appRossum);
+      Beans.get(OrganisationService.class).getOrganisations(appRossum);
+
+      response.setReload(true);
+    } catch (ParseException | IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+}
