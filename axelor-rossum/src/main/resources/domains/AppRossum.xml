@@ -11,6 +11,7 @@
     <string name="token" title="Token" help="It lasts upto 162 hours unless user logouts"/>
     <datetime name="tokenDateTime" title="Token created on"/>
     <boolean name="isValid" title="Valid connection"/>
+    <boolean name="isInvoiceLineConsolidated" title="Consolidate invoice lines"/>
   </entity>  
 
 </domain-models>

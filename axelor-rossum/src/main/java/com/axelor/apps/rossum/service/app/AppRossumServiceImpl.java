@@ -37,7 +37,6 @@ package com.axelor.apps.rossum.service.app;
 import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
-import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.Queue;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
@@ -48,7 +47,6 @@ import com.axelor.apps.rossum.db.repo.WorkspaceRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
 import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.apps.tool.date.DurationTool;
-import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
 import com.axelor.db.Query;
 import com.axelor.exception.AxelorException;
@@ -73,6 +71,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -127,20 +126,21 @@ public class AppRossumServiceImpl implements AppRossumService {
   }
 
   @Override
-  public Map<MetaFile, File> extractInvoiceDataMetaFile(
+  public Map<MetaFile, Pair<String, File>> extractInvoiceDataMetaFile(
       List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException {
     this.login(getAppRossum());
 
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+    Map<MetaFile, Pair<String, JSONObject>> metaFileAnnotationLinkJSONPairMap =
         submitInvoiceAndExtractData(metaFileList, timeout, queue);
 
-    Map<MetaFile, File> metaFileFileMap = new HashMap<>();
+    Map<MetaFile, Pair<String, File>> metaFileAnnotationLinkFilePairMap = new HashMap<>();
 
-    Set<MetaFile> metaFileSet = metaFileJSONObjectMap.keySet();
+    Set<MetaFile> metaFileSet = metaFileAnnotationLinkJSONPairMap.keySet();
 
     for (MetaFile metaFile : metaFileSet) {
-      JSONObject jsonData = metaFileJSONObjectMap.get(metaFile);
+      JSONObject jsonData = metaFileAnnotationLinkJSONPairMap.get(metaFile).getRight();
+
       String uri =
           String.format(
               "%s" + "%s" + "%s" + "%s" + "%s",
@@ -189,11 +189,12 @@ public class AppRossumServiceImpl implements AppRossumService {
         pw.close();
       }
 
-      metaFileFileMap.put(metaFile, file);
+      metaFileAnnotationLinkFilePairMap.put(
+          metaFile, Pair.of(metaFileAnnotationLinkJSONPairMap.get(metaFile).getLeft(), file));
       httpGet.abort();
     }
 
-    return metaFileFileMap;
+    return metaFileAnnotationLinkFilePairMap;
   }
 
   @Transactional(
@@ -203,7 +204,7 @@ public class AppRossumServiceImpl implements AppRossumService {
         JSONException.class,
         InterruptedException.class
       })
-  private Map<MetaFile, JSONObject> submitInvoiceAndExtractData(
+  protected Map<MetaFile, Pair<String, JSONObject>> submitInvoiceAndExtractData(
       List<MetaFile> metaFileList, Integer timeout, Queue queue)
       throws AxelorException, IOException, JSONException, InterruptedException {
 
@@ -229,12 +230,6 @@ public class AppRossumServiceImpl implements AppRossumService {
           String annotationsLink = result.getString("annotation");
           log.debug("Submit result: " + result);
 
-          if (ObjectUtils.isEmpty(annotationRepo.findByUrl(annotationsLink))) {
-            Annotation annotation = new Annotation();
-            annotation.setAnnotationUrl(annotationsLink);
-            annotationRepo.save(annotation);
-          }
-
           log.debug("Annotation link: " + annotationsLink);
 
           annotationsLinkMetaFileMap.put(annotationsLink, metaFile);
@@ -254,18 +249,18 @@ public class AppRossumServiceImpl implements AppRossumService {
     int sleepMillis = 5000;
     timeout = (int) ((timeout * 1e3) / sleepMillis);
 
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+    Map<MetaFile, Pair<String, JSONObject>> metaFileAnnotationLinkJSONPairMap =
         getDocumentWithStatus(annotationsLinkMetaFileMap, timeout, sleepMillis);
     log.debug("Document successfully processed.");
 
-    return metaFileJSONObjectMap;
+    return metaFileAnnotationLinkJSONPairMap;
   }
 
-  private Map<MetaFile, JSONObject> getDocumentWithStatus(
+  protected Map<MetaFile, Pair<String, JSONObject>> getDocumentWithStatus(
       Map<String, MetaFile> annotationsLinkMetaFileMap, int maxRetries, int sleepMillis)
       throws JSONException, AxelorException, IOException, InterruptedException {
 
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap = new HashMap<>();
+    Map<MetaFile, Pair<String, JSONObject>> metaFileAnnotationLinkJSONPairMap = new HashMap<>();
 
     Map<String, Boolean> annotationsLinkExportedMap = new HashMap<>();
 
@@ -296,8 +291,11 @@ public class AppRossumServiceImpl implements AppRossumService {
               new JSONObject(
                   IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
 
-          if (result.getString("status").equals("exported")) {
-            metaFileJSONObjectMap.put(annotationsLinkMetaFileMap.get(annotationsLink), result);
+          String annotationLinkStatus = result.getString("status");
+
+          if (annotationLinkStatus.equals("confirmed") || annotationLinkStatus.equals("exported")) {
+            metaFileAnnotationLinkJSONPairMap.put(
+                annotationsLinkMetaFileMap.get(annotationsLink), Pair.of(annotationsLink, result));
             annotationsLinkExportedMap.put(annotationsLink, true);
           } else {
             log.debug("Result: " + result);
@@ -305,8 +303,8 @@ public class AppRossumServiceImpl implements AppRossumService {
           httpGet.abort();
         }
       }
-      if (metaFileJSONObjectMap.size() == annotationsLinkList.size()) {
-        return metaFileJSONObjectMap;
+      if (metaFileAnnotationLinkJSONPairMap.size() == annotationsLinkList.size()) {
+        return metaFileAnnotationLinkJSONPairMap;
       } else {
         Thread.sleep(sleepMillis);
       }

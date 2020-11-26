@@ -5,31 +5,233 @@
 
 	<grid model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-grid">
       <field name="name"/>
+      <field name="invoiceOcrTemplateId"/>
 	</grid>
   
-	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-form" width="large">
-		<panel name="generalPanel">
-			<field name="name"/>
+	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-form"
+	  width="large" onLoad="action-invoice-ocr-template-attrs-check-totals" onNew="action-invoice-ocr-template-record-onnew"
+	  readonlyIf="invoice">
+		<panel name="namePanel">
+         <field name="name" colSpan="4"/>
+         <field name="isValidated" hidden="true"/>
+         <field name="$viewerTags" showTitle="false" readonly="true" colSpan="2" depends="isValidated">
+				<viewer>
+               <![CDATA[
+						<h4 class="text-right">
+                     <span class="label label-default" style="background-color: #86BC25; margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.isValidated" x-translate>Validated</span>
+						</h4>
+               ]]>
+				</viewer>
+         </field>
+		</panel>
+
+		<panel name="generalPanel" hideIf="exportedFile != null">
 			<field name="templateFile" widget="binary-link" onChange="action-invoice-ocr-template-group-onchange-template-file"/>
-			<field name="timeout" min="0"/>
-			<field name="queue" readonlyIf="exportedFile != null"/>
-			<field name="exportTypeSelect" required="true" readonlyIf="exportedFile != null" selection-in="['csv']"/>
-			<button name="generateTemplateBtn" title="Generate Template" showIf="exportedFile == null &amp;&amp; !queue.useConfirmedState"
-			   onClick="save,action-invoice-ocr-template-method-onclick-create-template" readonlyIf="!templateFile"/>
-         <button name="uploadFileBtn" title="Upload file to Rossum" showIf="exportedFile == null &amp;&amp; queue.useConfirmedState"
-            onClick="save,action-invoice-ocr-template-method-onclick-upload-file" readonlyIf="!templateFile"/>
+			<field name="timeout" min="0" colSpan="3"/>
+			<field name="queue" readonlyIf="exportedFile != null" colSpan="3"/>
 		</panel>
-		<panel name="ecportedDataPanel" title="Exported Data From Ocr" showIf="exportedFile != null">
-         <field name="exportedFile" readonly="true"/>
+
+      <panel name="detailsPanel" showIf="exportedFile != null">
+         <panel name="mainDetailsPanel" colSpan="4" stacked="true">
+            <field name="invoiceOcrTemplateId" colSpan="12" showIf="id">
+               <viewer>
+                  <![CDATA[
+                     <h4>
+                       {{record.invoiceOcrTemplateId}}
+                    </h4>
+                  ]]>
+               </viewer>
+            </field>
+            <field name="$invoiceOcrTemplateIdReq" showTitle="false" readonly="true" 
+               showIf="id !=null &amp;&amp; invoiceOcrTemplateId == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="customerName"/>
+            <field name="$customerNameReq" showTitle="false" readonly="true" showIf="customerName == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="senderName"/>
+            <field name="$senderNameReq" showTitle="false" readonly="true" showIf="senderName == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+            
+            <field name="invoiceOperationTypeSelect" onChange="action-invoice-ocr-template-group-onchange-amounts"/>
+            <field name="$invoiceOperationTypeSelectReq" showTitle="false" readonly="true"
+               showIf="invoiceOperationTypeSelect == 0 || invoiceOperationTypeSelect == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="invoiceOperationSubTypeSelect"/>
+            <field name="$invoiceOperationSubTypeSelectReq" showTitle="false" readonly="true"
+               showIf="invoiceOperationSubTypeSelect == 0 || invoiceOperationSubTypeSelect == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="invoiceNumber"/>
+            <field name="$invoiceNumberReq" showTitle="false" readonly="true" showIf="invoiceNumber == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="issueDate"/>
+            <field name="$issueDateReq" showTitle="false" readonly="true" showIf="issueDate == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="dueDate"/>
+
+            <field name="totalWithoutTax" onChange="action-invoice-ocr-template-group-onchange-amounts"/>
+            <field name="totalTax" onChange="action-invoice-ocr-template-group-onchange-amounts"/>
+
+            <field name="totalAmount" onChange="action-invoice-ocr-template-group-onchange-amounts"/>
+            <field name="$totalAmountIssue" showTitle="false" readonly="true" hidden="true">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF; font-size: 10px;" x-translate>Total amount is not equal to total amount without tax + total tax</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="currency"/>
+            <field name="$currencyReq" showTitle="false" readonly="true" showIf="currency == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+
+            <field name="vendorVatNumber"/>
+            <field name="customerVatNumber"/>
+            <field name="orderNumber"/>
+            
+            <field name="company"/>
+            <field name="$companyReq" showTitle="false" readonly="true" showIf="company == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+            
+            <field name="supplier"/>
+            <field name="$supplierReq" showTitle="false" readonly="true" showIf="supplier == null">
+              <viewer>
+                 <![CDATA[
+                    <h4>
+                       <span class="label label-important" style="color: #FFFFFF;" x-translate>Require field</span>
+                    </h4>
+                 ]]>
+              </viewer>
+            </field>
+         </panel>
+
+         <panel name="filePanel" colSpan="8" showIf="templateFile != null">
+            <panel itemSpan="12" showIf="templateFile.fileType == 'application/pdf'" colSpan="12">
+               <field name="$pdf" showTitle="false" readonly="true" colSpan="12">
+                  <viewer depends="inlineUrl"><![CDATA[
+                     <object data="{{record.inlineUrl}}" type="application/pdf" width="100%" height="800px">
+                         <embed ng-src="{{record.inlineUrl}}" type="application/pdf">
+                             <p>This browser does not support PDFs.</p>
+                         </embed>
+                     </object>
+                  ]]></viewer>
+               </field>
+            </panel>
+            <panel itemSpan="12" showIf="templateFile.fileType.indexOf('image') == 0" colSpan="12">
+               <field name="$img" showTitle="false" readonly="true" colSpan="12">
+                  <viewer depends="inlineUrl,templateFile.fileName"><![CDATA[
+                     <img ng-src="{{record.inlineUrl}}" alt="{{record.templateFile.fileName}}" style="width:100%; height:100%; object-fit: contain;"/>
+                  ]]></viewer>
+               </field>
+            </panel>
+         </panel>
+      </panel>
+
+		<panel name="technicalInfoPanel" title="Technical informations" showIf="exportedFile != null" readonly="true">
+         <field name="exportedFile"/>
+         <field name="invoice"/>
+         <field name="annotaionUrl"/>
 		</panel>
-		<panel name="generateInvoicePanel" title="Invoice details" showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null">
-         <field name="invoiceOperationTypeSelect" requiredIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
-         <field name="invoiceOperationSubTypeSelect" requiredIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"/>
-         <button name="generateInvoice" title="Generate Invoice" showIf="exportTypeSelect == 'csv' &amp;&amp; exportedFile != null"
-            onClick="save,action-invoice-ocr-template-method-onclick-generate-invoice"/>
-		</panel>
+
+      <panel name="buttonPanel" sidebar="true">
+         <field name="queue.useConfirmedState" widget="boolean-switch"/>
+         <field name="isInvoiceLineConsolidated" widget="boolean-switch" showIf="exportedFile != null"/>
+
+         <button name="generateTemplateBtn" title="Generate Template" showIf="exportedFile == null"
+            onClick="save,action-invoice-ocr-template-method-onclick-create-template" readonlyIf="!templateFile"/>
+
+         <button name="updateOcrDetailsBtn" title="Update details" showIf="!isValidated &amp;&amp; exportedFile != null"
+            onClick="save,action-invoice-ocr-template-method-fetch-updated-details"/>
+         <button name="rossumCorrectionBtn" title="To correct in Rossum" onClick="action-invoice-ocr-template-method-rossum-correction"
+            showIf="exportedFile != null &amp;&amp; !isValidated"/>
+         <button name="validateBtn" title="Validate" showIf="exportedFile != null &amp;&amp; !isValidated"
+            onClick="save,action-invoice-ocr-template-method-validate-rossum-data"/>
+
+         <button name="recogniseBtn" title="Recognise" onClick="save,action-invoice-ocr-template-method-onclick-recognise-data"
+            showIf="exportedFile != null &amp;&amp; isValidated &amp;&amp; invoice == null"/>
+         <button name="generateInvoice" title="Generate Invoice"
+            showIf="exportedFile != null &amp;&amp; isValidated &amp;&amp; invoice == null"
+            onClick="action-invoice-ocr-template-group-onclick-generate-invoice"/>
+
+         <!-- Kept hidden as proper functionality is not designed -->
+<!--          <button name="uploadFileBtn" title="Upload file to Rossum" showIf="exportedFile == null &amp;&amp; queue.useConfirmedState" -->
+<!--             onClick="save,action-invoice-ocr-template-method-onclick-upload-file" readonlyIf="!templateFile"/> -->
+      </panel>
+
 		<panel name="hiddenPanel" hidden="true" colSpan="12">
-         <field name="queue.useConfirmedState"/>
+         <field name="exportTypeSelect" required="true" readonlyIf="exportedFile != null" selection-in="['csv']"/>
+         <field name="templateFile.fileType"/>
+         <field name="templateFile.fileName"/>
 		</panel>
    </form>
 
@@ -50,6 +252,10 @@
             title="Export"/>
       </panel>
    </form>
+
+   <action-record name="action-invoice-ocr-template-record-onnew" model="com.axelor.apps.rossum.db.InvoiceOcrTemplate">
+      <field name="isInvoiceLineConsolidated" expr="eval: __config__.app.getApp('rossum')?.getIsInvoiceLineConsolidated()"/>
+   </action-record>
 
    <action-record name="action-invoice-ocr-template-wizard-record-onnew" model="com.axelor.apps.base.db.Wizard">
       <field name="annotation" expr="eval: __repo__(Annotation).find(_annotationId)"/>
@@ -80,4 +286,44 @@
       <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="generateInvoice"/>
    </action-method>
 
+   <action-method name="action-invoice-ocr-template-method-invoice-type-onchange-update-amounts">
+      <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="updateAmounts"/>
+   </action-method>
+
+   <action-method name="action-invoice-ocr-template-method-rossum-correction">
+      <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="rossumCorrection"/>
+   </action-method>
+
+   <action-method name="action-invoice-ocr-template-method-fetch-updated-details">
+      <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="fetchUpdatedDetails"/>
+   </action-method>
+
+   <action-method name="action-invoice-ocr-template-method-validate-rossum-data">
+      <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="validateRossumData"/>
+   </action-method>
+
+   <action-method name="action-invoice-ocr-template-method-onclick-recognise-data">
+      <call class="com.axelor.apps.rossum.web.InvoiceOcrTemplateController" method="recoginseData"/>
+   </action-method>
+
+   <action-group name="action-invoice-ocr-template-group-onchange-amounts">
+      <action name="action-invoice-ocr-template-method-invoice-type-onchange-update-amounts"/>
+      <action name="action-invoice-ocr-template-attrs-check-totals"/>
+   </action-group>
+
+   <action-attrs name="action-invoice-ocr-template-attrs-check-totals">
+      <attribute name="hidden" for="$totalAmountIssue" expr="eval: totalAmount == (totalWithoutTax + totalTax)"/>
+   </action-attrs>
+
+   <action-group name="action-invoice-ocr-template-group-onclick-generate-invoice">
+      <action name="action-invoice-ocr-template-validate-invoice-ocr-template-data"/>
+      <action name="save"/>
+      <action name="action-invoice-ocr-template-method-onclick-generate-invoice"/>
+   </action-group>
+
+   <action-validate name="action-invoice-ocr-template-validate-invoice-ocr-template-data">
+      <error message="At least one required field is empty, please fill it"
+         if="eval: (currency == null || invoiceOperationTypeSelect == 0 || invoiceOperationSubTypeSelect == 0 
+            || supplier == null || company == null)"/>
+   </action-validate>
 </object-views>

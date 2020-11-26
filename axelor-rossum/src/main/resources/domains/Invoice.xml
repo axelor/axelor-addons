@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+
+   <module name="account" package="com.axelor.apps.account.db"/>
+
+   <entity name="Invoice">
+      <one-to-one ref="com.axelor.apps.rossum.db.InvoiceOcrTemplate" name="invoiceOcrTemplate" mappedBy="invoice" 
+         title="Invoice ocr template"/>
+   </entity>
+</domain-models>

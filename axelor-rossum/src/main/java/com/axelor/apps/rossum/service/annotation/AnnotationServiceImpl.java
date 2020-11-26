@@ -36,14 +36,14 @@ import wslite.json.JSONArray;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
 
-public class AnnotaionServiceImpl implements AnnotationService {
+public class AnnotationServiceImpl implements AnnotationService {
 
   protected AppRossumService appRossumService;
   protected QueueRepository queueRepo;
   protected AnnotationRepository annotationRepo;
 
   @Inject
-  public AnnotaionServiceImpl(
+  public AnnotationServiceImpl(
       AppRossumService appRossumService,
       QueueRepository queueRepo,
       AnnotationRepository annotationRepo) {
@@ -93,29 +93,12 @@ public class AnnotaionServiceImpl implements AnnotationService {
     }
   }
 
-  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
   protected void createOrUpdateAnnotations(JSONObject obj) throws JSONException {
     JSONArray resultsArray = obj.getJSONArray("results");
 
     for (Integer i = 0; i < resultsArray.length(); i++) {
       JSONObject resultObject = resultsArray.getJSONObject(i);
-      String annotationUrl = resultObject.getString("url");
-
-      Integer annotationId = resultObject.getInt("id");
-      String statusSelect = resultObject.getString("status");
-      String queueUrl = resultObject.getString("queue");
-
-      Annotation annotation =
-          annotationRepo.findByUrl(annotationUrl) != null
-              ? annotationRepo.findByUrl(annotationUrl)
-              : new Annotation();
-
-      annotation.setAnnotationId(annotationId);
-      annotation.setAnnotationUrl(annotationUrl);
-      annotation.setStatusSelect(statusSelect);
-      annotation.setQueueUrl(queueRepo.findByUrl(queueUrl));
-      annotation.setAnnotationResult(resultObject.toString());
-      annotationRepo.save(annotation);
+      this.getAnnotationFromJSONObject(resultObject);
     }
   }
 
@@ -127,5 +110,45 @@ public class AnnotaionServiceImpl implements AnnotationService {
 
     JSONObject annotationObject = new JSONObject(annotation.getAnnotationResult());
     annotationObject.get("document");
+  }
+
+  @SuppressWarnings("static-access")
+  @Override
+  public void createOrUpdateAnnotationFromLink(String annotationLink)
+      throws IOException, JSONException, AxelorException {
+    AppRossum appRossum = appRossumService.getAppRossum();
+    appRossumService.login(appRossum);
+
+    CloseableHttpClient httpClient = appRossumService.httpClient;
+    HttpGet httpGet = new HttpGet(annotationLink);
+    httpGet.addHeader("Authorization", "token " + appRossum.getToken());
+    httpGet.addHeader("Accept", "application/json");
+    CloseableHttpResponse response = httpClient.execute(httpGet);
+
+    if (response.getEntity() != null) {
+      JSONObject obj = new JSONObject(EntityUtils.toString(response.getEntity()));
+      this.getAnnotationFromJSONObject(obj);
+    }
+  }
+
+  @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
+  protected Annotation getAnnotationFromJSONObject(JSONObject resultObject) throws JSONException {
+    String annotationUrl = resultObject.getString("url");
+
+    Integer annotationId = resultObject.getInt("id");
+    String statusSelect = resultObject.getString("status");
+    String queueUrl = resultObject.getString("queue");
+
+    Annotation annotation =
+        annotationRepo.findByUrl(annotationUrl) != null
+            ? annotationRepo.findByUrl(annotationUrl)
+            : new Annotation();
+
+    annotation.setAnnotationId(annotationId);
+    annotation.setAnnotationUrl(annotationUrl);
+    annotation.setStatusSelect(statusSelect);
+    annotation.setQueueUrl(queueRepo.findByUrl(queueUrl));
+    annotation.setAnnotationResult(resultObject.toString());
+    return annotationRepo.save(annotation);
   }
 }

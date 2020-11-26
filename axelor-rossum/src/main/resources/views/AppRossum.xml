@@ -5,12 +5,17 @@
 
   <form model="com.axelor.apps.base.db.AppRossum" title="App Rossum" name="app-rossum-config-form" 
       canDelete="false" canNew="false" width="large">
-      <panel name="configPanel">
+      <panel name="rossumDetailsPanel" title="Rossum details">
 			<field name="username" required="true" readonlyIf="isValid"/>
 			<field name="password" required="true" readonlyIf="isValid" widget="password"/>
 			<field name="token" readonly="true"/>
 			<field name="tokenDateTime" readonly="true"/>
 		</panel>
+		
+		<panel name="configPanel" title="Configurations">
+         <field name="isInvoiceLineConsolidated" widget="boolean-switch"/>
+		</panel>
+		
 		<panel name="buttonPanel" sidebar="true">
          <field name="isValid" readonly="true"/>
          <button name="loginButton" title="Login" onClick="save,action-app-rossum-method-login-onclick" showIf="!isValid"/>

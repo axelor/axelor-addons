@@ -12,9 +12,35 @@
       <integer name="invoiceOperationTypeSelect" title="Invoice document Type" selection="iinvoice.operation.type.select"/>
       <integer name="invoiceOperationSubTypeSelect" title="Invoice document Subtype" default="1" selection="iinvoice.operation.sub.type.select"/>
 
+      <string name="orderNumber" title="Order number"/>
+      <string name="invoiceNumber" title="Invoice number"/>
+      <date name="issueDate" title="Issue date"/>
+      <date name="dueDate" title="Due date"/>
+      
+      <decimal name="totalAmount" title="Total amount"/>
+      <decimal name="totalWithoutTax" title="Total without tax"/>
+      <decimal name="totalTax" title="Total tax"/>
+
+      <string name="inlineUrl" title="Dms file url"/>
+      <string name="annotaionUrl" title="Annotation url"/>
+
+      <string name="senderName" title="Sender name"/>
+      <string name="vendorVatNumber" title="Vendor VAT number"/>
+      <string name="customerName" title="Customer name"/>
+      <string name="customerVatNumber" title="Customer VAT number"/>
+
+      <many-to-one name="currency" ref="com.axelor.apps.base.db.Currency" title="Currency"/>
+      <many-to-one name="supplier" ref="com.axelor.apps.base.db.Partner" title="Supplier"/>
+      <many-to-one name="company" ref="com.axelor.apps.base.db.Company" title="Company"/>
+
+      <one-to-one name="invoice" ref="com.axelor.apps.account.db.Invoice" title="Invoice"/>
+      <string name="invoiceOcrTemplateId" namecolumn="true" readonly="true" title="Invoice ocr template N°"/>     
+
       <many-to-one name="queue" ref="com.axelor.apps.rossum.db.Queue" title="Queue"/>
-      <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV or XML file"/>
-   
+      <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV file"/>
+
+      <boolean name="isInvoiceLineConsolidated" title="Consolidate invoice lines"/>
+      <boolean name="isValidated" title="Validated"/>   
       <extra-code>
          <![CDATA[
          //Export type select
