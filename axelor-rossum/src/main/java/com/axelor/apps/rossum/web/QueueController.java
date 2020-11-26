@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.rossum.web;
 
+import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Queue;
 import com.axelor.apps.rossum.db.repo.QueueRepository;
 import com.axelor.apps.rossum.service.app.AppRossumService;
@@ -28,6 +29,7 @@ import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import java.io.IOException;
+import org.apache.http.ParseException;
 import wslite.json.JSONException;
 
 public class QueueController {
@@ -67,6 +69,18 @@ public class QueueController {
       Beans.get(QueueService.class).createQueue(queue);
       response.setReload(true);
     } catch (IOException | JSONException | AxelorException e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
+  }
+
+  public void getQueues(ActionRequest request, ActionResponse response) {
+
+    try {
+      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
+      Beans.get(AppRossumService.class).login(appRossum);
+      Beans.get(QueueService.class).getQueues(appRossum);
+      response.setReload(true);
+    } catch (ParseException | IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }

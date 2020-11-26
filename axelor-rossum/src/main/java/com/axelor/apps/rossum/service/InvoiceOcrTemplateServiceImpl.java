@@ -21,6 +21,7 @@ import com.axelor.app.AppSettings;
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.InvoiceLine;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
+import com.axelor.apps.account.service.invoice.InvoiceLineService;
 import com.axelor.apps.account.service.invoice.InvoiceService;
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.Company;
@@ -277,23 +278,44 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
         for (Integer i = 2; i < csvRows.size(); i++) {
           String[] dataRow = csvRows.get(i);
 
-          if (!Strings.isNullOrEmpty(dataRow[headerTitleMap.get("description")])) {
+          if (headerTitleMap.containsKey("description")
+              && !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("description")])) {
             InvoiceLine invoiceLine = new InvoiceLine();
 
             invoiceLine.setProductName(dataRow[headerTitleMap.get("description")]);
-            invoiceLine.setQty(
-                !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("quantity")])
-                    ? new BigDecimal(dataRow[headerTitleMap.get("quantity")])
-                    : BigDecimal.ONE);
-            invoiceLine.setPrice(
-                !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("unit price without vat")])
-                    ? new BigDecimal(dataRow[headerTitleMap.get("unit price without vat")])
-                    : BigDecimal.ZERO);
-            invoiceLine.setInTaxTotal(
-                !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("line total amount")])
-                    ? new BigDecimal(dataRow[headerTitleMap.get("line total amount")])
-                    : BigDecimal.ZERO);
-            invoiceLine.setPriceDiscounted(invoiceLine.getPrice());
+
+            BigDecimal qty =
+                headerTitleMap.containsKey("quantity")
+                    ? !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("quantity")])
+                        ? new BigDecimal(dataRow[headerTitleMap.get("quantity")])
+                        : BigDecimal.ONE
+                    : BigDecimal.ONE;
+
+            BigDecimal price =
+                headerTitleMap.containsKey("unit price without vat")
+                    ? !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("unit price without vat")])
+                        ? new BigDecimal(dataRow[headerTitleMap.get("unit price without vat")])
+                        : BigDecimal.ZERO
+                    : BigDecimal.ZERO;
+
+            BigDecimal exTaxTotal = qty.multiply(price);
+            BigDecimal companyExTaxTotal =
+                Beans.get(InvoiceLineService.class).getCompanyExTaxTotal(exTaxTotal, invoice);
+
+            invoiceLine.setQty(qty);
+            invoiceLine.setPrice(price);
+            //            invoiceLine.setInTaxTotal(
+            //                !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("line total
+            // amount")])
+            //                    ? new BigDecimal(dataRow[headerTitleMap.get("line total amount")])
+            //                    : BigDecimal.ZERO);
+            invoiceLine.setPriceDiscounted(price);
+            invoiceLine.setExTaxTotal(exTaxTotal);
+            invoiceLine.setCompanyExTaxTotal(companyExTaxTotal);
+
+            // Currently both inTaxTotal and exTaxTotal are same
+            invoiceLine.setInTaxTotal(exTaxTotal);
+            invoiceLine.setCompanyInTaxTotal(companyExTaxTotal);
             invoice.addInvoiceLineListItem(invoiceLine);
           }
         }
@@ -304,9 +326,19 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
 
       invoiceLine.setQty(BigDecimal.ONE);
 
-      BigDecimal totalAmountWT = invoiceOcrTemplate.getTotalWithoutTax();
-      invoiceLine.setPrice(totalAmountWT);
-      invoiceLine.setPriceDiscounted(invoiceLine.getPrice());
+      BigDecimal price = invoiceOcrTemplate.getTotalWithoutTax();
+      BigDecimal exTaxTotal = BigDecimal.ONE.multiply(price);
+      BigDecimal companyExTaxTotal =
+          Beans.get(InvoiceLineService.class).getCompanyExTaxTotal(exTaxTotal, invoice);
+
+      invoiceLine.setPrice(price);
+      invoiceLine.setPriceDiscounted(price);
+      invoiceLine.setExTaxTotal(exTaxTotal);
+      invoiceLine.setCompanyExTaxTotal(companyExTaxTotal);
+
+      // Currently both inTaxTotal and exTaxTotal are same
+      invoiceLine.setInTaxTotal(exTaxTotal);
+      invoiceLine.setCompanyInTaxTotal(companyExTaxTotal);
       invoice.addInvoiceLineListItem(invoiceLine);
     }
 
@@ -382,6 +414,11 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
           TraceBackRepository.CATEGORY_MISSING_FIELD,
           I18n.get(IExceptionMessage.ANNOTATION_NOT_FOUND),
           invoiceOcrTemplate.getAnnotaionUrl());
+    }
+
+    if (invoiceOcrTemplate.getQueue() == null) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_MISSING_FIELD, I18n.get(IExceptionMessage.QUEUE_NOT_FOUND));
     }
 
     String url =

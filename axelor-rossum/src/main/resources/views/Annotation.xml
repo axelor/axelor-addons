@@ -5,6 +5,10 @@
 
    <grid model="com.axelor.apps.rossum.db.Annotation" title="Annotations" name="annotation-grid" canNew="false" canDelete="false"
       groupBy="queueUrl" orderBy="-annotationId">
+      <toolbar>
+         <button onClick="action-rossum-annotation-method-get-annotations" name="getAnnotaionBtn"
+            title="Get annotation from Rossum"/>
+      </toolbar>
       <field name="annotationUrl"/>
       <field name="statusSelect"/>
       <field name="annotationId"/>
@@ -43,6 +47,10 @@
 
    <action-method name="action-invoice-ocr-template-wizard-method-export-annotation">
       <call class="com.axelor.apps.rossum.web.AnnotationController" method="exportAnnotation"/>
+   </action-method>
+
+   <action-method name="action-rossum-annotation-method-get-annotations">
+      <call class="com.axelor.apps.rossum.web.AnnotationController" method="getAnnotations"/>
    </action-method>
 
 </object-views>

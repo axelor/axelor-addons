@@ -43,4 +43,6 @@ public interface IExceptionMessage {
       "Required Fields are missing for %s Model. Please check 'Traceback' for details" /*)*/;
 
   public static final String ANNOTATION_NOT_FOUND = /*$$(*/ "Annotation %s not found!" /*)*/;
+
+  public static final String QUEUE_NOT_FOUND = /*$$(*/ "Queue not found!" /*)*/;
 }
