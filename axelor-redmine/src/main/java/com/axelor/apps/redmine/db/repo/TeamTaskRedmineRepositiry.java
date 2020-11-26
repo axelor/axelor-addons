@@ -17,7 +17,10 @@
  */
 package com.axelor.apps.redmine.db.repo;
 
+import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.TeamTaskBusinessSupportRepository;
+import com.axelor.apps.redmine.service.TeamTaskRedmineService;
+import com.axelor.inject.Beans;
 import com.axelor.team.db.TeamTask;
 
 public class TeamTaskRedmineRepositiry extends TeamTaskBusinessSupportRepository {
@@ -32,5 +35,18 @@ public class TeamTaskRedmineRepositiry extends TeamTaskBusinessSupportRepository
     }
 
     return teamTask;
+  }
+
+  @Override
+  public void remove(TeamTask teamTask) {
+
+    ProjectVersion targetVersion = teamTask.getTargetVersion();
+
+    super.remove(teamTask);
+
+    if (targetVersion != null) {
+      Beans.get(TeamTaskRedmineService.class)
+          .updateTargetVerionProgress(targetVersion, teamTask, false);
+    }
   }
 }

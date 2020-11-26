@@ -34,6 +34,7 @@ import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectServ
 import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectServiceImpl;
 import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.apps.redmine.service.RedmineServiceImpl;
+import com.axelor.apps.redmine.service.TeamTaskRedmineService;
 import com.axelor.apps.redmine.service.TeamTaskRedmineServiceImpl;
 import com.axelor.apps.redmine.service.TimesheetRedmineServiceImpl;
 
@@ -51,5 +52,6 @@ public class RedmineModule extends AxelorModule {
     bind(TeamTaskBusinessSupportRepository.class).to(TeamTaskRedmineRepositiry.class);
     bind(TimesheetBusinessProductionServiceImpl.class).to(TimesheetRedmineServiceImpl.class);
     bind(TeamTaskBusinessSupportServiceImpl.class).to(TeamTaskRedmineServiceImpl.class);
+    bind(TeamTaskRedmineService.class).to(TeamTaskRedmineServiceImpl.class);
   }
 }

@@ -48,6 +48,11 @@
 			<attribute name="widget" value="string"/>
 		</extend>
 
+		<extend target="/">
+			<attribute name="onSave"
+				value="action-team-task-method-update-target-version-progress" />
+		</extend>
+
 	</form>
 
 	<action-view name="action-team-task-dashlet-timesheet-line"
@@ -57,5 +62,10 @@
 		<view-param name="popup" value="true" />
 		<domain>self.teamTask.id = :id</domain>
 	</action-view>
+
+	<action-method name="action-team-task-method-update-target-version-progress">
+		<call class="com.axelor.apps.redmine.web.RedmineTeamTaskController"
+			method="updateTargetVerionProgress" />
+	</action-method>
 
 </object-views>
