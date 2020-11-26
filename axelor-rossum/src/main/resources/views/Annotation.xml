@@ -14,7 +14,8 @@
    <form model="com.axelor.apps.rossum.db.Annotation" title="Annotation" name="annotation-form" canNew="false" canDelete="false"
       canCopy="false" width="large">
       <menubar>
-         <menu title="Tools" name="toolsMenu">
+         <!-- Kept hidden as proper functionality is not designed -->
+         <menu title="Tools" name="toolsMenu" if="false">
             <item action="save,action-rossum-annotation-view-open-invoice-ocr-template-wizard" title="Export annotation"
                showIf="statusSelect == 'confirmed'"/>
          </menu>

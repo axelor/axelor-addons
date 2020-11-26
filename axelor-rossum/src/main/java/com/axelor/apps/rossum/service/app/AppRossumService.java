@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import wslite.json.JSONException;
@@ -40,7 +41,7 @@ public interface AppRossumService {
 
   public void reset(AppRossum appRossum);
 
-  public Map<MetaFile, File> extractInvoiceDataMetaFile(
+  public Map<MetaFile, Pair<String, File>> extractInvoiceDataMetaFile(
       List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException;
 }

@@ -21,6 +21,7 @@ import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.exception.AxelorException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import wslite.json.JSONException;
 
 public interface InvoiceOcrTemplateService {
@@ -37,5 +38,19 @@ public interface InvoiceOcrTemplateService {
   public void createTemplate(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, InterruptedException, JSONException;
 
-  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate) throws IOException;
+  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws IOException, AxelorException;
+
+  public InvoiceOcrTemplate setInvoiceOcrTemplateSeq(InvoiceOcrTemplate invoiceOcrTemplate);
+
+  public String getDocumentUrl(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws AxelorException, URISyntaxException;
+
+  public void fetchUpdatedDetails(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws AxelorException, IOException, JSONException;
+
+  public void validateRossumData(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws AxelorException, IOException, JSONException;
+
+  public void recogniseData(InvoiceOcrTemplate invoiceOcrTemplate);
 }

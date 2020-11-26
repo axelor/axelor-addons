@@ -15,22 +15,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.rossum.service.annotation;
+package com.axelor.apps.rossum.db.repo;
 
-import com.axelor.apps.base.db.AppRossum;
-import com.axelor.apps.rossum.db.Annotation;
-import com.axelor.exception.AxelorException;
-import java.io.IOException;
-import wslite.json.JSONException;
+import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
+import com.axelor.apps.rossum.service.InvoiceOcrTemplateService;
+import com.axelor.inject.Beans;
 
-public interface AnnotationService {
+public class InvoiceOcrTemplateManagementRepository extends InvoiceOcrTemplateRepository {
 
-  public void getAnnotations(AppRossum appRossum)
-      throws IOException, JSONException, AxelorException;
+  @Override
+  public InvoiceOcrTemplate save(InvoiceOcrTemplate invoiceOcrTemplate) {
 
-  public void exportAnnotation(Annotation annotation, String invOcrTemplateName)
-      throws IOException, JSONException, AxelorException;
+    Beans.get(InvoiceOcrTemplateService.class).setInvoiceOcrTemplateSeq(invoiceOcrTemplate);
 
-  public void createOrUpdateAnnotationFromLink(String annotationLink)
-      throws IOException, JSONException, AxelorException;
+    return super.save(invoiceOcrTemplate);
+  }
 }

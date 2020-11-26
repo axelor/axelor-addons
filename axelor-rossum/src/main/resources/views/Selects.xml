@@ -29,4 +29,9 @@
       <option value="exported">Exported</option>
       <option value="deleted">Deleted</option>
    </selection>
+
+   <selection name="sequence.generic.code.select" id="rossum-sequence.generic.code.select">
+      <option value="invoiceOcrTemplate">Invoice ocr template</option>
+   </selection>
+
 </object-views>

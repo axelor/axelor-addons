@@ -18,10 +18,12 @@
 package com.axelor.apps.rossum.module;
 
 import com.axelor.app.AxelorModule;
+import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateManagementRepository;
+import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
 import com.axelor.apps.rossum.service.InvoiceOcrTemplateService;
 import com.axelor.apps.rossum.service.InvoiceOcrTemplateServiceImpl;
-import com.axelor.apps.rossum.service.annotation.AnnotaionServiceImpl;
 import com.axelor.apps.rossum.service.annotation.AnnotationService;
+import com.axelor.apps.rossum.service.annotation.AnnotationServiceImpl;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.service.app.AppRossumServiceImpl;
 import com.axelor.apps.rossum.service.organisation.OrganisationService;
@@ -46,6 +48,7 @@ public class RossumModule extends AxelorModule {
     bind(SchemaService.class).to(SchemaServiceImpl.class);
     bind(QueueService.class).to(QueueServiceImpl.class);
     bind(SchemaFieldService.class).to(SchemaFieldServiceImpl.class);
-    bind(AnnotationService.class).to(AnnotaionServiceImpl.class);
+    bind(AnnotationService.class).to(AnnotationServiceImpl.class);
+    bind(InvoiceOcrTemplateRepository.class).to(InvoiceOcrTemplateManagementRepository.class);
   }
 }
