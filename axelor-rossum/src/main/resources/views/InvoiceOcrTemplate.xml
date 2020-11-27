@@ -9,7 +9,7 @@
 	</grid>
   
 	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-form"
-	  width="large" onLoad="action-invoice-ocr-template-attrs-check-totals" onNew="action-invoice-ocr-template-record-onnew"
+	  width="large" onLoad="action-invoice-ocr-template-group-onload" onNew="action-invoice-ocr-template-record-onnew"
 	  readonlyIf="invoice">
 		<panel name="namePanel">
          <field name="name" colSpan="4"/>
@@ -266,6 +266,18 @@
       <action name="action-invoice-ocr-template-record-reset-exported-data"/>
    </action-group>
 
+   <action-group name="action-invoice-ocr-template-group-onload">
+      <action name="action-invoice-ocr-template-attrs-check-totals"/>
+      <action name="action-invoice-ocr-template-atts-set-supplier-attrs"/>
+   </action-group>
+
+   <action-attrs name="action-invoice-ocr-template-atts-set-supplier-attrs">
+      <attribute name="title" for="supplier" expr="eval: com.axelor.i18n.I18n.get('Customer')"
+         if="invoiceOperationTypeSelect == 3 || invoiceOperationTypeSelect == 4"/>
+      <attribute name="title" for="supplier" expr="eval: com.axelor.i18n.I18n.get('Supplier')"
+         if="invoiceOperationTypeSelect != 3 &amp;&amp; invoiceOperationTypeSelect != 4"/>
+   </action-attrs>
+
    <action-validate name="action-invoice-ocr-template-validate-template-file">
       <alert message="Warning, existing exported data will be deleted, do you wish to continue?"/>
    </action-validate>
@@ -309,6 +321,7 @@
    <action-group name="action-invoice-ocr-template-group-onchange-amounts">
       <action name="action-invoice-ocr-template-method-invoice-type-onchange-update-amounts"/>
       <action name="action-invoice-ocr-template-attrs-check-totals"/>
+      <action name="action-invoice-ocr-template-atts-set-supplier-attrs"/>
    </action-group>
 
    <action-attrs name="action-invoice-ocr-template-attrs-check-totals">
