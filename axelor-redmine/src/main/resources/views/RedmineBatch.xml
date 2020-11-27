@@ -21,6 +21,9 @@
 				onChange="action-base-batch-condition-check-unique-code" />
 			<field name="batchUser" canEdit="false" widget="SuggestBox"
 				form-view="user-form" grid-view="user-grid" />
+			<field name="isImportIssuesWithActivities" widget="boolean-switch"
+				help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
+				showIf="redmineActionSelect == 1" />
 		</panel>
 		<panel-tabs>
 			<panel name="actionPanel" title="Actions">

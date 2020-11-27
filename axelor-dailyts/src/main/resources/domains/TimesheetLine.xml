@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+
+	<module name="human-resource" package="com.axelor.apps.hr.db" />
+
+	<entity name="TimesheetLine" cacheable="true">
+
+		<many-to-one name="dailyTimesheet" ref="com.axelor.apps.hr.db.DailyTimesheet"
+			title="Daily timesheet" />
+		<many-to-one name="iCalendarEvent" ref="com.axelor.apps.base.db.ICalendarEvent"
+			title="iEvent" />
+
+	</entity>
+
+</domain-models>

@@ -15,7 +15,7 @@
 			mappedBy="redmineBatch" title="Batchs" />
 		<integer name="redmineActionSelect" title="Action"
 			selection="redmine.batch.action.select" />
-
+		<boolean name="isImportIssuesWithActivities" title="Import issues with activities" />
 		<string name="failedRedmineIssuesIds" large="true" />
 		<string name="failedRedmineTimeEntriesIds" large="true" />
 

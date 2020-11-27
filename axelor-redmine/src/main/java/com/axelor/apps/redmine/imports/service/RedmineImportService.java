@@ -27,10 +27,12 @@ import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
+import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
+import com.taskadapter.redmineapi.IssueManager;
 import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.bean.CustomField;
 import java.io.StringWriter;
@@ -89,6 +91,7 @@ public class RedmineImportService {
 
   protected Batch batch;
   protected ProjectManager redmineProjectManager;
+  protected IssueManager redmineIssueManager;
   protected List<Object[]> errorObjList;
   protected Map<String, String> redmineCustomFieldsMap;
   protected LocalDateTime lastBatchUpdatedOn;
@@ -184,5 +187,20 @@ public class RedmineImportService {
     }
 
     return "";
+  }
+
+  protected void updateTransaction() {
+
+    JPA.em().getTransaction().commit();
+
+    if (!JPA.em().getTransaction().isActive()) {
+      JPA.em().getTransaction().begin();
+    }
+
+    JPA.clear();
+
+    if (!JPA.em().contains(batch)) {
+      batch = JPA.find(Batch.class, batch.getId());
+    }
   }
 }

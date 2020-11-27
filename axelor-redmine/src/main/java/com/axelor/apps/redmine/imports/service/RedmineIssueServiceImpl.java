@@ -142,6 +142,7 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
     paramsMap.put("errorObjList", errorObjList);
     paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
     paramsMap.put("redmineUserMap", redmineUserMap);
+    paramsMap.put("redmineManager", redmineManager);
 
     // IMPORT PROCESS
 
