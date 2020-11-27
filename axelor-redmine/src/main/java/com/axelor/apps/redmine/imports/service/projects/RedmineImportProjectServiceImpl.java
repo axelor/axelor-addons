@@ -177,6 +177,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
       this.importProjectsFromList(redmineProjectList);
 
+      updateTransaction();
+
       // SET PROJECTS PARENTS
 
       if (!parentMap.isEmpty()) {
@@ -229,17 +231,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         }
       } finally {
         if (++i % AbstractBatch.FETCH_LIMIT == 0) {
-          JPA.em().getTransaction().commit();
-
-          if (!JPA.em().getTransaction().isActive()) {
-            JPA.em().getTransaction().begin();
-          }
-
-          JPA.clear();
-
-          if (!JPA.em().contains(batch)) {
-            batch = JPA.find(Batch.class, batch.getId());
-          }
+          updateTransaction();
         }
       }
     }

@@ -257,20 +257,12 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
           this.createOpenSuiteTimesheetLine(redmineTimeEntry);
         } finally {
           if (++i % AbstractBatch.FETCH_LIMIT == 0) {
-            JPA.em().getTransaction().commit();
-
-            if (!JPA.em().getTransaction().isActive()) {
-              JPA.em().getTransaction().begin();
-            }
-
-            JPA.clear();
-
-            if (!JPA.em().contains(batch)) {
-              batch = JPA.find(Batch.class, batch.getId());
-            }
+            updateTransaction();
           }
         }
       }
+
+      updateTransaction();
 
       if (!updatedOnMap.isEmpty()) {
         String values =

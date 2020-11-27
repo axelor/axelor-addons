@@ -8,10 +8,7 @@
 	<entity name="MailMessage" table="MAIL_MESSAGE" cacheable="true"
 		repository="none">
 
-		<string name="relatedName" title="Related document name" large="true" />
-		<integer name="redmineId" title="Redmine Id" />
-
-		<finder-method name="findByRedmineId" using="redmineId" />
+		<string name="messageContentHtml" title="Content" large="true" />
 
 	</entity>
 
