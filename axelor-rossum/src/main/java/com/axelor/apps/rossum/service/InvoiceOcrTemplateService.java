@@ -44,7 +44,7 @@ public interface InvoiceOcrTemplateService {
   public InvoiceOcrTemplate setInvoiceOcrTemplateSeq(InvoiceOcrTemplate invoiceOcrTemplate);
 
   public String getDocumentUrl(InvoiceOcrTemplate invoiceOcrTemplate)
-      throws AxelorException, URISyntaxException;
+      throws AxelorException, URISyntaxException, IOException, JSONException;
 
   public void fetchUpdatedDetails(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, JSONException;

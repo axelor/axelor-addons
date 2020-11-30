@@ -116,18 +116,21 @@ public class InvoiceOcrTemplateController {
 
   public void rossumCorrection(ActionRequest request, ActionResponse response) {
     try {
-      InvoiceOcrTemplate invoiceOcrTemplate = request.getContext().asType(InvoiceOcrTemplate.class);
+      InvoiceOcrTemplate invoiceOcrTemplate =
+          Beans.get(InvoiceOcrTemplateRepository.class)
+              .find(request.getContext().asType(InvoiceOcrTemplate.class).getId());
 
       if (!StringUtils.isEmpty(invoiceOcrTemplate.getAnnotaionUrl())) {
         String documentUrl =
             Beans.get(InvoiceOcrTemplateService.class).getDocumentUrl(invoiceOcrTemplate);
 
         if (!StringUtils.isEmpty(documentUrl)) {
+          response.setReload(true);
           response.setView(ActionView.define(I18n.get("Rossum")).add("html", documentUrl).map());
         }
       }
 
-    } catch (AxelorException | URISyntaxException e) {
+    } catch (AxelorException | URISyntaxException | IOException | JSONException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
     }
   }

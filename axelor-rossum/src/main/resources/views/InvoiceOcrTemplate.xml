@@ -210,10 +210,10 @@
          <button name="generateTemplateBtn" title="Generate Template" showIf="exportedFile == null"
             onClick="save,action-invoice-ocr-template-method-onclick-create-template" readonlyIf="!templateFile"/>
 
-         <button name="updateOcrDetailsBtn" title="Update details" showIf="!isValidated &amp;&amp; exportedFile != null"
+         <button name="updateOcrDetailsBtn" title="Update details" showIf="!isValidated &amp;&amp; isCorrected &amp;&amp; exportedFile != null"
             onClick="save,action-invoice-ocr-template-method-fetch-updated-details"/>
-         <button name="rossumCorrectionBtn" title="To correct in Rossum" onClick="action-invoice-ocr-template-method-rossum-correction"
-            showIf="exportedFile != null &amp;&amp; !isValidated"/>
+         <button name="rossumCorrectionBtn" title="To correct in Rossum" onClick="save,action-invoice-ocr-template-method-rossum-correction"
+            showIf="exportedFile != null &amp;&amp; !isValidated &amp;&amp; !isCorrected"/>
          <button name="validateBtn" title="Validate" showIf="exportedFile != null &amp;&amp; !isValidated"
             onClick="save,action-invoice-ocr-template-method-validate-rossum-data"/>
 
@@ -232,6 +232,7 @@
          <field name="exportTypeSelect" required="true" readonlyIf="exportedFile != null" selection-in="['csv']"/>
          <field name="templateFile.fileType"/>
          <field name="templateFile.fileName"/>
+         <field name="isCorrected"/>
 		</panel>
    </form>
 

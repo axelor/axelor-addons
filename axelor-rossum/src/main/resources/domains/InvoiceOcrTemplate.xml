@@ -40,7 +40,9 @@
       <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV file"/>
 
       <boolean name="isInvoiceLineConsolidated" title="Consolidate invoice lines"/>
-      <boolean name="isValidated" title="Validated"/>   
+      <boolean name="isValidated" title="Validated"/>
+      <boolean name="isCorrected" title="Corrected"/>
+
       <extra-code>
          <![CDATA[
          //Export type select
