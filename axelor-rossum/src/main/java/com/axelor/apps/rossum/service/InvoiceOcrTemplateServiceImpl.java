@@ -219,6 +219,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     }
     csvReader.close();
 
+    invoiceOcrTemplate.setIsCorrected(false);
     invoiceOcrTemplate.setIsValidated(!invoiceOcrTemplate.getQueue().getUseConfirmedState());
     invoiceOcrTemplate.setAnnotaionUrl(annotationsLink);
     invoiceOcrTemplate.setExportedFile(metaFiles.upload(exportedFile));
@@ -371,6 +372,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   }
 
   @Override
+  @Transactional
   public InvoiceOcrTemplate setInvoiceOcrTemplateSeq(InvoiceOcrTemplate invoiceOcrTemplate) {
 
     if (StringUtils.isEmpty(invoiceOcrTemplate.getInvoiceOcrTemplateId())) {
@@ -383,8 +385,9 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   }
 
   @Override
+  @Transactional
   public String getDocumentUrl(InvoiceOcrTemplate invoiceOcrTemplate)
-      throws AxelorException, URISyntaxException {
+      throws AxelorException, URISyntaxException, IOException, JSONException {
     Annotation annotation = annotationRepo.findByUrl(invoiceOcrTemplate.getAnnotaionUrl());
 
     if (annotation == null) {
@@ -394,13 +397,17 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
           invoiceOcrTemplate.getAnnotaionUrl());
     }
 
-    String documentUrl = "https://elis.rossum.ai/document/" + annotation.getAnnotationId();
+    URIBuilder uriBuilder =
+        new URIBuilder("https://elis.rossum.ai/document/" + annotation.getAnnotationId());
 
-    URIBuilder uriBuilder = new URIBuilder(documentUrl);
-    uriBuilder.addParameter("username", rossumApiService.getAppRossum().getUsername());
-    uriBuilder.addParameter("password", rossumApiService.getAppRossum().getPassword());
+    String documentUrl = uriBuilder.build().toString();
 
-    return uriBuilder.build().toString();
+    if (!Strings.isNullOrEmpty(documentUrl)) {
+      invoiceOcrTemplate.setIsCorrected(true);
+      invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
+    }
+
+    return documentUrl;
   }
 
   @SuppressWarnings("static-access")
