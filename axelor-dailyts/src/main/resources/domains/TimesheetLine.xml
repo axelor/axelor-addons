@@ -12,6 +12,11 @@
 		<many-to-one name="iCalendarEvent" ref="com.axelor.apps.base.db.ICalendarEvent"
 			title="iEvent" />
 
+		<extra-code><![CDATA[
+	   		// ACTIVITY TYPE
+        	public static final String ACTIVITY_TYPE_ON_TICKET = "On ticket";
+		]]></extra-code>
+
 	</entity>
 
 </domain-models>

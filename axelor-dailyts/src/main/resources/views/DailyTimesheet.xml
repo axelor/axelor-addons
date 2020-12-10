@@ -86,7 +86,7 @@
 		title="Events" model="com.axelor.apps.base.db.ICalendarEvent">
 		<view type="grid" name="calendar-event-grid" />
 		<view type="form" name="calendar-event-form" />
-		<domain>self.user = :dailyTimesheetUser and date(self.startDateTime) &lt;= :dailyTimesheetDate and date(self.endDateTime) &gt;= :dailyTimesheetDate</domain>
+		<domain>(self.user = :dailyTimesheetUser or self.organizer.user = :dailyTimesheetUser or self.attendees.user in (:dailyTimesheetUser)) and date(self.startDateTime) &lt;= :dailyTimesheetDate and date(self.endDateTime) &gt;= :dailyTimesheetDate</domain>
 	</action-view>
 
 </object-views>
