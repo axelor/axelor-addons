@@ -206,7 +206,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
             .filter(
                 "self.id not in ("
                     + idString
-                    + ") and self.user = ?1 and date(self.startDateTime) <= ?2 and date(self.endDateTime) >= ?2",
+                    + ") and (self.user = ?1 or self.organizer.user = ?1 or self.attendees.user in (?1)) and date(self.startDateTime) <= ?2 and date(self.endDateTime) >= ?2",
                 dailyTimesheetUser,
                 dailyTimesheetDate)
             .fetch();
@@ -245,9 +245,18 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     timesheetLine.setDailyTimesheet(dailyTimesheet);
     timesheetLine.setTeamTask(teamTask);
+    timesheetLine.setDurationForCustomer(timesheetLine.getDuration());
 
     if (iCalendarEvent != null) {
       timesheetLine.setiCalendarEvent(iCalendarEvent);
+    }
+
+    if (teamTask != null) {
+      timesheetLine.setActivityTypeSelect(TimesheetLineRepository.ACTIVITY_TYPE_ON_TICKET);
+    }
+
+    if (dailyTimesheetUser.getEmployee() != null) {
+      timesheetLine.setProduct(dailyTimesheetUser.getEmployee().getProduct());
     }
 
     timesheetLineRepository.save(timesheetLine);
