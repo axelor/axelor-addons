@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2018 Axelor (<http://axelor.com>).
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -22,36 +22,30 @@ import com.axelor.apps.businessproduction.service.TimesheetBusinessProductionSer
 import com.axelor.apps.businesssupport.db.repo.TeamTaskBusinessSupportRepository;
 import com.axelor.apps.businesssupport.service.TeamTaskBusinessSupportServiceImpl;
 import com.axelor.apps.redmine.db.repo.TeamTaskRedmineRepositiry;
-import com.axelor.apps.redmine.imports.service.RedmineIssueService;
-import com.axelor.apps.redmine.imports.service.RedmineIssueServiceImpl;
-import com.axelor.apps.redmine.imports.service.RedmineProjectService;
-import com.axelor.apps.redmine.imports.service.RedmineProjectServiceImpl;
-import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueService;
-import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueServiceImpl;
-import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentService;
-import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentServiceImpl;
-import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectService;
-import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectServiceImpl;
-import com.axelor.apps.redmine.service.RedmineService;
-import com.axelor.apps.redmine.service.RedmineServiceImpl;
 import com.axelor.apps.redmine.service.TeamTaskRedmineService;
 import com.axelor.apps.redmine.service.TeamTaskRedmineServiceImpl;
 import com.axelor.apps.redmine.service.TimesheetRedmineServiceImpl;
+import com.axelor.apps.redmine.service.batch.RedmineBatchImportCommonService;
+import com.axelor.apps.redmine.service.batch.RedmineBatchImportCommonServiceImpl;
+import com.axelor.apps.redmine.service.imports.RedmineImportIssueService;
+import com.axelor.apps.redmine.service.imports.RedmineImportIssueServiceImpl;
+import com.axelor.apps.redmine.service.imports.RedmineImportProjectService;
+import com.axelor.apps.redmine.service.imports.RedmineImportProjectServiceImpl;
+import com.axelor.apps.redmine.service.imports.RedmineImportTimeSpentService;
+import com.axelor.apps.redmine.service.imports.RedmineImportTimeSpentServiceImpl;
 
 public class RedmineModule extends AxelorModule {
 
   @Override
   protected void configure() {
 
-    bind(RedmineService.class).to(RedmineServiceImpl.class);
-    bind(RedmineIssueService.class).to(RedmineIssueServiceImpl.class);
-    bind(RedmineProjectService.class).to(RedmineProjectServiceImpl.class);
-    bind(RedmineImportProjectService.class).to(RedmineImportProjectServiceImpl.class);
-    bind(RedmineImportIssueService.class).to(RedmineImportIssueServiceImpl.class);
-    bind(RedmineImportTimeSpentService.class).to(RedmineImportTimeSpentServiceImpl.class);
     bind(TeamTaskBusinessSupportRepository.class).to(TeamTaskRedmineRepositiry.class);
     bind(TimesheetBusinessProductionServiceImpl.class).to(TimesheetRedmineServiceImpl.class);
     bind(TeamTaskBusinessSupportServiceImpl.class).to(TeamTaskRedmineServiceImpl.class);
     bind(TeamTaskRedmineService.class).to(TeamTaskRedmineServiceImpl.class);
+    bind(RedmineBatchImportCommonService.class).to(RedmineBatchImportCommonServiceImpl.class);
+    bind(RedmineImportProjectService.class).to(RedmineImportProjectServiceImpl.class);
+    bind(RedmineImportIssueService.class).to(RedmineImportIssueServiceImpl.class);
+    bind(RedmineImportTimeSpentService.class).to(RedmineImportTimeSpentServiceImpl.class);
   }
 }

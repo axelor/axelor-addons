@@ -18,6 +18,7 @@
 		<boolean name="isImportIssuesWithActivities" title="Import issues with activities" />
 		<string name="failedRedmineIssuesIds" large="true" />
 		<string name="failedRedmineTimeEntriesIds" large="true" />
+		<integer name="redmineFetchLimit" title="Fetch limit" />
 
 		<extra-code>
 			<![CDATA[
