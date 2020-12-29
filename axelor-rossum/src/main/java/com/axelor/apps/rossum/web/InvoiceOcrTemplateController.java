@@ -126,7 +126,11 @@ public class InvoiceOcrTemplateController {
 
         if (!StringUtils.isEmpty(documentUrl)) {
           response.setReload(true);
-          response.setView(ActionView.define(I18n.get("Rossum")).add("html", documentUrl).map());
+          response.setView(
+              ActionView.define(I18n.get("Rossum"))
+                  .add("html", documentUrl)
+                  .param("target", "_blank")
+                  .map());
         }
       }
 
