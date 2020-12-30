@@ -20,9 +20,10 @@ package com.axelor.apps.prestashop.imports.service;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.repo.CurrencyRepository;
-import com.axelor.apps.base.service.CurrencyConversionService;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.currency.CurrencyConversionFactory;
+import com.axelor.apps.base.service.currency.CurrencyConversionService;
 import com.axelor.apps.prestashop.entities.PrestashopCurrency;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
@@ -47,24 +48,24 @@ public class ImportCurrencyServiceImpl implements ImportCurrencyService {
   private CurrencyRepository currencyRepo;
   private AppBaseService appBaseService;
   private CurrencyService currencyService;
-  private CurrencyConversionService currencyConversionService;
+  protected CurrencyConversionFactory currencyConversionFactory;
 
   @Inject
   public ImportCurrencyServiceImpl(
       CurrencyRepository currencyRepo,
       AppBaseService appBaseService,
       CurrencyService currencyService,
-      CurrencyConversionService currencyConversionService) {
+      CurrencyConversionFactory currencyConversionFactory) {
     this.currencyRepo = currencyRepo;
     this.appBaseService = appBaseService;
     this.currencyService = currencyService;
-    this.currencyConversionService = currencyConversionService;
+    this.currencyConversionFactory = currencyConversionFactory;
   }
 
   @Override
   @Transactional
   public void importCurrency(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer)
-      throws IOException, PrestaShopWebserviceException {
+      throws IOException, PrestaShopWebserviceException, AxelorException {
     Integer done = 0;
     Integer errors = 0;
 
@@ -125,6 +126,9 @@ public class ImportCurrencyServiceImpl implements ImportCurrencyService {
             && BigDecimal.ZERO.compareTo(remoteCurrency.getConversionRate()) != 0
             && BigDecimal.ONE.compareTo(remoteCurrency.getConversionRate()) != 0
             && currentRate.compareTo(remoteCurrency.getConversionRate()) != 0) {
+
+          CurrencyConversionService currencyConversionService =
+              currencyConversionFactory.getCurrencyConversionService();
           currencyConversionService.createCurrencyConversionLine(
               localCurrency,
               appConfig.getPrestaShopCurrency(),

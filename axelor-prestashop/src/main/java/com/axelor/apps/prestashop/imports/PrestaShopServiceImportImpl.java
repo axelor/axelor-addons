@@ -28,6 +28,7 @@ import com.axelor.apps.prestashop.imports.service.ImportOrderService;
 import com.axelor.apps.prestashop.imports.service.ImportProductService;
 import com.axelor.apps.prestashop.imports.service.ImportTaxService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
@@ -76,7 +77,7 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
 
   public void importAxelorBase(
       AppPrestashop appConfig, ZonedDateTime endDate, final Writer logWriter)
-      throws IOException, PrestaShopWebserviceException {
+      throws IOException, PrestaShopWebserviceException, AxelorException {
     currencyService.importCurrency(appConfig, endDate, logWriter);
     countryService.importCountry(appConfig, endDate, logWriter);
     customerService.importCustomer(appConfig, endDate, logWriter);
@@ -86,10 +87,14 @@ public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {
     productService.importProduct(appConfig, endDate, logWriter);
   }
 
-  /** Import Axelor modules (Base, SaleOrder) */
+  /**
+   * Import Axelor modules (Base, SaleOrder)
+   *
+   * @throws AxelorException
+   */
   @Override
   public void importFromPrestaShop(AppPrestashop appConfig, ZonedDateTime endDate, Batch batch)
-      throws IOException {
+      throws IOException, AxelorException {
     StringBuilderWriter logWriter = new StringBuilderWriter(1024);
     try {
       importAxelorBase(appConfig, endDate, logWriter);
