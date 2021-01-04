@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2019 Axelor (<http://axelor.com>).
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -22,7 +22,6 @@ import com.axelor.apps.base.exceptions.IExceptionMessage;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.db.Model;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -41,7 +40,6 @@ public class RedmineBatchService extends AbstractBatchService {
 
     Batch batch;
     RedmineBatch redmineBatch = (RedmineBatch) batchModel;
-    RedmineImportService.result = "";
 
     switch (redmineBatch.getRedmineActionSelect()) {
       case RedmineBatchRepository.ACTION_SELECT_IMPORT_PROJECT:
@@ -62,10 +60,10 @@ public class RedmineBatchService extends AbstractBatchService {
   }
 
   public Batch redmineImportProjects(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineProject.class).run(redmineBatch);
+    return Beans.get(RedmineBatchImportProjects.class).run(redmineBatch);
   }
 
   public Batch redmineImportIssues(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineIssue.class).run(redmineBatch);
+    return Beans.get(RedmineBatchImportIssues.class).run(redmineBatch);
   }
 }

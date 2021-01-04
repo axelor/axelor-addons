@@ -23,6 +23,7 @@ import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.meta.db.repo.MetaJsonModelRepository;
 import com.axelor.team.db.TeamTask;
+import com.axelor.team.db.repo.TeamTaskRepository;
 import com.axelor.text.GroovyTemplates;
 import com.axelor.text.Template;
 import com.axelor.text.Templates;
@@ -40,6 +41,15 @@ public class MailMessageDailytsRepository extends MailMessageRepository {
     message = super.save(message);
 
     if (message.getRelatedModel().equals(TeamTask.class.getName()) && message.getAuthor() != null) {
+
+      TeamTask teamTask = Beans.get(TeamTaskRepository.class).find(message.getRelatedId());
+
+      if (teamTask != null
+          && teamTask.getRedmineId() != 0
+          && message.getSubject().equals("Record created")) {
+        return message;
+      }
+
       message.setMessageContentHtml(getHtmlContent(message));
     }
 
@@ -56,8 +66,7 @@ public class MailMessageDailytsRepository extends MailMessageRepository {
       return text;
     }
 
-    final MailMessageRepository messages = Beans.get(MailMessageRepository.class);
-    final Map<String, Object> details = messages.details(message);
+    final Map<String, Object> details = details(message);
     final String jsonBody = details.containsKey("body") ? (String) details.get("body") : text;
 
     final ObjectMapper mapper = Beans.get(ObjectMapper.class);
