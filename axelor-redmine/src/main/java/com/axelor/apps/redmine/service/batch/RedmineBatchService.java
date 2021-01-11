@@ -22,7 +22,7 @@ import com.axelor.apps.base.exceptions.IExceptionMessage;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.imports.service.RedmineImportService;
+import com.axelor.apps.redmine.service.api.imports.RedmineImportService;
 import com.axelor.db.Model;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -50,6 +50,12 @@ public class RedmineBatchService extends AbstractBatchService {
       case RedmineBatchRepository.ACTION_SELECT_IMPORT_ISSUE:
         batch = redmineImportIssues(redmineBatch);
         break;
+      case RedmineBatchRepository.ACTION_SELECT_IMPORT_PROJECT_DB:
+        batch = redmineDbImportProjects(redmineBatch);
+        break;
+      case RedmineBatchRepository.ACTION_SELECT_IMPORT_ISSUE_DB:
+        batch = redmineDbImportIssues(redmineBatch);
+        break;
       default:
         throw new AxelorException(
             TraceBackRepository.CATEGORY_INCONSISTENCY,
@@ -62,10 +68,18 @@ public class RedmineBatchService extends AbstractBatchService {
   }
 
   public Batch redmineImportProjects(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineProject.class).run(redmineBatch);
+    return Beans.get(RedmineBatchApiImportProjects.class).run(redmineBatch);
   }
 
   public Batch redmineImportIssues(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineIssue.class).run(redmineBatch);
+    return Beans.get(RedmineBatchApiImportIssues.class).run(redmineBatch);
+  }
+
+  public Batch redmineDbImportProjects(RedmineBatch redmineBatch) {
+    return Beans.get(RedmineBatchDbImportProjects.class).run(redmineBatch);
+  }
+
+  public Batch redmineDbImportIssues(RedmineBatch redmineBatch) {
+    return Beans.get(RedmineBatchDbImportIssues.class).run(redmineBatch);
   }
 }

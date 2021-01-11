@@ -15,29 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.batch;
+package com.axelor.apps.redmine.service.api.imports.projects;
 
-import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.redmine.imports.service.RedmineImportService;
-import com.axelor.apps.redmine.service.RedmineService;
-import com.google.inject.Inject;
+import com.taskadapter.redmineapi.bean.Project;
+import java.util.HashMap;
+import java.util.List;
 
-public class BatchImportAllRedmineProject extends AbstractBatch {
+public interface RedmineImportProjectService {
 
-  @Inject private RedmineService redmineService;
-
-  @Override
-  protected void process() {
-
-    redmineService.redmineImportProjects(
-        batch, ticket -> incrementDone(), error -> incrementAnomaly());
-  }
-
-  @Override
-  protected void stop() {
-
-    super.stop();
-    String comments = RedmineImportService.result;
-    addComment(comments);
-  }
+  void importProject(List<Project> importProjectList, HashMap<String, Object> paramsMap);
 }

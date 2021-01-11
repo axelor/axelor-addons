@@ -18,11 +18,14 @@
 		<boolean name="isImportIssuesWithActivities" title="Import issues with activities" />
 		<string name="failedRedmineIssuesIds" large="true" />
 		<string name="failedRedmineTimeEntriesIds" large="true" />
+		<integer name="redmineFetchLimit" title="Fetch limit" default="100" />
 
 		<extra-code>
 			<![CDATA[
 				public static final int ACTION_SELECT_IMPORT_PROJECT = 0;
 				public static final int ACTION_SELECT_IMPORT_ISSUE = 1;
+				public static final int ACTION_SELECT_IMPORT_PROJECT_DB = 2;
+				public static final int ACTION_SELECT_IMPORT_ISSUE_DB = 3;
 			]]>
 		</extra-code>
 

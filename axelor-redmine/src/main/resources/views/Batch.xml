@@ -89,10 +89,12 @@
 	<action-attrs name="action-batch-attrs-hide-creted-updated-set">
 		<attribute name="hidden"
 			for="createdProjectsInOs,createdProjectsInOsBtn,updatedProjectsInOs,updatedProjectsInOsBtn"
-			expr="eval: true" if="eval: _parent?.redmineActionSelect == 1" />
+			expr="eval: true"
+			if="eval: __parent__?.redmineActionSelect == 1 || __parent__?.redmineActionSelect == 3" />
 		<attribute name="hidden"
 			for="createdTasksInOs,createdTasksInOsBtn,updatedTasksInOs,updatedTasksInOsBtn,createdTimesheetLinesInOs,createdTimesheetLinesInOsBtn,updatedTimesheetLinesInOs,updatedTimesheetLinesInOsBtn"
-			expr="eval: true" if="eval: _parent?.redmineActionSelect == 0" />
+			expr="eval: true"
+			if="eval: __parent__?.redmineActionSelect == 0 || __parent__?.redmineActionSelect == 2" />
 	</action-attrs>
 
 </object-views>

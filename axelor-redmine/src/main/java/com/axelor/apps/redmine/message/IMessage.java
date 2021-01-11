@@ -37,7 +37,7 @@ public interface IMessage {
   static final String REDMINE_IMPORT_TIMESHEET_LINE_ERROR = /*$$(*/ "TimesheetLine" /*)*/;
 
   static final String REDMINE_IMPORT_PRODUCT_NOT_FOUND = /*$$(*/
-      "Entity imported without product" /*)*/;
+      "Entity not imported, no product found in OS" /*)*/;
 
   static final String REDMINE_IMPORT_PARENT_TASK_NOT_FOUND = /*$$(*/
       "Entity not imported, no parent task found in OS" /*)*/;
@@ -63,8 +63,8 @@ public interface IMessage {
   static final String REDMINE_IMPORT_INVOICING_TYPE_NOT_FOUND = /*$$(*/
       "Invoicing Type not found in OS" /*)*/;
 
-  static final String REDMINE_IMPORT_PARENT_PROJECT_NOT_FOUND = /*$$(*/
-      "Parent project not found on OS while it's set in redmine" /*)*/;
+  static final String REDMINE_IMPORT_TIME_SPENT_WITHOUT_PRODUCT = /*$$(*/
+      "Entity imported without product" /*)*/;
 
   static final String REDMINE_IMPORT_USER_NOT_FOUND = /*$$(*/
       "Entity not imported, no user found in OS" /*)*/;

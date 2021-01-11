@@ -25,6 +25,8 @@
 	<selection name="redmine.batch.action.select">
 		<option value="0">Import Projects</option>
 		<option value="1">Import Issues</option>
+		<option value="2">Import Projects (DB)</option>
+		<option value="3">Import Issues (DB)</option>
 	</selection>
 	
 	<selection name="redmine.timesheetline.activity.type.select">

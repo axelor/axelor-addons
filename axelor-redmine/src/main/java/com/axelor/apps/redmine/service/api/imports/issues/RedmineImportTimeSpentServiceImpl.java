@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service.issues;
+package com.axelor.apps.redmine.service.api.imports.issues;
 
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
@@ -38,8 +38,8 @@ import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
-import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.apps.redmine.message.IMessage;
+import com.axelor.apps.redmine.service.api.imports.RedmineImportService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -373,7 +373,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
     Product product = StringUtils.isNotEmpty(value) ? productRepo.findByCode(value) : null;
 
     if (product == null) {
-      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)};
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_TIME_SPENT_WITHOUT_PRODUCT)};
       setErrorLog(
           I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
           redmineTimeEntry.getId().toString());
