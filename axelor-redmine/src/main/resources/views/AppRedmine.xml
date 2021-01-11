@@ -7,11 +7,22 @@
 		model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false"
 		width="large">
 		<panel name="mainPanel">
-			<field name="uri" />
-			<field name="apiAccessKey" />
-		</panel>
-		<panel name="fieldsPanel">
+			<field name="isImportWithDbConnction" widget="boolean-switch" />
 			<field name="company" required="true" />
+		</panel>
+		<panel name="redmineApiPanel" title="Redmine API" showIf="!isImportWithDbConnction">
+			<field name="uri" requiredIf="!isImportWithDbConnction" />
+			<field name="apiAccessKey" requiredIf="!isImportWithDbConnction" />
+		</panel>
+		<panel name="redmineDBPanel" title="Redmine DB" showIf="isImportWithDbConnction">
+			<field name="redmineDbDriver" placeholder="e.g. org.postgresql.Driver"
+				requiredIf="isImportWithDbConnction" />
+			<field name="redmineDbUrl" placeholder="e.g. jdbc:postgresql://localhost:5432/redmine_db"
+				requiredIf="isImportWithDbConnction" />
+			<field name="redmineDbUser" requiredIf="isImportWithDbConnction" />
+			<field name="redmineDbPassword" requiredIf="isImportWithDbConnction" />
+			<field name="redmineServerTimeZone" placeholder="e.g. Europe/Paris"
+				requiredIf="isImportWithDbConnction" />
 		</panel>
 		<panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
 			<field name="redmineProjectInvoiceable" required="true" />

@@ -15,12 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service;
+package com.axelor.apps.redmine.service.api.imports;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
-import com.axelor.apps.redmine.imports.service.log.RedmineErrorLogService;
-import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectService;
+import com.axelor.apps.redmine.service.api.imports.projects.RedmineImportProjectService;
+import com.axelor.apps.redmine.service.log.RedmineErrorLogService;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -122,7 +122,12 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     // ATTACH ERROR LOG WITH BATCH
 
     if (errorObjList != null && errorObjList.size() > 0) {
-      MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
+      String sheetName = "ErrorLog";
+      String fileName = "RedmineImportErrorLog_";
+      Object[] headers = new Object[] {"Object", "Redmine reference", "Error"};
+
+      MetaFile errorMetaFile =
+          redmineErrorLogService.generateErrorLog(sheetName, fileName, headers, errorObjList);
 
       if (errorMetaFile != null) {
         batch = batchRepo.find(batch.getId());

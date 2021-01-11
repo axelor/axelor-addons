@@ -15,6 +15,14 @@
 		<many-to-one name="company"
 			ref="com.axelor.apps.base.db.Company" title="Company" />
 
+		<!-- REDMINE DB CONFIGURATION DETAILS -->
+		<boolean name="isImportWithDbConnction" title="Import with database connection" />
+		<string name="redmineDbDriver" title="Redmine DB driver" />
+		<string name="redmineDbUrl" title="Redmine DB URL" />
+		<string name="redmineDbUser" title="Redmine DB user" />
+		<string name="redmineDbPassword" title="Redmine DB password" />
+		<string name="redmineServerTimeZone" title="Redmine server timezone" />
+
 		<!-- REDMINE CUSTOM FIELD CONFIGURATION DETAILS -->
 		<string name="redmineProjectInvoiceable" />
 		<string name="redmineProjectClientPartner" />

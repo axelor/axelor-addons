@@ -194,4 +194,32 @@ public class RedmineBatchController {
       response.setCanClose(true);
     }
   }
+
+  public void redmineDbImportProjects(ActionRequest request, ActionResponse response) {
+
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
+    redmineBatch = Beans.get(RedmineBatchRepository.class).find(redmineBatch.getId());
+
+    Batch batch = Beans.get(RedmineBatchService.class).redmineDbImportProjects(redmineBatch);
+
+    if (batch != null) {
+      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
+    }
+
+    response.setReload(true);
+  }
+
+  public void redmineDbImportIssues(ActionRequest request, ActionResponse response) {
+
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
+    redmineBatch = Beans.get(RedmineBatchRepository.class).find(redmineBatch.getId());
+
+    Batch batch = Beans.get(RedmineBatchService.class).redmineDbImportIssues(redmineBatch);
+
+    if (batch != null) {
+      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
+    }
+
+    response.setReload(true);
+  }
 }

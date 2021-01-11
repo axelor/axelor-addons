@@ -12,5 +12,6 @@ axelor {
 }
 
 dependencies {
+	implementation libs.fasterxml
 	api project(":modules:axelor-redmine")
 }

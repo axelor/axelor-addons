@@ -12,18 +12,23 @@
 		<field name="createdBy" form-view="user-form" grid-view="user-grid" />
 	</grid>
 
-	<form onNew="action-redmine-batch-record-on-new" name="redmine-batch-form"
-		title="Redmine Batch" model="com.axelor.apps.redmine.db.RedmineBatch"
-		width="large">
+	<form name="redmine-batch-form" title="Redmine Batch"
+		model="com.axelor.apps.redmine.db.RedmineBatch"
+		onNew="action-redmine-batch-record-on-new,action-redmine-batch-attrs-select-in-action-select"
+		onLoad="action-redmine-batch-attrs-select-in-action-select" width="large">
 		<panel name="main">
 			<field name="redmineActionSelect" />
 			<field name="code" x-bind="{{code|unaccent|uppercase}}"
 				onChange="action-base-batch-condition-check-unique-code" />
 			<field name="batchUser" canEdit="false" widget="SuggestBox"
 				form-view="user-form" grid-view="user-grid" />
+			<field name="redmineFetchLimit"
+				help="If fetch limit not provided, by default it will consider 100"
+				showIf="redmineActionSelect == 2 || redmineActionSelect == 3"
+				requiredIf="redmineActionSelect == 2 || redmineActionSelect == 3" />
 			<field name="isImportIssuesWithActivities" widget="boolean-switch"
 				help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
-				showIf="redmineActionSelect == 1" />
+				showIf="redmineActionSelect == 1 || redmineActionSelect == 3" />
 		</panel>
 		<panel-tabs>
 			<panel name="actionPanel" title="Actions">
@@ -34,6 +39,12 @@
 					<button name="redmineImportIssuesBtn" title="Redmine Import Issues"
 						onClick="save,action-redmine-batch-method-import-issues" colSpan="12"
 						hidden="true" showIf="redmineActionSelect == 1" />
+					<button name="redmineDbImportProjectsBtn" title="Redmine Import Projects (DB)"
+						onClick="save,action-redmine-db-batch-method-import-projects" colSpan="12"
+						hidden="true" showIf="redmineActionSelect == 2" />
+					<button name="redmineDbImportIssuesBtn" title="Redmine Import Issues (DB)"
+						onClick="save,action-redmine-db-batch-method-import-issues" colSpan="12"
+						hidden="true" showIf="redmineActionSelect == 3" />
 				</panel>
 			</panel>
 			<panel name="information" title="Information">
@@ -59,6 +70,15 @@
 		<field name="batchUser" expr="eval:__user__" />
 	</action-record>
 
+	<!-- ACTION ATTRS -->
+
+	<action-attrs name="action-redmine-batch-attrs-select-in-action-select">
+		<attribute name="value" for="redmineActionSelect" expr="eval: null"
+			if="!id" />
+		<attribute name="selection-in" for="redmineActionSelect"
+			expr="eval: __config__.app.getApp('redmine').isImportWithDbConnction ? [2,3] : [0,1]" />
+	</action-attrs>
+
 	<!-- ACTION METHOD -->
 
 	<action-method name="action-redmine-batch-method-import-projects">
@@ -69,6 +89,16 @@
 	<action-method name="action-redmine-batch-method-import-issues">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
 			method="redmineImportIssues" />
+	</action-method>
+
+	<action-method name="action-redmine-db-batch-method-import-projects">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="redmineDbImportProjects" />
+	</action-method>
+
+	<action-method name="action-redmine-db-batch-method-import-issues">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="redmineDbImportIssues" />
 	</action-method>
 
 </object-views>

@@ -18,11 +18,11 @@
 package com.axelor.apps.redmine.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.redmine.imports.service.RedmineImportService;
-import com.axelor.apps.redmine.service.RedmineService;
+import com.axelor.apps.redmine.service.api.imports.RedmineImportService;
+import com.axelor.apps.redmine.service.api.imports.RedmineService;
 import com.google.inject.Inject;
 
-public class BatchImportAllRedmineIssue extends AbstractBatch {
+public class RedmineBatchApiImportIssues extends AbstractBatch {
 
   @Inject private RedmineService redmineService;
 
