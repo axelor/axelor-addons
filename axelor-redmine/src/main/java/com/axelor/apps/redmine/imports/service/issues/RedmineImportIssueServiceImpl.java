@@ -496,6 +496,10 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       Version targetVersion = redmineIssue.getTargetVersion();
       teamTask.setFixedVersion(targetVersion != null ? targetVersion.getName() : null);
 
+      if (redmineIssue.getParentId() == null) {
+        teamTask.setParentTask(null);
+      }
+
       if (isAppBusinessSupport) {
 
         if (teamTask.getTargetVersion() != null
