@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
 	<grid name="redmine-batch-grid" title="Redmine batches"
-		model="com.axelor.apps.redmine.db.RedmineBatch">
+		model="com.axelor.apps.redmine.db.RedmineBatch" orderBy="-updatedOn">
 		<field name="redmineActionSelect" />
 		<field name="code" x-bind="{{code|unaccent|uppercase}}" />
 		<field name="batchUser" form-view="user-form" grid-view="user-grid" />
