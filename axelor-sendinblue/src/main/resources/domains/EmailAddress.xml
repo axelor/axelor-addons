@@ -7,9 +7,7 @@
 
 	<entity name="EmailAddress" lang="java">
 
-		<one-to-many name="sendinBlueContactStatList"
-			ref="com.axelor.apps.sendinblue.db.SendinBlueContactStat" mappedBy="emailAddress"
-			orphanRemoval="true" />
+		<one-to-many name="sendinBlueContactStatList" ref="com.axelor.apps.sendinblue.db.SendinBlueContactStat" mappedBy="emailAddress"/>
 
 	</entity>
 
