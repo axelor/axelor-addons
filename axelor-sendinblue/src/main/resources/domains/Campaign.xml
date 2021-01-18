@@ -7,8 +7,7 @@
 
 	<entity name="Campaign" lang="java" sequential="true">
 
-		<one-to-many name="sendinBlueCampaignList" title="SendinBlue Campaigns"
-			ref="com.axelor.apps.marketing.db.SendinBlueCampaign" mappedBy="campaign" orphanRemoval="true"/>
+		<one-to-many name="sendinBlueCampaignList" title="SendinBlue Campaigns" ref="com.axelor.apps.marketing.db.SendinBlueCampaign" mappedBy="campaign"/>
 
 	</entity>
 
