@@ -50,7 +50,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineException;
-import com.taskadapter.redmineapi.bean.CustomField;
 import com.taskadapter.redmineapi.bean.Membership;
 import com.taskadapter.redmineapi.bean.Tracker;
 import com.taskadapter.redmineapi.bean.Version;
@@ -63,7 +62,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -118,7 +116,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   protected String redmineVersionDeliveryDate;
 
   protected boolean isAppBusinessSupport;
-  protected Integer redmineVersionDeliveryDateCfId = 0;
+
+  protected List<Integer> redmineProjectVersionIdList = new ArrayList<>();
 
   @Override
   @SuppressWarnings("unchecked")
@@ -248,6 +247,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     if (project == null) {
       project = new Project();
+      project.setRedmineId(redmineProject.getId());
+      project.setCode(redmineProject.getIdentifier().toUpperCase());
     } else if (lastBatchUpdatedOn != null
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
             || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
@@ -312,9 +313,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   public void setProjectFields(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
 
-    project.setRedmineId(redmineProject.getId());
     project.setName(redmineProject.getName());
-    project.setCode(redmineProject.getIdentifier());
     project.setDescription(getHtmlFromTextile(redmineProject.getDescription()));
     project.setCompany(companyRepo.find(defaultCompanyId));
 
@@ -442,57 +441,42 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         for (Version redmineVersion : redmineVersionList) {
           ProjectVersion version = projectVersionRepo.findByRedmineId(redmineVersion.getId());
 
-          if (version == null) {
-            version = new ProjectVersion();
-            version.setRedmineId(redmineVersion.getId());
-          }
+          if (!redmineProjectVersionIdList.contains(redmineVersion.getId())) {
 
-          version.setStatusSelect(
-              (Integer) selectionMap.get(fieldMap.get(redmineVersion.getStatus())));
-          version.setTitle(redmineVersion.getName());
-          version.setContent(redmineVersion.getDescription());
-          version.setTestingServerDate(
-              redmineVersion.getDueDate() != null
-                  ? redmineVersion
-                      .getDueDate()
-                      .toInstant()
-                      .atZone(ZoneId.systemDefault())
-                      .toLocalDate()
-                  : null);
-
-          CustomField deliveryDateCf = null;
-
-          if (redmineVersionDeliveryDateCfId == 0) {
-            Collection<CustomField> redmineVersionCfs = redmineVersion.getCustomFields();
-
-            if (CollectionUtils.isNotEmpty(redmineVersionCfs)) {
-              Optional<CustomField> deliveryDateCfOptional =
-                  redmineVersionCfs.stream()
-                      .filter(v -> v.getName().equals(redmineVersionDeliveryDate))
-                      .findFirst();
-
-              if (deliveryDateCfOptional.isPresent()) {
-                deliveryDateCf = deliveryDateCfOptional.get();
-                redmineVersionDeliveryDateCfId = deliveryDateCf.getId();
-              }
+            if (version == null) {
+              version = new ProjectVersion();
+              version.setRedmineId(redmineVersion.getId());
             }
-          } else {
-            deliveryDateCf = redmineVersion.getCustomFieldById(redmineVersionDeliveryDateCfId);
-          }
 
-          if (deliveryDateCf != null) {
-            String value = deliveryDateCf.getValue();
+            version.setStatusSelect(
+                (Integer) selectionMap.get(fieldMap.get(redmineVersion.getStatus())));
+            version.setTitle(redmineVersion.getName());
+            version.setContent(redmineVersion.getDescription());
+            version.setTestingServerDate(
+                redmineVersion.getDueDate() != null
+                    ? redmineVersion
+                        .getDueDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                    : null);
+
+            setRedmineCustomFieldsMap(redmineVersion.getCustomFields());
+
+            String value = redmineCustomFieldsMap.get(redmineVersionDeliveryDate);
             version.setProductionServerDate(
                 StringUtils.isNotEmpty(value) ? LocalDate.parse(value) : null);
+
+            redmineProjectVersionIdList.add(redmineVersion.getId());
           }
 
           version.addProjectSetItem(project);
-          project.addRoadmapSetItem(version);
         }
       } else {
         project.clearRoadmapSet();
       }
     } catch (RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
   }
