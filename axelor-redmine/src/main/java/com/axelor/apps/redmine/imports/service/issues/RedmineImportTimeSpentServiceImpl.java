@@ -398,29 +398,22 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
         timesheetRepo
             .all()
             .filter(
-                "self.user = ?1 AND self.statusSelect != ?2",
+                "self.user = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
                 user,
-                TimesheetRepository.STATUS_CANCELED)
-            .order("-id")
+                TimesheetRepository.STATUS_CANCELED,
+                redmineSpentOn)
+            .order("-fromDate")
             .fetchOne();
 
     if (timesheet == null) {
       timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
-      timesheet.setCompany(
-          user.getActiveCompany() != null
-              ? user.getActiveCompany()
-              : companyRepo.find(defaultCompanyId));
-      timesheet.setToDate(redmineSpentOn);
-    } else {
-      if (timesheet.getFromDate() == null || timesheet.getFromDate().isAfter(redmineSpentOn)) {
-        timesheet.setFromDate(redmineSpentOn);
-      }
-      if (timesheet.getToDate() == null || timesheet.getToDate().isBefore(redmineSpentOn)) {
-        timesheet.setToDate(redmineSpentOn);
-      }
-    }
 
-    timesheet.setStatusSelect(TimesheetRepository.STATUS_VALIDATED);
+      if (timesheet.getCompany() == null) {
+        timesheet.setCompany(companyRepo.find(defaultCompanyId));
+      }
+    } else if (timesheet.getToDate() != null && timesheet.getToDate().isBefore(redmineSpentOn)) {
+      timesheet.setToDate(redmineSpentOn);
+    }
 
     try {
       timesheetLine.setDuration(
