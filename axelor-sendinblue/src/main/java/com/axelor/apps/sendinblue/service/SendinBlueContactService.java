@@ -28,6 +28,7 @@ import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueContactStatRepository;
+import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.apps.tool.service.TranslationService;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.common.StringUtils;
@@ -38,6 +39,7 @@ import com.axelor.db.mapper.Mapper;
 import com.axelor.db.mapper.Property;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.db.MetaField;
 import com.axelor.meta.db.MetaModel;
@@ -158,7 +160,8 @@ public class SendinBlueContactService {
         }
         logWriter.append(
             String.format(
-                "%nTotal Contact(%s) Exported : %s", metaModel.getFullName(), totalExportRecord));
+                "%n%s : %s",
+                I18n.get(ITranslation.EXPORT_CONTACT), metaModel.getFullName(), totalExportRecord));
       }
     }
   }
@@ -457,8 +460,10 @@ public class SendinBlueContactService {
     } catch (ApiException e) {
       TraceBackService.trace(e);
     }
-    logWriter.append(String.format("%nTotal Contacts Imported : %s", totalContactRecords));
-    logWriter.append(String.format("%nTotal Contacts Leads : %s", totalLeadRecords));
+    logWriter.append(
+        String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_CONTACT), totalContactRecords));
+    logWriter.append(
+        String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_LEAD), totalLeadRecords));
   }
 
   private void createEmailAddress(LinkedTreeMap<String, Object> conObj) {
@@ -563,7 +568,8 @@ public class SendinBlueContactService {
 
     for (String key : attributes.keySet()) {
       List<Property> keyProperty =
-          properties.stream()
+          properties
+              .stream()
               .filter(property -> property.getName().equalsIgnoreCase(key))
               .collect(Collectors.toList());
       if (keyProperty != null && keyProperty.size() == 1) {

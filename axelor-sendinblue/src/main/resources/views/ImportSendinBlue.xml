@@ -7,7 +7,7 @@
 		model="com.axelor.apps.sendinblue.db.ImportSendinBlue">
 		<field name="importtDateT" title="Import datetime" />
 		<field name="importUser" title="User" />
-		<field name="isImportLatest" title="Import latest" />
+		<field name="isImportLatest" title="Import latest data" />
 		<field name="isNoUpdate" title="No update" />
 	</grid>
 
@@ -15,7 +15,7 @@
 		model="com.axelor.apps.sendinblue.db.ImportSendinBlue" width="large" onNew="action-import-sendinblue-record-set-default-onnew">
 		<panel name="mainPanel">
 			<panel colSpan="12" name="configPanel">
-				<field name="isImportLatest" title="Import latest" widget="boolean-switch" colSpan="3" />
+				<field name="isImportLatest" title="Import latest data" widget="boolean-switch" colSpan="3" />
 				<field name="isNoUpdate" title="No update" widget="boolean-switch" colSpan="3" />
 			</panel>
 			<panel colSpan="12" name="btnPanel">

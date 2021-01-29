@@ -48,4 +48,20 @@ public interface ITranslation {
       "Aggregate Statistics deleted successfully"; /*)*/
   public static final String AGGREGATE_STATISTICS_ERROR = /*$$(*/
       "No Aggregate Statistics exist"; /*)*/
+
+  public static final String IMPORT_TEMPLATE = /*$$(*/ "Total Templates Imported"; /*)*/
+  public static final String IMPORT_CAMPAIN = /*$$(*/ "Total Campaigns Imported"; /*)*/
+  public static final String IMPORT_EVENT = /*$$(*/ "Total Events Imported"; /*)*/
+  public static final String IMPORT_CONTACT = /*$$(*/ "Total Contacts Imported"; /*)*/
+  public static final String IMPORT_LEAD = /*$$(*/ "Total Contacts Leads"; /*)*/
+  public static final String IMPORT_CAMPAIN_REPORT = /*$$(*/
+      "Total Campaign Reports Imported"; /*)*/
+  public static final String IMPORT_CAMPAIN_STATISTICS = /*$$(*/
+      "Total Campaign Statistics Imported"; /*)*/
+  public static final String IMPORT_CONTACT_STATISTICS = /*$$(*/
+      "Total Contact Statistics Imported"; /*)*/
+
+  public static final String EXPORT_TEMPLATE = /*$$(*/ "Total Template Exported"; /*)*/
+  public static final String EXPORT_CAMAPIN = /*$$(*/ "Total Campaign Exported"; /*)*/
+  public static final String EXPORT_CONTACT = /*$$(*/ "Total Contact(%s) Exported"; /*)*/
 }
