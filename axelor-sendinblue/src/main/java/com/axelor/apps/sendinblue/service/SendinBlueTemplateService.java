@@ -103,7 +103,8 @@ public class SendinBlueTemplateService {
           if (!templates.isEmpty()) {
             offset += totalTemplate;
             for (Template dataObject : templates) {
-              if (!senderEmails.stream()
+              if (!senderEmails
+                  .stream()
                   .anyMatch(email -> email.equals(emailAccount.getFromAddress()))) {
                 sendinBlueCampaignService.createSender(emailAccount.getFromAddress());
               }
@@ -112,7 +113,8 @@ public class SendinBlueTemplateService {
           }
         }
       }
-      logWriter.append(String.format("%nTotal Template Exported : %s", totalExportRecord));
+      logWriter.append(
+          String.format("%n%s : %s", I18n.get(ITranslation.EXPORT_TEMPLATE), totalExportRecord));
     }
   }
 
@@ -292,7 +294,8 @@ public class SendinBlueTemplateService {
     } catch (ApiException e) {
       TraceBackService.trace(e);
     }
-    logWriter.append(String.format("%nTotal Templates Imported : %s", totalImportRecord));
+    logWriter.append(
+        String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_TEMPLATE), totalImportRecord));
   }
 
   private void createTemplate(GetSmtpTemplateOverview template) {

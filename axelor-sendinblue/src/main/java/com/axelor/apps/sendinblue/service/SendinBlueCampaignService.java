@@ -128,7 +128,8 @@ public class SendinBlueCampaignService {
           }
         }
       }
-      logWriter.append(String.format("%nTotal Campaign Exported : %s%n", totalExportRecord));
+      logWriter.append(
+          String.format("%n%s : %s%n", I18n.get(ITranslation.EXPORT_CAMAPIN), totalExportRecord));
     }
   }
 
@@ -159,7 +160,9 @@ public class SendinBlueCampaignService {
     try {
       GetSendersList senderList = senderApiInstance.getSenders(null, null);
       senderEmails =
-          senderList.getSenders().stream()
+          senderList
+              .getSenders()
+              .stream()
               .map(sender -> sender.getEmail())
               .collect(Collectors.toList());
     } catch (ApiException e) {
@@ -185,7 +188,8 @@ public class SendinBlueCampaignService {
       List<String> senderEmails) {
     EmailCampaignsApi emailCampaignApiInstance = new EmailCampaignsApi();
     Optional<SendinBlueCampaign> partnerCampaign =
-        sendinBlueCampaigns.stream()
+        sendinBlueCampaigns
+            .stream()
             .filter(campaign -> campaign.getCampaignType() == campaignType)
             .findFirst();
     if (partnerCampaign.isPresent()) {
@@ -486,7 +490,8 @@ public class SendinBlueCampaignService {
     } catch (ApiException e) {
       TraceBackService.trace(e);
     }
-    logWriter.append(String.format("%nTotal Campaigns Imported : %s", totalImportRecord));
+    logWriter.append(
+        String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_CAMPAIN), totalImportRecord));
   }
 
   private void createCampaign(
