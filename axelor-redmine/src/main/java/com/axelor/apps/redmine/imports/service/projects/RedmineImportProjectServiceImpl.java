@@ -271,6 +271,10 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       projectRepo.save(project);
       updatedOnMap.put(project.getId(), redmineUpdatedOn);
 
+      if (isAppBusinessSupport) {
+        importProjectVersions(redmineProject.getId(), project);
+      }
+
       // CREATE MAP FOR CHILD-PARENT TASKS
 
       if (redmineProject.getParentId() != null) {
@@ -423,25 +427,20 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       project.setInvoicingSequenceSelect(null);
     }
 
-    if (isAppBusinessSupport) {
-      importProjectVersions(redmineProject, project);
-    }
-
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
   }
 
-  public void importProjectVersions(
-      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+  public void importProjectVersions(Integer redmineProjectId, Project project) {
 
     try {
-      List<Version> redmineVersionList = redmineProjectManager.getVersions(redmineProject.getId());
+      List<Version> redmineVersionList = redmineProjectManager.getVersions(redmineProjectId);
 
       if (CollectionUtils.isNotEmpty(redmineVersionList)) {
 
         for (Version redmineVersion : redmineVersionList) {
           ProjectVersion version = projectVersionRepo.findByRedmineId(redmineVersion.getId());
 
-          if (!redmineProjectVersionIdList.contains(redmineVersion.getId())) {
+          if (version == null || !redmineProjectVersionIdList.contains(redmineVersion.getId())) {
 
             if (version == null) {
               version = new ProjectVersion();
@@ -471,9 +470,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
           }
 
           version.addProjectSetItem(project);
+          projectVersionRepo.save(version);
         }
-      } else {
-        project.clearRoadmapSet();
       }
     } catch (RedmineException e) {
       onError.accept(e);
