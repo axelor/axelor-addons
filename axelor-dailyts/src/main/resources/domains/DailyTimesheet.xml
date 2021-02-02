@@ -14,6 +14,8 @@
 			title="Timesheet Lines" mappedBy="dailyTimesheet" />
 		<integer name="statusSelect" title="Status"
 			selection="daily.timesheet.status.select" />
+		<many-to-one name="timesheet" ref="com.axelor.apps.hr.db.Timesheet"
+			title="Time Sheet" />
 
 		<extra-code><![CDATA[
 			//STATUS SELECT
