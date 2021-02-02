@@ -18,6 +18,7 @@
 package com.axelor.apps.dailyts.service.timesheet;
 
 import com.axelor.apps.hr.db.DailyTimesheet;
+import com.axelor.apps.hr.db.Timesheet;
 
 public interface DailyTimesheetService {
 
@@ -26,4 +27,6 @@ public interface DailyTimesheetService {
   public void updateFromActivities(DailyTimesheet dailyTimesheet);
 
   public void updateFromEvents(DailyTimesheet dailyTimesheet);
+
+  public Timesheet getRelatedTimesheet(DailyTimesheet dailyTimesheet);
 }
