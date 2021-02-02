@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><domain-models xmlns="http://axelor.com/xml/ns/domain-models"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
    <module package="com.axelor.apps.rossum.db" name="rossum"/>
   
@@ -8,16 +8,41 @@
 		<many-to-one name="templateFile" ref="com.axelor.meta.db.MetaFile" title="Template" help="Please upload file with max. 32 pages"/>
 		<integer name="timeout" title="Timeout (Sec.)" default="60" help="Please enter seconds in multiple of 5"/>
 		<string name="name" title="Template Name"/>
-		<string name="rawData" title="Raw Data" large="true"/>
       <string name="exportTypeSelect" title="Export type" selection="rossum.export.type.select" default="csv"/>
       <integer name="invoiceOperationTypeSelect" title="Invoice document Type" selection="iinvoice.operation.type.select"/>
       <integer name="invoiceOperationSubTypeSelect" title="Invoice document Subtype" default="1" selection="iinvoice.operation.sub.type.select"/>
 
+      <string name="orderNumber" title="Order number"/>
+      <string name="invoiceNumber" title="Invoice number"/>
+      <date name="issueDate" title="Issue date"/>
+      <date name="dueDate" title="Due date"/>
       
+      <decimal name="totalAmount" title="Total amount"/>
+      <decimal name="totalWithoutTax" title="Total without tax"/>
+      <decimal name="totalTax" title="Total tax"/>
+
+      <string name="inlineUrl" title="Dms file url"/>
+      <string name="annotaionUrl" title="Annotation url"/>
+
+      <string name="senderName" title="Sender name"/>
+      <string name="vendorVatNumber" title="Vendor VAT number"/>
+      <string name="customerName" title="Customer name"/>
+      <string name="customerVatNumber" title="Customer VAT number"/>
+
+      <many-to-one name="currency" ref="com.axelor.apps.base.db.Currency" title="Currency"/>
+      <many-to-one name="supplier" ref="com.axelor.apps.base.db.Partner" title="Supplier"/>
+      <many-to-one name="company" ref="com.axelor.apps.base.db.Company" title="Company"/>
+
+      <one-to-one name="invoice" ref="com.axelor.apps.account.db.Invoice" title="Invoice"/>
+      <string name="invoiceOcrTemplateId" namecolumn="true" readonly="true" title="Invoice ocr template N°"/>     
+
       <many-to-one name="queue" ref="com.axelor.apps.rossum.db.Queue" title="Queue"/>
-      <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV or XML file"/>
-      <one-to-many name="invoiceFieldList" ref="com.axelor.apps.rossum.db.InvoiceField" title="Invoice fields" mappedBy="invoiceOcrTemplate"/>
-   
+      <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV file"/>
+
+      <boolean name="isInvoiceLineConsolidated" title="Consolidate invoice lines"/>
+      <boolean name="isValidated" title="Validated"/>
+      <boolean name="isCorrected" title="Corrected"/>
+
       <extra-code>
          <![CDATA[
          //Export type select

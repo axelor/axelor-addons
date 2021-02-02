@@ -149,6 +149,7 @@ public class RedmineServiceImpl implements RedmineService {
       customFieldsValidationMap.put(
           "project " + appRedmine.getRedmineProjectInvoicingSequenceSelect(), false);
       customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectAssignedTo(), false);
+      customFieldsValidationMap.put("version " + appRedmine.getRedmineVersionDeliveryDate(), false);
     }
 
     CustomFieldManager customFieldManager = redmineManager.getCustomFieldManager();
@@ -167,7 +168,7 @@ public class RedmineServiceImpl implements RedmineService {
 
     for (Entry<String, Boolean> entry : customFieldsValidationMap.entrySet()) {
 
-      if (entry.getValue().equals(Boolean.FALSE)) {
+      if (!entry.getValue()) {
         String key = entry.getKey();
 
         throw new PersistenceException(

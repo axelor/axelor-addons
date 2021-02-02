@@ -1,7 +1,25 @@
+/*
+ * Axelor Business Solutions
+ *
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ *
+ * This program is free software: you can redistribute it and/or  modify
+ * it under the terms of the GNU Affero General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.axelor.apps.rossum.web;
 
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
+import com.axelor.apps.rossum.service.annotation.AnnotationService;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.service.organisation.OrganisationService;
 import com.axelor.apps.rossum.service.queue.QueueService;
@@ -30,6 +48,7 @@ public class AppRossumController {
       Beans.get(WorkspaceService.class).getWorkspaces(appRossum);
       Beans.get(SchemaService.class).getSchemas(appRossum);
       Beans.get(QueueService.class).getQueues(appRossum);
+      Beans.get(AnnotationService.class).getAnnotations(appRossum);
 
       response.setReload(true);
     } catch (ParseException | IOException | JSONException | AxelorException e) {

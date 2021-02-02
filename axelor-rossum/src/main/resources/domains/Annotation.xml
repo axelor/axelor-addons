@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+
+   <module package="com.axelor.apps.rossum.db" name="rossum" />
+
+   <entity name="Annotation">
+      <string name="statusSelect" selection="rossum.annotation.status.select" readonly="true" title="Status" initParam="true"/>
+      <integer name="annotationId" title="Annotation id" readonly="true" initParam="true"/>
+
+      <string name="annotationUrl" title="Annotation url" readonly="true" initParam="true" namecolumn="true"/>
+      <string name="annotationResult" title="Annotation result" large="true" json="true"/>
+
+      <many-to-one name="queueUrl" ref="com.axelor.apps.rossum.db.Queue" title="Queue" initParam="true"/>
+
+      <finder-method name="findByUrl" using="annotationUrl"/>
+   </entity>
+
+</domain-models>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+
+   <grid model="com.axelor.apps.rossum.db.Annotation" title="Annotations" name="annotation-grid" canNew="false" canDelete="false"
+      groupBy="queueUrl" orderBy="-annotationId">
+      <toolbar>
+         <button onClick="action-rossum-annotation-method-get-annotations" name="getAnnotaionBtn"
+            title="Get annotation from Rossum"/>
+      </toolbar>
+      <field name="annotationUrl"/>
+      <field name="statusSelect"/>
+      <field name="annotationId"/>
+      <field name="queueUrl" hidden="true"/>
+   </grid>
+
+   <form model="com.axelor.apps.rossum.db.Annotation" title="Annotation" name="annotation-form" canNew="false" canDelete="false"
+      canCopy="false" width="large">
+      <menubar>
+         <!-- Kept hidden as proper functionality is not designed -->
+         <menu title="Tools" name="toolsMenu" if="false">
+            <item action="save,action-rossum-annotation-view-open-invoice-ocr-template-wizard" title="Export annotation"
+               showIf="statusSelect == 'confirmed'"/>
+         </menu>
+      </menubar>
+      <panel name="mainPanel" readonly="true">
+         <field name="statusSelect" widget="NavSelect" showTitle="false" colSpan="12"/>
+         <field name="annotationId"/>
+         <field name="annotationUrl"/>
+         <field name="queueUrl"/>
+      </panel>
+      <panel name="jsonDataPanel" title="Json Data">
+         <field name="annotationResult" widget="json-raw" colSpan="12" readonly="true"/>
+      </panel>
+   </form>
+
+   <action-view name="action-rossum-annotation-view-open-invoice-ocr-template-wizard" title="Fill template details"
+      model="com.axelor.apps.base.db.Wizard">
+      <view type="form" name="invoice-ocr-template-wizard-form"/>
+      <view-param name="popup" value="reload"/>
+      <view-param name="show-toolbar" value="false"/>
+      <view-param name="show-confirm" value="false"/>
+      <view-param name="popup-save" value="false"/>
+      <context name="_annotationId" expr="eval: id"/>
+   </action-view>
+
+   <action-method name="action-invoice-ocr-template-wizard-method-export-annotation">
+      <call class="com.axelor.apps.rossum.web.AnnotationController" method="exportAnnotation"/>
+   </action-method>
+
+   <action-method name="action-rossum-annotation-method-get-annotations">
+      <call class="com.axelor.apps.rossum.web.AnnotationController" method="getAnnotations"/>
+   </action-method>
+
+</object-views>

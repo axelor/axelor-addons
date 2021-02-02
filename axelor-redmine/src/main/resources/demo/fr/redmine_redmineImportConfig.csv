@@ -36,3 +36,6 @@ importId;redmineMappingFieldSelect;redmineValue;osValue
 4;Activity;On ticket;On ticket
 4;Activity;On project/Feature;On project/Feature
 4;Activity;A. Technologies;A. Technologies
+5;VersionStatus;open;en cours
+5;VersionStatus;locked;En attente
+5;VersionStatus;closed;En production

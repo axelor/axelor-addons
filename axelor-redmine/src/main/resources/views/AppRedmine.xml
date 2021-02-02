@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
 	<form name="app-redmine-config-form" title="App Redmine"
 		model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false"
@@ -17,7 +17,8 @@
 			<field name="redmineProjectInvoiceable" required="true" />
 			<field name="redmineProjectClientPartner" required="true" />
 			<field name="redmineProjectInvoicingSequenceSelect" required="true" />
-			<field name="redmineProjectAssignedTo" required="true"/>
+			<field name="redmineProjectAssignedTo" required="true" />
+			<field name="redmineVersionDeliveryDate" required="true" />
 			<field name="redmineIssueProduct" required="true" />
 			<field name="redmineIssueDueDate" required="true" />
 			<field name="redmineIssueEstimatedTime" required="true" />

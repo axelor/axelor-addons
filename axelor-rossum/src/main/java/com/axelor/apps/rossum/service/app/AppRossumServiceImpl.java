@@ -1,4 +1,21 @@
 /*
+ * Axelor Business Solutions
+ *
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ *
+ * This program is free software: you can redistribute it and/or  modify
+ * it under the terms of the GNU Affero General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+/*
 // * Axelor Business Solutions
  *
  * Copyright (C) 2019 Axelor (<http://axelor.com>).
@@ -21,6 +38,7 @@ import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.repo.AppRossumRepository;
 import com.axelor.apps.rossum.db.Queue;
+import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
 import com.axelor.apps.rossum.db.repo.OrganisationRepository;
 import com.axelor.apps.rossum.db.repo.QueueRepository;
@@ -31,7 +49,6 @@ import com.axelor.apps.rossum.translation.ITranslation;
 import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.common.StringUtils;
 import com.axelor.db.Query;
-import com.axelor.db.mapper.Mapper;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
@@ -47,7 +64,6 @@ import java.lang.invoke.MethodHandles;
 import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +71,7 @@ import java.util.Map;
 import java.util.Set;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -67,7 +84,6 @@ import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import wslite.json.JSONArray;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
 
@@ -78,6 +94,7 @@ public class AppRossumServiceImpl implements AppRossumService {
   protected WorkspaceRepository workspaceRepo;
   protected QueueRepository queueRepo;
   protected SchemaRepository schemaRepo;
+  protected AnnotationRepository annotationRepo;
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   protected static final String API_URL = "https://api.elis.rossum.ai";
@@ -93,12 +110,14 @@ public class AppRossumServiceImpl implements AppRossumService {
       OrganisationRepository organisationRepo,
       WorkspaceRepository workspaceRepo,
       QueueRepository queueRepo,
-      SchemaRepository schemaRepo) {
+      SchemaRepository schemaRepo,
+      AnnotationRepository annotationRepo) {
     this.appRossumRepository = appRossumRepository;
     this.organisationRepo = organisationRepo;
     this.workspaceRepo = workspaceRepo;
     this.queueRepo = queueRepo;
     this.schemaRepo = schemaRepo;
+    this.annotationRepo = annotationRepo;
   }
 
   @Override
@@ -107,64 +126,21 @@ public class AppRossumServiceImpl implements AppRossumService {
   }
 
   @Override
-  public List<JSONObject> extractInvoiceDataJson(
-      List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
-      throws AxelorException, IOException, InterruptedException, JSONException {
-
-    this.login(getAppRossum());
-
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
-        submitInvoiceAndExtractData(metaFileList, timeout, queue);
-
-    List<JSONObject> filterJSONDataList = new ArrayList<>();
-
-    Set<MetaFile> metaFileSet = metaFileJSONObjectMap.keySet();
-    for (MetaFile metaFile : metaFileSet) {
-      JSONObject jsonData = metaFileJSONObjectMap.get(metaFile);
-      String uri =
-          String.format(
-              "%s" + "%s" + "%s" + "%s" + "%s",
-              jsonData.getString("queue"),
-              "/export?format=",
-              exportTypeSelect,
-              "&id=",
-              jsonData.get("id").toString());
-
-      HttpGet httpGet = new HttpGet(uri);
-      httpGet.addHeader("Authorization", "token " + token);
-      httpGet.addHeader("Accept", ContentType.APPLICATION_JSON.getMimeType());
-
-      response = httpClient.execute(httpGet);
-
-      if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK
-          && response.getEntity() != null) {
-
-        JSONObject resultObject = new JSONObject(EntityUtils.toString(response.getEntity()));
-
-        jsonData = resultObject.getJSONArray("results").getJSONObject(0);
-        filterJSONDataList.add(jsonData);
-      }
-      httpGet.abort();
-    }
-
-    return filterJSONDataList;
-  }
-
-  @Override
-  public Map<MetaFile, File> extractInvoiceDataMetaFile(
+  public Map<MetaFile, Pair<String, File>> extractInvoiceDataMetaFile(
       List<MetaFile> metaFileList, Integer timeout, Queue queue, String exportTypeSelect)
       throws AxelorException, IOException, InterruptedException, JSONException {
     this.login(getAppRossum());
 
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+    Map<MetaFile, Pair<String, JSONObject>> metaFileAnnotationLinkJSONPairMap =
         submitInvoiceAndExtractData(metaFileList, timeout, queue);
 
-    Map<MetaFile, File> metaFileFileMap = new HashMap<>();
+    Map<MetaFile, Pair<String, File>> metaFileAnnotationLinkFilePairMap = new HashMap<>();
 
-    Set<MetaFile> metaFileSet = metaFileJSONObjectMap.keySet();
+    Set<MetaFile> metaFileSet = metaFileAnnotationLinkJSONPairMap.keySet();
 
     for (MetaFile metaFile : metaFileSet) {
-      JSONObject jsonData = metaFileJSONObjectMap.get(metaFile);
+      JSONObject jsonData = metaFileAnnotationLinkJSONPairMap.get(metaFile).getRight();
+
       String uri =
           String.format(
               "%s" + "%s" + "%s" + "%s" + "%s",
@@ -213,14 +189,22 @@ public class AppRossumServiceImpl implements AppRossumService {
         pw.close();
       }
 
-      metaFileFileMap.put(metaFile, file);
+      metaFileAnnotationLinkFilePairMap.put(
+          metaFile, Pair.of(metaFileAnnotationLinkJSONPairMap.get(metaFile).getLeft(), file));
       httpGet.abort();
     }
 
-    return metaFileFileMap;
+    return metaFileAnnotationLinkFilePairMap;
   }
 
-  private Map<MetaFile, JSONObject> submitInvoiceAndExtractData(
+  @Transactional(
+      rollbackOn = {
+        AxelorException.class,
+        IOException.class,
+        JSONException.class,
+        InterruptedException.class
+      })
+  protected Map<MetaFile, Pair<String, JSONObject>> submitInvoiceAndExtractData(
       List<MetaFile> metaFileList, Integer timeout, Queue queue)
       throws AxelorException, IOException, JSONException, InterruptedException {
 
@@ -265,18 +249,18 @@ public class AppRossumServiceImpl implements AppRossumService {
     int sleepMillis = 5000;
     timeout = (int) ((timeout * 1e3) / sleepMillis);
 
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap =
+    Map<MetaFile, Pair<String, JSONObject>> metaFileAnnotationLinkJSONPairMap =
         getDocumentWithStatus(annotationsLinkMetaFileMap, timeout, sleepMillis);
     log.debug("Document successfully processed.");
 
-    return metaFileJSONObjectMap;
+    return metaFileAnnotationLinkJSONPairMap;
   }
 
-  private Map<MetaFile, JSONObject> getDocumentWithStatus(
+  protected Map<MetaFile, Pair<String, JSONObject>> getDocumentWithStatus(
       Map<String, MetaFile> annotationsLinkMetaFileMap, int maxRetries, int sleepMillis)
       throws JSONException, AxelorException, IOException, InterruptedException {
 
-    Map<MetaFile, JSONObject> metaFileJSONObjectMap = new HashMap<>();
+    Map<MetaFile, Pair<String, JSONObject>> metaFileAnnotationLinkJSONPairMap = new HashMap<>();
 
     Map<String, Boolean> annotationsLinkExportedMap = new HashMap<>();
 
@@ -307,28 +291,20 @@ public class AppRossumServiceImpl implements AppRossumService {
               new JSONObject(
                   IOUtils.toString(response.getEntity().getContent(), Charset.defaultCharset()));
 
-          String status = result.getString("status");
-          switch (status) {
-            case "exported":
-              metaFileJSONObjectMap.put(annotationsLinkMetaFileMap.get(annotationsLink), result);
-              annotationsLinkExportedMap.put(annotationsLink, true);
-              break;
-            case "error":
-              log.debug("Result: " + result);
+          String annotationLinkStatus = result.getString("status");
 
-              throw new AxelorException(
-                  TraceBackRepository.CATEGORY_INCONSISTENCY,
-                  I18n.get(IExceptionMessage.DOCUMENT_PROCESS_ERROR),
-                  result.getString("message"));
-            default:
-              log.debug("Result: " + result);
-              break;
+          if (annotationLinkStatus.equals("confirmed") || annotationLinkStatus.equals("exported")) {
+            metaFileAnnotationLinkJSONPairMap.put(
+                annotationsLinkMetaFileMap.get(annotationsLink), Pair.of(annotationsLink, result));
+            annotationsLinkExportedMap.put(annotationsLink, true);
+          } else {
+            log.debug("Result: " + result);
           }
           httpGet.abort();
         }
       }
-      if (metaFileJSONObjectMap.size() == annotationsLinkList.size()) {
-        return metaFileJSONObjectMap;
+      if (metaFileAnnotationLinkJSONPairMap.size() == annotationsLinkList.size()) {
+        return metaFileAnnotationLinkJSONPairMap;
       } else {
         Thread.sleep(sleepMillis);
       }
@@ -359,52 +335,6 @@ public class AppRossumServiceImpl implements AppRossumService {
     httpPost.setEntity(params);
 
     return httpPost;
-  }
-
-  @Override
-  public JSONObject generateUniqueKeyFromJsonData(JSONObject jsonObject) throws JSONException {
-    Integer keyOccurance = 0;
-    Map<String, Object> jsonObjectMap = Mapper.toMap(jsonObject);
-
-    JSONArray fieldsArray = jsonObject.getJSONArray(ITranslation.GET_FIELDS);
-    if (fieldsArray != null) {
-      Map<String, Integer> fieldsArrayKeyMap = new HashMap<>();
-
-      for (int i = 0; i < fieldsArray.length(); i++) {
-        String name = fieldsArray.getJSONObject(i).getString(ITranslation.GET_NAME);
-        if (fieldsArrayKeyMap != null && name != null && fieldsArrayKeyMap.containsKey(name)) {
-          Integer newKeyOccurance = (Integer) fieldsArrayKeyMap.get(name) + 1;
-          fieldsArray.getJSONObject(i).put(ITranslation.GET_NAME, name + "_" + newKeyOccurance);
-          fieldsArrayKeyMap.put(name, newKeyOccurance);
-        } else {
-          fieldsArrayKeyMap.put(name, keyOccurance);
-        }
-      }
-      jsonObjectMap.put(ITranslation.GET_FIELDS, fieldsArray);
-    }
-
-    JSONArray tablesArray = jsonObject.getJSONArray(ITranslation.GET_TABLES);
-    if (tablesArray != null
-        && tablesArray.getJSONObject(0).getJSONArray(ITranslation.GET_COLUMN_TYPES) != null) {
-      JSONArray columnTypesArray =
-          tablesArray.getJSONObject(0).getJSONArray(ITranslation.GET_COLUMN_TYPES);
-      Map<String, Integer> columnTypesArrayKeyMap = new HashMap<>();
-
-      for (Integer i = 0; i < columnTypesArray.length(); i++) {
-        String name = columnTypesArray.getString(i);
-        if (columnTypesArrayKeyMap != null
-            && name != null
-            && columnTypesArrayKeyMap.containsKey(name)) {
-          columnTypesArray.set(i, name + "_" + columnTypesArrayKeyMap.get(name));
-        } else {
-          columnTypesArrayKeyMap.put(name, keyOccurance);
-        }
-      }
-      jsonObjectMap.put(ITranslation.GET_TABLES, tablesArray);
-    }
-
-    jsonObject.putAll(jsonObjectMap);
-    return jsonObject;
   }
 
   @Override
@@ -466,6 +396,7 @@ public class AppRossumServiceImpl implements AppRossumService {
 
     appRossumRepository.save(appRossum);
     Beans.get(InvoiceOcrTemplateRepository.class).all().update("queue", null);
+    annotationRepo.all().remove();
     queueRepo.all().remove();
     schemaRepo.all().remove();
     workspaceRepo.all().remove();

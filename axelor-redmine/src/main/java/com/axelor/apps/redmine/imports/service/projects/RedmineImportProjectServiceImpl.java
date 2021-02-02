@@ -25,11 +25,15 @@ import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.businesssupport.db.ProjectVersion;
+import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.TeamTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
+import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.imports.service.RedmineImportService;
 import com.axelor.apps.redmine.message.IMessage;
@@ -38,6 +42,8 @@ import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.meta.MetaStore;
+import com.axelor.meta.schema.views.Selection.Option;
 import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
@@ -46,14 +52,20 @@ import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.bean.Membership;
 import com.taskadapter.redmineapi.bean.Tracker;
+import com.taskadapter.redmineapi.bean.Version;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +74,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     implements RedmineImportProjectService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
+  protected ProjectVersionRepository projectVersionRepo;
+  protected AppBaseService appBaseService;
 
   @Inject
   public RedmineImportProjectServiceImpl(
@@ -73,7 +87,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       PartnerRepository partnerRepo,
       RedmineImportMappingRepository redmineImportMappingRepository,
       AppRedmineRepository appRedmineRepo,
-      CompanyRepository companyRepo) {
+      CompanyRepository companyRepo,
+      ProjectVersionRepository projectVersionRepo,
+      AppBaseService appBaseService) {
 
     super(
         userRepo,
@@ -85,6 +101,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         appRedmineRepo,
         companyRepo);
     this.redmineImportMappingRepository = redmineImportMappingRepository;
+    this.projectVersionRepo = projectVersionRepo;
+    this.appBaseService = appBaseService;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -95,6 +113,11 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   protected String redmineProjectClientPartner;
   protected String redmineProjectInvoicingSequenceSelect;
   protected String redmineProjectAssignedTo;
+  protected String redmineVersionDeliveryDate;
+
+  protected boolean isAppBusinessSupport;
+
+  protected List<Integer> redmineProjectVersionIdList = new ArrayList<>();
 
   @Override
   @SuppressWarnings("unchecked")
@@ -111,14 +134,17 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
       this.redmineProjectManager = (ProjectManager) paramsMap.get("redmineProjectManager");
       this.fieldMap = new HashMap<>();
+      this.selectionMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
+      isAppBusinessSupport = appBaseService.isApp("business-support");
 
       this.redmineProjectInvoiceable = appRedmine.getRedmineProjectInvoiceable();
       this.redmineProjectClientPartner = appRedmine.getRedmineProjectClientPartner();
       this.redmineProjectInvoicingSequenceSelect =
           appRedmine.getRedmineProjectInvoicingSequenceSelect();
       this.redmineProjectAssignedTo = appRedmine.getRedmineProjectAssignedTo();
+      this.redmineVersionDeliveryDate = appRedmine.getRedmineVersionDeliveryDate();
 
       this.defaultCompanyId = appRedmine.getCompany().getId();
       this.redmineProjectClientPartnerDefault = appRedmine.getRedmineProjectClientPartnerDefault();
@@ -126,13 +152,31 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
           appRedmine.getRedmineProjectInvoicingSequenceSelectDefault();
 
       List<RedmineImportMapping> redmineImportMappingList =
-          redmineImportMappingRepository.all().fetch();
+          redmineImportMappingRepository
+              .all()
+              .filter(
+                  "self.redmineImportConfig.redmineMappingFieldSelect in (?1, ?2)",
+                  RedmineImportConfigRepository.MAPPING_FIELD_PROJECT_TRACKER,
+                  RedmineImportConfigRepository.MAPPING_FIELD_VERSION_STATUS)
+              .fetch();
 
       for (RedmineImportMapping redmineImportMapping : redmineImportMappingList) {
         fieldMap.put(redmineImportMapping.getRedmineValue(), redmineImportMapping.getOsValue());
       }
 
+      ArrayList<Option> selectionList = new ArrayList<>();
+      selectionList.addAll(MetaStore.getSelectionList("support.project.version.status.select"));
+      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
+      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
+
+      for (Option option : selectionList) {
+        selectionMap.put(fr.getString(option.getTitle()), Integer.parseInt(option.getValue()));
+        selectionMap.put(en.getString(option.getTitle()), Integer.parseInt(option.getValue()));
+      }
+
       this.importProjectsFromList(redmineProjectList);
+
+      updateTransaction();
 
       // SET PROJECTS PARENTS
 
@@ -186,17 +230,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
         }
       } finally {
         if (++i % AbstractBatch.FETCH_LIMIT == 0) {
-          JPA.em().getTransaction().commit();
-
-          if (!JPA.em().getTransaction().isActive()) {
-            JPA.em().getTransaction().begin();
-          }
-
-          JPA.clear();
-
-          if (!JPA.em().contains(batch)) {
-            batch = JPA.find(Batch.class, batch.getId());
-          }
+          updateTransaction();
         }
       }
     }
@@ -213,6 +247,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
 
     if (project == null) {
       project = new Project();
+      project.setRedmineId(redmineProject.getId());
+      project.setCode(redmineProject.getIdentifier().toUpperCase());
     } else if (lastBatchUpdatedOn != null
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
             || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
@@ -277,9 +313,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   public void setProjectFields(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
 
-    project.setRedmineId(redmineProject.getId());
     project.setName(redmineProject.getName());
-    project.setCode(redmineProject.getIdentifier());
     project.setDescription(getHtmlFromTextile(redmineProject.getDescription()));
     project.setCompany(companyRepo.find(defaultCompanyId));
 
@@ -389,6 +423,61 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       project.setInvoicingSequenceSelect(null);
     }
 
+    if (isAppBusinessSupport) {
+      importProjectVersions(redmineProject, project);
+    }
+
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
+  }
+
+  public void importProjectVersions(
+      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+
+    try {
+      List<Version> redmineVersionList = redmineProjectManager.getVersions(redmineProject.getId());
+
+      if (CollectionUtils.isNotEmpty(redmineVersionList)) {
+
+        for (Version redmineVersion : redmineVersionList) {
+          ProjectVersion version = projectVersionRepo.findByRedmineId(redmineVersion.getId());
+
+          if (!redmineProjectVersionIdList.contains(redmineVersion.getId())) {
+
+            if (version == null) {
+              version = new ProjectVersion();
+              version.setRedmineId(redmineVersion.getId());
+            }
+
+            version.setStatusSelect(
+                (Integer) selectionMap.get(fieldMap.get(redmineVersion.getStatus())));
+            version.setTitle(redmineVersion.getName());
+            version.setContent(redmineVersion.getDescription());
+            version.setTestingServerDate(
+                redmineVersion.getDueDate() != null
+                    ? redmineVersion
+                        .getDueDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()
+                    : null);
+
+            setRedmineCustomFieldsMap(redmineVersion.getCustomFields());
+
+            String value = redmineCustomFieldsMap.get(redmineVersionDeliveryDate);
+            version.setProductionServerDate(
+                StringUtils.isNotEmpty(value) ? LocalDate.parse(value) : null);
+
+            redmineProjectVersionIdList.add(redmineVersion.getId());
+          }
+
+          version.addProjectSetItem(project);
+        }
+      } else {
+        project.clearRoadmapSet();
+      }
+    } catch (RedmineException e) {
+      onError.accept(e);
+      TraceBackService.trace(e, "", batch.getId());
+    }
   }
 }

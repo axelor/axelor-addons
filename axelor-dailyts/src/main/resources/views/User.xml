@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+
+	<form name="user-form" id="dailyts-user-form" title="User"
+		model="com.axelor.auth.db.User" extension="true">
+
+		<extend
+			target="//panel-tabs[@name='PermisionsPanelTab']/panel-related[@name='projectSetPanel']">
+			<replace>
+				<panel name="projectPanel" title="Projects" showIf="stepStatusSelect == 1"
+					if="__config__.app.isApp('project')">
+					<panel-related name="projectSetPanel" field="projectSet"
+						canEdit="false" form-view="project-form" grid-view="project-grid"
+						colSpan="12" />
+					<panel-related name="favouriteProjectSetPanel" field="favouriteProjectSet"
+						form-view="project-form" grid-view="project-grid"
+						onSelect="action-user-attrs-set-domain-for-favourite-projects" if="__config__.app.isApp('timesheet')"
+						colSpan="12" canNew="false" />
+					<panel-related name="favouriteTaskSetPanel" field="favouriteTaskSet"
+						form-view="team-task-form" grid-view="team-task-grid"
+						onSelect="action-user-attrs-set-domain-for-favourite-tasks" if="__config__.app.isApp('timesheet')"
+						colSpan="12" canNew="false" />
+				</panel>
+			</replace>
+		</extend>
+
+		<extend
+			target="//panel-tabs[@name='mainPanelTab']/panel-related[@name='projectSetPanel']">
+			<replace>
+				<panel name="projectPanel" title="Projects"
+					if="__config__.app.isApp('project')">
+					<panel-related name="projectSetPanel" field="projectSet"
+						canEdit="false" form-view="project-form" grid-view="project-grid"
+						colSpan="12" />
+					<panel-related name="favouriteProjectSetPanel" field="favouriteProjectSet"
+						form-view="project-form" grid-view="project-grid"
+						onSelect="action-user-attrs-set-domain-for-favourite-projects" if="__config__.app.isApp('timesheet')"
+						colSpan="12" canNew="false" />
+					<panel-related name="favouriteTaskSetPanel" field="favouriteTaskSet"
+						form-view="team-task-form" grid-view="team-task-grid"
+						onSelect="action-user-attrs-set-domain-for-favourite-tasks" if="__config__.app.isApp('timesheet')"
+						colSpan="12" canNew="false" />
+				</panel>
+			</replace>
+		</extend>
+
+	</form>
+
+	<action-attrs name="action-user-attrs-set-domain-for-favourite-projects">
+		<attribute name="domain" for="favouriteProjectSet"
+			expr="eval: projectSet &amp;&amp; !projectSet.isEmpty() ? &quot; self.id IN (${(projectSet?.collect{it.id})?.join(',')}) &quot; : &quot; self.id IN (0) &quot;" />
+	</action-attrs>
+
+	<action-attrs name="action-user-attrs-set-domain-for-favourite-tasks">
+		<attribute name="domain" for="favouriteTaskSet"
+			expr="eval: projectSet &amp;&amp; !projectSet.isEmpty() ? &quot; self.project.id IN (${(projectSet?.collect{it.id})?.join(',')}) &quot; : &quot; self.id IN (0) &quot;" />
+	</action-attrs>
+
+</object-views>

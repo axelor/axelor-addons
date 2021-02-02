@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
 	<grid name="redmine-batch-grid" title="Redmine batches"
 		model="com.axelor.apps.redmine.db.RedmineBatch" orderBy="-updatedOn">
@@ -21,6 +21,9 @@
 				onChange="action-base-batch-condition-check-unique-code" />
 			<field name="batchUser" canEdit="false" widget="SuggestBox"
 				form-view="user-form" grid-view="user-grid" />
+			<field name="isImportIssuesWithActivities" widget="boolean-switch"
+				help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
+				showIf="redmineActionSelect == 1" />
 		</panel>
 		<panel-tabs>
 			<panel name="actionPanel" title="Actions">

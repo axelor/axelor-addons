@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.1.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
 	<grid id="redmine-team-task-grid" name="team-task-grid" title="Tasks"
 		model="com.axelor.team.db.TeamTask" extension="true">
@@ -48,6 +48,11 @@
 			<attribute name="widget" value="string"/>
 		</extend>
 
+		<extend target="/">
+			<attribute name="onSave"
+				value="action-team-task-method-update-target-version-progress" />
+		</extend>
+
 	</form>
 
 	<action-view name="action-team-task-dashlet-timesheet-line"
@@ -57,5 +62,10 @@
 		<view-param name="popup" value="true" />
 		<domain>self.teamTask.id = :id</domain>
 	</action-view>
+
+	<action-method name="action-team-task-method-update-target-version-progress">
+		<call class="com.axelor.apps.redmine.web.RedmineTeamTaskController"
+			method="updateTargetVerionProgress" />
+	</action-method>
 
 </object-views>

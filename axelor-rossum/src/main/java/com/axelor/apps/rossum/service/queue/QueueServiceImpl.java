@@ -1,3 +1,20 @@
+/*
+ * Axelor Business Solutions
+ *
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ *
+ * This program is free software: you can redistribute it and/or  modify
+ * it under the terms of the GNU Affero General Public License, version 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package com.axelor.apps.rossum.service.queue;
 
 import com.axelor.apps.base.db.AppRossum;
@@ -61,6 +78,7 @@ public class QueueServiceImpl implements QueueService {
       queueObject.put(
           "automation_enabled",
           queue.getAutomationLevelSelect().equals("never") ? Boolean.FALSE : Boolean.TRUE);
+      queueObject.put("use_confirmed_state", queue.getUseConfirmedState());
       queue.setQueueResult(queueObject.toString());
     }
   }
@@ -111,6 +129,7 @@ public class QueueServiceImpl implements QueueService {
         String workspaceUrl = resultObject.getString("workspace");
         String schemaUrl = resultObject.getString("schema");
         String automationLevelSelect = resultObject.getString("automation_level");
+        Boolean useConfirmedState = resultObject.getBoolean("use_confirmed_state");
 
         Queue queue =
             queueRepo.findByUrl(queueUrl) != null ? queueRepo.findByUrl(queueUrl) : new Queue();
@@ -121,6 +140,7 @@ public class QueueServiceImpl implements QueueService {
         queue.setSchemaUrl(schemaRepo.findByUrl(schemaUrl));
         queue.setQueueResult(resultObject.toString());
         queue.setAutomationLevelSelect(automationLevelSelect);
+        queue.setUseConfirmedState(useConfirmedState);
         queueRepo.save(queue);
       }
     }
@@ -159,6 +179,7 @@ public class QueueServiceImpl implements QueueService {
       String workspaceUrl = resultObject.getString("workspace");
       String schemaUrl = resultObject.getString("schema");
       String automationLevelSelect = resultObject.getString("automation_level");
+      Boolean useConfirmedState = resultObject.getBoolean("use_confirmed_state");
 
       queue.setQueueId(queueId);
       queue.setQueueName(queueName);
@@ -167,6 +188,7 @@ public class QueueServiceImpl implements QueueService {
       queue.setSchemaUrl(schemaRepo.findByUrl(schemaUrl));
       queue.setQueueResult(resultObject.toString());
       queue.setAutomationLevelSelect(automationLevelSelect);
+      queue.setUseConfirmedState(useConfirmedState);
       queueRepo.save(queue);
     }
   }

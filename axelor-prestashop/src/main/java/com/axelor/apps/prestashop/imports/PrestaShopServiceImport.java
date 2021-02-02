@@ -20,6 +20,7 @@ package com.axelor.apps.prestashop.imports;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.AxelorException;
 import java.io.IOException;
 import java.time.ZonedDateTime;
 import javax.xml.bind.JAXBException;
@@ -37,8 +38,9 @@ public interface PrestaShopServiceImport {
    * @throws JAXBException
    * @throws TransformerException
    * @throws JSONException
+   * @throws AxelorException
    */
   void importFromPrestaShop(AppPrestashop appConfig, ZonedDateTime endDate, Batch batch)
       throws IOException, PrestaShopWebserviceException, TransformerException, JAXBException,
-          JSONException;
+          JSONException, AxelorException;
 }

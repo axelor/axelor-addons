@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.0.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
 	<module name="human-resource" package="com.axelor.apps.hr.db" />
 
@@ -11,7 +11,10 @@
 		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
 		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
 		<string name="activityTypeSelect" selection="redmine.timesheetline.activity.type.select" title="Activity Type" />
-		<many-to-one name="durationUnit" ref="com.axelor.apps.base.db.Unit" />
+		<many-to-one name="durationUnit" ref="com.axelor.apps.base.db.Unit" title="Customer unit" />
+		<!-- Change french translation of durationForCustomer -->
+		<decimal name="durationForCustomer" title="Duration adjust for customer" nullable="true"/>
+
 		<finder-method name="findByRedmineId" using="redmineId" />
 
 	</entity>

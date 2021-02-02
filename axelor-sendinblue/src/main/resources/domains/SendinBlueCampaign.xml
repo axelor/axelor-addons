@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.1.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
 	<module name="marketing" package="com.axelor.apps.marketing.db" />
 
@@ -11,12 +11,8 @@
 		<many-to-one name="campaign" ref="com.axelor.apps.marketing.db.Campaign" />
 		<integer name="campaignType" title="Campaign type"
 			selection="marketing.sendinblue.campaign.type" />
-		<one-to-many name="sendinBlueContactStatList"
-			ref="com.axelor.apps.sendinblue.db.SendinBlueContactStat" mappedBy="sendinBlueCampaign"
-			orphanRemoval="true" />
-		<one-to-many name="sendinBlueCampaignStatList"
-			ref="com.axelor.apps.sendinblue.db.SendinBlueCampaignStat" mappedBy="sendinBlueCampaign"
-			orphanRemoval="true" />
+		<one-to-many name="sendinBlueContactStatList" ref="com.axelor.apps.sendinblue.db.SendinBlueContactStat" mappedBy="sendinBlueCampaign"/>
+		<one-to-many name="sendinBlueCampaignStatList" ref="com.axelor.apps.sendinblue.db.SendinBlueCampaignStat" mappedBy="sendinBlueCampaign"/>
 
 		<finder-method name="findBySendinBlueId" using="sendinBlueId" />
 

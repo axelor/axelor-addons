@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2019 Axelor (<http://axelor.com>).
+ * Copyright (C) 2020 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -21,8 +21,8 @@ import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.exception.AxelorException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import wslite.json.JSONException;
-import wslite.json.JSONObject;
 
 public interface InvoiceOcrTemplateService {
 
@@ -38,16 +38,19 @@ public interface InvoiceOcrTemplateService {
   public void createTemplate(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, InterruptedException, JSONException;
 
-  /**
-   * Filter data from JSON object extracted using API
-   *
-   * @param invoiceResult
-   * @param invoiceOcrTemplate
-   * @throws IOException
-   * @throws JSONException
-   */
-  public void filterInvoiceData(JSONObject invoiceResult, InvoiceOcrTemplate invoiceOcrTemplate)
-      throws IOException, JSONException;
+  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws IOException, AxelorException;
 
-  public Invoice generateInvoiceFromCSV(InvoiceOcrTemplate invoiceOcrTemplate) throws IOException;
+  public InvoiceOcrTemplate setInvoiceOcrTemplateSeq(InvoiceOcrTemplate invoiceOcrTemplate);
+
+  public String getDocumentUrl(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws AxelorException, URISyntaxException, IOException, JSONException;
+
+  public void fetchUpdatedDetails(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws AxelorException, IOException, JSONException;
+
+  public void validateRossumData(InvoiceOcrTemplate invoiceOcrTemplate)
+      throws AxelorException, IOException, JSONException;
+
+  public void recogniseData(InvoiceOcrTemplate invoiceOcrTemplate);
 }
