@@ -512,7 +512,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
               projectVersionRepository.findByRedmineId(targetVersion.getId());
           teamTask.setTargetVersion(projectVersion);
 
-          if (!projectVersionIdList.contains(projectVersion.getId())) {
+          if (projectVersion != null && !projectVersionIdList.contains(projectVersion.getId())) {
             projectVersionIdList.add(projectVersion.getId());
           }
         } else {

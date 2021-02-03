@@ -27,6 +27,8 @@
 		<field name="toInvoice" if-module="axelor-business-project"
 			if="__config__.app.isApp('business-project')" />
 		<field name="comments" />
+		<field name="timesheet" hidden="true" />
+		<field name="user" hidden="true" />
 
 	</grid>
 
@@ -37,6 +39,7 @@
 			expr="eval: __parent__?.dailyTimesheetUser" />
 		<attribute name="value" for="product"
 			expr="eval: __parent__?.dailyTimesheetUser?.employee?.product" />
+		<attribute name="value" for="timesheet" expr="eval: __parent__?.timesheet" />
 	</action-attrs>
 
 	<action-attrs

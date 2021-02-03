@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.dailyts.service.batch;
 
+import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.HrBatch;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
@@ -32,6 +33,7 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
 
   @Inject UserRepository userRepository;
   @Inject DailyTimesheetRepository dailyTimesheetRepository;
+  @Inject DailyTimesheetService dailyTimesheetService;
 
   @Override
   @Transactional
@@ -55,6 +57,7 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
         DailyTimesheet dailyTimesheet = new DailyTimesheet();
         dailyTimesheet.setDailyTimesheetDate(dailyTsDate);
         dailyTimesheet.setDailyTimesheetUser(dailyTsUser);
+        dailyTimesheet.setTimesheet(dailyTimesheetService.getRelatedTimesheet(dailyTimesheet));
         dailyTimesheetRepository.save(dailyTimesheet);
         incrementDone();
       }
