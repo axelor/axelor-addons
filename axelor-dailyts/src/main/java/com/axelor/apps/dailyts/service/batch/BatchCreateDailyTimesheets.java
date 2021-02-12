@@ -43,6 +43,10 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
     Set<User> dailyTsUserSet = hrBatch.getDailyTsUserSet();
     LocalDate dailyTsDate = hrBatch.getDailyTsDate();
 
+    if (dailyTsDate == null) {
+      dailyTsDate = appBaseService.getTodayDate(null);
+    }
+
     for (User dailyTsUser : dailyTsUserSet) {
       long count =
           dailyTimesheetRepository

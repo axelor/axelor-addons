@@ -10,7 +10,7 @@
 			<insert position="before">
 				<panel name="dailyTimesheetCreatePanel" title="Create daily timesheets"
 					showIf="actionSelect == 8">
-					<field name="dailyTsDate" requiredIf="actionSelect == 8" />
+					<field name="dailyTsDate" />
 					<field name="dailyTsUserSet" colSpan="12" widget="TagSelect"
 						canNew="false" form-view="user-form" grid-view="user-grid" />
 					<button name="createDailyTimesheetBtn" title="Create daily timesheets"
