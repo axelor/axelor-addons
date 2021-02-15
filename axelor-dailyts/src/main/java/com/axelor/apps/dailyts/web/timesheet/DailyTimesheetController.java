@@ -50,7 +50,7 @@ public class DailyTimesheetController {
         && dailyTimesheet.getDailyTimesheetUser() != null) {
       Beans.get(DailyTimesheetService.class).updateFromTimesheets(dailyTimesheet);
       response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
-      response.setValue("timesheet", dailyTimesheet.getTimesheet());
+      response.setValue("dailyTotal", dailyTimesheet.getDailyTotal());
     }
   }
 
@@ -124,5 +124,12 @@ public class DailyTimesheetController {
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     }
+  }
+
+  public void computeDailyTotal(ActionRequest request, ActionResponse response) {
+
+    DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+    response.setValue(
+        "dailyTotal", Beans.get(DailyTimesheetService.class).computeDailyTotal(dailyTimesheet));
   }
 }

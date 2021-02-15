@@ -16,6 +16,7 @@
 			selection="daily.timesheet.status.select" />
 		<many-to-one name="timesheet" ref="com.axelor.apps.hr.db.Timesheet"
 			title="Time Sheet" />
+		<decimal name="dailyTotal" title="Daily total" />
 
 		<extra-code><![CDATA[
 			//STATUS SELECT
