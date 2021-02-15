@@ -14,11 +14,11 @@
 		<many-to-many name="leadFieldSet" ref="com.axelor.meta.db.MetaField"
 			title="Lead fields" />
 
-		<boolean name="isContactExport" title="Export contact" />
+		<boolean name="isContactExport" title="Export contact" help="If this option is activated, then data related to Partner and Lead will be exported during export operation."/>
 		<boolean name="isTemplateExport" title="Export template" />
 		<boolean name="isCampaignExport" title="Export campaign" />
 
-		<boolean name="isContactImport" title="Import contact" />
+		<boolean name="isContactImport" title="Import contact" help="If this option is activated, then data related to Partner and Lead will be imported during import operation."/>
 		<boolean name="isTemplateImport" title="Import template" />
 		<boolean name="isCampaignImport" title="Import campaign" />
 
