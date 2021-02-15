@@ -29,6 +29,7 @@
 			<panel-dashlet action="action-daily-timesheet-dashlet-events"
 				name="eventPanel" title="Events" colSpan="12" />
 			<panel-related field="dailyTimesheetLineList" name="dailyTimesheetLineListPanel"
+				onChange="action-daily-timesheet-method-compute-daily-total"
 				grid-view="timesheet-line-daily-timesheet-grid" form-view="timesheet-line-timesheet-form"
 				editable="true" colSpan="12" readonlyIf="statusSelect == 1" />
 		</panel>
@@ -43,6 +44,9 @@
 			<button name="createLinesFromEventsBtn" title="Create lines from events"
 				onClick="save,action-daily-timesheet-method-update-from-events"
 				showIf="statusSelect == 0" />
+		</panel>
+		<panel name="totalPanel" sidebar="true">
+			<field name="dailyTotal" readonly="true" />
 		</panel>
 
 	</form>
@@ -95,5 +99,22 @@
 		<view type="form" name="calendar-event-form" />
 		<domain>(self.user = :dailyTimesheetUser or self.organizer.user = :dailyTimesheetUser or self.attendees.user in (:dailyTimesheetUser)) and date(self.startDateTime) &lt;= :dailyTimesheetDate and date(self.endDateTime) &gt;= :dailyTimesheetDate</domain>
 	</action-view>
+
+	<action-method name="action-daily-timesheet-method-compute-daily-total">
+		<call class="com.axelor.apps.dailyts.web.timesheet.DailyTimesheetController"
+			method="computeDailyTotal" />
+	</action-method>
+
+	<!-- Set duration label when view is open from daily timesheet -->
+	<action-attrs
+		id="dailyts-action-timesheet-line-attrs-set-visible-duration-title"
+		name="action-timesheet-line-attrs-set-visible-duration-title">
+		<attribute name="title" for="durationLabel"
+			expr="eval: __parent__?.timeLoggingPreferenceSelect == 'days' ? com.axelor.i18n.I18n.get('Days') : __parent__?.timeLoggingPreferenceSelect == 'minutes' ? com.axelor.i18n.I18n.get('Minutes') : com.axelor.i18n.I18n.get('Hours')"
+			if="__parent__?._model == 'com.axelor.apps.hr.db.Timesheet'" />
+		<attribute name="title" for="durationLabel"
+			expr="eval: __parent__?.timesheet?.timeLoggingPreferenceSelect == 'days' ? com.axelor.i18n.I18n.get('Days') : __parent__?.timesheet?.timeLoggingPreferenceSelect == 'minutes' ? com.axelor.i18n.I18n.get('Minutes') : com.axelor.i18n.I18n.get('Hours')"
+			if="__parent__?._model == 'com.axelor.apps.hr.db.DailyTimesheet'" />
+	</action-attrs>
 
 </object-views>

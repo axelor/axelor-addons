@@ -101,6 +101,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
       computeTimesheetPeriodTotal(timesheet);
     }
+
+    dailyTimesheet.setDailyTotal(computeDailyTotal(dailyTimesheet));
   }
 
   @Override
@@ -302,5 +304,20 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     timesheet.setPeriodTotal(timesheetService.computePeriodTotal(timesheet));
     timesheetRepository.save(timesheet);
+  }
+
+  @Override
+  public BigDecimal computeDailyTotal(DailyTimesheet dailyTimesheet) {
+
+    List<TimesheetLine> dailyTimesheetLineList = dailyTimesheet.getDailyTimesheetLineList();
+
+    if (CollectionUtils.isNotEmpty(dailyTimesheetLineList)) {
+
+      return dailyTimesheetLineList.stream()
+          .map(dt -> dt.getHoursDuration())
+          .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    return BigDecimal.ZERO;
   }
 }
