@@ -161,7 +161,8 @@ public class SendinBlueContactService {
         logWriter.append(
             String.format(
                 "%n%s : %s",
-                I18n.get(ITranslation.EXPORT_CONTACT), metaModel.getFullName(), totalExportRecord));
+                String.format(I18n.get(ITranslation.EXPORT_CONTACT), metaModel.getFullName()),
+                totalExportRecord));
       }
     }
   }

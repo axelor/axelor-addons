@@ -1,4 +1,5 @@
 "key","message","comment","context"
+"'No update' is selected to true then only the data entries which are newly created after the last Export will be Exported",,,
 "Admin unsubscription",,,
 "Aggregate Statistics deleted successfully",,,
 "Api Key",,,
@@ -52,7 +53,6 @@
 "Import contact",,,
 "Import datetime",,,
 "Import latest data",,,
-"Import latest",,,
 "Import log",,,
 "Import template",,,
 "Invalid",,,
@@ -131,6 +131,7 @@
 "User",,,
 "User unsubscription",,,
 "Viewed",,,
+"When 'Export latest' is selected to true then only the data which is created after last Export will be Exported",,,
 "When 'Import latest' is selected to true then only the data which is uploaded after last import will be Imported.",,,
 "When 'No update' option is activated, then only the data entries which are newly created after the last import will be imported",,,
 "isLead",,,
