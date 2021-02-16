@@ -9,6 +9,7 @@
 		<field name="dailyTimesheetDate" />
 		<field name="dailyTimesheetUser" />
 		<field name="statusSelect" />
+		<field name="dailyTotal" />
 
 	</grid>
 
