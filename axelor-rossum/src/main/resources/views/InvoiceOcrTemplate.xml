@@ -8,7 +8,7 @@
       <field name="invoiceOcrTemplateId"/>
 	</grid>
   
-	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice Ocr Template" name="invoice-ocr-template-form"
+	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice ocr template" name="invoice-ocr-template-form"
 	  width="large" onLoad="action-invoice-ocr-template-group-onload" onNew="action-invoice-ocr-template-record-onnew"
 	  readonlyIf="invoice">
 		<panel name="namePanel">
