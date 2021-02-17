@@ -17,12 +17,12 @@
  */
 package com.axelor.apps.dailyts.db.repo;
 
+import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.meta.db.repo.MetaJsonModelRepository;
-import com.axelor.team.db.TeamTask;
 import com.axelor.text.GroovyTemplates;
 import com.axelor.text.Template;
 import com.axelor.text.Templates;
@@ -39,7 +39,8 @@ public class MailMessageDailytsRepository extends MailMessageRepository {
 
     message = super.save(message);
 
-    if (message.getRelatedModel().equals(TeamTask.class.getName()) && message.getAuthor() != null) {
+    if (message.getRelatedModel().equals(ProjectTask.class.getName())
+        && message.getAuthor() != null) {
       message.setMessageContentHtml(getHtmlContent(message));
     }
 

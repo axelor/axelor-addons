@@ -1,0 +1,13 @@
+"importId";"sequence";"name";"isDefaultCompleted";"isCompleted";relatedToSelect
+5;1;"New";"false";"false";2
+6;2;"In progress";"false";"false";2
+7;10;"Done";"true";"true";2
+8;11;"Canceled";"false";"true";2
+9;6;"Resolved";"false";"false";2
+10;3;"Feedback";"false";"false";2
+11;4;"Tested";"false";"true";2
+12;5;"Deployment";"false";"false";2
+13;7;"Rejected";"false";"true";2
+14;8;"Réalisé, non livré";"false";"false";2
+15;9;"Réalisé, livré";"false";"false";2
+16;12;"En attente";"false";"false";2

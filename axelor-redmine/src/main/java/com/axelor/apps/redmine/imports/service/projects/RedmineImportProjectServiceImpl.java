@@ -29,9 +29,14 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.TeamTaskCategory;
+import com.axelor.apps.project.db.ProjectPriority;
+import com.axelor.apps.project.db.ProjectStatus;
+import com.axelor.apps.project.db.ProjectTaskCategory;
+import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectStatusRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
@@ -44,7 +49,6 @@ import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -76,26 +80,30 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
   protected RedmineImportMappingRepository redmineImportMappingRepository;
   protected ProjectVersionRepository projectVersionRepo;
   protected AppBaseService appBaseService;
+  protected ProjectStatusRepository projectStatusRepo;
+  protected ProjectPriorityRepository projectPriorityRepo;
 
   @Inject
   public RedmineImportProjectServiceImpl(
       UserRepository userRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
-      TeamTaskRepository teamTaskRepo,
-      TeamTaskCategoryRepository projectCategoryRepo,
+      ProjectTaskRepository projectTaskRepo,
+      ProjectTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       RedmineImportMappingRepository redmineImportMappingRepository,
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo,
       ProjectVersionRepository projectVersionRepo,
-      AppBaseService appBaseService) {
+      AppBaseService appBaseService,
+      ProjectPriorityRepository projectPriorityRepo,
+      ProjectStatusRepository projectStatusRepo) {
 
     super(
         userRepo,
         projectRepo,
         productRepo,
-        teamTaskRepo,
+        projectTaskRepo,
         projectCategoryRepo,
         partnerRepo,
         appRedmineRepo,
@@ -103,6 +111,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.projectVersionRepo = projectVersionRepo;
     this.appBaseService = appBaseService;
+    this.projectStatusRepo = projectStatusRepo;
+    this.projectPriorityRepo = projectPriorityRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -249,6 +259,25 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       project = new Project();
       project.setRedmineId(redmineProject.getId());
       project.setCode(redmineProject.getIdentifier().toUpperCase());
+
+      List<ProjectStatus> projectStatuses =
+          projectStatusRepo
+              .all()
+              .filter("self.relatedToSelect = ?1", ProjectStatusRepository.PROJECT_STATUS_TASK)
+              .fetch();
+      if (projectStatuses != null && !projectStatuses.isEmpty()) {
+        for (ProjectStatus projectStatus : projectStatuses) {
+          project.addProjectTaskStatusSetItem(projectStatus);
+        }
+      }
+
+      List<ProjectPriority> projectPriorities = projectPriorityRepo.all().fetch();
+      if (projectPriorities != null && !projectPriorities.isEmpty()) {
+        for (ProjectPriority projectPriority : projectPriorities) {
+          project.addProjectTaskPrioritySetItem(projectPriority);
+        }
+      }
+
     } else if (lastBatchUpdatedOn != null
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
             || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
@@ -350,11 +379,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
       project.setClientPartner(null);
     }
 
-    project.setProjectTypeSelect(
-        redmineProject.getParentId() != null
-            ? ProjectRepository.TYPE_PHASE
-            : ProjectRepository.TYPE_PROJECT);
-
     try {
       List<Membership> redmineProjectMembers =
           redmineProjectManager.getProjectMembers(redmineProject.getId());
@@ -380,20 +404,27 @@ public class RedmineImportProjectServiceImpl extends RedmineImportService
     if (redmineTrackers != null && !redmineTrackers.isEmpty()) {
 
       for (Tracker tracker : redmineTrackers) {
-        TeamTaskCategory projectCategory =
+        ProjectTaskCategory projectCategory =
             projectCategoryRepo.findByName(fieldMap.get(tracker.getName()));
 
         if (projectCategory != null) {
-          project.addTeamTaskCategorySetItem(projectCategory);
+          project.addProjectTaskCategorySetItem(projectCategory);
         }
       }
     } else {
-      project.clearTeamTaskCategorySet();
+      project.clearProjectTaskCategorySet();
     }
 
-    if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
-      project.setStatusSelect(ProjectRepository.STATE_FINISHED);
-    }
+    project.setProjectStatus(
+        projectStatusRepo
+            .all()
+            .filter(
+                redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)
+                    ? "self.relatedToSelect = ?1 and self.isDefaultCompleted = true"
+                    : "self.relatedToSelect = ?1",
+                ProjectStatusRepository.PROJECT_STATUS_PROJECT)
+            .order("sequence")
+            .fetchOne());
 
     // ERROR AND IMPORT IF INVOICING TYPE NOT FOUND
 

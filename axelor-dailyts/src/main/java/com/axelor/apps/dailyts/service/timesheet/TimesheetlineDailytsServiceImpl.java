@@ -23,17 +23,16 @@ import com.axelor.apps.businessproject.service.app.AppBusinessProjectService;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
-import com.axelor.apps.hr.db.repo.TimesheetHRRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.auth.db.User;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
 import java.lang.invoke.MethodHandles;
 import java.math.BigDecimal;
@@ -46,19 +45,17 @@ public class TimesheetlineDailytsServiceImpl extends TimesheetLineProjectService
   @Inject
   public TimesheetlineDailytsServiceImpl(
       TimesheetService timesheetService,
-      TimesheetHRRepository timesheetHRRepository,
-      TimesheetRepository timesheetRepository,
+      TimesheetRepository timesheetRepo,
       EmployeeRepository employeeRepository,
       ProjectRepository projectRepo,
-      TeamTaskRepository teamTaskaRepo,
+      ProjectTaskRepository projectTaskaRepo,
       TimesheetLineRepository timesheetLineRepo) {
     super(
         timesheetService,
-        timesheetHRRepository,
-        timesheetRepository,
+        timesheetRepo,
         employeeRepository,
         projectRepo,
-        teamTaskaRepo,
+        projectTaskaRepo,
         timesheetLineRepo);
   }
 

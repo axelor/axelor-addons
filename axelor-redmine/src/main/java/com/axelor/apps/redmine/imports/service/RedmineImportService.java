@@ -23,13 +23,13 @@ import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.IssueManager;
@@ -57,8 +57,8 @@ public class RedmineImportService {
   protected UserRepository userRepo;
   protected ProjectRepository projectRepo;
   protected ProductRepository productRepo;
-  protected TeamTaskRepository teamTaskRepo;
-  protected TeamTaskCategoryRepository projectCategoryRepo;
+  protected ProjectTaskRepository projectTaskRepo;
+  protected ProjectTaskCategoryRepository projectCategoryRepo;
   protected PartnerRepository partnerRepo;
   protected AppRedmineRepository appRedmineRepo;
   protected CompanyRepository companyRepo;
@@ -68,8 +68,8 @@ public class RedmineImportService {
       UserRepository userRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
-      TeamTaskRepository teamTaskRepo,
-      TeamTaskCategoryRepository projectCategoryRepo,
+      ProjectTaskRepository projectTaskRepo,
+      ProjectTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo) {
@@ -77,7 +77,7 @@ public class RedmineImportService {
     this.userRepo = userRepo;
     this.projectRepo = projectRepo;
     this.productRepo = productRepo;
-    this.teamTaskRepo = teamTaskRepo;
+    this.projectTaskRepo = projectTaskRepo;
     this.projectCategoryRepo = projectCategoryRepo;
     this.partnerRepo = partnerRepo;
     this.appRedmineRepo = appRedmineRepo;

@@ -3,8 +3,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<grid id="redmine-team-task-grid" name="team-task-grid" title="Tasks"
-		model="com.axelor.team.db.TeamTask" extension="true">
+	<grid id="redmine-project-task-grid" name="project-task-grid" title="Tasks"
+		model="com.axelor.apps.project.db.ProjectTask" extension="true">
 
 		<extend target="//field[@name='targetVersion']">
 			<insert position="after">
@@ -14,8 +14,8 @@
 
 	</grid>
 
-	<form id="redmine-team-task-form" name="team-task-form" title="Task"
-		model="com.axelor.team.db.TeamTask" extension="true">
+	<form id="redmine-project-task-form" name="project-task-form" title="Task"
+		model="com.axelor.apps.project.db.ProjectTask" extension="true">
 
 		<extend target="panel-tabs[@name='mainPanelTab']/*[last()]">
 			<insert position="after">
@@ -60,11 +60,11 @@
 		<view type="grid" name="timesheet-line-grid" />
 		<view type="form" name="timesheet-line-timesheet-form" />
 		<view-param name="popup" value="true" />
-		<domain>self.teamTask.id = :id</domain>
+		<domain>self.projectTask.id = :id</domain>
 	</action-view>
 
 	<action-method name="action-team-task-method-update-target-version-progress">
-		<call class="com.axelor.apps.redmine.web.RedmineTeamTaskController"
+		<call class="com.axelor.apps.redmine.web.RedmineProjectTaskController"
 			method="updateTargetVerionProgress" />
 	</action-method>
 

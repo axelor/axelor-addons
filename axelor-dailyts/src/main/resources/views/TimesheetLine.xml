@@ -5,13 +5,13 @@
 
 	<grid name="timesheet-line-daily-timesheet-grid" title="Daily timesheet lines"
 		model="com.axelor.apps.hr.db.TimesheetLine" editable="true"
-		onNew="action-timesheet-line-attrs-set-default-onnew" orderBy="-teamTask.id">
+		onNew="action-timesheet-line-attrs-set-default-onnew" orderBy="-projectTask.id">
 
 		<field name="project" required="true" form-view="project-form"
 			grid-view="project-grid" onChange="action-timesheet-line-group-project-onchange"
 			onSelect="action-timesheet-line-attrs-domain-project" />
-		<field name="teamTask" form-view="team-task-form" grid-view="team-task-grid"
-			onSelect="action-timesheet-line-attrs-domain-team-task"
+		<field name="projectTask" form-view="project-task-form" grid-view="project-task-grid"
+			onSelect="action-timesheet-line-attrs-domain-project-task"
 			onChange="action-timesheet-line-method-set-default-to-invoice,action-timesheet-line-attrs-set-default-activity-type" />
 		<field name="date" hidden="true" />
 		<field name="product" requiredIf="toInvoice" widget="SuggestBox"
@@ -49,7 +49,7 @@
 
 	<action-attrs name="action-timesheet-line-attrs-set-default-activity-type">
 		<attribute name="value" for="activityTypeSelect"
-			expr="eval: teamTask != null ? __repo__(TimesheetLine).ACTIVITY_TYPE_ON_TICKET : null" />
+			expr="eval: projectTask != null ? __repo__(TimesheetLine).ACTIVITY_TYPE_ON_TICKET : null" />
 	</action-attrs>
 
 </object-views>
