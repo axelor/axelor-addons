@@ -86,7 +86,7 @@
 		title="Tasks activities" model="com.axelor.mail.db.MailMessage">
 		<view type="grid" name="daily-timesheet-activity-grid" />
 		<view type="form" name="daily-timesheet-activity-form" />
-		<domain>self.author = :dailyTimesheetUser and self.relatedModel = 'com.axelor.team.db.TeamTask' and date(self.createdOn) = :dailyTimesheetDate</domain>
+		<domain>self.author = :dailyTimesheetUser and self.relatedModel = 'com.axelor.apps.project.db.ProjectTask' and date(self.createdOn) = :dailyTimesheetDate</domain>
 	</action-view>
 
 	<action-view name="action-daily-timesheet-dashlet-events"

@@ -10,13 +10,13 @@
 		<many-to-one name="redmineBatch"
 			ref="com.axelor.apps.redmine.db.RedmineBatch" />
 
-		<many-to-many name="updatedTasksInOs" ref="com.axelor.team.db.TeamTask"
+		<many-to-many name="updatedTasksInOs" ref="com.axelor.apps.project.db.ProjectTask"
 			mappedBy="updatedBatchSet" />
 		<many-to-many name="createdProjectsInOs" ref="com.axelor.apps.project.db.Project"
 			mappedBy="createdBatchSet" />
 		<many-to-many name="createdTimesheetLinesInOs" ref="com.axelor.apps.hr.db.TimesheetLine"
 			mappedBy="createdBatchSet" />
-		<many-to-many name="createdTasksInOs" ref="com.axelor.team.db.TeamTask"
+		<many-to-many name="createdTasksInOs" ref="com.axelor.apps.project.db.ProjectTask"
 			mappedBy="createdBatchSet" />
 		<many-to-many name="updatedProjectsInOs" ref="com.axelor.apps.project.db.Project"
 			mappedBy="updatedBatchSet" />

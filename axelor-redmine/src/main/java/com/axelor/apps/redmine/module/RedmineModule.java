@@ -19,9 +19,9 @@ package com.axelor.apps.redmine.module;
 
 import com.axelor.app.AxelorModule;
 import com.axelor.apps.businessproduction.service.TimesheetBusinessProductionServiceImpl;
-import com.axelor.apps.businesssupport.db.repo.TeamTaskBusinessSupportRepository;
-import com.axelor.apps.businesssupport.service.TeamTaskBusinessSupportServiceImpl;
-import com.axelor.apps.redmine.db.repo.TeamTaskRedmineRepositiry;
+import com.axelor.apps.businesssupport.db.repo.ProjectTaskBusinessSupportRepository;
+import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
+import com.axelor.apps.redmine.db.repo.ProjectTaskRedmineRepositiry;
 import com.axelor.apps.redmine.imports.service.RedmineIssueService;
 import com.axelor.apps.redmine.imports.service.RedmineIssueServiceImpl;
 import com.axelor.apps.redmine.imports.service.RedmineProjectService;
@@ -32,10 +32,10 @@ import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentServ
 import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentServiceImpl;
 import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectService;
 import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectServiceImpl;
+import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
+import com.axelor.apps.redmine.service.ProjectTaskRedmineServiceImpl;
 import com.axelor.apps.redmine.service.RedmineService;
 import com.axelor.apps.redmine.service.RedmineServiceImpl;
-import com.axelor.apps.redmine.service.TeamTaskRedmineService;
-import com.axelor.apps.redmine.service.TeamTaskRedmineServiceImpl;
 import com.axelor.apps.redmine.service.TimesheetRedmineServiceImpl;
 
 public class RedmineModule extends AxelorModule {
@@ -49,9 +49,9 @@ public class RedmineModule extends AxelorModule {
     bind(RedmineImportProjectService.class).to(RedmineImportProjectServiceImpl.class);
     bind(RedmineImportIssueService.class).to(RedmineImportIssueServiceImpl.class);
     bind(RedmineImportTimeSpentService.class).to(RedmineImportTimeSpentServiceImpl.class);
-    bind(TeamTaskBusinessSupportRepository.class).to(TeamTaskRedmineRepositiry.class);
+    bind(ProjectTaskBusinessSupportRepository.class).to(ProjectTaskRedmineRepositiry.class);
     bind(TimesheetBusinessProductionServiceImpl.class).to(TimesheetRedmineServiceImpl.class);
-    bind(TeamTaskBusinessSupportServiceImpl.class).to(TeamTaskRedmineServiceImpl.class);
-    bind(TeamTaskRedmineService.class).to(TeamTaskRedmineServiceImpl.class);
+    bind(ProjectTaskRedmineService.class).to(ProjectTaskRedmineServiceImpl.class);
+    bind(ProjectTaskBusinessSupportServiceImpl.class).to(ProjectTaskRedmineServiceImpl.class);
   }
 }

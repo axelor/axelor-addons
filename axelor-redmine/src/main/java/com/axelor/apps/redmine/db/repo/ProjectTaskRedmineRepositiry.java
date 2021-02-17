@@ -18,35 +18,35 @@
 package com.axelor.apps.redmine.db.repo;
 
 import com.axelor.apps.businesssupport.db.ProjectVersion;
-import com.axelor.apps.businesssupport.db.repo.TeamTaskBusinessSupportRepository;
-import com.axelor.apps.redmine.service.TeamTaskRedmineService;
+import com.axelor.apps.businesssupport.db.repo.ProjectTaskBusinessSupportRepository;
+import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
 import com.axelor.inject.Beans;
-import com.axelor.team.db.TeamTask;
 
-public class TeamTaskRedmineRepositiry extends TeamTaskBusinessSupportRepository {
+public class ProjectTaskRedmineRepositiry extends ProjectTaskBusinessSupportRepository {
 
   @Override
-  public TeamTask save(TeamTask teamTask) {
+  public ProjectTask save(ProjectTask projectTask) {
 
-    super.save(teamTask);
+    super.save(projectTask);
 
-    if (teamTask.getRedmineId() != 0) {
-      teamTask.setFullName(teamTask.getName());
+    if (projectTask.getRedmineId() != 0) {
+      projectTask.setFullName(projectTask.getName());
     }
 
-    return teamTask;
+    return projectTask;
   }
 
   @Override
-  public void remove(TeamTask teamTask) {
+  public void remove(ProjectTask projectTask) {
 
-    ProjectVersion targetVersion = teamTask.getTargetVersion();
+    ProjectVersion targetVersion = projectTask.getTargetVersion();
 
-    super.remove(teamTask);
+    super.remove(projectTask);
 
     if (targetVersion != null) {
-      Beans.get(TeamTaskRedmineService.class)
-          .updateTargetVerionProgress(targetVersion, teamTask, false);
+      Beans.get(ProjectTaskRedmineService.class)
+          .updateTargetVerionProgress(targetVersion, projectTask, false);
     }
   }
 }

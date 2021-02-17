@@ -15,22 +15,17 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.web;
+package com.axelor.apps.redmine.service;
 
-import com.axelor.apps.base.service.app.AppBaseService;
-import com.axelor.apps.redmine.service.TeamTaskRedmineService;
-import com.axelor.inject.Beans;
-import com.axelor.rpc.ActionRequest;
-import com.axelor.rpc.ActionResponse;
-import com.axelor.team.db.TeamTask;
+import com.axelor.apps.businesssupport.db.ProjectVersion;
+import com.axelor.apps.project.db.ProjectTask;
 
-public class RedmineTeamTaskController {
+public interface ProjectTaskRedmineService {
 
-  public void updateTargetVerionProgress(ActionRequest request, ActionResponse response) {
+  public void updateTargetVerionProgress(ProjectTask projectTask);
 
-    if (Beans.get(AppBaseService.class).isApp("business-support")) {
-      TeamTask teamTask = request.getContext().asType(TeamTask.class);
-      Beans.get(TeamTaskRedmineService.class).updateTargetVerionProgress(teamTask);
-    }
-  }
+  public void updateTargetVerionProgress(
+      ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd);
+
+  public void updateProjectVersionProgress(ProjectVersion projectVersion);
 }

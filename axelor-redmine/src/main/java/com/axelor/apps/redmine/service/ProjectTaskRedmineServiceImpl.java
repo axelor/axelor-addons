@@ -19,84 +19,91 @@ package com.axelor.apps.redmine.service;
 
 import com.axelor.apps.base.db.AppBusinessProject;
 import com.axelor.apps.base.db.repo.AppBusinessSupportRepository;
+import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
+import com.axelor.apps.base.service.FrequencyService;
+import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PriceListService;
 import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
-import com.axelor.apps.businesssupport.service.TeamTaskBusinessSupportServiceImpl;
-import com.axelor.common.StringUtils;
+import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
+import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.exception.AxelorException;
-import com.axelor.team.db.TeamTask;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
 import java.util.DoubleSummaryStatistics;
 
-public class TeamTaskRedmineServiceImpl extends TeamTaskBusinessSupportServiceImpl
-    implements TeamTaskRedmineService {
+public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
+    implements ProjectTaskRedmineService {
 
-  @Inject public TeamTaskRepository teamTaskRepository;
   @Inject public AppBusinessSupportRepository appBusinessSupportRepository;
   @Inject public ProjectVersionRepository projectVersionRepository;
 
   @Inject
-  public TeamTaskRedmineServiceImpl(
-      TeamTaskRepository teamTaskRepo,
-      PriceListLineRepository priceListLineRepository,
+  public ProjectTaskRedmineServiceImpl(
+      ProjectTaskRepository projectTaskRepo,
+      FrequencyRepository frequencyRepo,
+      FrequencyService frequencyService,
+      AppBaseService appBaseService,
+      PriceListLineRepository priceListLineRepo,
       PriceListService priceListService,
-      ProductCompanyService productCompanyService,
-      AppBaseService appBaseService) {
+      PartnerPriceListService partnerPriceListService,
+      ProductCompanyService productCompanyService) {
     super(
-        teamTaskRepo,
-        priceListLineRepository,
+        projectTaskRepo,
+        frequencyRepo,
+        frequencyService,
+        appBaseService,
+        priceListLineRepo,
         priceListService,
-        productCompanyService,
-        appBaseService);
+        partnerPriceListService,
+        productCompanyService);
   }
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
   @Override
-  public TeamTask updateTask(TeamTask teamTask, AppBusinessProject appBusinessProject)
+  public ProjectTask updateTask(ProjectTask projectTask, AppBusinessProject appBusinessProject)
       throws AxelorException {
-    if (!teamTask.getIsOffered()) {
-      return super.updateTask(teamTask, appBusinessProject);
+    if (!projectTask.getIsOffered()) {
+      return super.updateTask(projectTask, appBusinessProject);
     }
-    teamTask = computeDefaultInformation(teamTask);
-
-    return teamTaskRepo.save(teamTask);
+    projectTask = computeDefaultInformation(projectTask);
+    return projectTaskRepo.save(projectTask);
   }
 
   @Override
-  public void updateTargetVerionProgress(TeamTask teamTask) {
+  public void updateTargetVerionProgress(ProjectTask projectTask) {
 
-    TeamTask teamTaskDb = null;
+    ProjectTask projectTaskDb = null;
 
-    if (teamTask.getId() != null) {
-      teamTaskDb = teamTaskRepository.find(teamTask.getId());
+    if (projectTask.getId() != null) {
+      projectTaskDb = projectTaskRepo.find(projectTask.getId());
     }
 
-    ProjectVersion targetVersion = teamTask.getTargetVersion();
-    ProjectVersion targetVersionDb = teamTaskDb != null ? teamTaskDb.getTargetVersion() : null;
+    ProjectVersion targetVersion = projectTask.getTargetVersion();
+    ProjectVersion targetVersionDb =
+        projectTaskDb != null ? projectTaskDb.getTargetVersion() : null;
 
-    if (teamTaskDb == null
-        || teamTaskDb.getProgressSelect() != teamTask.getProgressSelect()
-        || !teamTaskDb.getStatus().equals(teamTask.getStatus())
+    if (projectTaskDb == null
+        || projectTaskDb.getProgressSelect() != projectTask.getProgressSelect()
+        || !projectTaskDb.getStatus().equals(projectTask.getStatus())
         || (targetVersionDb == null && targetVersion != null)
         || (targetVersionDb != null
             && (targetVersion == null || !targetVersionDb.equals(targetVersion)))) {
 
       if (targetVersion != null
           && (targetVersionDb == null || targetVersionDb.equals(targetVersion))) {
-        updateTargetVerionProgress(targetVersion, teamTask, true);
+        updateTargetVerionProgress(targetVersion, projectTask, true);
       } else if (targetVersion != null
           && (targetVersionDb != null && !targetVersionDb.equals(targetVersion))) {
-        updateTargetVerionProgress(targetVersion, teamTask, true);
-        updateTargetVerionProgress(targetVersionDb, teamTask, false);
+        updateTargetVerionProgress(targetVersion, projectTask, true);
+        updateTargetVerionProgress(targetVersionDb, projectTask, false);
       } else if (targetVersionDb != null && targetVersion == null) {
-        updateTargetVerionProgress(targetVersionDb, teamTask, false);
+        updateTargetVerionProgress(targetVersionDb, projectTask, false);
       }
     }
   }
@@ -104,27 +111,19 @@ public class TeamTaskRedmineServiceImpl extends TeamTaskBusinessSupportServiceIm
   @Override
   @Transactional
   public void updateTargetVerionProgress(
-      ProjectVersion targetVersion, TeamTask teamTask, boolean isAdd) {
-
-    String taskClosedStatusSelect =
-        appBusinessSupportRepository.all().fetchOne().getTaskClosedStatusSelect();
+      ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd) {
 
     DoubleSummaryStatistics stats =
-        teamTaskRepository
+        projectTaskRepo
             .all()
             .filter(
-                teamTask.getId() != null
+                projectTask.getId() != null
                     ? "self.targetVersion = ?1 and self.id != ?2"
                     : "self.targetVersion = ?1",
                 targetVersion,
-                teamTask.getId())
+                projectTask.getId())
             .fetchStream()
-            .mapToDouble(
-                tt ->
-                    !StringUtils.isEmpty(taskClosedStatusSelect)
-                            && taskClosedStatusSelect.contains(tt.getStatus())
-                        ? 100
-                        : tt.getProgressSelect())
+            .mapToDouble(tt -> tt.getStatus().getIsCompleted() ? 100 : tt.getProgressSelect())
             .summaryStatistics();
 
     double sum = stats.getSum();
@@ -133,11 +132,7 @@ public class TeamTaskRedmineServiceImpl extends TeamTaskBusinessSupportServiceIm
     if (isAdd) {
       count = count + 1;
       sum =
-          sum
-              + (!StringUtils.isEmpty(taskClosedStatusSelect)
-                      && taskClosedStatusSelect.contains(teamTask.getStatus())
-                  ? 100
-                  : teamTask.getProgressSelect());
+          sum + (projectTask.getStatus().getIsCompleted() ? 100 : projectTask.getProgressSelect());
     }
 
     targetVersion.setTotalProgress(
@@ -150,20 +145,14 @@ public class TeamTaskRedmineServiceImpl extends TeamTaskBusinessSupportServiceIm
 
   @Override
   @Transactional
-  public void updateProjectVersionProgress(
-      ProjectVersion projectVersion, String taskClosedStatusSelect) {
+  public void updateProjectVersionProgress(ProjectVersion projectVersion) {
 
     double sum =
-        teamTaskRepo
+        projectTaskRepo
             .all()
             .filter("self.targetVersion = ?1", projectVersion)
             .fetchStream()
-            .mapToLong(
-                tt ->
-                    !StringUtils.isEmpty(taskClosedStatusSelect)
-                            && taskClosedStatusSelect.contains(tt.getStatus())
-                        ? 100
-                        : tt.getProgressSelect())
+            .mapToLong(tt -> tt.getStatus().getIsCompleted() ? 100 : tt.getProgressSelect())
             .average()
             .orElse(0);
 

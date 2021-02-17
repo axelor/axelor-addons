@@ -3,9 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="project" package="com.axelor.team.db" />
+	<module name="project" package="com.axelor.apps.project.db" />
 
-	<entity name="TeamTask">
+	<entity name="ProjectTask">
 
 		<integer name="redmineId" title="Redmine Id" />
 		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
@@ -21,13 +21,6 @@
 			large="true" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
-
-		<extra-code>
-			<![CDATA[
-				public static final String TEAM_TASK_DEFAULT_STATUS = "new";
-				public static final String TEAM_TASK_DEFAULT_PRIORITY = "normal";
-			]]>
-		</extra-code>
 
 	</entity>
 
