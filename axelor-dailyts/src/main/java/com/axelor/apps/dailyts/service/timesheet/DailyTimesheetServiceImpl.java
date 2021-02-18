@@ -23,11 +23,13 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
+import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.auth.db.User;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
@@ -36,6 +38,7 @@ import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -74,6 +77,10 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     this.timesheetRepository = timesheetRepository;
     this.timesheetService = timesheetService;
   }
+
+  private final BigDecimal MINUTES_IN_ONE_DAY = new BigDecimal(1440);
+  private final BigDecimal HOURS_IN_ONE_DAY = new BigDecimal(24);
+  private final BigDecimal MINUTES_IN_ONE_HOUR = new BigDecimal(60);
 
   @Override
   public void updateFromTimesheets(DailyTimesheet dailyTimesheet) {
@@ -243,26 +250,62 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     TimesheetLine timesheetLine =
         timesheetLineService.createTimesheetLine(
-            project, null, dailyTimesheetUser, dailyTimesheetDate, null, BigDecimal.ZERO, comments);
+            project,
+            dailyTimesheetUser.getEmployee() != null
+                ? dailyTimesheetUser.getEmployee().getProduct()
+                : null,
+            dailyTimesheetUser,
+            dailyTimesheetDate,
+            dailyTimesheet.getTimesheet(),
+            BigDecimal.ZERO,
+            comments);
 
     timesheetLine.setDailyTimesheet(dailyTimesheet);
-    timesheetLine.setTimesheet(dailyTimesheet.getTimesheet());
     timesheetLine.setTeamTask(teamTask);
-    timesheetLine.setDurationForCustomer(timesheetLine.getDuration());
 
     if (iCalendarEvent != null) {
       timesheetLine.setiCalendarEvent(iCalendarEvent);
+
+      BigDecimal minuteDuration =
+          BigDecimal.valueOf(
+              DurationTool.computeDuration(
+                      iCalendarEvent.getStartDateTime(), iCalendarEvent.getEndDateTime())
+                  .toMinutes());
+
+      if (minuteDuration.compareTo(MINUTES_IN_ONE_DAY) < 0) {
+        timesheetLine.setHoursDuration(
+            minuteDuration.divide(MINUTES_IN_ONE_HOUR, 2, RoundingMode.HALF_UP));
+        timesheetLine.setDuration(
+            computeDurationFromHours(
+                dailyTimesheetUser,
+                timesheetLine.getHoursDuration(),
+                dailyTimesheet.getTimesheet().getTimeLoggingPreferenceSelect()));
+      }
     }
+
+    timesheetLine.setDurationForCustomer(timesheetLine.getDuration());
 
     if (teamTask != null) {
       timesheetLine.setActivityTypeSelect(TimesheetLineRepository.ACTIVITY_TYPE_ON_TICKET);
     }
 
-    if (dailyTimesheetUser.getEmployee() != null) {
-      timesheetLine.setProduct(dailyTimesheetUser.getEmployee().getProduct());
+    timesheetLineRepository.save(timesheetLine);
+  }
+
+  public BigDecimal computeDurationFromHours(User user, BigDecimal duration, String timePref) {
+
+    if (timePref == null && user.getEmployee() != null) {
+      timePref = user.getEmployee().getTimeLoggingPreferenceSelect();
     }
 
-    timesheetLineRepository.save(timesheetLine);
+    switch (timePref) {
+      case EmployeeRepository.TIME_PREFERENCE_DAYS:
+        return duration.divide(HOURS_IN_ONE_DAY, 2, RoundingMode.HALF_UP);
+      case EmployeeRepository.TIME_PREFERENCE_MINUTES:
+        return duration.multiply(MINUTES_IN_ONE_HOUR);
+      default:
+        return duration;
+    }
   }
 
   @Override
