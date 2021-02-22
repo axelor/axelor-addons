@@ -48,6 +48,23 @@
 
 	</form>
 
+	<form id="dailyts-user-preferences-form" name="user-preferences-form"
+		title="Preferences" model="com.axelor.auth.db.User" extension="true">
+
+		<extend target="panel[@name='userPreferencesPanel']/*[last()]">
+			<insert position="after">
+				<field name="favouriteProjectSet" widget="TagSelect"
+					form-view="project-form" grid-view="project-grid"
+					onSelect="action-user-attrs-set-domain-for-favourite-projects" if="__config__.app.isApp('timesheet')"
+					colSpan="12" canNew="false" />
+				<field name="favouriteTaskSet" widget="TagSelect" form-view="team-task-form"
+					grid-view="team-task-grid" onSelect="action-user-attrs-set-domain-for-favourite-tasks"
+					if="__config__.app.isApp('timesheet')" colSpan="12" canNew="false" />
+			</insert>
+		</extend>
+
+	</form>
+
 	<action-attrs name="action-user-attrs-set-domain-for-favourite-projects">
 		<attribute name="domain" for="favouriteProjectSet"
 			expr="eval: projectSet &amp;&amp; !projectSet.isEmpty() ? &quot; self.id IN (${(projectSet?.collect{it.id})?.join(',')}) &quot; : &quot; self.id IN (0) &quot;" />

@@ -83,40 +83,82 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   private final BigDecimal MINUTES_IN_ONE_HOUR = new BigDecimal(60);
 
   @Override
-  public void updateFromTimesheets(DailyTimesheet dailyTimesheet) {
+  public void updateFromTimesheet(DailyTimesheet dailyTimesheet) {
 
-    LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
-    User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
+    List<TimesheetLine> timesheetLineList = dailyTimesheet.getTimesheet().getTimesheetLineList();
 
-    Timesheet timesheet = fetchRelatedTimesheet(dailyTimesheetUser, dailyTimesheetDate);
+    if (CollectionUtils.isNotEmpty(timesheetLineList)) {
 
-    if (timesheet != null) {
-      List<TimesheetLine> timesheetLineList = timesheet.getTimesheetLineList();
+      for (TimesheetLine timesheetLine : timesheetLineList) {
 
-      if (CollectionUtils.isNotEmpty(timesheetLineList)) {
-
-        for (TimesheetLine timesheetLine : timesheetLineList) {
-
-          if (timesheetLine.getUser().equals(dailyTimesheetUser)
-              && timesheetLine.getDate().compareTo(dailyTimesheetDate) == 0
-              && (timesheetLine.getDailyTimesheet() == null
-                  || !timesheetLine.getDailyTimesheet().equals(dailyTimesheet))) {
-            dailyTimesheet.addDailyTimesheetLineListItem(timesheetLine);
-          }
+        if (timesheetLine.getDate().compareTo(dailyTimesheet.getDailyTimesheetDate()) == 0
+            && (timesheetLine.getDailyTimesheet() == null
+                || !timesheetLine.getDailyTimesheet().equals(dailyTimesheet))) {
+          dailyTimesheet.addDailyTimesheetLineListItem(timesheetLine);
         }
       }
-
-      computeTimesheetPeriodTotal(timesheet);
     }
-
-    dailyTimesheet.setDailyTotal(computeDailyTotal(dailyTimesheet));
   }
 
   @Override
-  public void updateFromActivities(DailyTimesheet dailyTimesheet) {
+  public int updateFromActivities(DailyTimesheet dailyTimesheet) {
 
-    LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
-    User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
+    List<Long> taskIdList = new ArrayList<>();
+
+    List<TimesheetLine> dailyTimesheetLineList = dailyTimesheet.getDailyTimesheetLineList();
+
+    if (CollectionUtils.isNotEmpty(dailyTimesheetLineList)) {
+
+      for (TimesheetLine timesheetLine : dailyTimesheetLineList) {
+
+        if (timesheetLine.getTeamTask() != null) {
+          taskIdList.add(timesheetLine.getTeamTask().getId());
+        }
+      }
+    }
+
+    List<MailMessage> mailMessageList =
+        mailMessageRepository
+            .all()
+            .filter(
+                "self.relatedModel = ?1 and self.author = ?2 and date(self.createdOn) = ?3",
+                TeamTask.class.getName(),
+                dailyTimesheet.getDailyTimesheetUser(),
+                dailyTimesheet.getDailyTimesheetDate())
+            .fetch();
+
+    int count = 0;
+
+    for (MailMessage mailMessage : mailMessageList) {
+
+      if (!taskIdList.contains(mailMessage.getRelatedId())) {
+        TeamTask teamTask = teamTaskRepository.find(mailMessage.getRelatedId());
+
+        if (teamTask != null) {
+          dailyTimesheet.addDailyTimesheetLineListItem(
+              createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null));
+          taskIdList.add(mailMessage.getRelatedId());
+          count++;
+        }
+      }
+    }
+
+    return count;
+  }
+
+  @Override
+  public void updateFromTimesheetAndFavs(DailyTimesheet dailyTimesheet) {
+
+    // Set related timesheet
+
+    dailyTimesheet.setTimesheet(getRelatedTimesheet(dailyTimesheet));
+
+    // Update from related timesheet before favourites
+
+    updateFromTimesheet(dailyTimesheet);
+
+    // Update from favourites
+
     List<Long> taskIdList = new ArrayList<>();
     List<Long> projectIdList = new ArrayList<>();
 
@@ -126,69 +168,47 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
       for (TimesheetLine timesheetLine : dailyTimesheetLineList) {
 
-        if (timesheetLine.getProject() != null && timesheetLine.getTeamTask() != null) {
+        if (timesheetLine.getTeamTask() != null) {
           taskIdList.add(timesheetLine.getTeamTask().getId());
-        } else if (timesheetLine.getProject() != null && timesheetLine.getTeamTask() == null) {
+        }
+
+        if (timesheetLine.getProject() != null) {
           projectIdList.add(timesheetLine.getProject().getId());
         }
       }
     }
 
-    // Update from activities
-
-    List<MailMessage> mailMessageList =
-        mailMessageRepository
-            .all()
-            .filter(
-                "self.relatedModel = ?1 and self.author = ?2 and date(self.createdOn) = ?3",
-                TeamTask.class.getName(),
-                dailyTimesheetUser,
-                dailyTimesheetDate)
-            .fetch();
-
-    for (MailMessage mailMessage : mailMessageList) {
-
-      if (!taskIdList.contains(mailMessage.getRelatedId())) {
-        TeamTask teamTask = teamTaskRepository.find(mailMessage.getRelatedId());
-
-        if (teamTask != null) {
-          createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null);
-          taskIdList.add(mailMessage.getRelatedId());
-        }
-      }
-    }
-
-    // Update from favourites
-
-    Set<TeamTask> favouriteTaskSet = dailyTimesheetUser.getFavouriteTaskSet();
+    Set<TeamTask> favouriteTaskSet = dailyTimesheet.getDailyTimesheetUser().getFavouriteTaskSet();
 
     if (CollectionUtils.isNotEmpty(favouriteTaskSet)) {
 
       for (TeamTask teamTask : favouriteTaskSet) {
 
         if (!taskIdList.contains(teamTask.getId())) {
-          createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null);
-          taskIdList.add(teamTask.getId());
+          dailyTimesheet.addDailyTimesheetLineListItem(
+              createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null));
+          projectIdList.add(teamTask.getProject().getId());
         }
       }
     }
 
-    Set<Project> favouriteProjectSet = dailyTimesheetUser.getFavouriteProjectSet();
+    Set<Project> favouriteProjectSet =
+        dailyTimesheet.getDailyTimesheetUser().getFavouriteProjectSet();
 
     if (CollectionUtils.isNotEmpty(favouriteProjectSet)) {
 
       for (Project project : favouriteProjectSet) {
 
         if (!projectIdList.contains(project.getId())) {
-          createTimesheetLine(null, project, dailyTimesheet, null, null);
-          projectIdList.add(project.getId());
+          dailyTimesheet.addDailyTimesheetLineListItem(
+              createTimesheetLine(null, project, dailyTimesheet, null, null));
         }
       }
     }
   }
 
   @Override
-  public void updateFromEvents(DailyTimesheet dailyTimesheet) {
+  public int updateFromEvents(DailyTimesheet dailyTimesheet) {
 
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
     User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
@@ -222,23 +242,29 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
             .fetch();
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyy HH:mm");
+    int count = 0;
 
     for (ICalendarEvent iCalendarEvent : iCalendarEventList) {
-      createTimesheetLine(
-          null,
-          null,
-          dailyTimesheet,
-          iCalendarEvent.getSubject()
-              + ": "
-              + formatter.format(iCalendarEvent.getStartDateTime())
-              + " - "
-              + formatter.format(iCalendarEvent.getEndDateTime()),
-          iCalendarEvent);
+      dailyTimesheet.addDailyTimesheetLineListItem(
+          createTimesheetLine(
+              null,
+              null,
+              dailyTimesheet,
+              iCalendarEvent.getSubject()
+                  + ": "
+                  + formatter.format(iCalendarEvent.getStartDateTime())
+                  + " - "
+                  + formatter.format(iCalendarEvent.getEndDateTime()),
+              iCalendarEvent));
+      count++;
     }
+
+    dailyTimesheet.setDailyTotal(computeDailyTotal(dailyTimesheet));
+
+    return count;
   }
 
-  @Transactional
-  public void createTimesheetLine(
+  public TimesheetLine createTimesheetLine(
       TeamTask teamTask,
       Project project,
       DailyTimesheet dailyTimesheet,
@@ -259,9 +285,6 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
             dailyTimesheet.getTimesheet(),
             BigDecimal.ZERO,
             comments);
-
-    timesheetLine.setDailyTimesheet(dailyTimesheet);
-    timesheetLine.setTeamTask(teamTask);
 
     if (iCalendarEvent != null) {
       timesheetLine.setiCalendarEvent(iCalendarEvent);
@@ -284,12 +307,23 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     }
 
     timesheetLine.setDurationForCustomer(timesheetLine.getDuration());
+    timesheetLine.setToInvoice(false);
 
     if (teamTask != null) {
+      timesheetLine.setTeamTask(teamTask);
       timesheetLine.setActivityTypeSelect(TimesheetLineRepository.ACTIVITY_TYPE_ON_TICKET);
+
+      if (teamTask.getInvoicingType() != null
+          && teamTask.getInvoicingType().equals(TeamTaskRepository.INVOICING_TYPE_TIME_SPENT)
+          && teamTask.getToInvoice()) {
+        timesheetLine.setToInvoice(true);
+      }
+    } else {
+      timesheetLine.setActivityTypeSelect(
+          TimesheetLineRepository.ACTIVITY_TYPE_ON_PROJECT_OR_PROJECT_MANAGEMENT);
     }
 
-    timesheetLineRepository.save(timesheetLine);
+    return timesheetLine;
   }
 
   public BigDecimal computeDurationFromHours(User user, BigDecimal duration, String timePref) {
@@ -315,38 +349,23 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
     User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
 
-    Timesheet timesheet = fetchRelatedTimesheet(dailyTimesheetUser, dailyTimesheetDate);
+    Timesheet timesheet =
+        timesheetRepository
+            .all()
+            .filter(
+                "self.user = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
+                dailyTimesheetUser,
+                TimesheetRepository.STATUS_CANCELED,
+                dailyTimesheetDate)
+            .order("-fromDate")
+            .fetchOne();
 
     if (timesheet == null) {
       timesheet = timesheetService.createTimesheet(dailyTimesheetUser, dailyTimesheetDate, null);
       timesheetRepository.save(timesheet);
-    } else if (timesheet.getToDate() != null
-        && timesheet.getToDate().isBefore(dailyTimesheetDate)) {
-      timesheet.setToDate(dailyTimesheetDate);
-      timesheetRepository.save(timesheet);
     }
 
     return timesheet;
-  }
-
-  public Timesheet fetchRelatedTimesheet(User dailyTimesheetUser, LocalDate dailyTimesheetDate) {
-
-    return timesheetRepository
-        .all()
-        .filter(
-            "self.user = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
-            dailyTimesheetUser,
-            TimesheetRepository.STATUS_CANCELED,
-            dailyTimesheetDate)
-        .order("-fromDate")
-        .fetchOne();
-  }
-
-  @Transactional
-  public void computeTimesheetPeriodTotal(Timesheet timesheet) {
-
-    timesheet.setPeriodTotal(timesheetService.computePeriodTotal(timesheet));
-    timesheetRepository.save(timesheet);
   }
 
   @Override
