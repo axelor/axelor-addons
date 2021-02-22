@@ -61,7 +61,7 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
         DailyTimesheet dailyTimesheet = new DailyTimesheet();
         dailyTimesheet.setDailyTimesheetDate(dailyTsDate);
         dailyTimesheet.setDailyTimesheetUser(dailyTsUser);
-        dailyTimesheet.setTimesheet(dailyTimesheetService.getRelatedTimesheet(dailyTimesheet));
+        dailyTimesheetService.updateFromTimesheetAndFavs(dailyTimesheet);
         dailyTimesheetRepository.save(dailyTimesheet);
         incrementDone();
       }

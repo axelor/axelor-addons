@@ -18,13 +18,13 @@
 package com.axelor.apps.dailyts.module;
 
 import com.axelor.app.AxelorModule;
-import com.axelor.apps.businessproject.service.TimesheetLineProjectServiceImpl;
+import com.axelor.apps.dailyts.db.repo.DailyTimesheetManagementRepository;
 import com.axelor.apps.dailyts.db.repo.MailMessageDailytsRepository;
 import com.axelor.apps.dailyts.db.repo.TimesheetLineDailytsRepository;
 import com.axelor.apps.dailyts.service.batch.DailytsHrBatchService;
 import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetServiceImpl;
-import com.axelor.apps.dailyts.service.timesheet.TimesheetlineDailytsServiceImpl;
+import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineHRRepository;
 import com.axelor.apps.hr.service.batch.HrBatchService;
 import com.axelor.mail.db.repo.MailMessageRepository;
@@ -37,7 +37,7 @@ public class DailytsModule extends AxelorModule {
     bind(HrBatchService.class).to(DailytsHrBatchService.class);
     bind(DailyTimesheetService.class).to(DailyTimesheetServiceImpl.class);
     bind(TimesheetLineHRRepository.class).to(TimesheetLineDailytsRepository.class);
-    bind(TimesheetLineProjectServiceImpl.class).to(TimesheetlineDailytsServiceImpl.class);
     bind(MailMessageRepository.class).to(MailMessageDailytsRepository.class);
+    bind(DailyTimesheetRepository.class).to(DailyTimesheetManagementRepository.class);
   }
 }

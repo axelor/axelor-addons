@@ -23,13 +23,15 @@ import java.math.BigDecimal;
 
 public interface DailyTimesheetService {
 
-  public void updateFromTimesheets(DailyTimesheet dailyTimesheet);
+  public void updateFromTimesheet(DailyTimesheet dailyTimesheet);
 
-  public void updateFromActivities(DailyTimesheet dailyTimesheet);
+  public int updateFromActivities(DailyTimesheet dailyTimesheet);
 
-  public void updateFromEvents(DailyTimesheet dailyTimesheet);
+  public int updateFromEvents(DailyTimesheet dailyTimesheet);
 
   public Timesheet getRelatedTimesheet(DailyTimesheet dailyTimesheet);
 
   public BigDecimal computeDailyTotal(DailyTimesheet dailyTimesheet);
+
+  public void updateFromTimesheetAndFavs(DailyTimesheet dailyTimesheet);
 }

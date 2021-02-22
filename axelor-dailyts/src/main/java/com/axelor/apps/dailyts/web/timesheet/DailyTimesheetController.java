@@ -38,30 +38,31 @@ import com.google.inject.Singleton;
 @Singleton
 public class DailyTimesheetController {
 
-  public void updateFromTimesheets(ActionRequest request, ActionResponse response) {
+  public void updateFromTimesheet(ActionRequest request, ActionResponse response) {
 
     DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+    dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
+    Beans.get(DailyTimesheetService.class).updateFromTimesheet(dailyTimesheet);
+    response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
+  }
 
-    if (dailyTimesheet.getId() != null) {
-      dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
-    }
+  public void updateFromTimesheetAndFavs(ActionRequest request, ActionResponse response) {
 
-    if (dailyTimesheet.getDailyTimesheetDate() != null
-        && dailyTimesheet.getDailyTimesheetUser() != null) {
-      Beans.get(DailyTimesheetService.class).updateFromTimesheets(dailyTimesheet);
-      response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
-      response.setValue("dailyTotal", dailyTimesheet.getDailyTotal());
-    }
+    DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+    Beans.get(DailyTimesheetService.class).updateFromTimesheetAndFavs(dailyTimesheet);
+    response.setValue("timesheet", dailyTimesheet.getTimesheet());
+    response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
   }
 
   public void updateFromActivities(ActionRequest request, ActionResponse response) {
 
     DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
     dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
+    int count = Beans.get(DailyTimesheetService.class).updateFromActivities(dailyTimesheet);
 
-    if (dailyTimesheet.getDailyTimesheetDate() != null
-        && dailyTimesheet.getDailyTimesheetUser() != null) {
-      Beans.get(DailyTimesheetService.class).updateFromActivities(dailyTimesheet);
+    if (count > 0) {
+      response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
+    } else {
       response.setReload(true);
     }
   }
@@ -70,19 +71,14 @@ public class DailyTimesheetController {
 
     DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
     dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
+    int count = Beans.get(DailyTimesheetService.class).updateFromEvents(dailyTimesheet);
 
-    if (dailyTimesheet.getDailyTimesheetDate() != null
-        && dailyTimesheet.getDailyTimesheetUser() != null) {
-      Beans.get(DailyTimesheetService.class).updateFromEvents(dailyTimesheet);
+    if (count > 0) {
+      response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
+      response.setValue("dailyTotal", dailyTimesheet.getDailyTotal());
+    } else {
       response.setReload(true);
     }
-  }
-
-  public void setRelatedTimesheet(ActionRequest request, ActionResponse response) {
-
-    DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
-    response.setValue(
-        "timesheet", Beans.get(DailyTimesheetService.class).getRelatedTimesheet(dailyTimesheet));
   }
 
   /** Same process as performed during timesheet validation */
