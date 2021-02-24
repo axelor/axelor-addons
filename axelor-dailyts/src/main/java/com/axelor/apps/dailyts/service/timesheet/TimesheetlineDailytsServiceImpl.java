@@ -23,6 +23,7 @@ import com.axelor.apps.businessproject.service.app.AppBusinessProjectService;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
+import com.axelor.apps.hr.db.repo.TimesheetHRRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
@@ -45,14 +46,16 @@ public class TimesheetlineDailytsServiceImpl extends TimesheetLineProjectService
   @Inject
   public TimesheetlineDailytsServiceImpl(
       TimesheetService timesheetService,
-      TimesheetRepository timesheetRepo,
+      TimesheetHRRepository timesheetHRRepository,
+      TimesheetRepository timesheetRepository,
       EmployeeRepository employeeRepository,
       ProjectRepository projectRepo,
       ProjectTaskRepository projectTaskaRepo,
       TimesheetLineRepository timesheetLineRepo) {
     super(
         timesheetService,
-        timesheetRepo,
+        timesheetHRRepository,
+        timesheetRepository,
         employeeRepository,
         projectRepo,
         projectTaskaRepo,

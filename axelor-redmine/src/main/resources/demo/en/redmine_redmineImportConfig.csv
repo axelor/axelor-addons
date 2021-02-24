@@ -1,21 +1,21 @@
 importId;redmineMappingFieldSelect;redmineValue;osValue
-1;Status;New;New
+1;Status;New;Nouveau
 1;Status;Feedback;Feedback
-1;Status;In Progress;In progress
-1;Status;Resolved;Resolved
-1;Status;Tested;Tested
-1;Status;Deployment;Deployment
-1;Status;Rejected;Rejected
-1;Status;Closed;Closed
-1;Status;Canceled;Canceled
-1;Status;Won'tfix;Canceled
-1;Status;Nouveau;New
-1;Status;Rejeté;Rejected
-1;Status;En cours;In progress
+1;Status;In Progress;En cours
+1;Status;Resolved;Résolu
+1;Status;Tested;Testé
+1;Status;Deployment;Déployé
+1;Status;Rejected;Rejeté
+1;Status;Closed;Fermé
+1;Status;Canceled;Annulé
+1;Status;Won'tfix;Annulé
+1;Status;Nouveau;Nouveau
+1;Status;Rejeté;Rejeté
+1;Status;En cours;En cours
 1;Status;Réalisé, non livré;Réalisé, non livré
 1;Status;Réalisé, livré;Réalisé, livré
-1;Status;Annulé;Canceled
-1;Status;Fermé/terminé;Done
+1;Status;Annulé;Annulé
+1;Status;Fermé/terminé;Fermé
 1;Status;En attente;En attente
 2;Tracker;Anomaly;Anomalie
 2;Tracker;Feature;Fonctionnalité

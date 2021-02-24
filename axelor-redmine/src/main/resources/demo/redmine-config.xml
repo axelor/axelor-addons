@@ -13,7 +13,5 @@
 			<bind column="osValue" to="osValue" />
 		</bind>
 	</input>
-	
-	<input file="project_status.csv" separator=";" type="com.axelor.apps.project.db.ProjectStatus" search="self.importId = :importId"/>
 
 </csv-inputs>
