@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views
+  http://axelor.com/xml/ns/object-views/object-views_5.0.xsd">
+
+	<menuitem title="Invoice Extractor" if="__config__.app.isApp('extractor')" order="-79"
+		icon="fa-file-pdf-o" icon-background="#c40b0e" name="invoice-extractor-root"  />
+
+	<menuitem title="Template Extractor"  name="invoice-extractor-root-template" order="1"
+		parent="invoice-extractor-root"  action="invoice.extractor.view.template"/>
+		<action-view name="invoice.extractor.view.template" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractorTemplate" title="Template Extractor">
+			<view type="grid" name="invoice-extractor-template-grid"/>
+			<view type="form" name="invoice-extractor-template-form"/>
+		</action-view>
+
+	<menuitem title="Invoice Extractor" name="invoice-extractor-root-extractor" order="5"
+		parent="invoice-extractor-root"  action="invoice.extractor.view.field"/>
+		<action-view name="invoice.extractor.view.field" model="com.axelor.apps.invoice.extractor.db.InvoiceExtractor" title="Invoice Extractor">
+			<view type="grid" name="invoice-extractor-grid"/>
+			<view type="form" name="invoice-extractor-form"/>
+		</action-view>
+
+	<menuitem name="invoice-extractor-root-configuration" title="Configuration" parent="invoice-extractor-root" order="15" icon="fa-cog"/>
+
+	<menuitem name="iinvoice-extractor-root-configuration-date-format" title="Date Formats" parent="invoice-extractor-root-configuration"
+		action="invoice.extractor.view.date.format"/>
+
+		<action-view name="invoice.extractor.view.date.format" title="Date Format"
+				model="com.axelor.apps.invoice.extractor.db.DateFormatCollection">
+			<view type="grid" name="date-format-collection-grid"/>
+			<view type="form" name="date-format-collection-form"/>
+		</action-view>
+
+ </object-views>
