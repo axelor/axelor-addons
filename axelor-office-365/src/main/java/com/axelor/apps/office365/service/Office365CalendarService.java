@@ -21,6 +21,7 @@ import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.ICalendarUser;
 import com.axelor.apps.base.db.repo.ICalendarRepository;
 import com.axelor.apps.base.db.repo.ICalendarUserRepository;
+import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.EventReminder;
 import com.axelor.apps.crm.db.RecurrenceConfiguration;
@@ -131,6 +132,7 @@ public class Office365CalendarService {
         manageRecurrenceConfigration(event, jsonObject);
 
         event.setCalendar(iCalendar);
+        event.setUser(Beans.get(UserService.class).getUser());
         eventRepo.save(event);
       } catch (Exception e) {
         TraceBackService.trace(e);
