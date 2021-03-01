@@ -13,7 +13,99 @@
 				<field name="durationUnit" hidden="true" />
 			</insert>
 		</extend>
+		
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+			<move position="before" source="//field[@name='hoursDuration']"/>
+		</extend>
+		
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="onChange" value="action-timesheet-line-method-set-duration"/>
+			<attribute name="hidden" value="false"/>
+		</extend>
 	</grid>
+	
+	<grid id="redmine-timesheet-line-timesheet-manuf-order-grid" name="timesheet-line-timesheet-manuf-order-grid" title="Timesheet Lines" 
+	model="com.axelor.apps.hr.db.TimesheetLine" extension="true">
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+			<move position="before" source="//field[@name='hoursDuration']"/>
+		</extend>
+		
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="onChange" value="action-timesheet-line-method-set-duration"/>
+			<attribute name="hidden" value="false"/>
+		</extend>
+	</grid>
+	
+	<grid id="redmine-timesheet-line-timesheet-operation-order-grid" name="timesheet-line-timesheet-operation-order-grid" title="Timesheet Lines" 
+	model="com.axelor.apps.hr.db.TimesheetLine" extension="true">
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+			<move position="before" source="//field[@name='hoursDuration']"/>
+		</extend>
+		
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="hidden" value="false"/>
+			<attribute name="onChange" value="action-timesheet-line-method-set-duration"/>
+		</extend>
+	</grid>
+	
+	<grid id="redmine-timesheet-line-timesheet-readonly-manuf-order-grid" name="timesheet-line-timesheet-readonly-manuf-order-grid" title="Timesheet Lines" 
+	model="com.axelor.apps.hr.db.TimesheetLine" extension="true">
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+			<move position="before" source="//field[@name='hoursDuration']"/>
+		</extend>
+		
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="hidden" value="false"/>
+		</extend>
+	</grid>
+	
+	<grid id="redmine-timesheet-line-timesheet-project-grid" name="timesheet-line-timesheet-project-grid" title="Timesheet Lines" 
+		model="com.axelor.apps.hr.db.TimesheetLine" extension="true">
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="hidden" value="false"/>
+			<attribute name="onChange" value="action-timesheet-line-method-set-duration"/>
+		</extend>
+		
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+		</extend>
+	</grid>
+	
+	<grid id="redmine-timesheet-line-timesheet-readonly-grid" name="timesheet-line-timesheet-readonly-grid" title="Timesheet Lines" 
+		model="com.axelor.apps.hr.db.TimesheetLine" extension="true">
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="hidden" value="false"/>
+		</extend>
+		
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+		</extend>	
+	</grid>
+	
+	<form id="redmine-timesheet-line-timesheet-manuf-order-form" name="timesheet-line-timesheet-manuf-order-form" title="Timesheet Line" 
+	model="com.axelor.apps.hr.db.TimesheetLine" extension="true">
+		<extend target="//label[@name='durationLabel']">
+			<attribute name="hidden" value="true"/>
+		</extend>
+		
+		<extend target="//field[@name='comments']">
+			<move position="after" source="//label[@name='durationLabel']"/>
+			<move position="after" source="//field[@name='duration']"/>
+		</extend>
+		
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+		</extend>
+		
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="hidden" value="false"/>
+			<attribute name="onChange" value="action-timesheet-line-method-set-duration"/>
+		</extend>
+	</form>
 
 	<form model="com.axelor.apps.hr.db.TimesheetLine" title="Log Time" name="timesheet-line-project-form" id="redmine-timesheet-line-project-form" extension="true">
 
@@ -28,16 +120,18 @@
 					<field name="projectTask"/>
 					<field name="date" />
 					<field name="product" requiredIf="toInvoice" canEdit="false" onSelect="action-hr-timesheet-line-attrs-domain-product" widget="SuggestBox" form-view="product-activity-form" grid-view="product-activity-grid"/>
-					<field name="duration" width="62%" colSpan="3" onChange="action-timesheet-line-method-set-stored-duration" min="0.01"/>
-					<label name="durationLabel" colSpan="3"/>
+					<!-- REDMINE CHANGES remove hidden for hoursDuration -->
+					<field name="hoursDuration" onChange="action-timesheet-line-method-set-duration"/>
 					<field name="durationForCustomer" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')"/>
 		    		<!-- REDMINE CHANGES replace the durationLabel with below durationUnit field -->
 		    		<field name="durationUnit" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" readonly="true" />
-					<field name="hoursDuration" hidden="true" />
 					<field name="timesheet" grid-view="timesheet-grid" form-view="timesheet-form"/>
 					<field name="toInvoice" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" />
 					<field name="enableEditor" />
 					<field name="comments" />
+					<!-- REDMINE CHANGES add hidden in duration and durationLabel -->
+					<field name="duration" width="62%" colSpan="3" hidden="true" onChange="action-timesheet-line-method-set-stored-duration" min="0.01"/>
+					<label name="durationLabel" hidden="true" colSpan="3"/>
 				</panel>
 			</replace>
 		</extend>
@@ -65,18 +159,45 @@
 					<field name="projectTask" form-view="project-task-form" grid-view="project-task-grid" onSelect="action-timesheet-line-attrs-domain-project-task" onChange="action-timesheet-line-method-set-default-to-invoice"/>
 					<field name="date" />
 					<field name="product" requiredIf="toInvoice" canEdit="false" onSelect="action-hr-timesheet-line-attrs-domain-product" widget="SuggestBox" form-view="product-activity-form" grid-view="product-activity-grid"/>
-					<field name="duration" width="62%" colSpan="3" onChange="action-timesheet-line-method-set-stored-duration" min="0.01"/>
-					<label name="durationLabel" colSpan="3"/>
+					<!-- REDMINE CHANGES remove hidden for hoursDuration -->
+					<field name="hoursDuration" onChange="action-timesheet-line-method-set-duration"/>
 		    		<field name="durationForCustomer" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')"/>
 		    		<!-- REDMINE CHANGES replace the durationLabel with below durationUnit field -->
 		    		<field name="durationUnit" colSpan="3" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" readonly="true" />
-					<field name="hoursDuration" hidden="true" />
 					<field name="toInvoice" if-module="axelor-business-project" if="__config__.app.isApp('business-project')" />
 					<field name="enableEditor" />
 					<field name="comments" />
+					<!-- REDMINE CHANGES add hidden in duration and durationLabel -->
+					<field name="duration" width="62%" colSpan="3" hidden="true" onChange="action-timesheet-line-method-set-stored-duration" min="0.01"/>
+					<label name="durationLabel" colSpan="3" hidden="true"/>
 					<field name="user" form-view="user-form" grid-view="user-grid" hidden="true" canNew="false" canEdit="false" canView="false"/>
 				</panel>
 			</replace>
+		</extend>
+	</form>
+	
+	<form id="redmine-timesheet-line-timesheet-teamtask-form" model="com.axelor.apps.hr.db.TimesheetLine" title="Timesheet Line" name="timesheet-line-timesheet-teamtask-form"
+		extension="true">
+		<extend target="//label[@name='durationLabel']">
+			<attribute name="hidden" value="true"/>
+		</extend>
+		
+		<extend target="//field[@name='comments']">
+			<move position="after" source="//label[@name='durationLabel']"/>
+			<move position="after" source="//field[@name='duration']"/>
+		</extend>
+		
+		<extend target="//field[@name='product']">
+			<move position="after" source="//field[@name='hoursDuration']"/>
+		</extend>	
+		
+		<extend target="//field[@name='duration']">
+			<attribute name="hidden" value="true"/>
+		</extend>
+		
+		<extend target="//field[@name='hoursDuration']">
+			<attribute name="hidden" value="false"/>
+			<attribute name="onChange" value="action-timesheet-line-method-set-duration"/>
 		</extend>
 	</form>
 	

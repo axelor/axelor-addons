@@ -569,8 +569,7 @@ public class SendinBlueContactService {
 
     for (String key : attributes.keySet()) {
       List<Property> keyProperty =
-          properties
-              .stream()
+          properties.stream()
               .filter(property -> property.getName().equalsIgnoreCase(key))
               .collect(Collectors.toList());
       if (keyProperty != null && keyProperty.size() == 1) {

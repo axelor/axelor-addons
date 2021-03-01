@@ -20,8 +20,9 @@
 		<field name="activityTypeSelect" required="true" />
 		<field name="duration"
 			onChange="action-timesheet-line-method-set-stored-duration,action-timesheet-line-attrs-set-default-duration-for-customer"
-			aggregate="sum" min="0.01" />
-		<field name="hoursDuration" hidden="true" />
+			aggregate="sum" min="0.01" hidden="true" />
+		<field name="hoursDuration"
+			onChange="action-timesheet-line-method-set-duration,action-timesheet-line-attrs-set-default-duration-for-customer" />
 		<field name="durationForCustomer" />
 		<field name="durationUnit" />
 		<field name="toInvoice" if-module="axelor-business-project"

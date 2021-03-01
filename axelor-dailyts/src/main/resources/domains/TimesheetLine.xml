@@ -15,6 +15,7 @@
 		<extra-code><![CDATA[
 	   		// ACTIVITY TYPE
         	public static final String ACTIVITY_TYPE_ON_TICKET = "On ticket";
+        	public static final String ACTIVITY_TYPE_ON_PROJECT_OR_PROJECT_MANAGEMENT = "On project/Project Management";
 		]]></extra-code>
 
 	</entity>

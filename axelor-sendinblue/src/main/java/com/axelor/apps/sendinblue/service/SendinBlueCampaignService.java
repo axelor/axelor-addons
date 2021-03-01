@@ -160,9 +160,7 @@ public class SendinBlueCampaignService {
     try {
       GetSendersList senderList = senderApiInstance.getSenders(null, null);
       senderEmails =
-          senderList
-              .getSenders()
-              .stream()
+          senderList.getSenders().stream()
               .map(sender -> sender.getEmail())
               .collect(Collectors.toList());
     } catch (ApiException e) {
@@ -188,8 +186,7 @@ public class SendinBlueCampaignService {
       List<String> senderEmails) {
     EmailCampaignsApi emailCampaignApiInstance = new EmailCampaignsApi();
     Optional<SendinBlueCampaign> partnerCampaign =
-        sendinBlueCampaigns
-            .stream()
+        sendinBlueCampaigns.stream()
             .filter(campaign -> campaign.getCampaignType() == campaignType)
             .findFirst();
     if (partnerCampaign.isPresent()) {

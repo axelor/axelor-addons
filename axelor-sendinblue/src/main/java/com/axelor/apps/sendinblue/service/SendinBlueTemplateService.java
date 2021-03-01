@@ -103,8 +103,7 @@ public class SendinBlueTemplateService {
           if (!templates.isEmpty()) {
             offset += totalTemplate;
             for (Template dataObject : templates) {
-              if (!senderEmails
-                  .stream()
+              if (!senderEmails.stream()
                   .anyMatch(email -> email.equals(emailAccount.getFromAddress()))) {
                 sendinBlueCampaignService.createSender(emailAccount.getFromAddress());
               }
