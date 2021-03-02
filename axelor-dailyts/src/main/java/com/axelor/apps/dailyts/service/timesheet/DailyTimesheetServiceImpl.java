@@ -187,7 +187,6 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
         if (!taskIdList.contains(teamTask.getId())) {
           dailyTimesheet.addDailyTimesheetLineListItem(
               createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null));
-          projectIdList.add(teamTask.getProject().getId());
         }
       }
     }
