@@ -20,7 +20,6 @@ package com.axelor.apps.redmine.imports.service.issues;
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
-import com.axelor.apps.base.db.repo.AppBusinessSupportRepository;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
@@ -32,7 +31,9 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.ProjectTaskCategory;
+import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.ProjectStatusRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
@@ -47,13 +48,9 @@ import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
-import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
-import com.axelor.meta.MetaStore;
-import com.axelor.meta.schema.views.Selection.Option;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.CustomFieldManager;
@@ -74,9 +71,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
@@ -92,6 +87,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   protected AppBaseService appBaseService;
   protected ProjectTaskRedmineService projectTaskRedmineService;
   protected MailMessageRepository mailMessageRepository;
+  protected ProjectStatusRepository projectStatusRepo;
+  protected ProjectPriorityRepository projectPriorityRepo;
 
   @Inject
   public RedmineImportIssueServiceImpl(
@@ -107,7 +104,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       ProjectVersionRepository projectVersionRepository,
       AppBaseService appBaseService,
       ProjectTaskRedmineService projectTaskRedmineService,
-      MailMessageRepository mailMessageRepository) {
+      MailMessageRepository mailMessageRepository,
+      ProjectStatusRepository projectStatusRepo,
+      ProjectPriorityRepository projectPriorityRepo) {
 
     super(
         userRepo,
@@ -123,6 +122,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
     this.appBaseService = appBaseService;
     this.projectTaskRedmineService = projectTaskRedmineService;
     this.mailMessageRepository = mailMessageRepository;
+    this.projectStatusRepo = projectStatusRepo;
+    this.projectPriorityRepo = projectPriorityRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -168,7 +169,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       this.errorObjList = (List<Object[]>) paramsMap.get("errorObjList");
       this.lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
       this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
-      this.selectionMap = new HashMap<>();
       this.fieldMap = new HashMap<>();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
@@ -188,18 +188,6 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       this.redmineIssueDueDateDefault = appRedmine.getRedmineIssueDueDateDefault();
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
       this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
-
-      List<Option> selectionList = new ArrayList<>();
-      selectionList.addAll(MetaStore.getSelectionList("project.task.status"));
-      selectionList.addAll(MetaStore.getSelectionList("project.task.priority"));
-
-      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
-      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
-
-      for (Option option : selectionList) {
-        selectionMap.put(fr.getString(option.getTitle()), option.getValue());
-        selectionMap.put(en.getString(option.getTitle()), option.getValue());
-      }
 
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository
@@ -357,6 +345,47 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
         continue;
       }
 
+      if (projectStatusRepo
+              .all()
+              .filter(
+                  "self.name = ?1 and self.relatedToSelect = ?2",
+                  fieldMap.get(redmineIssue.getStatusName()),
+                  ProjectStatusRepository.PROJECT_STATUS_TASK)
+              .count()
+          == 0) {
+        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_STATUS_NOT_FOUND)};
+
+        redmineBatch.setFailedRedmineIssuesIds(
+            failedRedmineIssuesIds == null
+                ? redmineIssue.getId().toString()
+                : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
+
+        setErrorLog(
+            I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), redmineIssue.getId().toString());
+
+        fail++;
+        continue;
+      }
+
+      if (projectPriorityRepo
+              .all()
+              .filter("self.name = ?1", fieldMap.get(redmineIssue.getPriorityText()))
+              .count()
+          == 0) {
+        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_PRIORITY_NOT_FOUND)};
+
+        redmineBatch.setFailedRedmineIssuesIds(
+            failedRedmineIssuesIds == null
+                ? redmineIssue.getId().toString()
+                : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
+
+        setErrorLog(
+            I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), redmineIssue.getId().toString());
+
+        fail++;
+        continue;
+      }
+
       try {
         this.createOpenSuiteIssue(redmineIssue, isImportIssuesWithActivities);
 
@@ -452,12 +481,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
   @Transactional
   public void updateProjectVersionsProgress() {
 
-    String taskClosedStatusSelect =
-        Beans.get(AppBusinessSupportRepository.class).all().fetchOne().getTaskClosedStatusSelect();
-
     for (Long id : projectVersionIdList) {
-      projectTaskRedmineService.updateProjectVersionProgress(
-          projectVersionRepository.find(id), taskClosedStatusSelect);
+      projectTaskRedmineService.updateProjectVersionProgress(projectVersionRepository.find(id));
     }
   }
 
@@ -563,35 +588,20 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
       value = redmineCustomFieldsMap.get(redmineIssueIsTaskAccepted);
       projectTask.setIsTaskAccepted(value != null ? (value.equals("1") ? true : false) : false);
 
-      // ERROR AND IMPORT WITH DEFAULT IF STATUS NOT FOUND
+      projectTask.setStatus(
+          projectStatusRepo
+              .all()
+              .filter(
+                  "self.name = ?1 and self.relatedToSelect = ?2",
+                  fieldMap.get(redmineIssue.getStatusName()),
+                  ProjectStatusRepository.PROJECT_STATUS_TASK)
+              .fetchOne());
 
-      String status = fieldMap.get(redmineIssue.getStatusName());
-      value = (String) selectionMap.get(status);
-
-      if (status != null && value != null) {
-        projectTask.setStatus(value);
-      } else {
-        projectTask.setStatus(ProjectTaskRepository.PROJECT_TASK_DEFAULT_STATUS);
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_WITH_DEFAULT_STATUS)};
-      }
-
-      // ERROR AND IMPORT WITH DEFAULT IF PRIORITY NOT FOUND
-
-      String priority = fieldMap.get(redmineIssue.getPriorityText());
-      value = (String) selectionMap.get(priority);
-
-      if (priority != null && value != null) {
-        projectTask.setPriority(value);
-      } else {
-        projectTask.setPriority(ProjectTaskRepository.PROJECT_TASK_DEFAULT_PRIORITY);
-        errors =
-            errors.length == 0
-                ? new Object[] {I18n.get(IMessage.REDMINE_IMPORT_WITH_DEFAULT_PRIORITY)}
-                : ObjectArrays.concat(
-                    errors,
-                    new Object[] {I18n.get(IMessage.REDMINE_IMPORT_WITH_DEFAULT_PRIORITY)},
-                    Object.class);
-      }
+      projectTask.setPriority(
+          projectPriorityRepo
+              .all()
+              .filter("self.name = ?1", fieldMap.get(redmineIssue.getPriorityText()))
+              .fetchOne());
 
       setCreatedByUser(projectTask, getOsUser(redmineIssue.getAuthorId()), "setCreatedBy");
       setLocalDateTime(projectTask, redmineIssue.getCreatedOn(), "setCreatedOn");
@@ -859,13 +869,13 @@ public class RedmineImportIssueServiceImpl extends RedmineImportService
 
       switch (journalDetailName) {
         case "status_id":
-          value = (String) selectionMap.get(fieldMap.get(redmineStatusMap.get(value)));
+          value = fieldMap.get(redmineStatusMap.get(value));
           break;
         case "tracker_id":
           value = fieldMap.get(redmineTrackerMap.get(value));
           break;
         case "priority_id":
-          value = (String) selectionMap.get(fieldMap.get(redminePriorityMap.get(value)));
+          value = fieldMap.get(redminePriorityMap.get(value));
           break;
         case "assigned_to_id":
           value = getUserName(value);

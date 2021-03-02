@@ -3,17 +3,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<selection name="project.task.status" id="redmine.project.task.status">
-		<option value="resolved">Resolved</option>
-		<option value="feedback">Feedback</option>
-		<option value="tested">Tested</option>
-		<option value="deployment">Deployment</option>
-		<option value="rejected">Rejected</option>
-		<option value="notdelivered">Réalisé, non livré</option>
-		<option value="delivered">Réalisé, livré</option>
-		<option value="waiting">En attente</option>
-	</selection>
-
 	<selection name="redmine.import.config.redmine.mapping.field.select">
 		<option value="Status">Status</option>
 		<option value="Tracker">Tracker</option>

@@ -24,9 +24,8 @@ public interface ProjectTaskRedmineService {
 
   public void updateTargetVerionProgress(ProjectTask projectTask);
 
-  public void updateProjectVersionProgress(
-      ProjectVersion projectVersion, String taskClosedStatusSelect);
-
   public void updateTargetVerionProgress(
       ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd);
+
+  public void updateProjectVersionProgress(ProjectVersion projectVersion);
 }
