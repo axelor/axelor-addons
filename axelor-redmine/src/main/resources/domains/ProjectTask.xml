@@ -21,13 +21,7 @@
 			large="true" />
 
 		<finder-method name="findByRedmineId" using="redmineId" />
-		
-		<extra-code>
-			<![CDATA[
-				public static final String PROJECT_TASK_DEFAULT_STATUS = "new";
-				public static final String PROJECT_TASK_DEFAULT_PRIORITY = "normal";
-			]]>
-		</extra-code>
+
 	</entity>
 
 </domain-models>
