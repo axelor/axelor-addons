@@ -10,6 +10,8 @@
 		<field name="dailyTimesheetUser" />
 		<field name="statusSelect" />
 		<field name="dailyTotal" />
+		<button name="confirmBtn" showIf="statusSelect == 0" icon="fa-check"
+			help="Confirm" onClick="action-daily-timesheet-method-confirm" />
 
 	</grid>
 
@@ -36,9 +38,9 @@
 		</panel>
 		<panel name="actionPanel" sidebar="true">
 			<button name="confirmBtn" title="Confirm" showIf="statusSelect == 0"
-				onClick="save,action-daily-timesheet-method-confirm,save" />
+				onClick="save,action-daily-timesheet-method-confirm" />
 			<button name="resetBtn" title="Reset" showIf="statusSelect == 1"
-				onClick="save,action-daily-timesheet-attrs-status-draft,save" if="eval: __user__.employee?.hrManager" />
+				onClick="action-daily-timesheet-attrs-status-draft,save" if="eval: __user__.employee?.hrManager" />
 			<button name="createLinesFromActivitiesBtn" title="Create lines from activities"
 				onClick="save,action-daily-timesheet-method-update-from-activities"
 				showIf="statusSelect == 0" />
@@ -106,17 +108,5 @@
 		<call class="com.axelor.apps.dailyts.web.timesheet.DailyTimesheetController"
 			method="computeDailyTotal" />
 	</action-method>
-
-	<!-- Set duration label when view is open from daily timesheet -->
-	<action-attrs
-		id="dailyts-action-timesheet-line-attrs-set-visible-duration-title"
-		name="action-timesheet-line-attrs-set-visible-duration-title">
-		<attribute name="title" for="durationLabel"
-			expr="eval: __parent__?.timeLoggingPreferenceSelect == 'days' ? com.axelor.i18n.I18n.get('Days') : __parent__?.timeLoggingPreferenceSelect == 'minutes' ? com.axelor.i18n.I18n.get('Minutes') : com.axelor.i18n.I18n.get('Hours')"
-			if="__parent__?._model == 'com.axelor.apps.hr.db.Timesheet'" />
-		<attribute name="title" for="durationLabel"
-			expr="eval: __parent__?.timesheet?.timeLoggingPreferenceSelect == 'days' ? com.axelor.i18n.I18n.get('Days') : __parent__?.timesheet?.timeLoggingPreferenceSelect == 'minutes' ? com.axelor.i18n.I18n.get('Minutes') : com.axelor.i18n.I18n.get('Hours')"
-			if="__parent__?._model == 'com.axelor.apps.hr.db.DailyTimesheet'" />
-	</action-attrs>
 
 </object-views>

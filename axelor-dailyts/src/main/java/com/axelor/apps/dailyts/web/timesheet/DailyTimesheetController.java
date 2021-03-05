@@ -86,6 +86,7 @@ public class DailyTimesheetController {
 
     try {
       DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+      dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
       Timesheet timesheet =
           Beans.get(TimesheetRepository.class).find(dailyTimesheet.getTimesheet().getId());
 
@@ -116,7 +117,8 @@ public class DailyTimesheetController {
       }
 
       // Update daily timesheet status at last after timesheet validation
-      response.setValue("statusSelect", DailyTimesheetRepository.STATUS_COMPLETED);
+      Beans.get(DailyTimesheetService.class).confirmDailyTimesheet(dailyTimesheet);
+      response.setReload(true);
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     }

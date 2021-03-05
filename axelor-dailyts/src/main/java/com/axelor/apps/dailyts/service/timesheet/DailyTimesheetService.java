@@ -34,4 +34,6 @@ public interface DailyTimesheetService {
   public BigDecimal computeDailyTotal(DailyTimesheet dailyTimesheet);
 
   public void updateFromTimesheetAndFavs(DailyTimesheet dailyTimesheet);
+
+  public void confirmDailyTimesheet(DailyTimesheet dailyTimesheet);
 }
