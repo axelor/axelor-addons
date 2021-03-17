@@ -19,6 +19,7 @@ package com.axelor.apps.office365.service;
 
 import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.ICalendarUser;
+import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.db.repo.ICalendarRepository;
 import com.axelor.apps.base.db.repo.ICalendarUserRepository;
 import com.axelor.apps.base.service.user.UserService;
@@ -57,7 +58,7 @@ public class Office365CalendarService {
 
   @SuppressWarnings("unchecked")
   @Transactional
-  public ICalendar createCalendar(JSONObject jsonObject) {
+  public ICalendar createCalendar(JSONObject jsonObject, String login) {
 
     ICalendar iCalendar = null;
     if (jsonObject != null) {
@@ -82,7 +83,9 @@ public class Office365CalendarService {
             user.setEmail(emailAddressStr);
             user.setPassword(code);
           }
+          iCalendar.setUrl(Office365Service.CALENDAR_URL);
           iCalendar.setUser(user);
+          iCalendar.setLogin(login);
         }
         iCalendarRepo.save(iCalendar);
       } catch (Exception e) {
@@ -125,6 +128,30 @@ public class Office365CalendarService {
         if (bodyObject != null) {
           event.setDescription(bodyObject.getOrDefault("content", "").toString());
         }
+
+        String sensitivity = jsonObject.getOrDefault("sensitivity", "").toString();
+        Integer visibilitySelect = 0;
+        if ("normal".equalsIgnoreCase(sensitivity)) {
+          visibilitySelect = ICalendarEventRepository.VISIBILITY_PUBLIC;
+        } else if ("private".equalsIgnoreCase(sensitivity)) {
+          visibilitySelect = ICalendarEventRepository.VISIBILITY_PRIVATE;
+        }
+        event.setVisibilitySelect(visibilitySelect);
+
+        String showAs = jsonObject.getOrDefault("showAs", "").toString();
+        Integer disponibilitySelect = 0;
+        if ("busy".equalsIgnoreCase(showAs)) {
+          disponibilitySelect = ICalendarEventRepository.DISPONIBILITY_BUSY;
+        } else if ("free".equalsIgnoreCase(showAs)) {
+          disponibilitySelect = ICalendarEventRepository.DISPONIBILITY_AVAILABLE;
+        } else if ("oof".equalsIgnoreCase(showAs)) {
+          disponibilitySelect = ICalendarEventRepository.DISPONIBILITY_AWAY;
+        } else if ("tentative".equalsIgnoreCase(showAs)) {
+          disponibilitySelect = ICalendarEventRepository.DISPONIBILITY_TENTATIVE;
+        } else if ("workingElsewhere".equalsIgnoreCase(showAs)) {
+          disponibilitySelect = ICalendarEventRepository.DISPONIBILITY_WORKING_ELSEWHERE;
+        }
+        event.setDisponibilitySelect(disponibilitySelect);
 
         setEventLocation(event, jsonObject);
         setICalendarUser(event, jsonObject);

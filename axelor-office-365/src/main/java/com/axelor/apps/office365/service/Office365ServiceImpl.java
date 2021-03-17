@@ -123,13 +123,17 @@ public class Office365ServiceImpl implements Office365Service {
       throws AxelorException, MalformedURLException {
 
     String accessToken = getAccessTocken(appOffice365);
-    URL url = new URL(Office365Service.CALENDAR_URL);
+    URL url = new URL(Office365Service.SIGNED_USER_URL);
+    JSONObject userJsonObject = fetchData(url, accessToken);
+    String login = userJsonObject.getOrDefault("userPrincipalName", "").toString();
+
+    url = new URL(Office365Service.CALENDAR_URL);
     JSONObject jsonObject = fetchData(url, accessToken);
     JSONArray calendarArray = (JSONArray) jsonObject.getOrDefault("value", new ArrayList<>());
     if (calendarArray != null) {
       for (Object object : calendarArray) {
         jsonObject = (JSONObject) object;
-        ICalendar iCalendar = calendarService.createCalendar(jsonObject);
+        ICalendar iCalendar = calendarService.createCalendar(jsonObject, login);
         syncEvent(iCalendar, accessToken);
       }
     }

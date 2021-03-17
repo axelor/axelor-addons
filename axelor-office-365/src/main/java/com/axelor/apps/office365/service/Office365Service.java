@@ -30,6 +30,7 @@ public interface Office365Service {
 
   static final String GRAPH_URL = "https://graph.microsoft.com/v1.0/";
 
+  static final String SIGNED_USER_URL = GRAPH_URL + "me";
   static final String CONTACT_URL = GRAPH_URL + "me/contacts";
   static final String CALENDAR_URL = GRAPH_URL + "me/calendars";
   static final String EVENT_URL = GRAPH_URL + "me/calendars/%s/events";
