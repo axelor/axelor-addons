@@ -17,7 +17,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import wslite.json.JSONArray;
 import wslite.json.JSONException;
@@ -169,5 +172,100 @@ public class Office365MailService {
     }
 
     return null;
+  }
+
+  @Transactional
+  @SuppressWarnings("unchecked")
+  public void createEmailMessage(Map<String, Object> mailObj) {
+
+    if (mailObj != null) {
+      try {
+        String officeMessageId = mailObj.get("id").toString();
+        Message message = messageRepo.findByOffice365Id(officeMessageId);
+
+        if (message == null) {
+          message = new Message();
+          message.setOffice365Id(officeMessageId);
+        }
+        message.setSubject(mailObj.get("subject").toString());
+        message.setContent(mailObj.get("bodyPreview").toString());
+        message.setMediaTypeSelect(MessageRepository.MEDIA_TYPE_EMAIL);
+
+        if ((boolean) mailObj.get("isDraft")) {
+          message.setStatusSelect(MessageRepository.STATUS_DRAFT);
+        } else if ((boolean) mailObj.get("isRead")) {
+          message.setTypeSelect(MessageRepository.TYPE_RECEIVED);
+        } else {
+          message.setStatusSelect(MessageRepository.STATUS_SENT);
+          message.setTypeSelect(MessageRepository.TYPE_SENT);
+        }
+
+        Map<String, Object> fromMap = (Map<String, Object>) mailObj.get("from");
+        message.setFromEmailAddress(getMessageEmailAddress(fromMap));
+
+        message.setToEmailAddressSet(getMessageEmailAddressSet(mailObj, "toRecipients"));
+        message.setReplyToEmailAddressSet(getMessageEmailAddressSet(mailObj, "replyTo"));
+        message.setCcEmailAddressSet(getMessageEmailAddressSet(mailObj, "ccRecipients"));
+        message.setBccEmailAddressSet(getMessageEmailAddressSet(mailObj, "bccRecipients"));
+
+        try {
+          LocalDateTime sentDateTime = LocalDateTime.parse(mailObj.get("sentDateTime").toString());
+          LocalDateTime receivedDateTime =
+              LocalDateTime.parse(mailObj.get("receivedDateTime").toString());
+          message.setSentDateT(sentDateTime);
+          message.setReceivedDateT(receivedDateTime);
+        } catch (Exception e) {
+          TraceBackService.trace(e);
+        }
+
+        messageRepo.save(message);
+      } catch (Exception e) {
+        TraceBackService.trace(e);
+      }
+    }
+  }
+
+  private Set<EmailAddress> getMessageEmailAddressSet(Map<String, Object> map, String key)
+      throws JSONException {
+
+    Set<EmailAddress> toEmailAddressSet = null;
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> toList = (List<Map<String, Object>>) map.get(key);
+    if (CollectionUtils.isEmpty(toList)) {
+      return toEmailAddressSet;
+    }
+
+    toEmailAddressSet = new HashSet<>();
+    for (Object obj : toList) {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> toMap = (Map<String, Object>) obj;
+      toEmailAddressSet.add(getMessageEmailAddress(toMap));
+    }
+
+    return toEmailAddressSet;
+  }
+
+  private EmailAddress getMessageEmailAddress(Map<String, Object> map) throws JSONException {
+
+    EmailAddress emailAddress = null;
+    if (map == null) {
+      return emailAddress;
+    }
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> emailAddMap = (Map<String, Object>) map.get("emailAddress");
+
+    String emailAddressStr = emailAddMap.get("address").toString();
+    if (!StringUtils.isBlank(emailAddressStr)) {
+      emailAddress = emailAddressRepo.findByAddress(emailAddressStr);
+    }
+
+    if (emailAddress == null) {
+      emailAddress = new EmailAddress();
+      emailAddress.setAddress(emailAddressStr);
+    }
+    emailAddress.setName(emailAddMap.get("name").toString());
+
+    return emailAddress;
   }
 }
