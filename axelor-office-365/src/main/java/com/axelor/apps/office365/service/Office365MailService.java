@@ -1,7 +1,11 @@
 package com.axelor.apps.office365.service;
 
+import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.base.db.repo.AppOffice365Repository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.crm.db.Event;
+import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
@@ -11,6 +15,7 @@ import com.axelor.apps.message.db.repo.MessageRepository;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.time.LocalDateTime;
@@ -33,6 +38,7 @@ public class Office365MailService {
   @Inject private MessageRepository messageRepo;
   @Inject private UserRepository userRepo;
   @Inject private PartnerRepository partnerRepository;
+  @Inject private EventRepository eventRepo;
 
   @Transactional
   @SuppressWarnings("unchecked")
@@ -218,10 +224,49 @@ public class Office365MailService {
           TraceBackService.trace(e);
         }
 
+        AppOffice365 appOffice365 = Beans.get(AppOffice365Repository.class).all().fetchOne();
+        if (appOffice365.getManageMessageRelatedTo() != null
+            && appOffice365.getManageMessageRelatedTo()) {
+          if (mailObj.containsKey("relatedTo")) {
+            String relatedTo1Select = mailObj.get("relatedTo").toString();
+            Long relatedTo1SelectId = Long.parseLong(mailObj.get("relatedTo1SelectId").toString());
+            message.setRelatedTo1Select(relatedTo1Select);
+            message.setRelatedTo1SelectId(relatedTo1SelectId);
+          }
+        }
+        scheduleEvent(message);
+
         messageRepo.save(message);
       } catch (Exception e) {
         TraceBackService.trace(e);
       }
+    }
+  }
+
+  @Transactional
+  public void scheduleEvent(Message message) {
+
+    if (message.getStatusSelect() == MessageRepository.STATUS_DRAFT) {
+      return;
+    }
+
+    try {
+      Event event;
+      String office365Id = message.getOffice365Id();
+      event = eventRepo.findByOffice365Id(office365Id);
+      if (event == null) {
+        event = new Event();
+        event.setOffice365Id(office365Id);
+        event.setTypeSelect(EventRepository.TYPE_EVENT);
+      }
+
+      event.setStartDateTime(message.getSentDateT());
+      event.setEndDateTime(message.getSentDateT());
+      event.setSubject(message.getSubject());
+      event.setDescription(message.getContent());
+      eventRepo.save(event);
+    } catch (Exception e) {
+      TraceBackService.trace(e);
     }
   }
 
