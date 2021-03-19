@@ -228,7 +228,6 @@ public class ImportOrderServiceImpl implements ImportOrderService {
                     null,
                     null,
                     remoteOrder.getReference(),
-                    remoteOrder.getAddDate().toLocalDate(),
                     null,
                     customer,
                     null);
