@@ -14,4 +14,5 @@ dependencies {
 
   compile 'com.github.scribejava:scribejava-apis:6.9.0'
   compile 'com.microsoft.azure:adal4j:1.6.4'
+  implementation 'com.squareup.okhttp3:okhttp:4.9.0'
 }
