@@ -18,19 +18,28 @@
 package com.axelor.apps.office365.service;
 
 import com.axelor.apps.base.db.Address;
+import com.axelor.apps.base.db.City;
+import com.axelor.apps.base.db.Country;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerAddress;
 import com.axelor.apps.base.db.repo.AddressRepository;
+import com.axelor.apps.base.db.repo.CityRepository;
+import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.base.db.repo.PartnerAddressRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
-import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.inject.Beans;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import wslite.json.JSONArray;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
@@ -38,6 +47,7 @@ import wslite.json.JSONObject;
 public class Office365ContactService {
 
   @Inject private PartnerService partnerService;
+  @Inject private Office365Service office365Service;
 
   @Inject private PartnerRepository partnerRepo;
   @Inject private EmailAddressRepository emailAddressRepo;
@@ -45,64 +55,48 @@ public class Office365ContactService {
   @Inject private PartnerAddressRepository partnerAddressRepo;
 
   @SuppressWarnings("unchecked")
-  public void createContact(JSONObject jsonObject) {
+  public void createContact(JSONObject jsonObject, LocalDateTime lastSyncOn) {
 
-    if (jsonObject != null) {
-      try {
-        String officeContactId = jsonObject.getOrDefault("id", "").toString();
-        Partner partner = partnerRepo.findByOffice365Id(officeContactId);
+    if (jsonObject == null) {
+      return;
+    }
 
-        if (partner == null) {
-          partner = new Partner();
-          partner.setOffice365Id(officeContactId);
-          partner.setIsContact(true);
-          partner.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_INDIVIDUAL);
-        }
-        setPartnerValues(partner, jsonObject);
-      } catch (Exception e) {
-        TraceBackService.trace(e);
+    try {
+      String officeContactId = jsonObject.getOrDefault("id", "").toString();
+      Partner partner = partnerRepo.findByOffice365Id(officeContactId);
+
+      if (partner == null) {
+        partner = new Partner();
+        partner.setOffice365Id(officeContactId);
+        partner.setIsContact(true);
+        partner.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_INDIVIDUAL);
+
+      } else if (!office365Service.needUpdation(
+          jsonObject, lastSyncOn, partner.getCreatedOn(), partner.getUpdatedOn())) {
+        return;
       }
+
+      setPartnerValues(partner, jsonObject);
+    } catch (Exception e) {
+      TraceBackService.trace(e);
     }
   }
 
-  @SuppressWarnings("unchecked")
   @Transactional
   public void setPartnerValues(Partner partner, JSONObject jsonObject) throws JSONException {
 
-    partner.setFirstName(
-        (jsonObject.getOrDefault("givenName", "").toString()
-                + " "
-                + jsonObject.getOrDefault("middleName", "").toString())
-            .trim()
-            .replaceAll("null", ""));
-    partner.setName(jsonObject.getOrDefault("surname", "").toString().replaceAll("null", ""));
-    partner.setFullName(
-        jsonObject.getOrDefault("displayName", "").toString().replaceAll("null", ""));
-    partner.setCompanyStr(jsonObject.getOrDefault("companyName", "").toString());
-    partner.setDepartment(jsonObject.getOrDefault("department", "").toString());
-    partner.setMobilePhone(jsonObject.getOrDefault("mobilePhone", "").toString());
-    partner.setDescription(jsonObject.getOrDefault("personalNotes", "").toString());
-    if (jsonObject.getOrDefault("birthday", null) != null) {
-      String birthDateStr = jsonObject.getOrDefault("birthday", "").toString();
-      if (!StringUtils.isBlank((birthDateStr)) && !birthDateStr.equals("null")) {
-        partner.setBirthdate(LocalDate.parse(birthDateStr.substring(0, birthDateStr.indexOf("T"))));
-      }
-    }
-    partner.setJobTitle(jsonObject.getOrDefault("jobTitle", "").toString());
-    partner.setNickName(jsonObject.getOrDefault("nickName", "").toString());
+    managePartnerName(jsonObject, partner);
+    partner.setCompanyStr(office365Service.processJsonValue("companyName", jsonObject));
+    partner.setDepartment(office365Service.processJsonValue("department", jsonObject));
+    partner.setMobilePhone(office365Service.processJsonValue("mobilePhone", jsonObject));
+    partner.setDescription(office365Service.processJsonValue("personalNotes", jsonObject));
+    partner.setJobTitle(office365Service.processJsonValue("jobTitle", jsonObject));
+    partner.setNickName(office365Service.processJsonValue("nickName", jsonObject));
 
-    switch (jsonObject.getOrDefault("title", null).toString().toLowerCase()) {
-      case "miss":
-        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_MS);
-        break;
-      case "dr":
-        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_DR);
-        break;
-      case "prof":
-        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_PROF);
-        break;
-      default:
-        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_M);
+    LocalDateTime dob =
+        office365Service.processLocalDateTimeValue(jsonObject, "birthday", ZoneId.systemDefault());
+    if (dob != null) {
+      partner.setBirthdate(dob.toLocalDate());
     }
 
     JSONArray phones = jsonObject.getJSONArray("homePhones");
@@ -112,6 +106,60 @@ public class Office365ContactService {
     manageEmailAddress(jsonObject, partner);
     managePartnerAddress(jsonObject, partner);
     partnerRepo.save(partner);
+  }
+
+  @Transactional
+  public void createOffice365Contact(Partner partner, String accessToken) {
+
+    try {
+      JSONObject contactJsonObject = setOffice365ContactValues(partner);
+      String office365Id =
+          office365Service.createOffice365Object(
+              Office365Service.CONTACT_URL,
+              contactJsonObject,
+              accessToken,
+              partner.getOffice365Id(),
+              "Contacts");
+      partner.setOffice365Id(office365Id);
+      partnerRepo.save(partner);
+    } catch (Exception e) {
+      TraceBackService.trace(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void managePartnerName(JSONObject jsonObject, Partner partner) {
+
+    String nameStr =
+        office365Service.processJsonValue("givenName", jsonObject)
+            + " "
+            + office365Service.processJsonValue("middleName", jsonObject);
+    switch (partner.getPartnerTypeSelect()) {
+      case PartnerRepository.PARTNER_TYPE_COMPANY:
+        partner.setName(nameStr + " " + office365Service.processJsonValue("surname", jsonObject));
+        break;
+      default:
+        partner.setFirstName(nameStr);
+        partner.setName(office365Service.processJsonValue("surname", jsonObject));
+        break;
+    }
+
+    switch (jsonObject.getOrDefault("title", "").toString().toLowerCase()) {
+      case "ms.":
+        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_MS);
+        break;
+      case "dr.":
+        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_DR);
+        break;
+      case "prof.":
+        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_PROF);
+        break;
+      case "m.":
+        partner.setTitleSelect(PartnerRepository.PARTNER_TITLE_M);
+        break;
+    }
+
+    partner.setFullName(office365Service.processJsonValue("displayName", jsonObject));
   }
 
   @SuppressWarnings("unchecked")
@@ -146,7 +194,13 @@ public class Office365ContactService {
     try {
       JSONObject homeAddressObj = jsonObject.getJSONObject("homeAddress");
       if (homeAddressObj != null && homeAddressObj.size() > 0) {
-        Address defaultAddress = partner != null ? partnerService.getDefaultAddress(partner) : null;
+        Address defaultAddress = null;
+        if (partner.getIsContact()) {
+          defaultAddress = partner.getMainAddress();
+        } else {
+          defaultAddress = partner != null ? partnerService.getDefaultAddress(partner) : null;
+        }
+
         PartnerAddress partnerAddress = null;
         if (defaultAddress == null) {
           defaultAddress = new Address();
@@ -165,11 +219,10 @@ public class Office365ContactService {
       }
 
       JSONObject businessAddressObj = jsonObject.getJSONObject("businessAddress");
-      managePartnerAddress(businessAddressObj, partner, "self.isBusinessAddr = true", true);
+      managePartnerAddress(businessAddressObj, partner, "self.isInvoicingAddr = true", true);
 
       JSONObject otherAddressObj = jsonObject.getJSONObject("otherAddress");
-      managePartnerAddress(otherAddressObj, partner, "self.isOtherAddr = true", false);
-
+      managePartnerAddress(otherAddressObj, partner, "self.isDeliveryAddr = true", false);
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
@@ -197,9 +250,9 @@ public class Office365ContactService {
       }
       manageAddress(address, partner, jsonObject);
       if (isBusinessAddr) {
-        partnerAddress.setIsBusinessAddr(true);
+        partnerAddress.setIsInvoicingAddr(true);
       } else {
-        partnerAddress.setIsOtherAddr(true);
+        partnerAddress.setIsDeliveryAddr(true);
       }
       partnerAddressRepo.save(partnerAddress);
     }
@@ -209,14 +262,151 @@ public class Office365ContactService {
   private void manageAddress(Address address, Partner partner, JSONObject jsonAddressObj) {
 
     try {
-      address.setAddressL2(jsonAddressObj.getOrDefault("street", "").toString());
-      address.setAddressL3(jsonAddressObj.getOrDefault("city", "").toString());
-      address.setAddressL4(jsonAddressObj.getOrDefault("state", "").toString());
-      address.setAddressL5(jsonAddressObj.getOrDefault("countryOrRegion", "").toString());
+      address.setAddressL2(office365Service.processJsonValue("state", jsonAddressObj));
+      address.setAddressL4(office365Service.processJsonValue("street", jsonAddressObj));
+
+      String cityStr = office365Service.processJsonValue("city", jsonAddressObj);
+      if (StringUtils.isNotBlank(cityStr)) {
+        City city = Beans.get(CityRepository.class).findByName(cityStr);
+        if (city != null) address.setCity(city);
+      }
+
+      String countryStr = jsonAddressObj.getOrDefault("countryOrRegion", "").toString();
+      if (StringUtils.isNotBlank(countryStr)) {
+        Country country = Beans.get(CountryRepository.class).findByName(countryStr);
+        if (country != null) address.setAddressL7Country(country);
+      }
+
       address.setZip(jsonAddressObj.getOrDefault("postalCode", "").toString());
       addressRepo.save(address);
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
+  }
+
+  private JSONObject setOffice365ContactValues(Partner partner) throws JSONException {
+
+    JSONObject contactJsonObject = new JSONObject();
+    String fullName = Beans.get(PartnerService.class).computeSimpleFullName(partner);
+
+    if (partner.getPartnerTypeSelect() == PartnerRepository.PARTNER_TYPE_COMPANY) {
+      office365Service.putObjValue(contactJsonObject, "givenName", fullName);
+    } else {
+      office365Service.putObjValue(contactJsonObject, "givenName", partner.getFirstName());
+      office365Service.putObjValue(contactJsonObject, "surname", partner.getName());
+    }
+    office365Service.putObjValue(contactJsonObject, "displayName", fullName);
+    office365Service.putObjValue(contactJsonObject, "companyName", partner.getCompanyStr());
+    office365Service.putObjValue(contactJsonObject, "department", partner.getDepartment());
+    office365Service.putObjValue(contactJsonObject, "mobilePhone", partner.getMobilePhone());
+    office365Service.putObjValue(contactJsonObject, "personalNotes", partner.getDescription());
+
+    String title = null;
+    switch (partner.getTitleSelect()) {
+      case 1:
+        title = "M.";
+        break;
+      case 2:
+        title = "Ms.";
+        break;
+      case 3:
+        title = "Dr";
+        break;
+      case 4:
+        title = "Prof.";
+        break;
+    }
+    office365Service.putObjValue(contactJsonObject, "title", title);
+
+    JSONArray phoneJsonArr = new JSONArray();
+    if (StringUtils.isNotBlank(partner.getFixedPhone())) {
+      phoneJsonArr.add(partner.getFixedPhone());
+    }
+    if (CollectionUtils.isNotEmpty(phoneJsonArr)) {
+      contactJsonObject.put("homePhones", (Object) phoneJsonArr);
+    }
+
+    manageOffice365EmailAddress(contactJsonObject, partner);
+    manageOffice365PartnerAddress(contactJsonObject, partner);
+
+    return contactJsonObject;
+  }
+
+  private void manageOffice365EmailAddress(JSONObject contactJsonObject, Partner partner)
+      throws JSONException {
+
+    EmailAddress emailAddress = partner.getEmailAddress();
+    if (emailAddress == null || StringUtils.isBlank(emailAddress.getAddress())) {
+      return;
+    }
+
+    JSONArray emailJsonArr = new JSONArray();
+    JSONObject emailJsonObj = new JSONObject();
+    office365Service.putObjValue(emailJsonObj, "address", emailAddress.getAddress());
+    String emailName = emailAddress.getName();
+    office365Service.putObjValue(
+        emailJsonObj,
+        "name",
+        StringUtils.isNotBlank(emailName) ? emailName : partner.getFullName());
+    emailJsonArr.add(emailJsonObj);
+    contactJsonObject.put("emailAddresses", (Object) emailJsonArr);
+  }
+
+  private void manageOffice365PartnerAddress(JSONObject contactJsonObject, Partner partner)
+      throws JSONException {
+
+    if (partner.getIsContact()) {
+      manageOffice365Address(contactJsonObject, "homeAddress", partner.getMainAddress());
+    }
+
+    List<PartnerAddress> partnerAddressList = partner.getPartnerAddressList();
+    if (CollectionUtils.isEmpty(partnerAddressList)) {
+      return;
+    }
+
+    for (PartnerAddress partnerAddress : partnerAddressList) {
+      if (partnerAddress.getIsInvoicingAddr()
+          && !contactJsonObject.containsKey("businessAddress")) {
+        manageOffice365Address(contactJsonObject, "businessAddress", partnerAddress.getAddress());
+      } else if (partnerAddress.getIsDeliveryAddr()
+          && !contactJsonObject.containsKey("otherAddress")) {
+        manageOffice365Address(contactJsonObject, "otherAddress", partnerAddress.getAddress());
+      } else if (partnerAddress.getIsDefaultAddr()) {
+        manageOffice365Address(contactJsonObject, "homeAddress", partnerAddress.getAddress());
+      } else if (!contactJsonObject.containsKey("homeAddress")) {
+        manageOffice365Address(contactJsonObject, "homeAddress", partnerAddress.getAddress());
+      }
+    }
+  }
+
+  private void manageOffice365Address(JSONObject contactJsonObject, String key, Address address)
+      throws JSONException {
+
+    if (address == null) {
+      return;
+    }
+
+    JSONObject homeAddJsonObject = new JSONObject();
+
+    String l3 = address.getAddressL3();
+    String l4 = address.getAddressL4();
+    String l5 = address.getAddressL5();
+    String addressStr =
+        (!Strings.isNullOrEmpty(l3) ? " " + l3 : "")
+            + (!Strings.isNullOrEmpty(l4) ? " " + l4 : "")
+            + (!Strings.isNullOrEmpty(l5) ? " " + l5 : "");
+    office365Service.putObjValue(homeAddJsonObject, "street", addressStr);
+
+    City city = address.getCity();
+    if (city != null) {
+      office365Service.putObjValue(homeAddJsonObject, "city", address.getCity().getName());
+    }
+    Country country = address.getAddressL7Country();
+    if (country != null) {
+      office365Service.putObjValue(
+          homeAddJsonObject, "countryOrRegion", address.getAddressL7Country().getName());
+    }
+    office365Service.putObjValue(homeAddJsonObject, "postalCode", address.getZip());
+    contactJsonObject.put(key, (Object) homeAddJsonObject);
   }
 }

@@ -3,17 +3,31 @@
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
 	<form name="partner-form" id="office365-partner-form" title="Partner" model="com.axelor.apps.base.db.Partner" extension="true">
-		<extend target="/*[last()]">
+		<extend target="/panel-tabs[@name='mainPanelTab']/*[last()]">
 			<insert position="after">
-				<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail"/>
+				<panel name="office365Panel">
+					<panel name="office365DetailPanel" colSpan="12">
+						<field name="birthdate" title="Birth date" />
+						<field name="nickName" title="Nick name"/>
+						<field name="jobTitle" title="Job title"/>
+					</panel>
+					<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail" colSpan="12"/>
+				</panel>
 			</insert>
 		</extend>
 	</form>
 
 	<form name="partner-contact-form" id="office365-partner-contact-form" title="Contact" model="com.axelor.apps.base.db.Partner" extension="true">
-		<extend target="/panel[@name='contactAttrsPanel']">
+		<extend target="/panel-tabs[@name='mainPanelTab']/*[last()]">
 			<insert position="after">
-				<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail"/>
+				<panel name="office365Panel">
+					<panel name="office365DetailPanel" colSpan="12">
+						<field name="birthdate" title="Birth date" />
+						<field name="nickName" title="Nick name"/>
+						<field name="jobTitle" title="Job title"/>
+					</panel>
+					<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail" colSpan="12"/>
+				</panel>
 			</insert>
 		</extend>
 	</form>

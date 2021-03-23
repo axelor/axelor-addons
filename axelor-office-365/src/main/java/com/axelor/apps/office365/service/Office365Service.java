@@ -19,9 +19,15 @@ package com.axelor.apps.office365.service;
 
 import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.auth.db.User;
 import com.axelor.exception.AxelorException;
 import java.net.MalformedURLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.List;
+import wslite.json.JSONException;
+import wslite.json.JSONObject;
 
 public interface Office365Service {
 
@@ -37,6 +43,25 @@ public interface Office365Service {
   static final String MAIL_URL = GRAPH_URL + "me/messages";
   static final String MAIL_USER_URL = GRAPH_URL + "users/%s/messages";
   static final String MAIL_ID_URL = GRAPH_URL + "users/%s/messages/%s";
+
+  static final List<String> SCOPES = Arrays.asList(SCOPE.split(" "));
+
+  String processJsonValue(String key, JSONObject jsonObject);
+
+  void putObjValue(JSONObject jsonObject, String key, String value) throws JSONException;
+
+  LocalDateTime processLocalDateTimeValue(JSONObject jsonObject, String key, ZoneId zoneId);
+
+  boolean needUpdation(
+      JSONObject jsonObject,
+      LocalDateTime lastSyncOn,
+      LocalDateTime createdOn,
+      LocalDateTime updatedOn);
+
+  String createOffice365Object(
+      String urlStr, JSONObject jsonObject, String accessToken, String office365Id, String key);
+
+  void putUserEmailAddress(User user, JSONObject jsonObject, String key) throws JSONException;
 
   void syncContact(AppOffice365 appOffice365) throws AxelorException, MalformedURLException;
 

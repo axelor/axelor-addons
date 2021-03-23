@@ -8,8 +8,6 @@
 
 	<entity name="PartnerAddress" lang="java">
 		<string name="office365Id" title="Office365 id"/>
-		<boolean name="isBusinessAddr" title="Business address" />
-		<boolean name="isOtherAddr" title="Other address" />
 	</entity>
 
 </domain-models>
