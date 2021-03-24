@@ -64,4 +64,6 @@ public interface ITranslation {
   public static final String EXPORT_TEMPLATE = /*$$(*/ "Total Template Exported"; /*)*/
   public static final String EXPORT_CAMAPIN = /*$$(*/ "Total Campaign Exported"; /*)*/
   public static final String EXPORT_CONTACT = /*$$(*/ "Total Contact(%s) Exported"; /*)*/
+
+  public static final String EVENT_TAG = /*$$(*/ "Event tag"; /*)*/
 }
