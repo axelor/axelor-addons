@@ -12,7 +12,7 @@
 
 	<selection name="sendinblue.event.type">
 		<option value="requests">Requests</option>
-		<option value="delivered">Delivered</option>
+		<option value="delivered">Campaign Delivered</option>
 		<option value="opened">Opened</option>
 		<option value="deferred">Deferred</option>
 		<option value="clicks">Clicks</option>

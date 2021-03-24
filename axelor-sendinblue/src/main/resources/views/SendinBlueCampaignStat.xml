@@ -9,7 +9,7 @@
 		<field name="uniqueClicks" title="Unique clicks" />
 		<field name="clickers" title="Clickers" />
 		<field name="complaints" title="Complaints" />
-		<field name="delivered" title="Delivered" />
+		<field name="delivered" title="Campaign Delivered" />
 		<field name="sent" title="Sent" />
 		<field name="hardBounces" title="Hard bounces" />
 		<field name="softBounces" title="Soft bounces" />
@@ -26,7 +26,7 @@
 			<field name="uniqueClicks" title="Unique clicks" />
 			<field name="clickers" title="Clickers" />
 			<field name="complaints" title="Complaints" />
-			<field name="delivered" title="Delivered" />
+			<field name="delivered" title="Campaign Delivered" />
 			<field name="sent" title="Sent" />
 			<field name="hardBounces" title="Hard bounces" />
 			<field name="softBounces" title="Soft bounces" />

@@ -8,7 +8,7 @@
 	<entity name="SendinBlueReport" lang="java">
 
 		<long name="requests" title="Requests" />
-		<long name="delivered" title="Delivered" />
+		<long name="delivered" title="Campaign Delivered" />
 		<long name="hardBounces" title="Hard bounces" />
 		<long name="softBounces" title="Soft bounces" />
 		<long name="clicks" title="Clicks" />

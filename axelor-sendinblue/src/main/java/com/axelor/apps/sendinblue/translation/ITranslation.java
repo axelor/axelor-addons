@@ -53,7 +53,7 @@ public interface ITranslation {
   public static final String IMPORT_CAMPAIN = /*$$(*/ "Total Campaigns Imported"; /*)*/
   public static final String IMPORT_EVENT = /*$$(*/ "Total Events Imported"; /*)*/
   public static final String IMPORT_CONTACT = /*$$(*/ "Total Contacts Imported"; /*)*/
-  public static final String IMPORT_LEAD = /*$$(*/ "Total Contacts Leads"; /*)*/
+  public static final String IMPORT_LEAD = /*$$(*/ "Total Leads Imported"; /*)*/
   public static final String IMPORT_CAMPAIN_REPORT = /*$$(*/
       "Total Campaign Reports Imported"; /*)*/
   public static final String IMPORT_CAMPAIN_STATISTICS = /*$$(*/
