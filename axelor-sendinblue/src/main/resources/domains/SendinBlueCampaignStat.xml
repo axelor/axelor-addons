@@ -12,7 +12,7 @@
 		<long name="uniqueClicks" title="Unique clicks" />
 		<long name="clickers" title="Clickers" />
 		<long name="complaints" title="Complaints" />
-		<long name="delivered" title="Delivered" />
+		<long name="delivered" title="Campaign Delivered" />
 		<long name="sent" title="Sent" />
 		<long name="hardBounces" title="Hard bounces" />
 		<long name="softBounces" title="Soft bounces" />

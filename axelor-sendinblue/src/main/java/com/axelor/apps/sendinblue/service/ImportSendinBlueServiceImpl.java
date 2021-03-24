@@ -23,6 +23,7 @@ import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.ImportSendinBlueRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
+import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -118,7 +119,7 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
       for (int i = 0; i < eventType.size(); i++) {
         Map<String, Object> dataMap = new HashMap<>();
         dataMap.put("total", (Long) result[i]);
-        dataMap.put("eventType", StringUtils.capitalize(eventType.get(i)));
+        dataMap.put("eventType", I18n.get(StringUtils.capitalize(eventType.get(i))));
         dataList.add(dataMap);
       }
     }
@@ -129,17 +130,19 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
   @Override
   public List<Map<String, Object>> getTagReport(List<Long> ids) {
     List<Map<String, Object>> dataList = new ArrayList<>();
+
     javax.persistence.Query q =
         JPA.em()
             .createQuery(
                 "SELECT new map(event, COUNT(id)) FROM SendinBlueEvent sendinBlueEvent WHERE sendinBlueEvent.tag.id IN :eventTag GROUP BY event");
     q.setParameter("eventTag", ids);
+
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> result = q.getResultList();
     for (Map<String, Object> map : result) {
       Map<String, Object> dataMap = new HashMap<>();
       dataMap.put("total", map.get("1"));
-      dataMap.put("event", StringUtils.capitalize((String) map.get("0")));
+      dataMap.put("event", I18n.get(StringUtils.capitalize((String) map.get("0"))));
       dataList.add(dataMap);
     }
     return dataList;
