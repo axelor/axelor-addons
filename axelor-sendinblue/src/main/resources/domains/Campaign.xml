@@ -9,6 +9,17 @@
 
 		<one-to-many name="sendinBlueCampaignList" title="SendinBlue Campaigns" ref="com.axelor.apps.marketing.db.SendinBlueCampaign" mappedBy="campaign"/>
 
+		<extra-code>
+		<![CDATA[
+			// capign stage select
+			public static final int CAMPAIGN_STAGE_SELECT_DRAFT = 0;
+			public static final int CAMPAIGN_STAGE_SELECT_PLANNED = 1;
+			public static final int CAMPAIGN_STAGE_SELECT_STARTED = 2;
+			public static final int CAMPAIGN_STAGE_SELECT_SUSPENDED = 3;
+			public static final int CAMPAIGN_STAGE_SELECT_ENDED = 4;
+		]]>
+		</extra-code>
+
 	</entity>
 
 </domain-models>
