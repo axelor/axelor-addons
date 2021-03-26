@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
@@ -131,14 +132,27 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
   public List<Map<String, Object>> getTagReport(List<Long> ids) {
     List<Map<String, Object>> dataList = new ArrayList<>();
 
-    javax.persistence.Query q =
-        JPA.em()
-            .createQuery(
-                "SELECT new map(event, COUNT(id)) FROM SendinBlueEvent sendinBlueEvent WHERE sendinBlueEvent.tag.id IN :eventTag GROUP BY event");
-    q.setParameter("eventTag", ids);
+    javax.persistence.Query query = null;
+    if (CollectionUtils.isNotEmpty(ids)) {
+      query =
+          JPA.em()
+              .createQuery(
+                  "SELECT new map(event, COUNT(id)) "
+                      + "FROM SendinBlueEvent sendinBlueEvent "
+                      + "WHERE event IS NOT NULL AND sendinBlueEvent.tag.id IN :eventTag "
+                      + "GROUP BY event");
+      query.setParameter("eventTag", ids);
+    } else {
+      query =
+          JPA.em()
+              .createQuery(
+                  "SELECT new map(event, COUNT(id)) "
+                      + "FROM SendinBlueEvent sendinBlueEvent "
+                      + "WHERE event IS NOT NULL GROUP BY event ");
+    }
 
     @SuppressWarnings("unchecked")
-    List<Map<String, Object>> result = q.getResultList();
+    List<Map<String, Object>> result = query.getResultList();
     for (Map<String, Object> map : result) {
       Map<String, Object> dataMap = new HashMap<>();
       dataMap.put("total", map.get("1"));

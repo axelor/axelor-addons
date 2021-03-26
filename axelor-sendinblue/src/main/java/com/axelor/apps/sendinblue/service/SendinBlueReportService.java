@@ -83,6 +83,7 @@ public class SendinBlueReportService {
   protected List<SendinBlueReport> sendinBlueReportList = new ArrayList<>();
   protected List<SendinBlueEvent> sendinBlueEventList = new ArrayList<>();
   protected List<SendinBlueContactStat> sendinBlueContactStatList = new ArrayList<>();
+  protected List<Exception> exceptions;
 
   private long totalEventImported,
       totalCampaignReportImported,
@@ -95,6 +96,7 @@ public class SendinBlueReportService {
       LocalDateTime lastImportDateTime,
       StringBuilder logWriter)
       throws AxelorException {
+    exceptions = new ArrayList<>();
     totalEventImported =
         totalCampaignReportImported = totalCampaignStatImported = totalContactStatImported = 0;
     if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
@@ -119,6 +121,9 @@ public class SendinBlueReportService {
           String.format(
               "%n%s : %s%n",
               I18n.get(ITranslation.IMPORT_CONTACT_STATISTICS), totalContactStatImported));
+    }
+    for (Exception exception : exceptions) {
+      TraceBackService.trace(exception);
     }
   }
 
@@ -174,7 +179,7 @@ public class SendinBlueReportService {
         }
       } while (total > 0);
     } catch (ApiException e) {
-      TraceBackService.trace(e);
+      exceptions.add(e);
     }
   }
 
@@ -259,7 +264,7 @@ public class SendinBlueReportService {
         }
       } while (total > 0);
     } catch (ApiException e) {
-      TraceBackService.trace(e);
+      exceptions.add(e);
     }
   }
 
@@ -384,7 +389,7 @@ public class SendinBlueReportService {
           sendinBlueCampaignStatRepo.save(sendinBlueCampaignStat);
           totalCampaignStatImported++;
         } catch (Exception e) {
-          TraceBackService.trace(e);
+          exceptions.add(e);
         }
       }
     }

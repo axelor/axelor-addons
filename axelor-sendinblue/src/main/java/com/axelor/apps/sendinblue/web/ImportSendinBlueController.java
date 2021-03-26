@@ -79,14 +79,15 @@ public class ImportSendinBlueController {
 
   public void tagReport(ActionRequest request, ActionResponse response) throws AxelorException {
     List<Map<String, Object>> dataList = null;
+    List<Long> ids = null;
     @SuppressWarnings("unchecked")
     List<LinkedHashMap<String, Integer>> obj =
         (List<LinkedHashMap<String, Integer>>) request.getContext().get("eventTag");
     if (obj != null) {
       Stream<Long> idStream = obj.stream().map(mapObj -> mapObj.get("id").longValue());
-      List<Long> ids = idStream.collect(Collectors.toList());
-      dataList = importSendinBlueService.getTagReport(ids);
+      ids = idStream.collect(Collectors.toList());
     }
+    dataList = importSendinBlueService.getTagReport(ids);
     response.setData(dataList);
   }
 }
