@@ -66,4 +66,8 @@ public interface ITranslation {
   public static final String EXPORT_CONTACT = /*$$(*/ "Total Contact(%s) Exported"; /*)*/
 
   public static final String EVENT_TAG = /*$$(*/ "Event tag"; /*)*/
+  public static final String UNIQUE_CLICKS = /*$$(*/ "UniqueClicks"; /*)*/
+  public static final String UNIQUE_OPENS = /*$$(*/ "UniqueOpens"; /*)*/
+  public static final String SPAM_REPORTS = /*$$(*/ "SpamReports"; /*)*/
+
 }
