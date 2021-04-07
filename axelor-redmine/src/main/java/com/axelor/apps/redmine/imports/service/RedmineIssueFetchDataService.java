@@ -43,7 +43,6 @@ public class RedmineIssueFetchDataService {
   private TimeEntryManager redmineTimeEntryManager;
 
   private static Integer FETCH_LIMIT = 100;
-  private static Integer TOTAL_FETCH_COUNT = 0;
 
   public Map<String, List<?>> fetchImportData(
       RedmineManager redmineManager,
@@ -65,16 +64,12 @@ public class RedmineIssueFetchDataService {
 
   public void fetchImportIssueData(String failedRedmineIssuesIds) throws RedmineException {
 
-    TOTAL_FETCH_COUNT = 0;
-    List<com.taskadapter.redmineapi.bean.Issue> importIssueList =
-        new ArrayList<com.taskadapter.redmineapi.bean.Issue>();
+    List<Issue> importIssueList = new ArrayList<Issue>();
 
     Params params = new Params();
-    Params errorIdsParams = new Params();
 
     if (lastBatchEndDate != null) {
       ZonedDateTime endOn = lastBatchEndDate.withZoneSameInstant(ZoneOffset.UTC).withNano(0);
-
       params
           .add("set_filter", "1")
           .add("f[]", "updated_on")
@@ -82,46 +77,44 @@ public class RedmineIssueFetchDataService {
           .add("v[updated_on][]", endOn.toString());
 
       if (!StringUtils.isEmpty(failedRedmineIssuesIds)) {
-        params
-            .add("f[]", "issue_id")
-            .add("op[issue_id]", "!=")
-            .add("v[issue_id][]", failedRedmineIssuesIds);
-        errorIdsParams
-            .add("set_filter", "1")
-            .add("f[]", "issue_id")
-            .add("op[issue_id]", "=")
-            .add("v[issue_id][]", failedRedmineIssuesIds);
+        params.add("f[]", "issue_id").add("op[issue_id]", "!");
+
+        for (String failedId : failedRedmineIssuesIds.split(",")) {
+          params.add("v[issue_id][]", failedId);
+        }
+
+        Params errorIdsParams =
+            new Params()
+                .add("set_filter", "1")
+                .add("f[]", "issue_id")
+                .add("op[issue_id]", "=")
+                .add("v[issue_id][]", failedRedmineIssuesIds);
+
+        addIssues(importIssueList, errorIdsParams);
       }
     } else {
       params.add("status_id", "*");
     }
 
-    List<Issue> tempIssueList;
-
-    do {
-      tempIssueList = fetchIssues(params);
-
-      if (tempIssueList != null && tempIssueList.size() > 0) {
-        importIssueList.addAll(tempIssueList);
-        TOTAL_FETCH_COUNT += tempIssueList.size();
-      } else {
-        params = !StringUtils.isEmpty(failedRedmineIssuesIds) ? errorIdsParams : null;
-        errorIdsParams = null;
-      }
-    } while (params != null);
+    addIssues(importIssueList, params);
 
     importDataMap.put("importIssueList", importIssueList);
   }
 
-  public List<Issue> fetchIssues(Params params) throws RedmineException {
+  private void addIssues(List<Issue> importIssueList, Params params) throws RedmineException {
 
-    List<Issue> issueList = null;
+    Long count = 0L;
 
-    params.add("limit", FETCH_LIMIT.toString());
-    params.add("offset", TOTAL_FETCH_COUNT.toString());
-    issueList = redmineIssueManager.getIssues(params).getResults();
+    do {
+      params.add("offset", count.toString());
 
-    return issueList;
+      List<Issue> tempIssueList = redmineIssueManager.getIssues(params).getResults();
+      if (tempIssueList == null || tempIssueList.isEmpty()) {
+        break;
+      }
+      importIssueList.addAll(tempIssueList);
+      count += tempIssueList.size();
+    } while (true);
   }
 
   public void fetchImportTimeEntryData(String failedRedmineTimeEntriesIds) throws RedmineException {
@@ -174,16 +167,16 @@ public class RedmineIssueFetchDataService {
     Map<String, String> tempParams;
 
     params.put("limit", FETCH_LIMIT.toString());
-    TOTAL_FETCH_COUNT = 0;
+    Long count = 0L;
 
     do {
       tempParams = params;
-      tempParams.put("offset", TOTAL_FETCH_COUNT.toString());
+      tempParams.put("offset", count.toString());
       tempRedmineTimeEntryList = redmineTimeEntryManager.getTimeEntries(tempParams).getResults();
 
       if (CollectionUtils.isNotEmpty(tempRedmineTimeEntryList)) {
         redmineTimeEntryList.addAll(tempRedmineTimeEntryList);
-        TOTAL_FETCH_COUNT += tempRedmineTimeEntryList.size();
+        count += tempRedmineTimeEntryList.size();
         tempRedmineTimeEntryList.clear();
       } else {
         params = null;

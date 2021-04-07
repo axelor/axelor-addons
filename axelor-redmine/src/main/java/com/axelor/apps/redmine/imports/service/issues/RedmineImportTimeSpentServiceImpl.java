@@ -308,7 +308,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportService
       timesheetLine = new TimesheetLine();
     } else if (lastBatchUpdatedOn != null
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-            || (timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+            || (timesheetLine.getUpdatedOn() != null
+                && timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
                 && timesheetLine.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
       return;
     }
