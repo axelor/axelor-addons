@@ -15,31 +15,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service;
+package com.axelor.apps.redmine.service.imports.issues;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
-import com.axelor.apps.redmine.imports.service.issues.RedmineImportIssueService;
-import com.axelor.apps.redmine.imports.service.issues.RedmineImportTimeSpentService;
-import com.axelor.apps.redmine.imports.service.log.RedmineErrorLogService;
+import com.axelor.apps.redmine.service.imports.common.RedmineFetchDataService;
+import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.imports.log.RedmineErrorLogService;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
-import com.taskadapter.redmineapi.bean.Issue;
-import com.taskadapter.redmineapi.bean.TimeEntry;
 import com.taskadapter.redmineapi.bean.User;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,29 +42,23 @@ import org.slf4j.LoggerFactory;
 public class RedmineIssueServiceImpl implements RedmineIssueService {
 
   protected RedmineImportIssueService redmineImportIssueService;
-  protected RedmineImportTimeSpentService redmineImportTimeSpentService;
-  protected RedmineIssueFetchDataService redmineIssueFetchImportDataService;
+  protected RedmineFetchDataService redmineFetchDataService;
   protected RedmineErrorLogService redmineErrorLogService;
   protected BatchRepository batchRepo;
-  protected RedmineImportMappingRepository redmineImportMappingRepository;
   protected RedmineBatchRepository redmineBatchRepo;
 
   @Inject
   public RedmineIssueServiceImpl(
       RedmineImportIssueService redmineImportIssueService,
-      RedmineImportTimeSpentService redmineImportTimeSpentService,
-      RedmineIssueFetchDataService redmineIssueFetchImportDataService,
+      RedmineFetchDataService redmineFetchDataService,
       RedmineErrorLogService redmineErrorLogService,
       BatchRepository batchRepo,
-      RedmineImportMappingRepository redmineImportMappingRepository,
       RedmineBatchRepository redmineBatchRepo) {
 
     this.redmineImportIssueService = redmineImportIssueService;
-    this.redmineImportTimeSpentService = redmineImportTimeSpentService;
-    this.redmineIssueFetchImportDataService = redmineIssueFetchImportDataService;
+    this.redmineFetchDataService = redmineFetchDataService;
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
-    this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.redmineBatchRepo = redmineBatchRepo;
   }
 
@@ -77,14 +66,13 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
   @Override
   @Transactional
-  @SuppressWarnings("unchecked")
   public void redmineImportIssue(
       Batch batch,
       RedmineManager redmineManager,
       Consumer<Object> onSuccess,
       Consumer<Throwable> onError) {
 
-    RedmineImportService.result = "";
+    RedmineImportCommonService.result = "";
 
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 
@@ -106,72 +94,56 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
     ZonedDateTime lastBatchEndDate = lastBatch != null ? lastBatch.getEndDate() : null;
     LocalDateTime lastBatchUpdatedOn = lastBatch != null ? lastBatch.getUpdatedOn() : null;
-
     String failedRedmineIssuesIds = redmineBatch.getFailedRedmineIssuesIds();
-    String failedRedmineTimeEntriesIds = redmineBatch.getFailedRedmineTimeEntriesIds();
 
-    Map<String, List<?>> importDataMap = new HashMap<>();
     HashMap<Integer, String> redmineUserMap = new HashMap<Integer, String>();
 
-    LOG.debug("Fetching issues and timespents from redmine..");
+    LOG.debug("Fetching issues from redmine..");
 
     try {
-      importDataMap =
-          redmineIssueFetchImportDataService.fetchImportData(
-              redmineManager,
-              lastBatchEndDate,
-              failedRedmineIssuesIds,
-              failedRedmineTimeEntriesIds);
-
       List<User> redmineUserList = redmineManager.getUserManager().getUsers();
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
       }
-    } catch (RedmineException e) {
-      TraceBackService.trace(e, "", batch.getId());
-    }
 
-    // CREATE MAP FOR PASS TO THE METHODS
+      // CREATE MAP FOR PASS TO THE METHODS
 
-    HashMap<String, Object> paramsMap = new HashMap<String, Object>();
+      HashMap<String, Object> paramsMap = new HashMap<String, Object>();
 
-    paramsMap.put("onError", onError);
-    paramsMap.put("onSuccess", onSuccess);
-    paramsMap.put("batch", batch);
-    paramsMap.put("errorObjList", errorObjList);
-    paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
-    paramsMap.put("redmineUserMap", redmineUserMap);
-    paramsMap.put("redmineManager", redmineManager);
+      paramsMap.put("onError", onError);
+      paramsMap.put("onSuccess", onSuccess);
+      paramsMap.put("batch", batch);
+      paramsMap.put("errorObjList", errorObjList);
+      paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
+      paramsMap.put("redmineUserMap", redmineUserMap);
+      paramsMap.put("redmineManager", redmineManager);
 
-    // IMPORT PROCESS
+      // IMPORT PROCESS
 
-    redmineImportIssueService.importIssue(
-        (List<Issue>) importDataMap.get("importIssueList"), paramsMap);
-    failedRedmineIssuesIds = batch.getRedmineBatch().getFailedRedmineIssuesIds();
+      redmineImportIssueService.importIssue(
+          redmineFetchDataService.fetchIssueImportData(
+              redmineManager, lastBatchEndDate, failedRedmineIssuesIds),
+          paramsMap);
+      failedRedmineIssuesIds = batch.getRedmineBatch().getFailedRedmineIssuesIds();
 
-    batch = batchRepo.find(batch.getId());
-    paramsMap.put("batch", batch);
+      // ATTACH ERROR LOG WITH BATCH
 
-    redmineImportTimeSpentService.importTimeSpent(
-        (List<TimeEntry>) importDataMap.get("importTimeEntryList"), paramsMap);
-    failedRedmineTimeEntriesIds = batch.getRedmineBatch().getFailedRedmineTimeEntriesIds();
+      if (errorObjList != null && errorObjList.size() > 0) {
+        MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
 
-    // ATTACH ERROR LOG WITH BATCH
+        redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
+        redmineBatch.setFailedRedmineIssuesIds(failedRedmineIssuesIds);
+        redmineBatchRepo.save(redmineBatch);
 
-    if (errorObjList != null && errorObjList.size() > 0) {
-      MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
-
-      redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
-      redmineBatch.setFailedRedmineIssuesIds(failedRedmineIssuesIds);
-      redmineBatch.setFailedRedmineTimeEntriesIds(failedRedmineTimeEntriesIds);
-      redmineBatchRepo.save(redmineBatch);
-
-      if (errorMetaFile != null) {
-        batch = batchRepo.find(batch.getId());
-        batch.setErrorLogFile(errorMetaFile);
-        batchRepo.save(batch);
+        if (errorMetaFile != null) {
+          batch = batchRepo.find(batch.getId());
+          batch.setErrorLogFile(errorMetaFile);
+          batchRepo.save(batch);
+        }
       }
+    } catch (Exception e) {
+      TraceBackService.trace(e, "", batch.getId());
     }
   }
 }

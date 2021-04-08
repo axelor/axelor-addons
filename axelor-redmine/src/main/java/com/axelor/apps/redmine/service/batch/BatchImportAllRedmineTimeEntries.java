@@ -22,14 +22,14 @@ import com.axelor.apps.redmine.service.imports.RedmineService;
 import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
 import com.google.inject.Inject;
 
-public class BatchImportAllRedmineIssue extends AbstractBatch {
+public class BatchImportAllRedmineTimeEntries extends AbstractBatch {
 
   @Inject private RedmineService redmineService;
 
   @Override
   protected void process() {
 
-    redmineService.redmineImportIssues(
+    redmineService.redmineImportTimeEntries(
         batch, ticket -> incrementDone(), error -> incrementAnomaly());
   }
 

@@ -15,12 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service;
+package com.axelor.apps.redmine.service.imports.projects;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
-import com.axelor.apps.redmine.imports.service.log.RedmineErrorLogService;
-import com.axelor.apps.redmine.imports.service.projects.RedmineImportProjectService;
+import com.axelor.apps.redmine.service.imports.common.RedmineFetchDataService;
+import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.imports.log.RedmineErrorLogService;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -39,19 +40,19 @@ import org.slf4j.LoggerFactory;
 public class RedmineProjectServiceImpl implements RedmineProjectService {
 
   protected RedmineImportProjectService redmineImportProjectService;
-  protected RedmineProjectFetchDataService redmineProjectFetchImportDataService;
+  protected RedmineFetchDataService redmineFetchDataService;
   protected RedmineErrorLogService redmineErrorLogService;
   protected BatchRepository batchRepo;
 
   @Inject
   public RedmineProjectServiceImpl(
       RedmineImportProjectService redmineImportProjectService,
-      RedmineProjectFetchDataService redmineProjectFetchImportDataService,
+      RedmineFetchDataService redmineFetchDataService,
       RedmineErrorLogService redmineErrorLogService,
       BatchRepository batchRepo) {
 
     this.redmineImportProjectService = redmineImportProjectService;
-    this.redmineProjectFetchImportDataService = redmineProjectFetchImportDataService;
+    this.redmineFetchDataService = redmineFetchDataService;
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
   }
@@ -66,7 +67,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       Consumer<Object> onSuccess,
       Consumer<Throwable> onError) {
 
-    RedmineImportService.result = "";
+    RedmineImportCommonService.result = "";
 
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 
@@ -92,7 +93,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     LOG.debug("Fetching projects from redmine..");
 
     try {
-      importProjectList = redmineProjectFetchImportDataService.fetchImportData(redmineManager);
+      importProjectList = redmineFetchDataService.fetchProjectImportData(redmineManager);
 
       List<User> redmineUserList = redmineManager.getUserManager().getUsers();
 

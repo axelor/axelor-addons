@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service;
+package com.axelor.apps.redmine.service.imports.common;
 
 import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;
@@ -25,6 +25,7 @@ import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.TimeEntryManager;
 import com.taskadapter.redmineapi.bean.Issue;
+import com.taskadapter.redmineapi.bean.Project;
 import com.taskadapter.redmineapi.bean.TimeEntry;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -35,38 +36,31 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 
-public class RedmineIssueFetchDataService {
+public class RedmineFetchDataService {
 
-  private ZonedDateTime lastBatchEndDate;
-  private HashMap<String, List<?>> importDataMap;
   private IssueManager redmineIssueManager;
   private TimeEntryManager redmineTimeEntryManager;
 
   private static Integer FETCH_LIMIT = 100;
 
-  public Map<String, List<?>> fetchImportData(
-      RedmineManager redmineManager,
-      ZonedDateTime lastBatchEndDate,
-      String failedRedmineIssuesIds,
-      String failedRedmineTimeEntriesIds)
+  public List<Project> fetchProjectImportData(RedmineManager redmineManager)
       throws RedmineException {
 
-    this.lastBatchEndDate = lastBatchEndDate;
-    this.importDataMap = new HashMap<String, List<?>>();
-    this.redmineIssueManager = redmineManager.getIssueManager();
-    this.redmineTimeEntryManager = redmineManager.getTimeEntryManager();
-
-    this.fetchImportIssueData(failedRedmineIssuesIds);
-    this.fetchImportTimeEntryData(failedRedmineTimeEntriesIds);
-
-    return importDataMap;
+    return redmineManager.getProjectManager().getProjects();
   }
 
-  public void fetchImportIssueData(String failedRedmineIssuesIds) throws RedmineException {
+  public List<Issue> fetchIssueImportData(
+      RedmineManager redmineManager, ZonedDateTime lastBatchEndDate, String failedRedmineIssuesIds)
+      throws RedmineException {
+
+    redmineIssueManager = redmineManager.getIssueManager();
 
     List<Issue> importIssueList = new ArrayList<Issue>();
 
     Params params = new Params();
+
+    params.add("sort", "updated_on");
+    params.add("limit", FETCH_LIMIT.toString());
 
     if (lastBatchEndDate != null) {
       ZonedDateTime endOn = lastBatchEndDate.withZoneSameInstant(ZoneOffset.UTC).withNano(0);
@@ -98,7 +92,7 @@ public class RedmineIssueFetchDataService {
 
     addIssues(importIssueList, params);
 
-    importDataMap.put("importIssueList", importIssueList);
+    return importIssueList;
   }
 
   private void addIssues(List<Issue> importIssueList, Params params) throws RedmineException {
@@ -117,7 +111,13 @@ public class RedmineIssueFetchDataService {
     } while (true);
   }
 
-  public void fetchImportTimeEntryData(String failedRedmineTimeEntriesIds) throws RedmineException {
+  public List<TimeEntry> fetchTimeEntryImportData(
+      RedmineManager redmineManager,
+      ZonedDateTime lastBatchEndDate,
+      String failedRedmineTimeEntriesIds)
+      throws RedmineException {
+
+    redmineTimeEntryManager = redmineManager.getTimeEntryManager();
 
     List<com.taskadapter.redmineapi.bean.TimeEntry> importTimeEntryList = null;
 
@@ -157,7 +157,7 @@ public class RedmineIssueFetchDataService {
       }
     }
 
-    importDataMap.put("importTimeEntryList", importTimeEntryList);
+    return importTimeEntryList;
   }
 
   public List<TimeEntry> fetchTimeEntries(Map<String, String> params) throws RedmineException {

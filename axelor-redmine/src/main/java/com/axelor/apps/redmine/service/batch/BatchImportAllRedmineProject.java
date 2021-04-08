@@ -18,8 +18,8 @@
 package com.axelor.apps.redmine.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.redmine.imports.service.RedmineImportService;
-import com.axelor.apps.redmine.service.RedmineService;
+import com.axelor.apps.redmine.service.imports.RedmineService;
+import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
 import com.google.inject.Inject;
 
 public class BatchImportAllRedmineProject extends AbstractBatch {
@@ -37,7 +37,7 @@ public class BatchImportAllRedmineProject extends AbstractBatch {
   protected void stop() {
 
     super.stop();
-    String comments = RedmineImportService.result;
+    String comments = RedmineImportCommonService.result;
     addComment(comments);
   }
 }
