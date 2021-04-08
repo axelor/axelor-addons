@@ -88,7 +88,10 @@
 
 	<action-attrs name="action-batch-attrs-hide-creted-updated-set">
 		<attribute name="hidden"
-			for="createdProjectsInOs,createdProjectsInOsBtn,updatedProjectsInOs,updatedProjectsInOsBtn"
+			for="createdProjectsInOs,createdProjectsInOsBtn,updatedProjectsInOs,updatedProjectsInOsBtn,createdTasksInOs,createdTasksInOsBtn,updatedTasksInOs,updatedTasksInOsBtn"
+			expr="eval: true" if="eval: _parent?.redmineActionSelect == 2" />
+		<attribute name="hidden"
+			for="createdProjectsInOs,createdProjectsInOsBtn,updatedProjectsInOs,updatedProjectsInOsBtn,createdTimesheetLinesInOs,createdTimesheetLinesInOsBtn,updatedTimesheetLinesInOs,updatedTimesheetLinesInOsBtn"
 			expr="eval: true" if="eval: _parent?.redmineActionSelect == 1" />
 		<attribute name="hidden"
 			for="createdTasksInOs,createdTasksInOsBtn,updatedTasksInOs,updatedTasksInOsBtn,createdTimesheetLinesInOs,createdTimesheetLinesInOsBtn,updatedTimesheetLinesInOs,updatedTimesheetLinesInOsBtn"

@@ -24,6 +24,7 @@
 			<field name="isImportIssuesWithActivities" widget="boolean-switch"
 				help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
 				showIf="redmineActionSelect == 1" />
+			<field name="isOverrideRecords" widget="boolean-switch" showIf="redmineActionSelect == 2" />
 		</panel>
 		<panel-tabs>
 			<panel name="actionPanel" title="Actions">
@@ -34,6 +35,9 @@
 					<button name="redmineImportIssuesBtn" title="Redmine Import Issues"
 						onClick="save,action-redmine-batch-method-import-issues" colSpan="12"
 						hidden="true" showIf="redmineActionSelect == 1" />
+					<button name="redmineImportTimeEntriesBtn" title="Redmine Import Time Entries"
+						onClick="save,action-redmine-batch-method-import-time-entries" colSpan="12"
+						showIf="redmineActionSelect == 2" />
 				</panel>
 			</panel>
 			<panel name="information" title="Information">
@@ -69,6 +73,11 @@
 	<action-method name="action-redmine-batch-method-import-issues">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
 			method="redmineImportIssues" />
+	</action-method>
+
+	<action-method name="action-redmine-batch-method-import-time-entries">
+		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
+			method="redmineImportTimeEntries" />
 	</action-method>
 
 </object-views>

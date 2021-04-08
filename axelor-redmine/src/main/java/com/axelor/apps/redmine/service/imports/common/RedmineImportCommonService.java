@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service;
+package com.axelor.apps.redmine.service.imports.common;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -52,7 +52,7 @@ import net.java.textilej.parser.markup.textile.TextileDialect;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class RedmineImportService {
+public class RedmineImportCommonService {
 
   protected UserRepository userRepo;
   protected ProjectRepository projectRepo;
@@ -64,7 +64,7 @@ public class RedmineImportService {
   protected CompanyRepository companyRepo;
 
   @Inject
-  public RedmineImportService(
+  public RedmineImportCommonService(
       UserRepository userRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,

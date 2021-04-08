@@ -15,13 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.imports.service.issues;
+package com.axelor.apps.redmine.service.imports.projects;
 
-import com.taskadapter.redmineapi.bean.Issue;
+import com.taskadapter.redmineapi.bean.Project;
 import java.util.HashMap;
 import java.util.List;
 
-public interface RedmineImportIssueService {
+public interface RedmineImportProjectService {
 
-  void importIssue(List<Issue> importIssueList, HashMap<String, Object> paramsMap);
+  void importProject(List<Project> importProjectList, HashMap<String, Object> paramsMap);
 }
