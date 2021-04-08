@@ -66,13 +66,12 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
   @Override
-  public ProjectTask updateTask(ProjectTask projectTask, AppBusinessProject appBusinessProject)
-      throws AxelorException {
+  public ProjectTask updateTaskToInvoice(
+      ProjectTask projectTask, AppBusinessProject appBusinessProject) {
     if (!projectTask.getIsOffered()) {
-      return super.updateTask(projectTask, appBusinessProject);
+      return super.updateTaskToInvoice(projectTask, appBusinessProject);
     }
-    projectTask = computeDefaultInformation(projectTask);
-    return projectTaskRepo.save(projectTask);
+    return projectTask;
   }
 
   @Override

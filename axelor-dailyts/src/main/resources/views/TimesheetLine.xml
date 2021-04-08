@@ -25,8 +25,8 @@
 			onChange="action-timesheet-line-method-set-duration,action-timesheet-line-attrs-set-default-duration-for-customer" />
 		<field name="durationForCustomer" />
 		<field name="durationUnit" />
-		<field name="toInvoice" if-module="axelor-business-project"
-			if="__config__.app.isApp('business-project')" />
+		<field name="toInvoice" readonly="true" if-module="axelor-business-project" if="__config__.app.isApp('business-project') &amp;&amp; __config__.app.getApp('business-project').automaticInvoicing"/>
+		<field name="toInvoice" if-module="axelor-business-project" if="__config__.app.isApp('business-project') &amp;&amp; !__config__.app.getApp('business-project').automaticInvoicing"/>
 		<field name="comments" />
 		<field name="timesheet" hidden="true" />
 		<field name="user" hidden="true" />
