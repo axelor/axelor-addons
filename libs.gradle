@@ -17,3 +17,5 @@ libs.sendinblue = 'com.sendinblue:sib-api-v3-sdk:3.0.1'
 
 libs.json = 'org.json:json:20090211'
 libs.java_textile = 'net.java:textile-j:2.2'
+
+libs.fasterxml = 'com.fasterxml.jackson.core:jackson-core:2.12.0'
