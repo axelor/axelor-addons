@@ -253,6 +253,16 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
             || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
                 && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
+      LOG.debug(
+          "Updating project members, trackers and versions: " + redmineProject.getIdentifier());
+
+      importProjectMembersAndTrackers(redmineProject, project);
+      projectRepo.save(project);
+
+      if (isAppBusinessSupport) {
+        importProjectVersions(redmineProject.getId(), project);
+      }
+
       return;
     }
 
@@ -355,41 +365,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
             ? ProjectRepository.TYPE_PHASE
             : ProjectRepository.TYPE_PROJECT);
 
-    try {
-      List<Membership> redmineProjectMembers =
-          redmineProjectManager.getProjectMembers(redmineProject.getId());
-
-      if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
-
-        for (Membership membership : redmineProjectMembers) {
-          User user = getOsUser(membership.getUserId());
-
-          if (user != null) {
-            project.addMembersUserSetItem(user);
-          }
-        }
-      } else {
-        project.clearMembersUserSet();
-      }
-    } catch (RedmineException e) {
-      TraceBackService.trace(e, "", batch.getId());
-    }
-
-    Collection<Tracker> redmineTrackers = redmineProject.getTrackers();
-
-    if (redmineTrackers != null && !redmineTrackers.isEmpty()) {
-
-      for (Tracker tracker : redmineTrackers) {
-        TeamTaskCategory projectCategory =
-            projectCategoryRepo.findByName(fieldMap.get(tracker.getName()));
-
-        if (projectCategory != null) {
-          project.addTeamTaskCategorySetItem(projectCategory);
-        }
-      }
-    } else {
-      project.clearTeamTaskCategorySet();
-    }
+    importProjectMembersAndTrackers(redmineProject, project);
 
     if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
       project.setStatusSelect(ProjectRepository.STATE_FINISHED);
@@ -428,6 +404,50 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
     }
 
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
+  }
+
+  public void importProjectMembersAndTrackers(
+      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+
+    // Import members
+
+    try {
+      List<Membership> redmineProjectMembers =
+          redmineProjectManager.getProjectMembers(redmineProject.getId());
+
+      if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
+
+        for (Membership membership : redmineProjectMembers) {
+          User user = getOsUser(membership.getUserId());
+
+          if (user != null) {
+            project.addMembersUserSetItem(user);
+          }
+        }
+      } else {
+        project.clearMembersUserSet();
+      }
+    } catch (RedmineException e) {
+      TraceBackService.trace(e, "", batch.getId());
+    }
+
+    // Import trackers
+
+    Collection<Tracker> redmineTrackers = redmineProject.getTrackers();
+
+    if (redmineTrackers != null && !redmineTrackers.isEmpty()) {
+
+      for (Tracker tracker : redmineTrackers) {
+        TeamTaskCategory projectCategory =
+            projectCategoryRepo.findByName(fieldMap.get(tracker.getName()));
+
+        if (projectCategory != null) {
+          project.addTeamTaskCategorySetItem(projectCategory);
+        }
+      }
+    } else {
+      project.clearTeamTaskCategorySet();
+    }
   }
 
   public void importProjectVersions(Integer redmineProjectId, Project project) {
