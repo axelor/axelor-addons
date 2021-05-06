@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
 	<form name="partner-form" id="office365-partner-form" title="Partner" model="com.axelor.apps.base.db.Partner" extension="true">
-		<extend target="/*[last()]">
+		<extend target="/panel[@name='partnerAttrsPanel']">
 			<insert position="after">
 				<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail"/>
 			</insert>
