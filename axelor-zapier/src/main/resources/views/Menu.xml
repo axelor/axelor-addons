@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+    <menuitem name="zapier-root" title="Zapier" order="-70" icon="fa-pencil-square-o" icon-background="green" />
+
+    <menuitem name="zapier-embeded" title="Zapier starter" parent="zapier-root" action="zapier.embeded" order="10" />
+
+    <action-view name="zapier.embeded" title="Zapier starter">
+        <view type="html" name="zapier" />
+    </action-view>		
+
+</object-views>
