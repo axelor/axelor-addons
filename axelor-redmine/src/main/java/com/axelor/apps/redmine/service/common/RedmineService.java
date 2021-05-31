@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports;
+package com.axelor.apps.redmine.service.common;
 
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
@@ -31,7 +31,7 @@ public interface RedmineService {
   public void redmineImportIssues(
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError);
 
-  public void redmineImportTimeEntries(
+  public void redmineSyncTimeEntries(
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError);
 
   public RedmineManager getRedmineManager(AppRedmine appRedmine) throws AxelorException;

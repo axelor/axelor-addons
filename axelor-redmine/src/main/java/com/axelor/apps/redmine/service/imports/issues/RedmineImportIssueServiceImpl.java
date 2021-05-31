@@ -39,7 +39,7 @@ import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.TeamTaskRedmineService;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -84,7 +84,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
+public class RedmineImportIssueServiceImpl extends RedmineCommonService
     implements RedmineImportIssueService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
@@ -189,6 +189,8 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
       this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
 
+      serverTimeZone = appRedmine.getServerTimezone();
+
       List<Option> selectionList = new ArrayList<>();
       selectionList.addAll(MetaStore.getSelectionList("team.task.status"));
       selectionList.addAll(MetaStore.getSelectionList("team.task.priority"));
@@ -270,7 +272,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
 
     String resultStr =
         String.format("Redmine Issue -> ABS Teamtask : Success: %d Fail: %d", success, fail);
-    result += String.format("%s \n", resultStr);
+    setResult(getResult() + String.format("%s \n", resultStr));
     LOG.debug(resultStr);
     success = fail = 0;
   }
@@ -375,8 +377,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
   public void createOpenSuiteIssue(Issue redmineIssue, Boolean isImportIssuesWithActivities) {
 
     TeamTask teamTask = teamTaskRepo.findByRedmineId(redmineIssue.getId());
-    LocalDateTime redmineUpdatedOn =
-        redmineIssue.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    LocalDateTime redmineUpdatedOn = getRedmineDate(redmineIssue.getUpdatedOn());
 
     if (teamTask == null) {
       teamTask = new TeamTask();

@@ -35,8 +35,8 @@
 					<button name="redmineImportIssuesBtn" title="Redmine Import Issues"
 						onClick="save,action-redmine-batch-method-import-issues" colSpan="12"
 						hidden="true" showIf="redmineActionSelect == 1" />
-					<button name="redmineImportTimeEntriesBtn" title="Redmine Import Time Entries"
-						onClick="save,action-redmine-batch-method-import-time-entries" colSpan="12"
+					<button name="redmineSyncTimeEntriesBtn" title="Redmine Sync Time Entries"
+						onClick="save,action-redmine-batch-method-sync-time-entries" colSpan="12"
 						showIf="redmineActionSelect == 2" />
 				</panel>
 			</panel>
@@ -75,9 +75,9 @@
 			method="redmineImportIssues" />
 	</action-method>
 
-	<action-method name="action-redmine-batch-method-import-time-entries">
+	<action-method name="action-redmine-batch-method-sync-time-entries">
 		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="redmineImportTimeEntries" />
+			method="redmineSyncTimeEntries" />
 	</action-method>
 
 </object-views>
