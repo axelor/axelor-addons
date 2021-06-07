@@ -130,4 +130,11 @@ public class DailyTimesheetController {
     response.setValue(
         "dailyTotal", Beans.get(DailyTimesheetService.class).computeDailyTotal(dailyTimesheet));
   }
+
+  public void updateRelatedTimesheet(ActionRequest request, ActionResponse response) {
+
+    DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+    response.setValue(
+        "timesheet", Beans.get(DailyTimesheetService.class).updateRelatedTimesheet(dailyTimesheet));
+  }
 }

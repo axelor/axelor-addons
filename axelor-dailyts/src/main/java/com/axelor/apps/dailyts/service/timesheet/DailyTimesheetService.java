@@ -36,4 +36,6 @@ public interface DailyTimesheetService {
   public void updateFromTimesheetAndFavs(DailyTimesheet dailyTimesheet);
 
   public void confirmDailyTimesheet(DailyTimesheet dailyTimesheet);
+
+  public Timesheet updateRelatedTimesheet(DailyTimesheet dailyTimesheet);
 }

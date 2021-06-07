@@ -18,7 +18,7 @@
 	<form name="daily-timesheet-form" title="Daily timesheet"
 		model="com.axelor.apps.hr.db.DailyTimesheet"
 		onNew="action-daily-timesheet-attrs-default-values,action-daily-timesheet-method-update-from-timesheet-and-favourites"
-		onLoad="action-daily-timesheet-method-update-from-timesheet,save"
+		onLoad="action-daily-timesheet-method-update-from-timesheet,action-daily-timesheet-method-update-related-timesheet,save"
 		width="large">
 
 		<panel name="mainPanel">
@@ -38,14 +38,14 @@
 		</panel>
 		<panel name="actionPanel" sidebar="true">
 			<button name="confirmBtn" title="Confirm" showIf="statusSelect == 0"
-				onClick="save,action-daily-timesheet-method-confirm" />
+				onClick="action-daily-timesheet-method-update-related-timesheet,save,action-daily-timesheet-method-confirm" />
 			<button name="resetBtn" title="Reset" showIf="statusSelect == 1"
-				onClick="action-daily-timesheet-attrs-status-draft,save" if="eval: __user__.employee?.hrManager" />
+				onClick="action-daily-timesheet-attrs-status-draft,action-daily-timesheet-method-update-related-timesheet,save" if="eval: __user__.employee?.hrManager" />
 			<button name="createLinesFromActivitiesBtn" title="Create lines from activities"
-				onClick="save,action-daily-timesheet-method-update-from-activities"
+				onClick="action-daily-timesheet-method-update-related-timesheet,save,action-daily-timesheet-method-update-from-activities"
 				showIf="statusSelect == 0" />
 			<button name="createLinesFromEventsBtn" title="Create lines from events"
-				onClick="save,action-daily-timesheet-method-update-from-events"
+				onClick="action-daily-timesheet-method-update-related-timesheet,save,action-daily-timesheet-method-update-from-events"
 				showIf="statusSelect == 0" />
 		</panel>
 		<panel name="totalPanel" sidebar="true">
@@ -107,6 +107,11 @@
 	<action-method name="action-daily-timesheet-method-compute-daily-total">
 		<call class="com.axelor.apps.dailyts.web.timesheet.DailyTimesheetController"
 			method="computeDailyTotal" />
+	</action-method>
+
+	<action-method name="action-daily-timesheet-method-update-related-timesheet">
+		<call class="com.axelor.apps.dailyts.web.timesheet.DailyTimesheetController"
+			method="updateRelatedTimesheet" />
 	</action-method>
 
 </object-views>
