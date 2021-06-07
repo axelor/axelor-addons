@@ -34,6 +34,7 @@ import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.auth.db.User;
+import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.team.db.TeamTask;
@@ -415,5 +416,20 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     dailyTimesheet.setStatusSelect(DailyTimesheetRepository.STATUS_COMPLETED);
     dailyTimesheetRepository.save(dailyTimesheet);
+  }
+
+  @Override
+  @Transactional
+  public Timesheet updateRelatedTimesheet(DailyTimesheet dailyTimesheet) {
+
+    Timesheet timesheet = dailyTimesheet.getTimesheet();
+    timesheet.setPeriodTotal(Beans.get(TimesheetService.class).computePeriodTotal(timesheet));
+
+    if (timesheet.getToDate() != null
+        && timesheet.getToDate().isBefore(dailyTimesheet.getDailyTimesheetDate())) {
+      timesheet.setToDate(dailyTimesheet.getDailyTimesheetDate());
+    }
+
+    return timesheet;
   }
 }
