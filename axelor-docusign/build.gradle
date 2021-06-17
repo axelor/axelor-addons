@@ -5,10 +5,9 @@ plugins {
 apply plugin: "com.axelor.app-module"
 
 apply from: "../libs.gradle"
-apply from: "../version.gradle"
 
 apply {
-	version = openSuiteVersion
+	version = "6.1-SNAPSHOT"
 }
 
 axelor {
