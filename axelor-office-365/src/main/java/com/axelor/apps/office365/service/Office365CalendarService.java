@@ -23,7 +23,7 @@ import com.axelor.apps.base.db.ICalendarUser;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.db.repo.ICalendarRepository;
 import com.axelor.apps.base.db.repo.ICalendarUserRepository;
-import com.axelor.apps.base.service.user.UserService;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.EventCategory;
 import com.axelor.apps.crm.db.EventReminder;
@@ -33,9 +33,11 @@ import com.axelor.apps.crm.db.repo.EventReminderRepository;
 import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.crm.db.repo.RecurrenceConfigurationRepository;
 import com.axelor.apps.crm.service.EventService;
+import com.axelor.apps.office.db.OfficeAccount;
 import com.axelor.auth.AuthUtils;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
+import com.axelor.common.ObjectUtils;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
@@ -48,7 +50,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import wslite.json.JSONArray;
 import wslite.json.JSONException;
@@ -66,8 +67,11 @@ public class Office365CalendarService {
   @Inject private RecurrenceConfigurationRepository recurrenceConfigurationRepo;
   @Inject private UserRepository userRepo;
 
+  private static final String DEFAULT_CAL_NAME = "AOS_Office365 Calendar";
+
   @Transactional
-  public ICalendar createCalendar(JSONObject jsonObject, String login, LocalDateTime lastSyncOn) {
+  public ICalendar createCalendar(
+      JSONObject jsonObject, OfficeAccount officeAccount, LocalDateTime lastSyncOn) {
 
     if (jsonObject == null) {
       return null;
@@ -80,6 +84,10 @@ public class Office365CalendarService {
       if (iCalendar == null) {
         iCalendar = new ICalendar();
         iCalendar.setOffice365Id(office365Id);
+        iCalendar.setOfficeAccount(officeAccount);
+        iCalendar.setTypeSelect(ICalendarRepository.OFFICE_365);
+        iCalendar.setSynchronizationSelect(ICalendarRepository.CRM_SYNCHRO);
+        iCalendar.setSynchronizationDuration(5);
       }
 
       iCalendar.setName(office365Service.processJsonValue("name", jsonObject));
@@ -93,20 +101,24 @@ public class Office365CalendarService {
   }
 
   @Transactional
-  public void createOffice365Calendar(ICalendar calendar, String accessToken) {
+  public void createOffice365Calendar(
+      ICalendar calendar, OfficeAccount officeAccount, String accessToken) {
 
     try {
       JSONObject calendarJsonObject = new JSONObject();
       office365Service.putObjValue(calendarJsonObject, "name", calendar.getName());
       office365Service.putUserEmailAddress(calendar.getUser(), calendarJsonObject, "owner");
+
       String office365Id =
           office365Service.createOffice365Object(
               Office365Service.CALENDAR_URL,
               calendarJsonObject,
               accessToken,
               calendar.getOffice365Id(),
-              "Calendars");
+              "calendars");
+
       calendar.setOffice365Id(office365Id);
+      calendar.setOfficeAccount(officeAccount);
       iCalendarRepo.save(calendar);
     } catch (Exception e) {
       TraceBackService.trace(e);
@@ -116,29 +128,49 @@ public class Office365CalendarService {
   @Transactional
   public void createEvent(
       JSONObject jsonObject,
+      OfficeAccount officeAccount,
       ICalendar iCalendar,
       ICalendar defaultCalendar,
-      LocalDateTime lastSyncOn) {
+      LocalDateTime lastSyncOn,
+      LocalDateTime now) {
 
     if (jsonObject == null) {
       return;
     }
 
     try {
+      LocalDateTime eventStart = getLocalDateTime(jsonObject.getJSONObject("start"));
+      LocalDateTime eventEnd = getLocalDateTime(jsonObject.getJSONObject("end"));
+      if (iCalendar.getSynchronizationDuration() > 0) {
+        LocalDateTime start = now.minusWeeks(iCalendar.getSynchronizationDuration());
+        LocalDateTime end = now.plusWeeks(iCalendar.getSynchronizationDuration());
+        if (!isDateWithinRange(eventStart, start, end)
+            && !isDateWithinRange(eventEnd, start, end)) {
+          return;
+        }
+      }
+
       String office365Id = office365Service.processJsonValue("id", jsonObject);
       ICalendarEvent event = eventRepo.findByOffice365Id(office365Id);
-
       if (event == null) {
         event = new Event();
         event.setOffice365Id(office365Id);
         event.setTypeSelect(EventRepository.TYPE_EVENT);
 
-      } else if (!office365Service.needUpdation(
-          jsonObject, lastSyncOn, event.getCreatedOn(), event.getUpdatedOn())) {
+      } else if (!iCalendar.getKeepRemote()
+          && !office365Service.needUpdation(
+              jsonObject, lastSyncOn, event.getCreatedOn(), event.getUpdatedOn())) {
         return;
       }
 
-      setEventValues(jsonObject, event, iCalendar, defaultCalendar);
+      setEventValues(
+          jsonObject,
+          event,
+          iCalendar,
+          defaultCalendar,
+          officeAccount.getOwnerUser(),
+          eventStart,
+          eventEnd);
       eventRepo.save(event);
     } catch (Exception e) {
       TraceBackService.trace(e);
@@ -147,30 +179,142 @@ public class Office365CalendarService {
 
   @Transactional
   public void createOffice365Event(
-      ICalendarEvent event, String accessToken, User currentUser, ICalendar defaultCalendar) {
+      ICalendarEvent event,
+      OfficeAccount officeAccount,
+      String accessToken,
+      User currentUser,
+      ICalendar defaultCalendar,
+      LocalDateTime now) {
 
     try {
-      String calendarId = null;
-      if (event.getCalendar() != null
-          && StringUtils.isNotBlank(event.getCalendar().getOffice365Id())) {
-        calendarId = event.getCalendar().getOffice365Id();
-      } else if (defaultCalendar != null
-          && StringUtils.isNotBlank(defaultCalendar.getOffice365Id())) {
-        calendarId = defaultCalendar.getOffice365Id();
-      } else {
+      ICalendar calendar = event.getCalendar();
+      String calendarId = getCalendarOffice365Id(calendar, defaultCalendar);
+      if (calendarId == null) {
         return;
+      }
+
+      if (calendar.getSynchronizationDuration() > 0) {
+        LocalDateTime start = now.minusWeeks(calendar.getSynchronizationDuration());
+        LocalDateTime end = now.plusWeeks(calendar.getSynchronizationDuration());
+        if (!isDateWithinRange(event.getStartDateTime(), start, end)
+            && !isDateWithinRange(event.getEndDateTime(), start, end)) {
+          return;
+        }
       }
 
       JSONObject eventJsonObject = setOffice365EventValues(event, currentUser);
       String urlStr = String.format(Office365Service.EVENT_URL, calendarId);
       String office365Id =
           office365Service.createOffice365Object(
-              urlStr, eventJsonObject, accessToken, event.getOffice365Id(), "Events");
+              urlStr, eventJsonObject, accessToken, event.getOffice365Id(), "events");
       event.setOffice365Id(office365Id);
       eventRepo.save(event);
+
+      calendar.setLastSynchronizationDateT(
+          Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime());
+      iCalendarRepo.save(calendar);
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
+  }
+
+  public String getCalendarOffice365Id(ICalendar calendar, ICalendar defaultCalendar) {
+
+    String calendarId = null;
+
+    if (calendar != null && StringUtils.isNotBlank(calendar.getOffice365Id())) {
+      calendarId = calendar.getOffice365Id();
+    }
+
+    if (calendarId == null
+        && defaultCalendar != null
+        && StringUtils.isNotBlank(defaultCalendar.getOffice365Id())) {
+      calendar = defaultCalendar;
+      calendarId = defaultCalendar.getOffice365Id();
+    }
+
+    return calendarId;
+  }
+
+  public ICalendar manageDefaultCalendar(
+      List<ICalendarEvent> eventList, OfficeAccount officeAccount, String accessToken) {
+
+    ICalendar defaultCalendar = null;
+    if (ObjectUtils.notEmpty(eventList)
+        && eventList.stream().anyMatch(event -> event.getCalendar() == null)) {
+      defaultCalendar = Beans.get(ICalendarRepository.class).findByName(DEFAULT_CAL_NAME);
+      if (defaultCalendar == null) {
+        defaultCalendar = new ICalendar();
+        defaultCalendar.setName(DEFAULT_CAL_NAME);
+        defaultCalendar.setUser(officeAccount.getOwnerUser());
+        defaultCalendar.setTypeSelect(ICalendarRepository.OFFICE_365);
+        defaultCalendar.setSynchronizationSelect(ICalendarRepository.CRM_SYNCHRO);
+        defaultCalendar.setArchived(true);
+        Beans.get(ICalendarRepository.class).save(defaultCalendar);
+        createOffice365Calendar(defaultCalendar, officeAccount, accessToken);
+      }
+    }
+
+    return defaultCalendar;
+  }
+
+  public List<ICalendarEvent> getICalendarEvents(
+      ICalendar calendar, LocalDateTime lastSync, LocalDateTime start) {
+
+    String queryStr =
+        "(self.office365Id IS NULL OR COALESCE(self.calendar.keepRemote, false) = false) AND self.calendar = :calendar";
+    if (lastSync == null) {
+      queryStr = queryStr + " AND self.createdOn < :start";
+      if (calendar.getSynchronizationSelect() != null
+          && ICalendarRepository.CRM_SYNCHRO.equals(calendar.getSynchronizationSelect())) {
+        return new ArrayList<ICalendarEvent>(
+            Beans.get(EventRepository.class)
+                .all()
+                .filter(queryStr)
+                .bind("calendar", calendar)
+                .bind("start", start)
+                .fetch());
+      } else {
+        return Beans.get(ICalendarEventRepository.class)
+            .all()
+            .filter(queryStr)
+            .bind("calendar", calendar)
+            .bind("start", start)
+            .fetch();
+      }
+    } else {
+      queryStr =
+          queryStr + " AND COALESCE(self.updatedOn, self.createdOn) BETWEEN :lastSync AND :start";
+      if (calendar.getSynchronizationSelect() != null
+          && ICalendarRepository.CRM_SYNCHRO.equals(calendar.getSynchronizationSelect())) {
+        return new ArrayList<ICalendarEvent>(
+            Beans.get(EventRepository.class)
+                .all()
+                .filter(queryStr)
+                .bind("calendar", calendar)
+                .bind("start", start)
+                .bind("lastSync", lastSync)
+                .fetch());
+      } else {
+        return Beans.get(ICalendarEventRepository.class)
+            .all()
+            .filter(queryStr)
+            .bind("calendar", calendar)
+            .bind("start", start)
+            .bind("lastSync", lastSync)
+            .fetch();
+      }
+    }
+  }
+
+  private boolean isDateWithinRange(
+      LocalDateTime dateTime, LocalDateTime start, LocalDateTime end) {
+
+    if (dateTime == null) {
+      return false;
+    }
+
+    return !(dateTime.isBefore(start) || dateTime.isAfter(end));
   }
 
   @SuppressWarnings("unchecked")
@@ -183,31 +327,25 @@ public class Office365CalendarService {
 
     String ownerName = ownerObject.getOrDefault("name", "").toString();
     String emailAddressStr = ownerObject.getOrDefault("address", "").toString();
-    String code = ownerName.replaceAll("[^a-zA-Z0-9]", "");
-    User user = userRepo.findByCode(code);
-    if (user == null) {
-      user = new User();
-      user.setName(ownerName);
-      user.setCode(code);
-      user.setEmail(emailAddressStr);
-      user.setPassword(code);
-    }
-    iCalendar.setUser(user);
+    iCalendar.setUser(office365Service.getUser(ownerName, emailAddressStr));
   }
 
   @SuppressWarnings("unchecked")
   private void setEventValues(
-      JSONObject jsonObject, ICalendarEvent event, ICalendar iCalendar, ICalendar defaultCalendar)
+      JSONObject jsonObject,
+      ICalendarEvent event,
+      ICalendar iCalendar,
+      ICalendar defaultCalendar,
+      User ownerUser,
+      LocalDateTime eventStart,
+      LocalDateTime eventEnd)
       throws JSONException {
 
     event.setSubject(jsonObject.getOrDefault("subject", "").toString());
     event.setAllDay((Boolean) jsonObject.getOrDefault("isAllDay", false));
-    event.setUser(Beans.get(UserService.class).getUser());
-
-    JSONObject startObject = jsonObject.getJSONObject("start");
-    event.setStartDateTime(getLocalDateTime(startObject));
-    JSONObject endObject = jsonObject.getJSONObject("start");
-    event.setEndDateTime(getLocalDateTime(endObject));
+    event.setUser(ownerUser);
+    event.setStartDateTime(eventStart);
+    event.setEndDateTime(eventEnd);
 
     JSONObject bodyObject = jsonObject.getJSONObject("body");
     if (bodyObject != null) {
@@ -646,7 +784,7 @@ public class Office365CalendarService {
 
   private void putAttendees(ICalendarEvent event, JSONObject eventJsonObject) throws JSONException {
 
-    if (CollectionUtils.isEmpty(event.getAttendees())) {
+    if (ObjectUtils.isEmpty(event.getAttendees())) {
       return;
     }
 
@@ -670,7 +808,7 @@ public class Office365CalendarService {
 
   private void putReminder(Event event, JSONObject eventJsonObject) throws JSONException {
 
-    if (CollectionUtils.isEmpty(event.getEventReminderList())) {
+    if (ObjectUtils.isEmpty(event.getEventReminderList())) {
       return;
     }
 

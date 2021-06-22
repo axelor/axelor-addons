@@ -14,4 +14,12 @@
 		<option value="5">Working elsewhere</option>
 	</selection>
 
+	<selection name="icrm.calendar.type.select" id="office365.icrm.calendar.type.select">
+		<option value="8">OFFICE_365</option>
+	</selection>
+
+	<selection name="ibase.batch.action.select" id="office365.ibase.batch.action.select">
+		<option value='3'>Contact synchronization</option>
+	</selection>
+
 </object-views>

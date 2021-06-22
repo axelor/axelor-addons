@@ -17,8 +17,9 @@
  */
 package com.axelor.apps.office365.service;
 
-import com.axelor.apps.base.db.AppOffice365;
+import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.apps.office.db.OfficeAccount;
 import com.axelor.auth.db.User;
 import com.axelor.exception.AxelorException;
 import java.net.MalformedURLException;
@@ -63,11 +64,15 @@ public interface Office365Service {
 
   void putUserEmailAddress(User user, JSONObject jsonObject, String key) throws JSONException;
 
-  void syncContact(AppOffice365 appOffice365) throws AxelorException, MalformedURLException;
+  void syncContact(OfficeAccount officeAccount) throws AxelorException, MalformedURLException;
 
-  void syncCalendar(AppOffice365 appOffice365) throws AxelorException, MalformedURLException;
+  void syncCalendar(OfficeAccount officeAccount) throws AxelorException, MalformedURLException;
 
-  void syncMail(AppOffice365 appOffice365, String urlStr)
+  void syncCalendar(ICalendar calendar) throws AxelorException, MalformedURLException;
+
+  User getUser(String name, String email);
+
+  void syncMail(OfficeAccount officeAccount, String urlStr)
       throws AxelorException, MalformedURLException;
 
   void syncUserMail(EmailAddress emailAddress, List<String> emailIds);

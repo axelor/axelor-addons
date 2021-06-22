@@ -18,13 +18,22 @@
 package com.axelor.apps.office365.module;
 
 import com.axelor.app.AxelorModule;
+import com.axelor.apps.base.service.batch.BaseBatchService;
+import com.axelor.apps.base.service.batch.BatchCalendarSynchronization;
+import com.axelor.apps.crm.service.CalendarService;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.apps.office365.service.Office365ServiceImpl;
+import com.axelor.apps.office365.service.batch.Office365BaseBatchService;
+import com.axelor.apps.office365.service.batch.Office365BatchCalendarSynchronization;
+import com.axelor.apps.office365.service.ical.Office365ICalendarService;
 
 public class Office365Module extends AxelorModule {
 
   @Override
   protected void configure() {
     bind(Office365Service.class).to(Office365ServiceImpl.class);
+    bind(BaseBatchService.class).to(Office365BaseBatchService.class);
+    bind(BatchCalendarSynchronization.class).to(Office365BatchCalendarSynchronization.class);
+    bind(CalendarService.class).to(Office365ICalendarService.class);
   }
 }

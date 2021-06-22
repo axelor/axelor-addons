@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<form name="base-batch-form" id="office365-base-batch-form" title="Base Batch" model="com.axelor.apps.base.db.BaseBatch" extension="true">
+		<extend target="//panel-tabs[@name='targetPanelTab']/*[last()]">
+			<insert position="after">
+				<panel title="Configuration" name="configurationPanel" showIf="[2,3].indexOf(actionSelect) >= 0">
+					<field name="calendarList" showIf="actionSelect == 2" colSpan="12" domain="self.officeAccount IS NOT NULL" canSelect="true"/>
+					<field name="officeAccountList" showIf="actionSelect == 3" colSpan="12" domain="self.isAuthorized = true" canSelect="true"/>
+				</panel>
+			</insert>
+		</extend>
+		<extend target="//button[@name='synchronizeBtn']">
+			<insert position="after">
+				<button name="synchronizeContactBtn" showIf="actionSelect == 3" title="Batch contact synchronization" onClick="save,action-base-batch-method-synchronize-contacts"/>
+			</insert>
+		</extend>
+	</form>
+
+	<action-method name="action-base-batch-method-synchronize-contacts">
+		<call class="com.axelor.apps.office365.web.Office365BatchController" method="actionSynchronizeContacts"/>
+	</action-method>
+
+</object-views>
