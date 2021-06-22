@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<form name="calendar-form" id="office365-calendar-form" model="com.axelor.apps.base.db.ICalendar" title="Calendar" width="large" extension="true">
+		<extend target="//field[@name='url']">
+			<attribute name="hideIf" value="typeSelect == 8"/>
+			<attribute name="requiredIf" value="typeSelect != 8"/>
+		</extend>
+		<extend target="//field[@name='isSslConnection']">
+			<attribute name="hideIf" value="typeSelect == 8"/>
+		</extend>
+		<extend target="//field[@name='port']">
+			<attribute name="hideIf" value="typeSelect == 8"/>
+		</extend>
+		<extend target="//panel[@name='loginInfoPanel']">
+			<attribute name="hideIf" value="typeSelect == 8"/>
+		</extend>
+		<extend target="//field[@name='login']">
+			<attribute name="requiredIf" value="typeSelect != 8"/>
+		</extend>
+		<extend target="//field[@name='newPassword']">
+			<attribute name="requiredIf" value="(change || password==null) &amp;&amp; typeSelect != 8"/>
+			<attribute name="validIf" value="((!change &amp;&amp; id) || confirm == newPassword) || typeSelect == 8"/>
+		</extend>
+		<extend target="//field[@name='typeSelect']">
+			<insert position="after">
+				<field name="officeAccount" showIf="typeSelect == 8"/>
+			</insert>
+		</extend>
+	</form>
+
+</object-views>

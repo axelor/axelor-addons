@@ -19,6 +19,8 @@ package com.axelor.web;
 
 import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
+import com.axelor.apps.office.db.OfficeAccount;
+import com.axelor.apps.office.db.repo.OfficeAccountRepository;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.exception.service.TraceBackService;
 import com.github.scribejava.apis.MicrosoftAzureActiveDirectory20Api;
@@ -38,11 +40,12 @@ import javax.ws.rs.core.UriInfo;
 @Path("/office365")
 public class office365Rest {
 
-  private static final String APP_VIEW_SUFFIX = "/#/ds/admin.root.app.management/cards";
+  private static final String APP_VIEW_SUFFIX = "/#/ds/office365.account/edit/";
   private static final String ERROR_VIEW_SUFFIX = "/#/ds/admin.root.maintenance.trace.back/list/1";
   private static final String WEB_SERVICE_SUFFIX = "/ws/";
 
   @Inject private AppOffice365Repository appOffice365Repo;
+  @Inject protected OfficeAccountRepository officeAccountRepo;
 
   @Path("/authenticate")
   @GET
@@ -68,9 +71,14 @@ public class office365Rest {
                 .defaultScope(Office365Service.SCOPE)
                 .build(MicrosoftAzureActiveDirectory20Api.instance());
         OAuth2AccessToken accessToken = authService.getAccessToken(code);
-        appOffice365.setRefreshToken(accessToken.getRefreshToken());
-        appOffice365Repo.save(appOffice365);
-        baseUri = baseUri.replace(WEB_SERVICE_SUFFIX, APP_VIEW_SUFFIX);
+
+        Long officeAccountId = Long.parseLong(state);
+        OfficeAccount officeAccount = officeAccountRepo.find(officeAccountId);
+        officeAccount.setRefreshToken(accessToken.getRefreshToken());
+        officeAccount.setIsAuthorized(true);
+        officeAccountRepo.save(officeAccount);
+
+        baseUri = baseUri.replace(WEB_SERVICE_SUFFIX, APP_VIEW_SUFFIX + officeAccountId);
       }
     } catch (Exception e) {
       TraceBackService.trace(e);

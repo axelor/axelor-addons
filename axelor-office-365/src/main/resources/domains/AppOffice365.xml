@@ -9,12 +9,6 @@
 		<string name="clientId" title="Application (client) ID" />
 		<string name="redirectUri" title="Redirect URI" />
 		<string name="clientSecret" title="Application (client) secret" />
-		<string name="authenticationUrl" large="true"/>
-		<string name="refreshToken" readonly="true" large="true"/>
-
-		<datetime name="lastContactSyncOn" title="Contact sync"/>
-		<datetime name="lastCalendarSyncOn" title="Calendar sync"/>
-		<datetime name="lastMailSyncOn" title="Mail sync"/>
 	</entity>
 
 </domain-models>

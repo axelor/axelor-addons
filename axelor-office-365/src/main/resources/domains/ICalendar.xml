@@ -8,7 +8,16 @@
 
 	<entity name="ICalendar" table="ICAL_CALENDAR" sequential="true">
 		<string name="office365Id" title="Office365 id" />
+		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
 
 		<finder-method name="findByOffice365Id" using="office365Id" />
+
+		<extra-code>
+      	<![CDATA[
+      		// TYPE SELECT
+	  		public static final int OFFICE_365 = 8;
+	  	]]>
+      	</extra-code>
 	</entity>
+
 </domain-models>

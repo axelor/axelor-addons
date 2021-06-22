@@ -8,6 +8,7 @@
 
 	<entity name="Partner" lang="java">
 		<string name="office365Id" title="Office365 id"/>
+		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
 		<date name="birthdate" title="Birth date" />
 		<string name="nickName" title="Nick name"/>
 		<string name="jobTitle" title="Job title"/>

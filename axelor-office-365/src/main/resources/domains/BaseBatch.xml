@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
+
+	<module name="base" package="com.axelor.apps.base.db" />
+
+	<entity name="BaseBatch" lang="java">
+		<one-to-many name="calendarList" ref="com.axelor.apps.base.db.ICalendar" title="Calendars"/>
+		<one-to-many name="officeAccountList" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts"/>
+
+		<extra-code>
+			<![CDATA[
+				public static final int ACTION_SYNCHRONIZE_CONTACTS = 3;
+			]]>
+ 		</extra-code>
+	</entity>
+
+</domain-models>

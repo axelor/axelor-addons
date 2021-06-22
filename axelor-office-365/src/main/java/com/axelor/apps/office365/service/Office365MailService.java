@@ -25,8 +25,11 @@ import com.axelor.apps.message.db.Message;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
+import com.axelor.apps.office.db.OfficeAccount;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
+import com.axelor.common.ObjectUtils;
+import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -35,8 +38,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import wslite.json.JSONArray;
 import wslite.json.JSONException;
 import wslite.json.JSONObject;
@@ -52,61 +53,71 @@ public class Office365MailService {
   @Inject private Office365Service office365Service;
 
   @Transactional
-  @SuppressWarnings("unchecked")
-  public void createMessage(JSONObject jsonObject, LocalDateTime lastSyncOn) {
+  public void createMessage(
+      JSONObject jsonObject, OfficeAccount officeAccount, LocalDateTime lastSyncOn) {
 
-    if (jsonObject != null) {
-      try {
-        String officeMessageId = office365Service.processJsonValue("id", jsonObject);
-        Message message = messageRepo.findByOffice365Id(officeMessageId);
+    if (jsonObject == null) {
+      return;
+    }
 
-        if (message == null) {
-          message = new Message();
-          message.setOffice365Id(officeMessageId);
+    try {
+      String officeMessageId = office365Service.processJsonValue("id", jsonObject);
+      Message message = messageRepo.findByOffice365Id(officeMessageId);
+      if (message == null) {
+        message = new Message();
+        message.setOffice365Id(officeMessageId);
+        message.setOfficeAccount(officeAccount);
 
-        } else if (!office365Service.needUpdation(
-            jsonObject, lastSyncOn, message.getCreatedOn(), message.getUpdatedOn())) {
-          return;
-        }
-
-        message.setSubject(office365Service.processJsonValue("subject", jsonObject));
-        message.setContent(office365Service.processJsonValue("bodyPreview", jsonObject));
-        message.setMediaTypeSelect(MessageRepository.MEDIA_TYPE_EMAIL);
-
-        message.setSentDateT(
-            office365Service.processLocalDateTimeValue(
-                jsonObject, "sentDateTime", ZoneId.systemDefault()));
-        message.setReceivedDateT(
-            office365Service.processLocalDateTimeValue(
-                jsonObject, "receivedDateTime", ZoneId.systemDefault()));
-
-        if (jsonObject.getBoolean("isDraft")) {
-          message.setStatusSelect(MessageRepository.STATUS_DRAFT);
-        } else if (jsonObject.getBoolean("isRead")) {
-          message.setTypeSelect(MessageRepository.TYPE_RECEIVED);
-        } else {
-          message.setStatusSelect(MessageRepository.STATUS_SENT);
-          message.setTypeSelect(MessageRepository.TYPE_SENT);
-        }
-
-        JSONObject fromJsonObj = (JSONObject) jsonObject.getOrDefault("from", JSONObject.NULL);
-        message.setFromEmailAddress(getEmailAddress(fromJsonObj));
-
-        message.setToEmailAddressSet(getEmailAddressSet(jsonObject, "toRecipients"));
-        message.setReplyToEmailAddressSet(getEmailAddressSet(jsonObject, "replyTo"));
-        message.setCcEmailAddressSet(getEmailAddressSet(jsonObject, "ccRecipients"));
-        message.setBccEmailAddressSet(getEmailAddressSet(jsonObject, "bccRecipients"));
-        setSender(jsonObject, message);
-
-        messageRepo.save(message);
-      } catch (Exception e) {
-        TraceBackService.trace(e);
+      } else if (!office365Service.needUpdation(
+          jsonObject, lastSyncOn, message.getCreatedOn(), message.getUpdatedOn())) {
+        return;
       }
+
+      message.setSubject(office365Service.processJsonValue("subject", jsonObject));
+      message.setMediaTypeSelect(MessageRepository.MEDIA_TYPE_EMAIL);
+      message.setSentDateT(
+          office365Service.processLocalDateTimeValue(
+              jsonObject, "sentDateTime", ZoneId.systemDefault()));
+      message.setReceivedDateT(
+          office365Service.processLocalDateTimeValue(
+              jsonObject, "receivedDateTime", ZoneId.systemDefault()));
+
+      JSONObject bodyJsonObj = this.getJSONObject(jsonObject, "body");
+      if (bodyJsonObj != null) {
+        if (bodyJsonObj.containsKey("content")) {
+          message.setContent(office365Service.processJsonValue("content", bodyJsonObj));
+        } else {
+          message.setContent(office365Service.processJsonValue("bodyPreview", jsonObject));
+        }
+      }
+
+      if (jsonObject.getBoolean("isDraft")) {
+        message.setStatusSelect(MessageRepository.STATUS_DRAFT);
+      } else if (jsonObject.getBoolean("isRead")) {
+        message.setTypeSelect(MessageRepository.TYPE_RECEIVED);
+      } else {
+        message.setStatusSelect(MessageRepository.STATUS_SENT);
+        message.setTypeSelect(MessageRepository.TYPE_SENT);
+      }
+
+      JSONObject fromJsonObj = this.getJSONObject(jsonObject, "from");
+      message.setFromEmailAddress(getEmailAddress(fromJsonObj));
+
+      message.setToEmailAddressSet(getEmailAddressSet(jsonObject, "toRecipients"));
+      message.setReplyToEmailAddressSet(getEmailAddressSet(jsonObject, "replyTo"));
+      message.setCcEmailAddressSet(getEmailAddressSet(jsonObject, "ccRecipients"));
+      message.setBccEmailAddressSet(getEmailAddressSet(jsonObject, "bccRecipients"));
+      setSender(jsonObject, message, officeAccount.getOwnerUser());
+
+      messageRepo.save(message);
+    } catch (Exception e) {
+      TraceBackService.trace(e);
     }
   }
 
   @Transactional
-  public void createOffice365Mail(Message message, String accessToken) {
+  public void createOffice365Mail(
+      Message message, OfficeAccount officeAccount, String accessToken) {
 
     try {
       JSONObject messageJsonObject = setOffice365MailValues(message);
@@ -116,9 +127,12 @@ public class Office365MailService {
               messageJsonObject,
               accessToken,
               message.getOffice365Id(),
-              "Messages");
+              "messages");
+
       message.setOffice365Id(office365Id);
+      message.setOfficeAccount(officeAccount);
       messageRepo.save(message);
+
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
@@ -131,7 +145,7 @@ public class Office365MailService {
 
     JSONObject bodyJsonObject = new JSONObject();
     bodyJsonObject.put("content", message.getContent());
-    bodyJsonObject.put("contentType", "text");
+    bodyJsonObject.put("contentType", "html");
     messageJsonObject.put("body", (Object) bodyJsonObject);
     messageJsonObject.put("importance", "Low");
 
@@ -166,21 +180,26 @@ public class Office365MailService {
 
   private EmailAddress getEmailAddress(JSONObject jsonObject) throws JSONException {
 
-    EmailAddress emailAddress = null;
-    if (jsonObject != JSONObject.NULL) {
-      JSONObject emailAddJsonObj = jsonObject.getJSONObject("emailAddress");
-
-      String emailAddressStr = emailAddJsonObj.getString("address");
-      if (!StringUtils.isBlank(emailAddressStr)) {
-        emailAddress = emailAddressRepo.findByAddress(emailAddressStr);
-      }
-
-      if (emailAddress == null) {
-        emailAddress = new EmailAddress();
-        emailAddress.setAddress(emailAddressStr);
-      }
-      emailAddress.setName(emailAddJsonObj.getString("name"));
+    if (jsonObject == null) {
+      return null;
     }
+
+    JSONObject emailAddJsonObj = this.getJSONObject(jsonObject, "emailAddress");
+    if (emailAddJsonObj == null) {
+      return null;
+    }
+
+    EmailAddress emailAddress = null;
+    String emailAddressStr = emailAddJsonObj.getString("address");
+    if (!StringUtils.isBlank(emailAddressStr)) {
+      emailAddress = emailAddressRepo.findByAddress(emailAddressStr);
+    }
+
+    if (emailAddress == null) {
+      emailAddress = new EmailAddress();
+      emailAddress.setAddress(emailAddressStr);
+    }
+    emailAddress.setName(emailAddJsonObj.getString("name"));
 
     return emailAddress;
   }
@@ -201,51 +220,60 @@ public class Office365MailService {
     return toEmailAddressSet;
   }
 
-  private void setSender(JSONObject jsonObject, Message message) throws JSONException {
+  private JSONObject getJSONObject(JSONObject jsonObject, String key) {
 
-    JSONObject senderJsonObj = jsonObject.getJSONObject("sender");
-    if (senderJsonObj != JSONObject.NULL) {
-
-      JSONObject emailAddressJsonObj = senderJsonObj.getJSONObject("emailAddress");
-      String email = emailAddressJsonObj.getString("address");
-      String name = emailAddressJsonObj.getString("name");
-
-      User user = userRepo.findByCode(name);
-      if (user == null) {
-        user = new User();
-        user.setEmail(email);
-        user.setName(name);
-        user.setCode(name);
-        user.setPassword(name);
-
-        EmailAddress emailAddress = getEmailAddress(senderJsonObj);
-        Partner partner =
-            partnerRepository
-                .all()
-                .filter("self.emailAddress = :emailAddress")
-                .bind("emailAddress", emailAddress)
-                .fetchOne();
-        user.setPartner(partner);
+    try {
+      if (jsonObject.containsKey(key)) {
+        return jsonObject.getJSONObject(key);
       }
-      message.setSenderUser(user);
-
-      EmailAccount emailAccount = emailAccountRepo.findByName(name);
-      if (emailAccount == null) {
-        emailAccount = new EmailAccount();
-        emailAccount.setServerTypeSelect(EmailAccountRepository.SERVER_TYPE_SMTP);
-        emailAccount.setSecuritySelect(EmailAccountRepository.SECURITY_NONE);
-        emailAccount.setName(name);
-        emailAccount.setLogin(email);
-        emailAccount.setHost("Microsoft");
-      }
-      message.setMailAccount(emailAccount);
+    } catch (JSONException e) {
     }
+
+    return null;
+  }
+
+  private void setSender(JSONObject jsonObject, Message message, User ownerUser)
+      throws JSONException {
+
+    JSONObject senderJsonObj = this.getJSONObject(jsonObject, "sender");
+    if (senderJsonObj == null) {
+      message.setSenderUser(ownerUser);
+    }
+
+    JSONObject emailAddressJsonObj = senderJsonObj.getJSONObject("emailAddress");
+    String email = emailAddressJsonObj.getString("address");
+    String name = emailAddressJsonObj.getString("name");
+
+    User user = userRepo.findByCode(name);
+    if (user == null) {
+      user = office365Service.getUser(name, email);
+      EmailAddress emailAddress = getEmailAddress(senderJsonObj);
+      Partner partner =
+          partnerRepository
+              .all()
+              .filter("self.emailAddress = :emailAddress")
+              .bind("emailAddress", emailAddress)
+              .fetchOne();
+      user.setPartner(partner);
+    }
+    message.setSenderUser(user);
+
+    EmailAccount emailAccount = emailAccountRepo.findByName(name);
+    if (emailAccount == null) {
+      emailAccount = new EmailAccount();
+      emailAccount.setServerTypeSelect(EmailAccountRepository.SERVER_TYPE_SMTP);
+      emailAccount.setSecuritySelect(EmailAccountRepository.SECURITY_NONE);
+      emailAccount.setName(name);
+      emailAccount.setLogin(email);
+      emailAccount.setHost("Microsoft");
+    }
+    message.setMailAccount(emailAccount);
   }
 
   private void manageOffice365EmailAddresses(
       JSONObject jsonObject, String key, Set<EmailAddress> emailAddressSet) throws JSONException {
 
-    if (CollectionUtils.isEmpty(emailAddressSet)) {
+    if (ObjectUtils.isEmpty(emailAddressSet)) {
       return;
     }
 

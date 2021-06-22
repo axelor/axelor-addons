@@ -4,36 +4,13 @@
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
 	<form name="app-office365-config-form" title="App office365" model="com.axelor.apps.base.db.AppOffice365" 
-		canDelete="false" canNew="false" width="large" onSave="action-office365-method-generateUrl">
+		canDelete="false" canNew="false" width="large">
 		<panel name="mainPanel">
 			<field name="clientId" required="true"/>
 			<field name="redirectUri" required="true"/>
 			<field name="clientSecret" required="true" widget="password"/>
-			<field name="authenticationUrl" showTitle="false" readonly="true" widget="html" hidden="true"/>
-			<field name="refreshToken" hidden="true"/>
-		</panel>
-		<panel name="btnPanel" sidebar="true" showIf="refreshToken">
-			<button name="syncContactBtn" title="Sync contact" onClick="action-office365-method-sync-contact" />
-			<button name="syncCalendarBtn" title="Sync calendar" onClick="action-office365-method-sync-calendar" />
-			<button name="syncMailBtn" title="Sync mail" onClick="action-office365-method-sync-mail" />
 		</panel>
 	</form>
-
-	<action-method name="action-office365-method-generateUrl">
-		<call class="com.axelor.apps.office365.web.Office365Controller" method="generateUrl" />
-	</action-method>
-
-	<action-method name="action-office365-method-sync-contact">
-		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncContact" />
-	</action-method>
-
-	<action-method name="action-office365-method-sync-calendar">
-		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncCalendar" />
-	</action-method>
-
-	<action-method name="action-office365-method-sync-mail">
-		<call class="com.axelor.apps.office365.web.Office365Controller" method="syncMail" />
-	</action-method>
 
 	<action-view name="action-message-view-office365-mail" title="Office365 mail" model="com.axelor.apps.message.db.Message">
 		<view type="grid" name="message-grid"/>
