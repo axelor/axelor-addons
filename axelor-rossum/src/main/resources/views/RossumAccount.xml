@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+   <grid model="com.axelor.apps.rossum.db.RossumAccount" title="Rossum accounts" name="rossum-account-grid">
+      <field name="username"/>
+      <field name="isValid"/>
+   </grid>
+
+   <form model="com.axelor.apps.rossum.db.RossumAccount" title="Rossum account" name="rossum-account-form" width="large">
+      <panel name="rossumDetailsPanel" title="Rossum details">
+         <field name="username" required="true" readonlyIf="isValid"/>
+         <field name="password" required="true" readonlyIf="isValid" widget="password"/>
+         <field name="token" readonly="true"/>
+         <field name="tokenDateTime" readonly="true"/>
+      </panel>
+      <panel name="buttonPanel" sidebar="true" hideIf="$popup()">
+         <field name="isValid" readonly="true"/>
+         <button name="loginButton" title="Login" onClick="save,action-rossum-account-method-login-onclick" showIf="!isValid"/>
+         <button name="resetButton" title="Reset" onClick="save,action-rossum-account-method-reset-onclick" showIf="isValid"/>
+      </panel>
+   </form>
+
+   <action-method name="action-rossum-account-method-login-onclick">
+      <call class="com.axelor.apps.rossum.web.RossumAccountController" method="login"/>
+   </action-method>
+
+   <action-method name="action-rossum-account-method-reset-onclick">
+      <call class="com.axelor.apps.rossum.web.RossumAccountController" method="reset"/>
+   </action-method>
+
+</object-views>

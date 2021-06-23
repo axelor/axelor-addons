@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -15,14 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.rossum.service.queue;
+package com.axelor.apps.rossum.service;
 
-import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Queue;
+import com.axelor.apps.rossum.db.RossumAccount;
 import com.axelor.apps.rossum.db.repo.QueueRepository;
 import com.axelor.apps.rossum.db.repo.SchemaRepository;
 import com.axelor.apps.rossum.db.repo.WorkspaceRepository;
-import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.exception.AxelorException;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -46,25 +45,24 @@ import wslite.json.JSONObject;
 
 public class QueueServiceImpl implements QueueService {
 
-  protected static final String API_URL = "https://api.elis.rossum.ai";
   protected CloseableHttpClient httpClient = HttpClients.createDefault();
   protected CloseableHttpResponse response;
 
   protected QueueRepository queueRepo;
   protected WorkspaceRepository workspaceRepo;
   protected SchemaRepository schemaRepo;
-  protected AppRossumService appRossumService;
+  protected RossumAccountService rossumAccountService;
 
   @Inject
   public QueueServiceImpl(
       QueueRepository queueRepo,
       WorkspaceRepository workspaceRepo,
       SchemaRepository schemaRepo,
-      AppRossumService appRossumService) {
+      RossumAccountService rossumAccountService) {
     this.queueRepo = queueRepo;
     this.workspaceRepo = workspaceRepo;
     this.schemaRepo = schemaRepo;
-    this.appRossumService = appRossumService;
+    this.rossumAccountService = rossumAccountService;
   }
 
   @Override
@@ -84,13 +82,14 @@ public class QueueServiceImpl implements QueueService {
   }
 
   @Override
-  public void updateQueue(AppRossum appRossum, Queue queue)
-      throws IOException, JSONException, AxelorException {
-    appRossumService.login(appRossum);
+  public void updateQueue(Queue queue) throws IOException, JSONException, AxelorException {
+    RossumAccount rossumAccount = queue.getRossumAccount();
+    rossumAccountService.login(rossumAccount);
 
     HttpPut httpPut =
-        new HttpPut(String.format(API_URL + "%s", "/v1/queues/" + queue.getQueueId()));
-    httpPut.addHeader("Authorization", "token " + appRossum.getToken());
+        new HttpPut(
+            String.format(RossumAccountService.API_URL + "%s", "/v1/queues/" + queue.getQueueId()));
+    httpPut.addHeader("Authorization", "token " + rossumAccount.getToken());
     httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
     JSONObject queueUpdateObject = new JSONObject(queue.getQueueResult());
@@ -101,16 +100,17 @@ public class QueueServiceImpl implements QueueService {
     httpPut.setEntity(stringEntity);
 
     response = httpClient.execute(httpPut);
-    this.getQueues(appRossum);
+    this.getQueues(rossumAccount);
   }
 
   @Override
   @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
-  public void getQueues(AppRossum appRossum) throws IOException, JSONException, AxelorException {
-    appRossumService.login(appRossum);
+  public void getQueues(RossumAccount rossumAccount)
+      throws IOException, JSONException, AxelorException {
+    rossumAccountService.login(rossumAccount);
 
-    HttpGet httpGet = new HttpGet(String.format(API_URL + "%s", "/v1/queues"));
-    httpGet.addHeader("Authorization", "token " + appRossum.getToken());
+    HttpGet httpGet = new HttpGet(String.format(RossumAccountService.API_URL + "%s", "/v1/queues"));
+    httpGet.addHeader("Authorization", "token " + rossumAccount.getToken());
     httpGet.addHeader("Accept", "application/json");
 
     response = httpClient.execute(httpGet);
@@ -141,6 +141,7 @@ public class QueueServiceImpl implements QueueService {
         queue.setQueueResult(resultObject.toString());
         queue.setAutomationLevelSelect(automationLevelSelect);
         queue.setUseConfirmedState(useConfirmedState);
+        queue.setRossumAccount(rossumAccount);
         queueRepo.save(queue);
       }
     }
@@ -149,17 +150,18 @@ public class QueueServiceImpl implements QueueService {
   @Override
   @Transactional(rollbackOn = {IOException.class, JSONException.class, AxelorException.class})
   public void createQueue(Queue queue) throws IOException, JSONException, AxelorException {
-    AppRossum appRossum = appRossumService.getAppRossum();
 
-    appRossumService.login(appRossum);
+    RossumAccount rossumAccount = queue.getRossumAccount();
+    rossumAccountService.login(rossumAccount);
 
     JSONObject jsonObject = new JSONObject();
     jsonObject.put("name", queue.getQueueName());
     jsonObject.put("workspace", queue.getWorkspaceUrl().getWorkspaceUrl());
     jsonObject.put("schema", queue.getSchemaUrl().getSchemaUrl());
 
-    HttpPost httpPost = new HttpPost(String.format(API_URL + "%s", "/v1/queues"));
-    httpPost.addHeader("Authorization", "token " + appRossum.getToken());
+    HttpPost httpPost =
+        new HttpPost(String.format(RossumAccountService.API_URL + "%s", "/v1/queues"));
+    httpPost.addHeader("Authorization", "token " + rossumAccount.getToken());
     httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
     StringEntity stringEntity = new StringEntity(jsonObject.toString());

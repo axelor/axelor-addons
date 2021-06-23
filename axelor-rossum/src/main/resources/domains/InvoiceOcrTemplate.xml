@@ -36,12 +36,15 @@
       <one-to-one name="invoice" ref="com.axelor.apps.account.db.Invoice" title="Invoice"/>
       <string name="invoiceOcrTemplateId" namecolumn="true" readonly="true" title="Invoice ocr template N°"/>     
 
+      <many-to-one name="rossumAccount" ref="com.axelor.apps.rossum.db.RossumAccount" title="Rossum account"/>
       <many-to-one name="queue" ref="com.axelor.apps.rossum.db.Queue" title="Queue"/>
       <many-to-one name="exportedFile" ref="com.axelor.meta.db.MetaFile" title="CSV file"/>
 
       <boolean name="isInvoiceLineConsolidated" title="Consolidate invoice lines"/>
       <boolean name="isValidated" title="Validated"/>
       <boolean name="isCorrected" title="Corrected"/>
+
+      <finder-method name="findAllRossumAccount" using="long:id" filter="self.rossumAccount.id = :id" all="true"/>
 
       <extra-code>
          <![CDATA[

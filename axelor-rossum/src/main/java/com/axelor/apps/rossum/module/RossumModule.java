@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -20,22 +20,26 @@ package com.axelor.apps.rossum.module;
 import com.axelor.app.AxelorModule;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateManagementRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
+import com.axelor.apps.rossum.db.repo.RossumAccountManagementRepository;
+import com.axelor.apps.rossum.db.repo.RossumAccountRepository;
+import com.axelor.apps.rossum.service.AnnotationService;
+import com.axelor.apps.rossum.service.AnnotationServiceImpl;
 import com.axelor.apps.rossum.service.InvoiceOcrTemplateService;
 import com.axelor.apps.rossum.service.InvoiceOcrTemplateServiceImpl;
-import com.axelor.apps.rossum.service.annotation.AnnotationService;
-import com.axelor.apps.rossum.service.annotation.AnnotationServiceImpl;
+import com.axelor.apps.rossum.service.OrganisationService;
+import com.axelor.apps.rossum.service.OrganisationServiceImpl;
+import com.axelor.apps.rossum.service.QueueService;
+import com.axelor.apps.rossum.service.QueueServiceImpl;
+import com.axelor.apps.rossum.service.RossumAccountService;
+import com.axelor.apps.rossum.service.RossumAccountServiceImpl;
+import com.axelor.apps.rossum.service.SchemaFieldService;
+import com.axelor.apps.rossum.service.SchemaFieldServiceImpl;
+import com.axelor.apps.rossum.service.SchemaService;
+import com.axelor.apps.rossum.service.SchemaServiceImpl;
+import com.axelor.apps.rossum.service.WorkspaceService;
+import com.axelor.apps.rossum.service.WorkspaceServiceImpl;
 import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.apps.rossum.service.app.AppRossumServiceImpl;
-import com.axelor.apps.rossum.service.organisation.OrganisationService;
-import com.axelor.apps.rossum.service.organisation.OrganisationServiceImpl;
-import com.axelor.apps.rossum.service.queue.QueueService;
-import com.axelor.apps.rossum.service.queue.QueueServiceImpl;
-import com.axelor.apps.rossum.service.schema.SchemaFieldService;
-import com.axelor.apps.rossum.service.schema.SchemaFieldServiceImpl;
-import com.axelor.apps.rossum.service.schema.SchemaService;
-import com.axelor.apps.rossum.service.schema.SchemaServiceImpl;
-import com.axelor.apps.rossum.service.workspace.WorkspaceService;
-import com.axelor.apps.rossum.service.workspace.WorkspaceServiceImpl;
 
 public class RossumModule extends AxelorModule {
 
@@ -50,5 +54,7 @@ public class RossumModule extends AxelorModule {
     bind(SchemaFieldService.class).to(SchemaFieldServiceImpl.class);
     bind(AnnotationService.class).to(AnnotationServiceImpl.class);
     bind(InvoiceOcrTemplateRepository.class).to(InvoiceOcrTemplateManagementRepository.class);
+    bind(RossumAccountService.class).to(RossumAccountServiceImpl.class);
+    bind(RossumAccountRepository.class).to(RossumAccountManagementRepository.class);
   }
 }

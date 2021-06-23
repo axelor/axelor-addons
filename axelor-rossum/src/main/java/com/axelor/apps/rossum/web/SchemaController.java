@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -17,11 +17,9 @@
  */
 package com.axelor.apps.rossum.web;
 
-import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Schema;
 import com.axelor.apps.rossum.db.repo.SchemaRepository;
-import com.axelor.apps.rossum.service.app.AppRossumService;
-import com.axelor.apps.rossum.service.schema.SchemaService;
+import com.axelor.apps.rossum.service.SchemaService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.ResponseMessageType;
 import com.axelor.exception.service.TraceBackService;
@@ -50,8 +48,7 @@ public class SchemaController {
 
     try {
       Schema schema = request.getContext().asType(Schema.class);
-      Beans.get(SchemaService.class)
-          .updateSchema(Beans.get(AppRossumService.class).getAppRossum(), schema);
+      Beans.get(SchemaService.class).updateSchema(schema);
 
       response.setReload(true);
     } catch (IOException | JSONException | AxelorException e) {
@@ -87,9 +84,7 @@ public class SchemaController {
 
   public void getSchemas(ActionRequest request, ActionResponse response) {
     try {
-      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
-      Beans.get(AppRossumService.class).login(appRossum);
-      Beans.get(SchemaService.class).getSchemas(appRossum);
+      Beans.get(SchemaService.class).getSchemas(null);
 
       response.setReload(true);
     } catch (ParseException | IOException | JSONException | AxelorException e) {

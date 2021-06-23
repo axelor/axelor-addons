@@ -3,20 +3,22 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-   <grid model="com.axelor.apps.rossum.db.Queue" title="Queues" name="queue-grid">
+   <grid model="com.axelor.apps.rossum.db.Queue" title="Queues" name="queue-grid" groupBy="rossumAccount">
       <toolbar>
-         <button name="getQueuesBtn" title="Get queue from Rossum" onClick="action-rossum-queue-method-get-queues"/>
+         <button name="getQueuesBtn" title="Get queue from Rossum" onClick="action-rossum-queue-method-get-queues" hidden="true"/>
       </toolbar>
      <field name="queueName"/>
      <field name="queueUrl"/>
      <field name="queueId"/>
      <field name="workspaceUrl"/>
      <field name="schemaUrl"/>
+     <field name="rossumAccount" hidden="true"/>
    </grid>
 
    <form model="com.axelor.apps.rossum.db.Queue" title="Queue" name="queue-form" width="large">
       <panel name="mainPanel">
 			<field name="queueName" onChange="action-rossum-queue-method-update-json-data" required="true"/>
+         <field name="rossumAccount" required="true" readonlyIf="rossumAccount"/>
 			<field name="queueUrl"/>
          <field name="queueId"/>
 			<field name="workspaceUrl" required="true"/>

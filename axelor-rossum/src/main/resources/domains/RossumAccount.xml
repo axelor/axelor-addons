@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
+
+   <module name="rossum" package="com.axelor.apps.rossum.db"/>
+
+   <entity name="RossumAccount" cacheable="true" lang="java">
+		<string name="username" title="User name" namecolumn="true"/>
+		<string name="password" title="Password" encrypted="true"/>
+		<string name="token" title="Token" help="It lasts upto 162 hours unless user logouts"/>
+		<datetime name="tokenDateTime" title="Token created on"/>
+		<boolean name="isValid" title="Valid connection"/>
+  </entity> 
+
+</domain-models>

@@ -12,9 +12,11 @@
       <string name="annotationUrl" title="Annotation url" readonly="true" initParam="true" namecolumn="true"/>
       <string name="annotationResult" title="Annotation result" large="true" json="true"/>
 
+      <many-to-one name="rossumAccount" ref="com.axelor.apps.rossum.db.RossumAccount" title="Rossum account" readonly="true"/>
       <many-to-one name="queueUrl" ref="com.axelor.apps.rossum.db.Queue" title="Queue" initParam="true"/>
 
       <finder-method name="findByUrl" using="annotationUrl"/>
+      <finder-method name="findAllRossumAccount" using="long:id" filter="self.rossumAccount.id = :id" all="true"/>
    </entity>
 
 </domain-models>

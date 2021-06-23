@@ -3,19 +3,21 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-   <grid model="com.axelor.apps.rossum.db.Organisation" title="Organisations" name="organisation-grid" canNew="false">
+   <grid model="com.axelor.apps.rossum.db.Organisation" title="Organisations" name="organisation-grid" canNew="false" groupBy="rossumAccount">
       <toolbar>
          <button onClick="action-rossum-organisation-method-get-organisations" name="getOrganisationBtn"
-            title="Get organisation from Rossum"/>
+            title="Get organisation from Rossum" hidden="true"/>
       </toolbar>
       <field name="organisationName"/>
       <field name="organisationUrl"/>
       <field name="organisationId"/>
+      <field name="rossumAccount" hidden="true"/>
    </grid>
 
    <form model="com.axelor.apps.rossum.db.Organisation" title="Organisation" name="organisation-form" width="large" canNew="false">
       <panel name="mainPanel">
          <field name="organisationName" readonly="true"/>
+         <field name="rossumAccount"/>
          <field name="organisationUrl"/>
          <field name="organisationId"/>
          

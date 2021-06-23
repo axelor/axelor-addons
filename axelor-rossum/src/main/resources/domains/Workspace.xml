@@ -11,9 +11,11 @@
       <string name="workspaceUrl" title="Workspace url" readonly="true" initParam="true"/>
       <string name="workspaceResult" title="Workspace result" large="true" json="true"/>
 
+      <many-to-one name="rossumAccount" ref="com.axelor.apps.rossum.db.RossumAccount" title="Rossum account" readonly="true"/>
       <many-to-one name="organisationUrl" ref="com.axelor.apps.rossum.db.Organisation" title="Organisation" initParam="true"/>
       <one-to-many name="queueList" ref="com.axelor.apps.rossum.db.Queue" title="Queues" mappedBy="workspaceUrl" readonly="true"/>
       
       <finder-method name="findByUrl" using="workspaceUrl"/>
+      <finder-method name="findAllRossumAccount" using="long:id" filter="self.rossumAccount.id = :id" all="true"/>
    </entity>
 </domain-models>

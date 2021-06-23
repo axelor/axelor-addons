@@ -12,9 +12,11 @@
       <string name="schemaResult" title="Schema result" large="true" json="true"/>
       <string name="schemaTemplateSelect" title="Schema template" selection="rossum.schema.template.select" default="EU Demo Template"/>
 
+      <many-to-one name="rossumAccount" ref="com.axelor.apps.rossum.db.RossumAccount" title="Rossum account"/>
       <one-to-many name="queueList" ref="com.axelor.apps.rossum.db.Queue" title="Queues" mappedBy="schemaUrl" readonly="true"/>
       <one-to-many name="schemaFieldList" ref="com.axelor.apps.rossum.db.SchemaField" title="Schema fields" mappedBy="schemaUrl" orderBy="id"/>
       
       <finder-method name="findByUrl" using="schemaUrl"/>
+      <finder-method name="findAllRossumAccount" using="long:id" filter="self.rossumAccount.id = :id" all="true"/>
    </entity>
 </domain-models>

@@ -15,28 +15,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.rossum.web;
+package com.axelor.apps.rossum.service;
 
-import com.axelor.apps.rossum.service.OrganisationService;
+import com.axelor.apps.rossum.db.Annotation;
+import com.axelor.apps.rossum.db.RossumAccount;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.ResponseMessageType;
-import com.axelor.exception.service.TraceBackService;
-import com.axelor.inject.Beans;
-import com.axelor.rpc.ActionRequest;
-import com.axelor.rpc.ActionResponse;
 import java.io.IOException;
-import org.apache.http.ParseException;
 import wslite.json.JSONException;
 
-public class OrganisationController {
+public interface AnnotationService {
 
-  public void getOrganisations(ActionRequest request, ActionResponse response) {
-    try {
-      Beans.get(OrganisationService.class).getOrganisations(null);
+  public void getAnnotations(RossumAccount rossumAccount)
+      throws IOException, JSONException, AxelorException;
 
-      response.setReload(true);
-    } catch (ParseException | IOException | JSONException | AxelorException e) {
-      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
-    }
-  }
+  public void exportAnnotation(Annotation annotation, String invOcrTemplateName)
+      throws IOException, JSONException, AxelorException;
+
+  public void createOrUpdateAnnotationFromLink(String annotationLink, RossumAccount rossumAccount)
+      throws IOException, JSONException, AxelorException;
 }

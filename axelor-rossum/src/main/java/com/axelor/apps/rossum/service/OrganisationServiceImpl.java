@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -15,12 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.rossum.service.organisation;
+package com.axelor.apps.rossum.service;
 
-import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Organisation;
+import com.axelor.apps.rossum.db.RossumAccount;
 import com.axelor.apps.rossum.db.repo.OrganisationRepository;
-import com.axelor.apps.rossum.service.app.AppRossumService;
 import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -36,28 +35,28 @@ import wslite.json.JSONObject;
 
 public class OrganisationServiceImpl implements OrganisationService {
 
-  protected static final String API_URL = "https://api.elis.rossum.ai";
   protected CloseableHttpClient httpClient = HttpClients.createDefault();
   protected CloseableHttpResponse response;
 
   protected OrganisationRepository organisationRepo;
-  protected AppRossumService appRossumService;
+  protected RossumAccountService rossumAccountService;
 
   @Inject
   public OrganisationServiceImpl(
-      OrganisationRepository organisationRepo, AppRossumService appRossumService) {
+      OrganisationRepository organisationRepo, RossumAccountService rossumAccountService) {
     this.organisationRepo = organisationRepo;
-    this.appRossumService = appRossumService;
+    this.rossumAccountService = rossumAccountService;
   }
 
   @Override
   @Transactional
-  public void getOrganisations(AppRossum appRossum)
+  public void getOrganisations(RossumAccount rossumAccount)
       throws IOException, JSONException, AxelorException {
-    appRossumService.login(appRossum);
+    rossumAccountService.login(rossumAccount);
 
-    HttpGet httpGet = new HttpGet(String.format(API_URL + "%s", "/v1/organizations"));
-    httpGet.addHeader("Authorization", "token " + appRossum.getToken());
+    HttpGet httpGet =
+        new HttpGet(String.format(RossumAccountService.API_URL + "%s", "/v1/organizations"));
+    httpGet.addHeader("Authorization", "token " + rossumAccount.getToken());
     httpGet.addHeader("Accept", "application/json");
 
     response = httpClient.execute(httpGet);
@@ -83,6 +82,7 @@ public class OrganisationServiceImpl implements OrganisationService {
         organisation.setOrganisationName(organisationName);
         organisation.setOrganisationUrl(organisationUrl);
         organisation.setOrganisationResult(resultObject.toString());
+        organisation.setRossumAccount(rossumAccount);
         organisationRepo.save(organisation);
       }
     }

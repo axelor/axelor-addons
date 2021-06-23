@@ -3,20 +3,21 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-   <grid model="com.axelor.apps.rossum.db.Workspace" title="Workspaces" name="workspace-grid" canNew="false">
+   <grid model="com.axelor.apps.rossum.db.Workspace" title="Workspaces" name="workspace-grid" canNew="false" groupBy="rossumAccount">
       <toolbar>
-         <button onClick="action-rossum-workspace-method-get-workspace" name="getWorkspaceBtn"
-            title="Get workspace from Rossum"/>
+         <button onClick="action-rossum-workspace-method-get-workspace" name="getWorkspaceBtn" title="Get workspace from Rossum" hidden="true"/>
       </toolbar>
       <field name="workspaceName"/>
       <field name="workspaceUrl"/>
       <field name="workspaceId"/>
       <field name="organisationUrl"/>
+      <field name="rossumAccount" hidden="true"/>
    </grid>
 
    <form model="com.axelor.apps.rossum.db.Workspace" title="Workspace" name="workspace-form" width="large" canNew="false">
       <panel name="mainPanel">
          <field name="workspaceName" onChange="action-rossum-workspace-method-update-json-data"/>
+         <field name="rossumAccount"/>
          <field name="workspaceUrl"/>
          <field name="workspaceId"/>
          <field name="organisationUrl"/>

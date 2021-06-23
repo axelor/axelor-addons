@@ -11,9 +11,11 @@
 		<string name="organisationUrl" title="Organisation url" readonly="true" initParam="true"/>
       <string name="organisationResult" title="Organisation result" large="true" json="true"/>
 
+      <many-to-one name="rossumAccount" ref="com.axelor.apps.rossum.db.RossumAccount" title="Rossum account" readonly="true"/>
 		<one-to-many name="workspaceList" ref="com.axelor.apps.rossum.db.Workspace" title="Workspaces" 
          mappedBy="organisationUrl" readonly="true"/>
          
       <finder-method name="findByUrl" using="organisationUrl"/>
+      <finder-method name="findAllRossumAccount" using="long:id" filter="self.rossumAccount.id = :id" all="true"/>
 	</entity>
 </domain-models>

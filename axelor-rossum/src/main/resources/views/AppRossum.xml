@@ -5,30 +5,9 @@
 
   <form model="com.axelor.apps.base.db.AppRossum" title="App Rossum" name="app-rossum-config-form" 
       canDelete="false" canNew="false" width="large">
-      <panel name="rossumDetailsPanel" title="Rossum details">
-			<field name="username" required="true" readonlyIf="isValid"/>
-			<field name="password" required="true" readonlyIf="isValid" widget="password"/>
-			<field name="token" readonly="true"/>
-			<field name="tokenDateTime" readonly="true"/>
-		</panel>
-		
 		<panel name="configPanel" title="Configurations">
          <field name="isInvoiceLineConsolidated" widget="boolean-switch"/>
 		</panel>
-		
-		<panel name="buttonPanel" sidebar="true">
-         <field name="isValid" readonly="true"/>
-         <button name="loginButton" title="Login" onClick="save,action-app-rossum-method-login-onclick" showIf="!isValid"/>
-         <button name="resetButton" title="Reset" onClick="save,action-app-rossum-method-reset-onclick" showIf="isValid"/>
-		</panel>
    </form>
-
-   <action-method name="action-app-rossum-method-login-onclick">
-      <call class="com.axelor.apps.rossum.web.AppRossumController" method="login"/>
-   </action-method>
-
-   <action-method name="action-app-rossum-method-reset-onclick">
-      <call class="com.axelor.apps.rossum.web.AppRossumController" method="reset"/>
-   </action-method>
 
 </object-views>
