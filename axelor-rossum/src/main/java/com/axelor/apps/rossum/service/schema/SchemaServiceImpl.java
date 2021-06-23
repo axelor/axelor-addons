@@ -179,6 +179,7 @@ public class SchemaServiceImpl implements SchemaService {
       schema.setSchemaUrl(schemaUrl);
       schema.setSchemaResult(resultObject.toString());
       schemaRepo.save(schema);
+      this.generateSchemaFields(schema);
     }
   }
 

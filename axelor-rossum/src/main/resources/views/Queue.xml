@@ -19,8 +19,8 @@
 			<field name="queueName" onChange="action-rossum-queue-method-update-json-data" required="true"/>
 			<field name="queueUrl"/>
          <field name="queueId"/>
-			<field name="workspaceUrl" required="true"/>
-			<field name="schemaUrl" required="true"/>
+			<field name="workspaceUrl" required="true" readonlyIf="workspaceUrl"/>
+			<field name="schemaUrl" required="true" readonlyIf="schemaUrl"/>
 			<field name="useConfirmedState" onChange="action-rossum-queue-method-update-json-data"/>
 			<field name="automationLevelSelect" onChange="action-rossum-queue-method-update-json-data"/>
       </panel>

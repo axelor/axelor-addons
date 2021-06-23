@@ -38,6 +38,7 @@ import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateManagementRepository;
+import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
 import com.axelor.apps.rossum.service.annotation.AnnotationService;
 import com.axelor.apps.rossum.service.app.AppRossumService;
@@ -93,6 +94,25 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   protected AnnotationService annotationService;
   protected AnnotationRepository annotationRepo;
 
+  /*Invoice template static schema's*/
+  public static final String INVOICE_NUMBER = "invoice number";
+  public static final String TOTAL_AMOUNT = "total amount";
+  public static final String LINE_TOTAL_AMOUNT = "line total amount";
+  public static final String ORDER_NUMBER = "order number";
+  public static final String ISSUE_DATE = "issue date";
+  public static final String DUE_DATE = "due date";
+  public static final String TOTAL_WITHOUT_TAX = "total without tax";
+  public static final String TOTAL_TAX = "total tax";
+  public static final String CURRENCY = "currency";
+  public static final String CURRENCY_EUR = "EUR";
+  public static final String VENDOR_NAME = "vendor name";
+  public static final String VENDOR_VAT_NUMBER = "vendor vat number";
+  public static final String CUSTOMER_NAME = "customer name";
+  public static final String CUSTOMER_VAT_NUMBER = "customer vat number";
+  public static final String DESCRIPTION = "description";
+  public static final String QUANTITY = "quantity";
+  public static final String UNIT_PRICE_WITHOUT_VAT = "unit price without vat";
+
   @Inject
   public InvoiceOcrTemplateServiceImpl(
       AppRossumService rossumApiService,
@@ -123,9 +143,8 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     metaFileList.add(invoiceOcrTemplate.getTemplateFile());
 
     if (!Strings.isNullOrEmpty(exportTypeSelect)
-        && (exportTypeSelect.equals(InvoiceOcrTemplateManagementRepository.EXPORT_TYPE_SELECT_CSV)
-            || exportTypeSelect.equals(
-                InvoiceOcrTemplateManagementRepository.EXPORT_TYPE_SELECT_XML))) {
+        && (exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_CSV)
+            || exportTypeSelect.equals(InvoiceOcrTemplateRepository.EXPORT_TYPE_SELECT_XML))) {
 
       Map<MetaFile, Pair<String, File>> metaFileAnnotationLinkFilePairMap =
           rossumApiService.extractInvoiceDataMetaFile(
@@ -163,59 +182,51 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
 
       for (Integer i = 0; i < headerRow.length; i++) {
         String key = headerRow[i].toLowerCase();
-        if (headerTitleMap.containsKey(key) && key.equals("total amount")) {
-          key = "line total amount";
+        if (headerTitleMap.containsKey(key) && key.equals(TOTAL_AMOUNT)) {
+          key = LINE_TOTAL_AMOUNT;
         }
         headerTitleMap.put(key, i);
       }
 
       String[] dataRow = csvRows.get(1);
 
-      invoiceOcrTemplate.setInvoiceNumber(dataRow[headerTitleMap.get("invoice number")]);
-      invoiceOcrTemplate.setOrderNumber(dataRow[headerTitleMap.get("order number")]);
-      invoiceOcrTemplate.setIssueDate(
-          !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("issue date")])
-              ? LocalDate.parse(dataRow[headerTitleMap.get("issue date")])
-              : null);
-      invoiceOcrTemplate.setDueDate(
-          !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("due date")])
-              ? LocalDate.parse(dataRow[headerTitleMap.get("due date")])
-              : null);
-      invoiceOcrTemplate.setTotalAmount(
-          !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total amount")])
-              ? new BigDecimal(dataRow[headerTitleMap.get("total amount")])
-              : BigDecimal.ZERO);
-      invoiceOcrTemplate.setTotalWithoutTax(
-          !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total without tax")])
-              ? new BigDecimal(dataRow[headerTitleMap.get("total without tax")])
-              : BigDecimal.ZERO);
-      invoiceOcrTemplate.setTotalTax(
-          !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("total tax")])
-              ? new BigDecimal(dataRow[headerTitleMap.get("total tax")])
-              : BigDecimal.ZERO);
+      invoiceOcrTemplate.setInvoiceNumber(
+          this.getStringFromDataRow(dataRow, headerTitleMap, INVOICE_NUMBER));
 
+      invoiceOcrTemplate.setOrderNumber(
+          this.getStringFromDataRow(dataRow, headerTitleMap, ORDER_NUMBER));
+
+      invoiceOcrTemplate.setIssueDate(this.getDateFromDataRow(dataRow, headerTitleMap, ISSUE_DATE));
+
+      invoiceOcrTemplate.setDueDate(this.getDateFromDataRow(dataRow, headerTitleMap, DUE_DATE));
+
+      invoiceOcrTemplate.setTotalAmount(
+          this.getDecimalFromDataRow(dataRow, headerTitleMap, TOTAL_AMOUNT));
+
+      invoiceOcrTemplate.setTotalWithoutTax(
+          this.getDecimalFromDataRow(dataRow, headerTitleMap, TOTAL_WITHOUT_TAX));
+
+      invoiceOcrTemplate.setTotalTax(
+          this.getDecimalFromDataRow(dataRow, headerTitleMap, TOTAL_TAX));
+
+      String currencyCode = this.getStringFromDataRow(dataRow, headerTitleMap, CURRENCY);
       Currency currency =
-          Beans.get(CurrencyRepository.class)
-              .findByCode(dataRow[headerTitleMap.get("currency")].toUpperCase());
+          currencyCode != null
+              ? Beans.get(CurrencyRepository.class).findByCode(currencyCode.toUpperCase())
+              : null;
       invoiceOcrTemplate.setCurrency(
-          currency != null ? currency : Beans.get(CurrencyRepository.class).findByCode("EUR"));
+          currency != null
+              ? currency
+              : Beans.get(CurrencyRepository.class).findByCode(CURRENCY_EUR));
 
       invoiceOcrTemplate.setSenderName(
-          headerTitleMap.containsKey("vendor name")
-              ? dataRow[headerTitleMap.get("vendor name")]
-              : null);
+          this.getStringFromDataRow(dataRow, headerTitleMap, VENDOR_NAME));
       invoiceOcrTemplate.setVendorVatNumber(
-          headerTitleMap.containsKey("vendor vat number")
-              ? dataRow[headerTitleMap.get("vendor vat number")]
-              : null);
+          this.getStringFromDataRow(dataRow, headerTitleMap, VENDOR_VAT_NUMBER));
       invoiceOcrTemplate.setCustomerName(
-          headerTitleMap.containsKey("customer name")
-              ? dataRow[headerTitleMap.get("customer name")]
-              : null);
+          this.getStringFromDataRow(dataRow, headerTitleMap, CUSTOMER_NAME));
       invoiceOcrTemplate.setCustomerVatNumber(
-          headerTitleMap.containsKey("customer vat number")
-              ? dataRow[headerTitleMap.get("customer vat number")]
-              : null);
+          this.getStringFromDataRow(dataRow, headerTitleMap, CUSTOMER_VAT_NUMBER));
     }
     csvReader.close();
 
@@ -270,8 +281,8 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
 
         for (Integer i = 0; i < headerRow.length; i++) {
           String key = headerRow[i].toLowerCase();
-          if (headerTitleMap.containsKey(key) && key.equals("total amount")) {
-            key = "line total amount";
+          if (headerTitleMap.containsKey(key) && key.equals(TOTAL_AMOUNT)) {
+            key = LINE_TOTAL_AMOUNT;
           }
           headerTitleMap.put(key, i);
         }
@@ -279,25 +290,17 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
         for (Integer i = 2; i < csvRows.size(); i++) {
           String[] dataRow = csvRows.get(i);
 
-          if (headerTitleMap.containsKey("description")
-              && !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("description")])) {
+          String description = this.getStringFromDataRow(dataRow, headerTitleMap, DESCRIPTION);
+          if (!Strings.isNullOrEmpty(description)) {
             InvoiceLine invoiceLine = new InvoiceLine();
 
-            invoiceLine.setProductName(dataRow[headerTitleMap.get("description")]);
+            invoiceLine.setProductName(description);
 
-            BigDecimal qty =
-                headerTitleMap.containsKey("quantity")
-                    ? !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("quantity")])
-                        ? new BigDecimal(dataRow[headerTitleMap.get("quantity")])
-                        : BigDecimal.ONE
-                    : BigDecimal.ONE;
+            BigDecimal qty = this.getDecimalFromDataRow(dataRow, headerTitleMap, QUANTITY);
+            qty = qty.equals(BigDecimal.ZERO) ? BigDecimal.ONE : qty;
 
             BigDecimal price =
-                headerTitleMap.containsKey("unit price without vat")
-                    ? !Strings.isNullOrEmpty(dataRow[headerTitleMap.get("unit price without vat")])
-                        ? new BigDecimal(dataRow[headerTitleMap.get("unit price without vat")])
-                        : BigDecimal.ZERO
-                    : BigDecimal.ZERO;
+                this.getDecimalFromDataRow(dataRow, headerTitleMap, UNIT_PRICE_WITHOUT_VAT);
 
             BigDecimal exTaxTotal = qty.multiply(price);
             BigDecimal companyExTaxTotal =
@@ -369,6 +372,54 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
 
     return invoice;
+  }
+
+  protected String getStringFromDataRow(
+      String[] dataRow, Map<String, Integer> headerTitleMap, String key) {
+
+    String data = null;
+
+    if (headerTitleMap.containsKey(key)) {
+      data =
+          Strings.isNullOrEmpty(dataRow[headerTitleMap.get(key)])
+              ? null
+              : dataRow[headerTitleMap.get(key)];
+    }
+
+    return data;
+  }
+
+  protected BigDecimal getDecimalFromDataRow(
+      String[] dataRow, Map<String, Integer> headerTitleMap, String key) {
+
+    BigDecimal value = BigDecimal.ZERO;
+
+    if (key != null
+        && headerTitleMap != null
+        && headerTitleMap.containsKey(key)
+        && dataRow != null) {
+      value =
+          Strings.isNullOrEmpty(dataRow[headerTitleMap.get(key)])
+              ? BigDecimal.ZERO
+              : new BigDecimal(dataRow[headerTitleMap.get(key)]);
+    }
+
+    return value;
+  }
+
+  protected LocalDate getDateFromDataRow(
+      String[] dataRow, Map<String, Integer> headerTitleMap, String key) {
+
+    LocalDate date = null;
+
+    if (headerTitleMap.containsKey(key)) {
+      date =
+          Strings.isNullOrEmpty(dataRow[headerTitleMap.get(key)])
+              ? null
+              : LocalDate.parse(dataRow[headerTitleMap.get(key)]);
+    }
+
+    return date;
   }
 
   @Override
