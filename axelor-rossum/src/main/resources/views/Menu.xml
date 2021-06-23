@@ -5,8 +5,8 @@
   
    <menuitem title="Rossum" name="rossum-root" icon="fa-file-text" icon-background="blue" if="__config__.app.isApp('rossum')" order="-68"/>
 
-	<menuitem title="Invoice Ocr Template" name="rossum-root-invoice-ocr-template" parent="rossum-root" action="rossum.root.invoice.ocr.template" order="5"/>
-	<action-view name="rossum.root.invoice.ocr.template" title="Invoice Ocr Template" model="com.axelor.apps.rossum.db.InvoiceOcrTemplate">
+	<menuitem title="Invoice ocr template" name="rossum-root-invoice-ocr-template" parent="rossum-root" action="rossum.root.invoice.ocr.template" order="5"/>
+	<action-view name="rossum.root.invoice.ocr.template" title="Invoice ocr template" model="com.axelor.apps.rossum.db.InvoiceOcrTemplate">
       <view type="grid" name="invoice-ocr-template-grid"/>
       <view type="form" name="invoice-ocr-template-form"/>
 	</action-view>
@@ -25,8 +25,8 @@
       <view type="form" name="workspace-form"/>
    </action-view>
 
-   <menuitem title="Schemas" name="rossum-root-config-rossum-schema" parent="rossum-root-config" action="rossum.root.config.rossum.schema"/>
-   <action-view name="rossum.root.config.rossum.schema" title="Schemas" model="com.axelor.apps.rossum.db.Schema">
+   <menuitem title="rossum.Schemas" name="rossum-root-config-rossum-schema" parent="rossum-root-config" action="rossum.root.config.rossum.schema"/>
+   <action-view name="rossum.root.config.rossum.schema" title="rossum.Schemas" model="com.axelor.apps.rossum.db.Schema">
       <view type="grid" name="schema-grid"/>
       <view type="form" name="schema-form"/>
    </action-view>

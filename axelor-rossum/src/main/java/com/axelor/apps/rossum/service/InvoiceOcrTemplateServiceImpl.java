@@ -33,7 +33,7 @@ import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.SequenceRepository;
 import com.axelor.apps.base.service.administration.SequenceService;
-import com.axelor.apps.base.service.readers.DataReaderFactory;
+import com.axelor.apps.tool.reader.DataReaderFactory;
 import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
