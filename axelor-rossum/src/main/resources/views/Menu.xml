@@ -13,6 +13,13 @@
 
    <menuitem title="Config" name="rossum-root-config" parent="rossum-root" order="10"/>
 
+   <menuitem title="Rossum accounts" name="rossum-root-config-rossum-account" parent="rossum-root-config"
+      action="rossum.root.config.rossum.account"/>
+   <action-view name="rossum.root.config.rossum.account" title="Rossum accounts" model="com.axelor.apps.rossum.db.RossumAccount">
+      <view type="grid" name="rossum-account-grid"/>
+      <view type="form" name="rossum-account-form"/>
+   </action-view>
+
    <menuitem title="Organisations" name="rossum-root-config-rossum-organisation" parent="rossum-root-config" action="rossum.root.config.rossum.organisation"/>
    <action-view name="rossum.root.config.rossum.organisation" title="Organisations" model="com.axelor.apps.rossum.db.Organisation">
       <view type="grid" name="organisation-grid"/>

@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -23,7 +23,6 @@ import com.axelor.apps.account.db.InvoiceLine;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
 import com.axelor.apps.account.service.invoice.InvoiceLineService;
 import com.axelor.apps.account.service.invoice.InvoiceService;
-import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Partner;
@@ -33,14 +32,13 @@ import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.SequenceRepository;
 import com.axelor.apps.base.service.administration.SequenceService;
-import com.axelor.apps.tool.reader.DataReaderFactory;
 import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
+import com.axelor.apps.rossum.db.RossumAccount;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
 import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateManagementRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
-import com.axelor.apps.rossum.service.annotation.AnnotationService;
-import com.axelor.apps.rossum.service.app.AppRossumService;
+import com.axelor.apps.tool.reader.DataReaderFactory;
 import com.axelor.common.StringUtils;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.exception.AxelorException;
@@ -77,6 +75,7 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import wslite.json.JSONException;
@@ -84,7 +83,10 @@ import wslite.json.JSONObject;
 
 public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService {
 
-  protected AppRossumService rossumApiService;
+  protected CloseableHttpClient httpClient = HttpClients.createDefault();
+  protected CloseableHttpResponse response;
+
+  protected RossumAccountService rossumAccountService;
   protected InvoiceOcrTemplateManagementRepository invoiceOcrTemplateRepository;
   protected AppRossumRepository appRossumRepository;
   protected MetaFiles metaFiles;
@@ -95,7 +97,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
 
   @Inject
   public InvoiceOcrTemplateServiceImpl(
-      AppRossumService rossumApiService,
+      RossumAccountService rossumAccountService,
       InvoiceOcrTemplateManagementRepository invoiceOcrTemplateRepository,
       AppRossumRepository appRossumRepository,
       MetaFiles metaFiles,
@@ -103,7 +105,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
       DataReaderFactory dataReaderFactory,
       AnnotationService annotationService,
       AnnotationRepository annotationRepo) {
-    this.rossumApiService = rossumApiService;
+    this.rossumAccountService = rossumAccountService;
     this.invoiceOcrTemplateRepository = invoiceOcrTemplateRepository;
     this.appRossumRepository = appRossumRepository;
     this.metaFiles = metaFiles;
@@ -128,7 +130,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
                 InvoiceOcrTemplateManagementRepository.EXPORT_TYPE_SELECT_XML))) {
 
       Map<MetaFile, Pair<String, File>> metaFileAnnotationLinkFilePairMap =
-          rossumApiService.extractInvoiceDataMetaFile(
+          rossumAccountService.extractInvoiceDataMetaFile(
               metaFileList,
               invoiceOcrTemplate.getTimeout(),
               invoiceOcrTemplate.getQueue(),
@@ -149,7 +151,8 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
       String annotationsLink, File exportedFile, InvoiceOcrTemplate invoiceOcrTemplate)
       throws IOException, JSONException, AxelorException {
 
-    annotationService.createOrUpdateAnnotationFromLink(annotationsLink);
+    annotationService.createOrUpdateAnnotationFromLink(
+        annotationsLink, invoiceOcrTemplate.getRossumAccount());
 
     Reader reader = new FileReader(exportedFile);
     CSVReader csvReader = new CSVReader(reader, ',');
@@ -410,7 +413,6 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     return documentUrl;
   }
 
-  @SuppressWarnings("static-access")
   @Override
   public void fetchUpdatedDetails(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, JSONException {
@@ -437,16 +439,14 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
             "&id=",
             annotation.getAnnotationId().toString());
 
-    AppRossum appRossum = rossumApiService.getAppRossum();
-    rossumApiService.login(appRossum);
-
-    CloseableHttpClient httpClient = rossumApiService.httpClient;
+    RossumAccount rossumAccount = invoiceOcrTemplate.getRossumAccount();
+    rossumAccountService.login(rossumAccount);
 
     HttpGet httpGet = new HttpGet(url);
-    httpGet.addHeader("Authorization", "token " + appRossum.getToken());
+    httpGet.addHeader("Authorization", "token " + rossumAccount.getToken());
     httpGet.addHeader(HTTP.CONTENT_TYPE, "text/csv");
 
-    CloseableHttpResponse response = httpClient.execute(httpGet);
+    response = httpClient.execute(httpGet);
 
     File file = null;
 
@@ -481,16 +481,13 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     }
   }
 
-  @SuppressWarnings("static-access")
   @Override
   @Transactional(rollbackOn = {AxelorException.class, IOException.class, JSONException.class})
   public void validateRossumData(InvoiceOcrTemplate invoiceOcrTemplate)
       throws AxelorException, IOException, JSONException {
 
-    AppRossum appRossum = rossumApiService.getAppRossum();
-    rossumApiService.login(appRossum);
-
-    CloseableHttpClient httpClient = rossumApiService.httpClient;
+    RossumAccount rossumAccount = invoiceOcrTemplate.getRossumAccount();
+    rossumAccountService.login(rossumAccount);
 
     Annotation annotation = annotationRepo.findByUrl(invoiceOcrTemplate.getAnnotaionUrl());
 
@@ -502,7 +499,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     }
 
     HttpPut httpPut = new HttpPut(annotation.getAnnotationUrl());
-    httpPut.addHeader("Authorization", "token " + appRossum.getToken());
+    httpPut.addHeader("Authorization", "token " + rossumAccount.getToken());
     httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
     JSONObject annotationObject = new JSONObject(annotation.getAnnotationResult());
@@ -515,7 +512,7 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
     StringEntity stringEntity = new StringEntity(annotationUpdateObject.toString());
     httpPut.setEntity(stringEntity);
 
-    CloseableHttpResponse response = httpClient.execute(httpPut);
+    response = httpClient.execute(httpPut);
 
     if (response.getEntity() != null) {
       JSONObject obj = new JSONObject(EntityUtils.toString(response.getEntity()));

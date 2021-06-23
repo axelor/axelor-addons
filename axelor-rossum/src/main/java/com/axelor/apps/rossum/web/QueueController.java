@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -17,11 +17,9 @@
  */
 package com.axelor.apps.rossum.web;
 
-import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Queue;
 import com.axelor.apps.rossum.db.repo.QueueRepository;
-import com.axelor.apps.rossum.service.app.AppRossumService;
-import com.axelor.apps.rossum.service.queue.QueueService;
+import com.axelor.apps.rossum.service.QueueService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.ResponseMessageType;
 import com.axelor.exception.service.TraceBackService;
@@ -53,8 +51,7 @@ public class QueueController {
       Queue queue =
           Beans.get(QueueRepository.class).find(request.getContext().asType(Queue.class).getId());
 
-      Beans.get(QueueService.class)
-          .updateQueue(Beans.get(AppRossumService.class).getAppRossum(), queue);
+      Beans.get(QueueService.class).updateQueue(queue);
       response.setReload(true);
     } catch (IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);
@@ -76,9 +73,7 @@ public class QueueController {
   public void getQueues(ActionRequest request, ActionResponse response) {
 
     try {
-      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
-      Beans.get(AppRossumService.class).login(appRossum);
-      Beans.get(QueueService.class).getQueues(appRossum);
+      Beans.get(QueueService.class).getQueues(null);
       response.setReload(true);
     } catch (ParseException | IOException | JSONException | AxelorException e) {
       TraceBackService.trace(response, e, ResponseMessageType.ERROR);

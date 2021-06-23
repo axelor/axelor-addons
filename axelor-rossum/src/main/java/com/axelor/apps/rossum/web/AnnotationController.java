@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -17,11 +17,9 @@
  */
 package com.axelor.apps.rossum.web;
 
-import com.axelor.apps.base.db.AppRossum;
 import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
-import com.axelor.apps.rossum.service.annotation.AnnotationService;
-import com.axelor.apps.rossum.service.app.AppRossumService;
+import com.axelor.apps.rossum.service.AnnotationService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.ResponseMessageType;
 import com.axelor.exception.service.TraceBackService;
@@ -59,9 +57,7 @@ public class AnnotationController {
   public void getAnnotations(ActionRequest request, ActionResponse response) {
 
     try {
-      AppRossum appRossum = Beans.get(AppRossumService.class).getAppRossum();
-      Beans.get(AppRossumService.class).login(appRossum);
-      Beans.get(AnnotationService.class).getAnnotations(appRossum);
+      Beans.get(AnnotationService.class).getAnnotations(null);
 
       response.setReload(true);
     } catch (ParseException | IOException | JSONException | AxelorException e) {

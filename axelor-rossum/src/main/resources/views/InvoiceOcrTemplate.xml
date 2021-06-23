@@ -3,9 +3,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<grid model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice ocr template" name="invoice-ocr-template-grid">
+	<grid model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice ocr template" name="invoice-ocr-template-grid"
+	  groupBy="rossumAccount">
       <field name="name"/>
       <field name="invoiceOcrTemplateId"/>
+      <field name="rossumAccount" hidden="true"/>
 	</grid>
   
 	<form model="com.axelor.apps.rossum.db.InvoiceOcrTemplate" title="Invoice ocr template" name="invoice-ocr-template-form"
@@ -27,8 +29,9 @@
 
 		<panel name="generalPanel" hideIf="exportedFile != null">
 			<field name="templateFile" widget="binary-link" onChange="action-invoice-ocr-template-group-onchange-template-file"/>
-			<field name="timeout" min="0" colSpan="3"/>
-			<field name="queue" readonlyIf="exportedFile != null" colSpan="3"/>
+			<field name="timeout" min="0"/>
+			<field name="rossumAccount" required="true"/>
+			<field name="queue" readonlyIf="exportedFile != null" domain="self.rossumAccount = :rossumAccount"/>
 		</panel>
 
       <panel name="detailsPanel" showIf="exportedFile != null">
@@ -204,6 +207,7 @@
 		</panel>
 
       <panel name="buttonPanel" sidebar="true">
+         <field name="queue.rossumAccount" showIf="exportedFile != null"/>
          <field name="queue.useConfirmedState" widget="boolean-switch"/>
          <field name="isInvoiceLineConsolidated" widget="boolean-switch" showIf="exportedFile != null"/>
 

@@ -4,15 +4,16 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
    <grid model="com.axelor.apps.rossum.db.Annotation" title="Annotations" name="annotation-grid" canNew="false" canDelete="false"
-      groupBy="queueUrl" orderBy="-annotationId">
+      groupBy="rossumAccount,queueUrl" orderBy="-annotationId">
       <toolbar>
          <button onClick="action-rossum-annotation-method-get-annotations" name="getAnnotaionBtn"
-            title="Get annotation from Rossum"/>
+            title="Get annotation from Rossum" hidden="true"/>
       </toolbar>
       <field name="annotationUrl"/>
       <field name="statusSelect"/>
       <field name="annotationId"/>
       <field name="queueUrl" hidden="true"/>
+      <field name="rossumAccount" hidden="true"/>
    </grid>
 
    <form model="com.axelor.apps.rossum.db.Annotation" title="Annotation" name="annotation-form" canNew="false" canDelete="false"
@@ -29,6 +30,7 @@
          <field name="annotationId"/>
          <field name="annotationUrl"/>
          <field name="queueUrl"/>
+         <field name="rossumAccount"/>
       </panel>
       <panel name="jsonDataPanel" title="Json Data">
          <field name="annotationResult" widget="json-raw" colSpan="12" readonly="true"/>
