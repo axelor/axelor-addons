@@ -75,7 +75,7 @@
               </viewer>
             </field>
             
-            <field name="invoiceOperationTypeSelect" onChange="action-invoice-ocr-template-group-onchange-amounts"/>
+            <field name="invoiceOperationTypeSelect" onChange="action-invoice-ocr-template-group-onchange-amounts" selection-in="[3,4]"/>
             <field name="$invoiceOperationTypeSelectReq" showTitle="false" readonly="true"
                showIf="invoiceOperationTypeSelect == 0 || invoiceOperationTypeSelect == null">
               <viewer>
@@ -163,7 +163,7 @@
               </viewer>
             </field>
             
-            <field name="supplier"/>
+            <field name="supplier" domain="self.isSupplier = true"/>
             <field name="$supplierReq" showTitle="false" readonly="true" showIf="supplier == null">
               <viewer>
                  <![CDATA[
