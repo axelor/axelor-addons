@@ -41,7 +41,6 @@ public class DailyTimesheetController {
   public void updateFromTimesheet(ActionRequest request, ActionResponse response) {
 
     DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
-    dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
     Beans.get(DailyTimesheetService.class).updateFromTimesheet(dailyTimesheet);
     response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
   }
