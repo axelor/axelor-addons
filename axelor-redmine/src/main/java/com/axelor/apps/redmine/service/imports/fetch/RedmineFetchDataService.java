@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports.common;
+package com.axelor.apps.redmine.service.imports.fetch;
 
 import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;

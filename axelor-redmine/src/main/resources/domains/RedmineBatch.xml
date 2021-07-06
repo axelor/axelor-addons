@@ -19,12 +19,13 @@
 		<string name="failedRedmineIssuesIds" large="true" />
 		<string name="failedRedmineTimeEntriesIds" large="true" />
 		<boolean name="isOverrideRecords" title="Override records" />
+		<string name="failedAosTimesheetLineIds" large="true" />
 
 		<extra-code>
 			<![CDATA[
 				public static final int ACTION_SELECT_IMPORT_PROJECT = 0;
 				public static final int ACTION_SELECT_IMPORT_ISSUE = 1;
-				public static final int ACTION_SELECT_IMPORT_TIME_ENTRIES = 2;
+				public static final int ACTION_SELECT_SYNC_TIME_ENTRIES = 2;
 			]]>
 		</extra-code>
 

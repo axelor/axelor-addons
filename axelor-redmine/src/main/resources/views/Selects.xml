@@ -25,7 +25,7 @@
 	<selection name="redmine.batch.action.select">
 		<option value="0">Import Projects</option>
 		<option value="1">Import Issues</option>
-		<option value="2">Import Time Entries</option>
+		<option value="2">Sync Time Entries</option>
 	</selection>
 	
 	<selection name="redmine.timesheetline.activity.type.select">

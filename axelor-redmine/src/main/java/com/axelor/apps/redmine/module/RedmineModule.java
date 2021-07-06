@@ -25,8 +25,8 @@ import com.axelor.apps.redmine.db.repo.TeamTaskRedmineRepositiry;
 import com.axelor.apps.redmine.service.TeamTaskRedmineService;
 import com.axelor.apps.redmine.service.TeamTaskRedmineServiceImpl;
 import com.axelor.apps.redmine.service.TimesheetRedmineServiceImpl;
-import com.axelor.apps.redmine.service.imports.RedmineService;
-import com.axelor.apps.redmine.service.imports.RedmineServiceImpl;
+import com.axelor.apps.redmine.service.common.RedmineService;
+import com.axelor.apps.redmine.service.common.RedmineServiceImpl;
 import com.axelor.apps.redmine.service.imports.issues.RedmineImportIssueService;
 import com.axelor.apps.redmine.service.imports.issues.RedmineImportIssueServiceImpl;
 import com.axelor.apps.redmine.service.imports.issues.RedmineIssueService;
@@ -35,10 +35,12 @@ import com.axelor.apps.redmine.service.imports.projects.RedmineImportProjectServ
 import com.axelor.apps.redmine.service.imports.projects.RedmineImportProjectServiceImpl;
 import com.axelor.apps.redmine.service.imports.projects.RedmineProjectService;
 import com.axelor.apps.redmine.service.imports.projects.RedmineProjectServiceImpl;
-import com.axelor.apps.redmine.service.imports.timeentries.RedmineImportTimeSpentService;
-import com.axelor.apps.redmine.service.imports.timeentries.RedmineImportTimeSpentServiceImpl;
-import com.axelor.apps.redmine.service.imports.timeentries.RedmineTimeEntriesService;
-import com.axelor.apps.redmine.service.imports.timeentries.RedmineTimeEntriesServiceImpl;
+import com.axelor.apps.redmine.service.sync.timeentries.RedmineExportTimeSpentService;
+import com.axelor.apps.redmine.service.sync.timeentries.RedmineExportTimeSpentServiceImpl;
+import com.axelor.apps.redmine.service.sync.timeentries.RedmineImportTimeSpentService;
+import com.axelor.apps.redmine.service.sync.timeentries.RedmineImportTimeSpentServiceImpl;
+import com.axelor.apps.redmine.service.sync.timeentries.RedmineTimeEntriesService;
+import com.axelor.apps.redmine.service.sync.timeentries.RedmineTimeEntriesServiceImpl;
 
 public class RedmineModule extends AxelorModule {
 
@@ -52,6 +54,7 @@ public class RedmineModule extends AxelorModule {
     bind(RedmineImportProjectService.class).to(RedmineImportProjectServiceImpl.class);
     bind(RedmineImportIssueService.class).to(RedmineImportIssueServiceImpl.class);
     bind(RedmineImportTimeSpentService.class).to(RedmineImportTimeSpentServiceImpl.class);
+    bind(RedmineExportTimeSpentService.class).to(RedmineExportTimeSpentServiceImpl.class);
     bind(TeamTaskBusinessSupportRepository.class).to(TeamTaskRedmineRepositiry.class);
     bind(TimesheetBusinessProductionServiceImpl.class).to(TimesheetRedmineServiceImpl.class);
     bind(TeamTaskBusinessSupportServiceImpl.class).to(TeamTaskRedmineServiceImpl.class);

@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports.common;
+package com.axelor.apps.redmine.service.common;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -38,6 +38,8 @@ import com.taskadapter.redmineapi.bean.CustomField;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collection;
@@ -45,6 +47,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.function.Consumer;
 import net.java.textilej.parser.MarkupParser;
 import net.java.textilej.parser.builder.HtmlDocumentBuilder;
@@ -52,7 +55,7 @@ import net.java.textilej.parser.markup.textile.TextileDialect;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class RedmineImportCommonService {
+public class RedmineCommonService {
 
   protected UserRepository userRepo;
   protected ProjectRepository projectRepo;
@@ -64,7 +67,7 @@ public class RedmineImportCommonService {
   protected CompanyRepository companyRepo;
 
   @Inject
-  public RedmineImportCommonService(
+  public RedmineCommonService(
       UserRepository userRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
@@ -84,8 +87,9 @@ public class RedmineImportCommonService {
     this.companyRepo = companyRepo;
   }
 
-  public static String result = "";
-  protected static int success = 0, fail = 0;
+  protected static String result = "";
+  protected int success = 0;
+  protected int fail = 0;
   protected Consumer<Object> onSuccess;
   protected Consumer<Throwable> onError;
 
@@ -102,6 +106,9 @@ public class RedmineImportCommonService {
   protected HashMap<Long, Integer> parentMap = new HashMap<>();
   protected HashMap<Long, LocalDateTime> updatedOnMap = new HashMap<>();
   protected Object[] errors;
+
+  protected SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+  protected String serverTimeZone;
 
   public static final Integer REDMINE_PROJECT_STATUS_CLOSED = 5;
 
@@ -124,10 +131,7 @@ public class RedmineImportCommonService {
     try {
       Method createdOnMethod =
           AuditableModel.class.getDeclaredMethod(methodName, LocalDateTime.class);
-      invokeMethod(
-          createdOnMethod,
-          obj,
-          objDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+      invokeMethod(createdOnMethod, obj, getRedmineDate(objDate));
     } catch (NoSuchMethodException | SecurityException | IllegalArgumentException e) {
       TraceBackService.trace(e);
     }
@@ -202,5 +206,28 @@ public class RedmineImportCommonService {
     if (!JPA.em().contains(batch)) {
       batch = JPA.find(Batch.class, batch.getId());
     }
+  }
+
+  public static String getResult() {
+    return result;
+  }
+
+  public static void setResult(String result) {
+    RedmineCommonService.result = result;
+  }
+
+  public LocalDateTime getRedmineDate(Date date) {
+
+    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+    String dateGmtStr = dateFormat.format(date);
+
+    try {
+      dateFormat.setTimeZone(TimeZone.getTimeZone(serverTimeZone));
+      date = dateFormat.parse(dateGmtStr);
+    } catch (ParseException e) {
+      TraceBackService.trace(e, "", batch.getId());
+    }
+
+    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
   }
 }

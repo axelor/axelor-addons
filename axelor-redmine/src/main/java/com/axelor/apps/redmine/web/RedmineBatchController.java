@@ -69,12 +69,12 @@ public class RedmineBatchController {
     response.setReload(true);
   }
 
-  public void redmineImportTimeEntries(ActionRequest request, ActionResponse response) {
+  public void redmineSyncTimeEntries(ActionRequest request, ActionResponse response) {
 
     RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
     redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
 
-    Batch batch = Beans.get(RedmineBatchService.class).redmineImportTimeEntries(redmineBatch);
+    Batch batch = Beans.get(RedmineBatchService.class).redmineSyncTimeEntries(redmineBatch);
 
     if (batch != null) {
       response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
@@ -88,7 +88,7 @@ public class RedmineBatchController {
     Batch batch = request.getContext().asType(Batch.class);
     batch = batchRepo.find(batch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
+    List<Long> idList = new ArrayList<>();
     batch.getCreatedProjectsInOs().forEach(p -> idList.add(p.getId()));
 
     if (!idList.isEmpty()) {
@@ -109,7 +109,7 @@ public class RedmineBatchController {
     Batch batch = request.getContext().asType(Batch.class);
     batch = batchRepo.find(batch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
+    List<Long> idList = new ArrayList<>();
     batch.getUpdatedProjectsInOs().forEach(p -> idList.add(p.getId()));
 
     if (!idList.isEmpty()) {
@@ -130,7 +130,7 @@ public class RedmineBatchController {
     Batch batch = request.getContext().asType(Batch.class);
     batch = batchRepo.find(batch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
+    List<Long> idList = new ArrayList<>();
     batch.getCreatedTimesheetLinesInOs().forEach(t -> idList.add(t.getId()));
 
     if (!idList.isEmpty()) {
@@ -151,7 +151,7 @@ public class RedmineBatchController {
     Batch batch = request.getContext().asType(Batch.class);
     batch = batchRepo.find(batch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
+    List<Long> idList = new ArrayList<>();
     batch.getUpdatedTimesheetLinesInOs().forEach(t -> idList.add(t.getId()));
 
     if (!idList.isEmpty()) {
@@ -172,7 +172,7 @@ public class RedmineBatchController {
     Batch batch = request.getContext().asType(Batch.class);
     batch = batchRepo.find(batch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
+    List<Long> idList = new ArrayList<>();
     batch.getCreatedTasksInOs().forEach(t -> idList.add(t.getId()));
 
     if (!idList.isEmpty()) {
@@ -193,7 +193,7 @@ public class RedmineBatchController {
     Batch batch = request.getContext().asType(Batch.class);
     batch = batchRepo.find(batch.getId());
 
-    List<Long> idList = new ArrayList<Long>();
+    List<Long> idList = new ArrayList<>();
     batch.getUpdatedTasksInOs().forEach(t -> idList.add(t.getId()));
 
     if (!idList.isEmpty()) {
@@ -202,6 +202,48 @@ public class RedmineBatchController {
               .model(TeamTask.class.getName())
               .add("grid", "team-task-grid")
               .add("form", "team-task-form")
+              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
+              .map());
+
+      response.setCanClose(true);
+    }
+  }
+
+  public void createdTimeentriesInRedmine(ActionRequest request, ActionResponse response) {
+
+    Batch batch = request.getContext().asType(Batch.class);
+    batch = batchRepo.find(batch.getId());
+
+    List<Long> idList = new ArrayList<>();
+    batch.getCreatedTimeEntriesInRedmine().forEach(t -> idList.add(t.getId()));
+
+    if (!idList.isEmpty()) {
+      response.setView(
+          ActionView.define(I18n.get("Timesheetlines"))
+              .model(TimesheetLine.class.getName())
+              .add("grid", "timesheet-line-grid")
+              .add("form", "timesheet-line-form")
+              .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
+              .map());
+
+      response.setCanClose(true);
+    }
+  }
+
+  public void updatedTimeentriesInRedmine(ActionRequest request, ActionResponse response) {
+
+    Batch batch = request.getContext().asType(Batch.class);
+    batch = batchRepo.find(batch.getId());
+
+    List<Long> idList = new ArrayList<>();
+    batch.getUpdatedTimeEntriesInRedmine().forEach(t -> idList.add(t.getId()));
+
+    if (!idList.isEmpty()) {
+      response.setView(
+          ActionView.define(I18n.get("Timesheetlines"))
+              .model(TimesheetLine.class.getName())
+              .add("grid", "timesheet-line-grid")
+              .add("form", "timesheet-line-form")
               .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
               .map());
 

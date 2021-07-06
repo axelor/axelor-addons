@@ -15,20 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports.timeentries;
+package com.axelor.apps.redmine.service.sync.timeentries;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.service.imports.common.RedmineFetchDataService;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
-import com.axelor.apps.redmine.service.imports.log.RedmineErrorLogService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
+import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
+import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineManager;
+import com.taskadapter.redmineapi.bean.TimeEntry;
 import com.taskadapter.redmineapi.bean.User;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
@@ -36,12 +37,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService {
 
   protected RedmineImportTimeSpentService redmineImportTimeSpentService;
+  protected RedmineExportTimeSpentService redmineExportTimeSpentService;
   protected RedmineFetchDataService redmineFetchDataService;
   protected RedmineErrorLogService redmineErrorLogService;
   protected BatchRepository batchRepo;
@@ -50,12 +53,14 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
   @Inject
   public RedmineTimeEntriesServiceImpl(
       RedmineImportTimeSpentService redmineImportTimeSpentService,
+      RedmineExportTimeSpentService redmineExportTimeSpentService,
       RedmineFetchDataService redmineFetchDataService,
       RedmineErrorLogService redmineErrorLogService,
       BatchRepository batchRepo,
       RedmineBatchRepository redmineBatchRepo) {
 
     this.redmineImportTimeSpentService = redmineImportTimeSpentService;
+    this.redmineExportTimeSpentService = redmineExportTimeSpentService;
     this.redmineFetchDataService = redmineFetchDataService;
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
@@ -72,7 +77,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
       Consumer<Object> onSuccess,
       Consumer<Throwable> onError) {
 
-    RedmineImportCommonService.result = "";
+    RedmineCommonService.setResult("");
 
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 
@@ -96,7 +101,8 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     LocalDateTime lastBatchUpdatedOn = lastBatch != null ? lastBatch.getUpdatedOn() : null;
     String failedRedmineTimeEntriesIds = redmineBatch.getFailedRedmineTimeEntriesIds();
 
-    HashMap<Integer, String> redmineUserMap = new HashMap<Integer, String>();
+    HashMap<Integer, String> redmineUserMap = new HashMap<>();
+    HashMap<String, String> redmineUserLoginMap = new HashMap<>();
 
     LOG.debug("Fetching time entries from redmine..");
 
@@ -105,6 +111,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
+        redmineUserLoginMap.put(user.getMail(), user.getLogin());
       }
 
       // CREATE MAP FOR PASS TO THE METHODS
@@ -117,24 +124,43 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
       paramsMap.put("errorObjList", errorObjList);
       paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
       paramsMap.put("redmineUserMap", redmineUserMap);
+      paramsMap.put("redmineUserLoginMap", redmineUserLoginMap);
       paramsMap.put("redmineManager", redmineManager);
+
+      // FETCH RECORDS TO IMPORT
+
+      LOG.debug("Start timeentries fetching process from Redmine..");
+
+      List<TimeEntry> redmineTimeEntryList =
+          redmineFetchDataService.fetchTimeEntryImportData(
+              redmineManager, lastBatchEndDate, failedRedmineTimeEntriesIds);
+
+      // EXPORT PROCESS
+
+      LOG.debug("Start timesheetlines export process from AOS to Redmine..");
+
+      String failedAosTimesheetLineIds =
+          redmineExportTimeSpentService.exportTimesheetLines(paramsMap);
+      paramsMap.put("batch", batchRepo.find(batch.getId()));
 
       // IMPORT PROCESS
 
-      redmineImportTimeSpentService.importTimeSpent(
-          redmineFetchDataService.fetchTimeEntryImportData(
-              redmineManager, lastBatchEndDate, failedRedmineTimeEntriesIds),
-          paramsMap);
-      failedRedmineTimeEntriesIds = batch.getRedmineBatch().getFailedRedmineTimeEntriesIds();
+      LOG.debug("Start timesheetlines import process from Redmine to AOS..");
+
+      failedRedmineTimeEntriesIds =
+          redmineImportTimeSpentService.importTimeSpent(redmineTimeEntryList, paramsMap);
 
       // ATTACH ERROR LOG WITH BATCH
 
-      if (errorObjList != null && errorObjList.size() > 0) {
-        MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
+      redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
+      redmineBatch.setFailedRedmineTimeEntriesIds(failedRedmineTimeEntriesIds);
+      redmineBatch.setFailedAosTimesheetLineIds(failedAosTimesheetLineIds);
+      redmineBatchRepo.save(redmineBatch);
 
-        redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
-        redmineBatch.setFailedRedmineTimeEntriesIds(failedRedmineTimeEntriesIds);
-        redmineBatchRepo.save(redmineBatch);
+      LOG.debug("Prepare error log file to attach with batch..");
+
+      if (CollectionUtils.isNotEmpty(errorObjList)) {
+        MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
 
         if (errorMetaFile != null) {
           batch = batchRepo.find(batch.getId());
