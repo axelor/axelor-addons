@@ -33,7 +33,6 @@ import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.SequenceRepository;
 import com.axelor.apps.base.service.administration.SequenceService;
-import com.axelor.apps.tool.reader.DataReaderFactory;
 import com.axelor.apps.rossum.db.Annotation;
 import com.axelor.apps.rossum.db.InvoiceOcrTemplate;
 import com.axelor.apps.rossum.db.repo.AnnotationRepository;
@@ -41,6 +40,7 @@ import com.axelor.apps.rossum.db.repo.InvoiceOcrTemplateManagementRepository;
 import com.axelor.apps.rossum.exception.IExceptionMessage;
 import com.axelor.apps.rossum.service.annotation.AnnotationService;
 import com.axelor.apps.rossum.service.app.AppRossumService;
+import com.axelor.apps.tool.reader.DataReaderFactory;
 import com.axelor.common.StringUtils;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.exception.AxelorException;
@@ -532,25 +532,46 @@ public class InvoiceOcrTemplateServiceImpl implements InvoiceOcrTemplateService 
   @Override
   @Transactional
   public void recogniseData(InvoiceOcrTemplate invoiceOcrTemplate) {
+    StringBuilder companyFilter = new StringBuilder();
+    String customerName = invoiceOcrTemplate.getCustomerName();
+    String customerVatNo = invoiceOcrTemplate.getCustomerVatNumber();
+
+    if (!Strings.isNullOrEmpty(customerName)) {
+      companyFilter.append("LOWER(self.name) = LOWER('" + customerName + "')");
+    }
+    if (!Strings.isNullOrEmpty(customerVatNo)) {
+      if (companyFilter.length() != 0) {
+        companyFilter.append(" OR ");
+      }
+      companyFilter.append("self.partner.taxNbr = '" + customerVatNo + "'");
+    }
+
     Company company =
-        Beans.get(CompanyRepository.class)
-            .all()
-            .filter(
-                "LOWER(self.name) = LOWER(?1) OR self.partner.taxNbr =?2",
-                invoiceOcrTemplate.getCustomerName(),
-                invoiceOcrTemplate.getCustomerVatNumber())
-            .fetchOne();
+        companyFilter.length() != 0
+            ? Beans.get(CompanyRepository.class).all().filter(companyFilter.toString()).fetchOne()
+            : null;
+    invoiceOcrTemplate.setCompany(company);
+
+    StringBuilder partnerFilter = new StringBuilder();
+    String senderName = invoiceOcrTemplate.getSenderName();
+    String senderVatNo = invoiceOcrTemplate.getVendorVatNumber();
+
+    if (!Strings.isNullOrEmpty(senderName)) {
+      partnerFilter.append("LOWER(self.name) = LOWER('" + senderName + "')");
+    }
+    if (!Strings.isNullOrEmpty(senderVatNo)) {
+      if (partnerFilter.length() != 0) {
+        partnerFilter.append(" OR ");
+      }
+      partnerFilter.append(
+          "self.registrationCode = '" + senderVatNo + "' OR self.taxNbr = '" + senderVatNo + "'");
+    }
 
     Partner partner =
-        Beans.get(PartnerRepository.class)
-            .all()
-            .filter(
-                "LOWER(self.name) = LOWER(?1) OR self.registrationCode = ?1 OR self.taxNbr = ?2",
-                invoiceOcrTemplate.getSenderName(),
-                invoiceOcrTemplate.getVendorVatNumber())
-            .fetchOne();
+        partnerFilter.length() != 0
+            ? Beans.get(PartnerRepository.class).all().filter(partnerFilter.toString()).fetchOne()
+            : null;
 
-    invoiceOcrTemplate.setCompany(company);
     invoiceOcrTemplate.setSupplier(partner);
 
     invoiceOcrTemplateRepository.save(invoiceOcrTemplate);
