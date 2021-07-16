@@ -19,7 +19,8 @@ package com.axelor.apps.gsuite.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.service.GSuiteAOSTaskService;
+import com.axelor.apps.gsuite.service.people.GSuitePartnerExporterService;
+import com.axelor.apps.gsuite.service.people.GSuitePartnerImportService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
@@ -29,20 +30,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class BatchGSuiteTaskSyncService extends AbstractBatch {
+public class BatchGSuitePartnerService extends AbstractBatch {
 
-  @Inject UserRepository userRepo;
-  @Inject GSuiteAOSTaskService taskSyncService;
+  @Inject protected UserRepository userRepo;
+  @Inject protected GSuitePartnerImportService gSuitePartnerImportService;
+  @Inject protected GSuitePartnerExporterService gSuitePartnerExportService;
 
   @Override
   protected void process() {
-
     List<User> users = userRepo.all().filter("self.googleAccount != null").fetch();
     Set<GoogleAccount> accountSet =
         users.stream().map(User::getGoogleAccount).collect(Collectors.toSet());
     for (GoogleAccount account : accountSet) {
       try {
-        taskSyncService.sync(account);
+        gSuitePartnerImportService.sync(account);
         incrementDone();
       } catch (AxelorException e) {
         TraceBackService.trace(e, "", batch.getId());

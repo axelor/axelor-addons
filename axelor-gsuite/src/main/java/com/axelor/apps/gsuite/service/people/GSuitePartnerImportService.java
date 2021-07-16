@@ -15,16 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.people;
 
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
-import java.time.LocalDateTime;
 
-public interface GSuiteAOSTaskService {
+public interface GSuitePartnerImportService {
 
-  public void sync(GoogleAccount account) throws AxelorException;
-
-  public void sync(GoogleAccount account, LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
-      throws AxelorException;
+  void sync(GoogleAccount account) throws AxelorException;
 }
