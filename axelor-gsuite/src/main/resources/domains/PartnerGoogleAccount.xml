@@ -11,7 +11,7 @@
 		<string name="googleContactId" />
 		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount" />
 
-		<finder-method name="findByGoogleContactId" using="googleContactId" />
+		<finder-method name="findByGoogleContactIdAndAccount" using="googleContactId,googleAccount" />
 		
 	</entity>
 

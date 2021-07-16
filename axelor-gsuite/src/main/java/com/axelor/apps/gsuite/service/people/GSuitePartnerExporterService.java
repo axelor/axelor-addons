@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -15,17 +15,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.people;
 
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
-import com.google.gdata.client.contacts.ContactsService;
-import com.google.gdata.data.contacts.ContactFeed;
 
-public interface GSuiteAOSContactService {
+public interface GSuitePartnerExporterService {
 
-  GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
-
-  void sync(ContactFeed resultFeed, ContactsService contactsService, GoogleAccount googleAccount)
-      throws AxelorException;
+  public void sync(GoogleAccount account) throws AxelorException;
 }

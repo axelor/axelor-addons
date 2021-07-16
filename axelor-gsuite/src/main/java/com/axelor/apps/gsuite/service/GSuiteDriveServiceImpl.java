@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -32,7 +32,6 @@ import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
-import com.google.gdata.util.ServiceException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
@@ -110,7 +109,7 @@ public class GSuiteDriveServiceImpl implements GSuiteDriveService {
         driveGoogleAccountRepo.save(driveAccount);
       }
       googleAccount.setDocSyncToGoogleDate(LocalDateTime.now());
-    } catch (IOException | ServiceException e) {
+    } catch (IOException e) {
       googleAccount.setDocSyncToGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
     }
 
@@ -151,7 +150,7 @@ public class GSuiteDriveServiceImpl implements GSuiteDriveService {
           }
         }
       }
-    } catch (IOException | ServiceException e) {
+    } catch (IOException e) {
       throw new AxelorException(
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
           I18n.get(IExceptionMessage.DRIVE_UPDATE_EXCEPTION),
@@ -163,7 +162,7 @@ public class GSuiteDriveServiceImpl implements GSuiteDriveService {
 
   @Override
   public String updateGoogleDrive(DMSFile dmsFile, String[] account, boolean remove)
-      throws IOException, ServiceException, AxelorException {
+      throws IOException, AxelorException {
 
     LOG.debug("Exporting google drive id: {}", dmsFile.getId());
     com.google.api.services.drive.model.File googleDrive =
@@ -276,8 +275,8 @@ public class GSuiteDriveServiceImpl implements GSuiteDriveService {
     fileMetadata.setName(dmsFile.getFileName());
     fileMetadata.setMimeType(dmsFile.getMetaFile().getFileType());
     fileMetadata.setParents(Collections.singletonList(parentGoogleDriveId));
-    java.io.File file_path = MetaFiles.getPath(dmsFile.getMetaFile()).toFile();
-    FileContent mediaContent = new FileContent(dmsFile.getMetaFile().getFileType(), file_path);
+    java.io.File filePath = MetaFiles.getPath(dmsFile.getMetaFile()).toFile();
+    FileContent mediaContent = new FileContent(dmsFile.getMetaFile().getFileType(), filePath);
     try {
       if (account[0] != null) {
         googleDrive = drive.files().update(account[0], googleDrive).execute();
@@ -298,8 +297,8 @@ public class GSuiteDriveServiceImpl implements GSuiteDriveService {
 
     fileMetadata.setName(dmsFile.getFileName());
     fileMetadata.setMimeType(dmsFile.getMetaFile().getFileType());
-    java.io.File file_path = MetaFiles.getPath(dmsFile.getMetaFile()).toFile();
-    FileContent mediaContent = new FileContent(dmsFile.getMetaFile().getFileType(), file_path);
+    java.io.File filePath = MetaFiles.getPath(dmsFile.getMetaFile()).toFile();
+    FileContent mediaContent = new FileContent(dmsFile.getMetaFile().getFileType(), filePath);
     try {
       if (account[0] != null) {
         googleDrive = drive.files().update(account[0], googleDrive).execute();
@@ -315,11 +314,11 @@ public class GSuiteDriveServiceImpl implements GSuiteDriveService {
   public String findParentFolder(DMSFile dmsFile) {
 
     String parentGoogleDriveId = null;
-    List<Long> inputs = new ArrayList<Long>();
+    List<Long> inputs = new ArrayList<>();
     List<DriveGoogleAccount> list = driveGoogleAccountRepo.all().fetch();
 
     for (DriveGoogleAccount driveAccount : list) {
-      if (dmsFile.getParent().getId() == driveAccount.getDms().getId()
+      if (dmsFile.getParent().getId().equals(driveAccount.getDms().getId())
           && driveAccount.getGoogleDriveId() != null) {
         inputs.add(driveAccount.getId());
       }

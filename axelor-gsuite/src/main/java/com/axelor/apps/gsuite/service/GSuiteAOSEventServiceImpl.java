@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -19,7 +19,6 @@ package com.axelor.apps.gsuite.service;
 
 import com.axelor.apps.base.db.ICalendarUser;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
-import com.axelor.apps.base.ical.ICalendarException;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.gsuite.db.EventGoogleAccount;
@@ -40,9 +39,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.text.ParseException;
 import java.time.LocalDateTime;
-import javax.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,15 +138,8 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
         }
 
         pageToken = events.getNextPageToken();
-      } catch (IOException
-          | ClassNotFoundException
-          | InstantiationException
-          | IllegalAccessException
-          | AxelorException
-          | MessagingException
-          | ICalendarException
-          | ParseException e) {
-        throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+      } catch (IOException e) {
+        throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
       }
     } while (pageToken != null);
 
@@ -174,9 +164,7 @@ public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
 
   @Transactional
   protected void setAttendees(
-      Event aosEvent, com.google.api.services.calendar.model.Event gsuiteEvent)
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException,
-          AxelorException, MessagingException, IOException, ICalendarException, ParseException {
+      Event aosEvent, com.google.api.services.calendar.model.Event gsuiteEvent) {
 
     if (ObjectUtils.notEmpty(gsuiteEvent.getAttendees())) {
       for (EventAttendee eventAttendee : gsuiteEvent.getAttendees()) {
