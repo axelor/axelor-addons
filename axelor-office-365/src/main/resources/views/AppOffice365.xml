@@ -12,10 +12,4 @@
 		</panel>
 	</form>
 
-	<action-view name="action-message-view-office365-mail" title="Office365 mail" model="com.axelor.apps.message.db.Message">
-		<view type="grid" name="message-grid"/>
-		<view type="form" name="message-form"/>
-		<domain>self.office365Id IS NOT NULL AND (self.fromEmailAddress = :emailAddress OR :emailAddress MEMBER OF self.toEmailAddressSet)</domain>
-	</action-view>
-
 </object-views>

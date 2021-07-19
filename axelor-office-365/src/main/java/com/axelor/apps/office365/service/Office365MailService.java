@@ -254,6 +254,10 @@ public class Office365MailService {
               .filter("self.emailAddress = :emailAddress")
               .bind("emailAddress", emailAddress)
               .fetchOne();
+      if (partner != null) {
+        message.setRelatedTo1Select(Partner.class.getName());
+        message.setRelatedTo1SelectId(partner.getId());
+      }
       user.setPartner(partner);
     }
     message.setSenderUser(user);

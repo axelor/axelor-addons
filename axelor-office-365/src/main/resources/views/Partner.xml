@@ -11,7 +11,6 @@
 						<field name="nickName" title="Nick name"/>
 						<field name="jobTitle" title="Job title"/>
 					</panel>
-					<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail" colSpan="12"/>
 				</panel>
 			</insert>
 		</extend>
@@ -29,7 +28,6 @@
 						<field name="nickName" title="Nick name"/>
 						<field name="jobTitle" title="Job title"/>
 					</panel>
-					<panel-dashlet action="action-message-view-office365-mail" name="office365MailPanel" title="Office365 mail" colSpan="12"/>
 				</panel>
 			</insert>
 		</extend>
