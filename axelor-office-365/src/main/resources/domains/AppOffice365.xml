@@ -11,6 +11,7 @@
 		<string name="clientSecret" title="Application (client) secret" />
 		<string name="authenticationUrl" large="true"/>
 		<string name="refreshToken" readonly="true" large="true"/>
+		<boolean name="manageMessageRelatedTo"/>
 	</entity>
 
 </domain-models>
