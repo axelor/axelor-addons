@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<form name="message-form" id="office365-message-form" title="Email" model="com.axelor.apps.message.db.Message" extension="true">
+		<extend target="//panel[@name='relatedToPanel']">
+			<insert position="after">
+				<panel name="office365Panel" title="Office365" sidebar="true"> 
+					<field name="officeAccount" colSpan="12" onSelect="action-office365-attrs-message-office-account-domain" />
+				</panel>
+			</insert>
+		</extend>
+	</form>
+
+	<action-attrs name="action-office365-attrs-message-office-account-domain">
+		<attribute for="officeAccount" if="senderUser != null" name="domain" expr="eval: &quot;self.id IN (${senderUser?.officeAccountList?.collect{it.id}.join(',')})&quot;"/>
+ 		<attribute for="officeAccount" if="senderUser == null" name="domain" expr="self.id IN (0)"/>
+	</action-attrs>
+
+</object-views>

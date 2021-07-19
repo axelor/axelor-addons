@@ -1,14 +1,17 @@
-<?xml version="1.0" ?>
-<domain-models
-	xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
 	<entity name="ICalendar" table="ICAL_CALENDAR" sequential="true">
 		<string name="office365Id" title="Office365 id" />
 		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
+		<string name="calendarViewDeltaToken" readonly="true" large="true"/>
+		<boolean name="isOfficeDefaultCalendar"/>
+		<boolean name="isOfficeRemovableCalendar"/>
+		<boolean name="isOfficeEditableCalendar"/>
 
 		<finder-method name="findByOffice365Id" using="office365Id" />
 

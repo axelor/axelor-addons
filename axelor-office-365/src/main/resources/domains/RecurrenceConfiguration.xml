@@ -3,11 +3,10 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
-	<module name="base" package="com.axelor.apps.base.db" />
+  <module name="crm" package="com.axelor.apps.crm.db"/>
 
-	<entity name="PartnerAddress" lang="java">
-		<boolean name="isBusinessAddr" title="Business address" />
-		<boolean name="isOtherAddr" title="Other address" />
-	</entity>
+  <entity name="RecurrenceConfiguration" lang="java">
+  	<boolean name="isNoEnd"/>
+  </entity>
 
 </domain-models>

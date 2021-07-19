@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
 	<grid model="com.axelor.apps.office.db.OfficeAccount" title="Office accounts" name="office-account-grid">
 		<field name="name"/>
@@ -51,8 +51,8 @@
 	</action-method>
 
 	<action-view name="office365.account.contact" title="Office365 contacts" model="com.axelor.apps.base.db.Partner">
-		<view type="grid" name="partner-grid" />
-		<view type="form" name="partner-form" />
+		<view type="grid" name="partner-contact-grid" />
+		<view type="form" name="partner-contact-form" />
 		<domain>self.office365Id IS NOT NULL AND (self.officeAccount.id = :office365AccountId OR self.user.officeAccount.id = :office365AccountId)</domain>
 		<context name="office365AccountId" expr="eval:id"/>
 	</action-view>

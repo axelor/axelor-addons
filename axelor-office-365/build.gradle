@@ -11,6 +11,7 @@ axelor {
 
 dependencies {
   compile project(":modules:axelor-crm")
+  compile project(":modules:axelor-human-resource")
 
   compile 'com.github.scribejava:scribejava-apis:6.9.0'
   compile 'com.microsoft.azure:adal4j:1.6.4'

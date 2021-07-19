@@ -30,17 +30,23 @@ import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
+import com.axelor.apps.office.db.ContactFolder;
 import com.axelor.apps.office.db.OfficeAccount;
+import com.axelor.apps.office.db.repo.ContactFolderRepository;
+import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.auth.db.User;
 import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
+import com.axelor.db.Query;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import wslite.json.JSONArray;
 import wslite.json.JSONException;
@@ -48,22 +54,246 @@ import wslite.json.JSONObject;
 
 public class Office365ContactService {
 
-  private static final String COMPANY_OFFICE_ID_PREFIX = "company_";
+  public static final String COMPANY_OFFICE_ID_PREFIX = "company_";
 
   @Inject private PartnerService partnerService;
   @Inject private Office365Service office365Service;
 
+  @Inject private ContactFolderRepository contactFolderRepo;
   @Inject private PartnerRepository partnerRepo;
   @Inject private EmailAddressRepository emailAddressRepo;
   @Inject private AddressRepository addressRepo;
   @Inject private PartnerAddressRepository partnerAddressRepo;
 
   @SuppressWarnings("unchecked")
-  public void createContact(
-      JSONObject jsonObject, OfficeAccount officeAccount, LocalDateTime lastSyncOn) {
+  public void syncContactFolders(
+      OfficeAccount officeAccount, String accessToken, List<Long> removedContactIdList) {
+
+    JSONArray contactFolderJsonArray =
+        office365Service.fetchData(
+            Office365Service.CONTACT_FOLDER_URL, accessToken, true, null, "contactFolders");
+
+    List<Long> contactFolderIdList = new ArrayList<>();
+    String defaultContactFolderOfficeId = null;
+
+    if (contactFolderJsonArray != null) {
+      for (Object contactFolderObject : contactFolderJsonArray) {
+        JSONObject contactFolderJsonObject = (JSONObject) contactFolderObject;
+        ContactFolder contactFolder = createContactFolder(contactFolderJsonObject, officeAccount);
+        if (contactFolder == null || StringUtils.isBlank(contactFolder.getOffice365Id())) {
+          continue;
+        }
+
+        if (defaultContactFolderOfficeId == null) {
+          defaultContactFolderOfficeId = contactFolder.getParentFolderId();
+        }
+
+        if (!contactFolderIdList.contains(contactFolder.getId())) {
+          contactFolderIdList.add(contactFolder.getId());
+        }
+
+        String contactFolderOfficeId = contactFolder.getOffice365Id();
+        office365Service.syncContacts(
+            officeAccount, accessToken, contactFolderOfficeId, contactFolder, removedContactIdList);
+
+        int totalChild = (int) contactFolderJsonObject.getOrDefault("childFolderCount", 0);
+        if (totalChild > 0) {
+          syncChildContactFolders(
+              contactFolderOfficeId,
+              officeAccount,
+              accessToken,
+              contactFolderIdList,
+              removedContactIdList);
+        }
+      }
+    }
+
+    manageDefaultContactFolder(
+        officeAccount, defaultContactFolderOfficeId, accessToken, removedContactIdList);
+    removeContactFolder(officeAccount, contactFolderIdList, removedContactIdList);
+  }
+
+  @SuppressWarnings("unchecked")
+  public void syncChildContactFolders(
+      String parentFolderId,
+      OfficeAccount officeAccount,
+      String accessToken,
+      List<Long> contactFolderIdList,
+      List<Long> removedContactIdList) {
+
+    JSONArray childContactFolderJsonArray =
+        office365Service.fetchData(
+            String.format(Office365Service.CONTACT_CHILD_FOLDER_URL, parentFolderId),
+            accessToken,
+            true,
+            null,
+            "child contactFolders");
+    if (childContactFolderJsonArray == null) {
+      return;
+    }
+
+    for (Object childContactFolderObject : childContactFolderJsonArray) {
+      JSONObject childContactFolderJsonObject = (JSONObject) childContactFolderObject;
+      ContactFolder contactFolder =
+          createContactFolder(childContactFolderJsonObject, officeAccount);
+      if (contactFolder == null || StringUtils.isBlank(contactFolder.getOffice365Id())) {
+        continue;
+      }
+
+      if (!contactFolderIdList.contains(contactFolder.getId())) {
+        contactFolderIdList.add(contactFolder.getId());
+      }
+
+      String contactFolderOfficeId = contactFolder.getOffice365Id();
+      office365Service.syncContacts(
+          officeAccount, accessToken, contactFolderOfficeId, contactFolder, removedContactIdList);
+
+      int totalChild = (int) childContactFolderJsonObject.getOrDefault("childFolderCount", 0);
+      if (totalChild > 0) {
+        syncChildContactFolders(
+            contactFolderOfficeId,
+            officeAccount,
+            accessToken,
+            contactFolderIdList,
+            removedContactIdList);
+      }
+    }
+  }
+
+  @Transactional
+  public ContactFolder createContactFolder(JSONObject jsonObject, OfficeAccount officeAccount) {
 
     if (jsonObject == null) {
-      return;
+      return null;
+    }
+
+    try {
+      @SuppressWarnings("unchecked")
+      String officeContactFolderId = jsonObject.getOrDefault("id", "").toString();
+      ContactFolder contactFolder = contactFolderRepo.findByOffice365Id(officeContactFolderId);
+      if (contactFolder == null) {
+        contactFolder = new ContactFolder();
+        contactFolder.setOffice365Id(officeContactFolderId);
+        contactFolder.setOfficeAccount(officeAccount);
+      }
+
+      contactFolder.setName(office365Service.processJsonValue("displayName", jsonObject));
+      contactFolder.setParentFolderId(
+          office365Service.processJsonValue("parentFolderId", jsonObject));
+      contactFolderRepo.save(contactFolder);
+
+      Office365Service.LOG.debug(
+          String.format(
+              I18n.get(ITranslation.OFFICE365_OBJECT_SYNC_SUCESS),
+              "contactFolder",
+              contactFolder.toString()));
+      return contactFolder;
+    } catch (Exception e) {
+      TraceBackService.trace(e);
+      return null;
+    }
+  }
+
+  @Transactional
+  public void manageDefaultContactFolder(
+      OfficeAccount officeAccount,
+      String officeId,
+      String accessToken,
+      List<Long> removedContactIdList) {
+
+    ContactFolder contactFolder = null;
+    if (StringUtils.notBlank(officeId)) {
+      contactFolder = contactFolderRepo.findByOffice365Id(officeId);
+    }
+
+    if (contactFolder == null) {
+      contactFolder = fetchDefaultContactFolder(officeAccount);
+      if (contactFolder == null) {
+        contactFolder = new ContactFolder();
+        contactFolder.setOffice365Id(officeId);
+        contactFolder.setOfficeAccount(officeAccount);
+        contactFolder.setName(I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER));
+        contactFolderRepo.save(contactFolder);
+        Office365Service.LOG.debug(
+            String.format(
+                I18n.get(ITranslation.OFFICE365_OBJECT_SYNC_SUCESS),
+                "contactFolder",
+                contactFolder.toString()));
+      }
+    }
+
+    office365Service.syncContacts(
+        officeAccount,
+        accessToken,
+        contactFolder.getOffice365Id(),
+        contactFolder,
+        removedContactIdList);
+  }
+
+  private ContactFolder fetchDefaultContactFolder(OfficeAccount officeAccount) {
+
+    return contactFolderRepo
+        .all()
+        .filter("self.name = :name AND self.officeAccount = :officeAccount")
+        .bind("name", I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER))
+        .bind("officeAccount", officeAccount)
+        .fetchOne();
+  }
+
+  @Transactional
+  public void removeContactFolder(
+      OfficeAccount officeAccount,
+      List<Long> contactFolderIdList,
+      List<Long> removedContactIdList) {
+
+    Query<ContactFolder> contactFolderQuery;
+    if (ObjectUtils.notEmpty(contactFolderIdList)) {
+      contactFolderQuery =
+          contactFolderRepo
+              .all()
+              .filter(
+                  "self.id NOT IN :ids AND self.office365Id IS NOT NULL AND self.officeAccount = :officeAccount AND self.name != :defaultName")
+              .bind("ids", contactFolderIdList);
+    } else {
+      contactFolderQuery =
+          contactFolderRepo
+              .all()
+              .filter(
+                  "self.office365Id IS NOT NULL AND self.officeAccount = :officeAccount AND self.name != :defaultName");
+    }
+
+    List<ContactFolder> contactFolders =
+        contactFolderQuery
+            .bind("officeAccount", officeAccount)
+            .bind("defaultName", I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER))
+            .fetch();
+    for (ContactFolder contactFolder : contactFolders) {
+      try {
+        List<Partner> partners =
+            partnerRepo
+                .all()
+                .filter("self.contactFolder =:contactFolder")
+                .bind("contactFolder", contactFolder)
+                .fetch();
+
+        for (Partner partner : partners) {
+          removePartner(partner, removedContactIdList);
+        }
+        contactFolderRepo.remove(contactFolder);
+      } catch (Exception e) {
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public Partner createContact(
+      JSONObject jsonObject,
+      OfficeAccount officeAccount,
+      LocalDateTime lastSyncOn,
+      ContactFolder contactFolder) {
+
+    if (jsonObject == null) {
+      return null;
     }
 
     try {
@@ -78,18 +308,28 @@ public class Office365ContactService {
 
       } else if (!office365Service.needUpdation(
           jsonObject, lastSyncOn, partner.getCreatedOn(), partner.getUpdatedOn())) {
-        return;
+        return partner;
       }
 
-      setPartnerValues(partner, jsonObject, officeAccount.getOwnerUser(), officeAccount);
+      setPartnerValues(
+          partner, jsonObject, officeAccount.getOwnerUser(), officeAccount, contactFolder);
+      Office365Service.LOG.debug(
+          String.format(
+              I18n.get(ITranslation.OFFICE365_OBJECT_SYNC_SUCESS), "contact", partner.toString()));
+      return partner;
     } catch (Exception e) {
       TraceBackService.trace(e);
+      return null;
     }
   }
 
   @Transactional
   public void setPartnerValues(
-      Partner partner, JSONObject jsonObject, User user, OfficeAccount officeAccount)
+      Partner partner,
+      JSONObject jsonObject,
+      User user,
+      OfficeAccount officeAccount,
+      ContactFolder contactFolder)
       throws JSONException {
 
     managePartnerName(jsonObject, partner);
@@ -101,6 +341,22 @@ public class Office365ContactService {
     partner.setJobTitle(office365Service.processJsonValue("jobTitle", jsonObject));
     partner.setNickName(office365Service.processJsonValue("nickName", jsonObject));
     partner.setUser(user);
+
+    if (contactFolder != null) {
+      partner.setContactFolder(contactFolder);
+    } else {
+      contactFolder =
+          contactFolderRepo
+              .all()
+              .filter("self.name = :name AND self.officeAccount = :officeAccount")
+              .bind("name", I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER))
+              .bind("officeAccount", officeAccount)
+              .fetchOne();
+      partner.setContactFolder(contactFolder);
+    }
+    if (contactFolder != null && StringUtils.isBlank(contactFolder.getOffice365Id())) {
+      contactFolder.setOffice365Id(office365Service.processJsonValue("parentFolderId", jsonObject));
+    }
 
     LocalDateTime dob =
         office365Service.processLocalDateTimeValue(jsonObject, "birthday", ZoneId.systemDefault());
@@ -122,14 +378,31 @@ public class Office365ContactService {
       Partner partner, OfficeAccount officeAccount, String accessToken) {
 
     try {
+      if (partner.getOffice365Id() != null
+          && partner.getOffice365Id().startsWith(COMPANY_OFFICE_ID_PREFIX)) {
+        return;
+      }
+
+      String contactFolderOfficeId = null;
+      if (partner.getContactFolder() != null
+          && StringUtils.notBlank(partner.getContactFolder().getOffice365Id())) {
+        contactFolderOfficeId = partner.getContactFolder().getOffice365Id();
+      } else {
+        ContactFolder defaultFolder = fetchDefaultContactFolder(officeAccount);
+        if (defaultFolder != null) {
+          contactFolderOfficeId = defaultFolder.getOffice365Id();
+        }
+      }
+
+      String url = String.format(Office365Service.FOLDER_CONTACTS_URL, contactFolderOfficeId);
+      if (StringUtils.isBlank(contactFolderOfficeId)) {
+        url = Office365Service.CONTACT_URL;
+      }
+
       JSONObject contactJsonObject = setOffice365ContactValues(partner);
       String office365Id =
           office365Service.createOffice365Object(
-              Office365Service.CONTACT_URL,
-              contactJsonObject,
-              accessToken,
-              partner.getOffice365Id(),
-              "contacts");
+              url, contactJsonObject, accessToken, partner.getOffice365Id(), "contacts", "contact");
       partner.setOffice365Id(office365Id);
       partner.setOfficeAccount(officeAccount);
       partnerRepo.save(partner);
@@ -138,25 +411,97 @@ public class Office365ContactService {
     }
   }
 
+  @SuppressWarnings("unchecked")
+  @Transactional
+  public void removeContact(
+      JSONObject jsonObject, List<Long> removedContactIdList, ContactFolder contactFolder) {
+
+    try {
+      JSONObject removedJsonObject = (JSONObject) jsonObject.get("@removed");
+      String reason = removedJsonObject.getOrDefault("reason", "").toString();
+      if (!"deleted".equalsIgnoreCase(reason)) {
+        return;
+      }
+
+      String office365Id = jsonObject.getOrDefault("id", "").toString();
+      if (StringUtils.isBlank(office365Id)) {
+        return;
+      }
+
+      Partner partner = partnerRepo.findByOffice365Id(office365Id);
+      if (partner == null) {
+        return;
+      }
+
+      removePartner(partner, removedContactIdList);
+
+    } catch (JSONException e) {
+      TraceBackService.trace(e);
+    }
+  }
+
+  @Transactional
+  public void removePartner(Partner partner, List<Long> removedContactIdList) {
+
+    partner.setOffice365Id(null);
+    removedContactIdList.add(partner.getId());
+    List<Partner> parentPartners =
+        partnerRepo
+            .all()
+            .filter(":partner MEMBER OF self.contactPartnerSet")
+            .bind("partner", partner)
+            .fetch();
+    for (Partner parent : parentPartners) {
+      parent.removeContactPartnerSetItem(partner);
+      partnerRepo.save(parent);
+      if (parent.getContactPartnerSet().size() == 0
+          && org.apache.commons.lang3.StringUtils.startsWith(
+              parent.getOffice365Id(), COMPANY_OFFICE_ID_PREFIX)) {
+        partnerRepo.remove(parent);
+      }
+    }
+
+    partnerRepo.remove(partner);
+  }
+
   @Transactional
   public void manageCompany(
       JSONObject jsonObject, Partner partner, User user, OfficeAccount officeAccount) {
 
     String companyName = office365Service.processJsonValue("companyName", jsonObject);
+    String companyOffice365Id = COMPANY_OFFICE_ID_PREFIX + partner.getOffice365Id();
+    Partner company;
     if (StringUtils.isBlank(companyName)) {
+      if (partner.getMainPartner() == null) {
+        return;
+      }
+
+      company = partner.getMainPartner();
+      company.removeContactPartnerSetItem(partner);
+      partner.setMainPartner(null);
+      if (ObjectUtils.isEmpty(company.getContactPartnerSet())
+          && company.getOffice365Id() != null
+          && company.getOffice365Id().equals(companyOffice365Id)) {
+        partnerRepo.remove(company);
+      } else {
+        partnerRepo.save(company);
+      }
       return;
     }
 
-    String office365Id = partner.getOffice365Id();
-    Partner company = partnerRepo.findByOffice365Id(COMPANY_OFFICE_ID_PREFIX + office365Id);
+    company = partnerRepo.findByOffice365Id(companyOffice365Id);
+    if (company == null) {
+      company = partnerRepo.findByName(companyName);
+    }
+
     if (company == null) {
       company = new Partner();
       company.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_COMPANY);
       company.setIsCustomer(true);
       company.setOfficeAccount(officeAccount);
-      company.setOffice365Id(COMPANY_OFFICE_ID_PREFIX + office365Id);
     }
 
+    company.setOffice365Id(companyOffice365Id);
     company.setName(companyName);
     company.setFullName(companyName);
     company.setUser(user);

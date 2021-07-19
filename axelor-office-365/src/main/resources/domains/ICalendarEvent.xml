@@ -8,6 +8,7 @@
 
 	<entity name="ICalendarEvent" table="ICAL_EVENT" sequential="true">
 		<string name="office365Id" title="Office365 id"/>
+		<datetime name="lastOfficeSyncOn"/>
 
 		<finder-method name="findByOffice365Id" using="office365Id"/>
 

@@ -3,15 +3,14 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
-	<module name="base" package="com.axelor.apps.base.db" />
+	<module name="office" package="com.axelor.apps.office.db" />
 
-	<entity name="Partner" lang="java">
+	<entity name="ContactFolder" lang="java">
 		<string name="office365Id" title="Office365 id"/>
 		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
-		<many-to-one name="contactFolder" ref="com.axelor.apps.office.db.ContactFolder" title="Contact folder"/>
-		<date name="birthdate" title="Birth date" />
-		<string name="nickName" title="Nick name"/>
-		<string name="jobTitle" title="Job title"/>
+		<string name="contactDeltaToken" readonly="true" large="true"/>
+		<string name="parentFolderId" title="Parent folder" />
+		<string name="name" />
 
 		<finder-method name="findByOffice365Id" using="office365Id"/>
 	</entity>
