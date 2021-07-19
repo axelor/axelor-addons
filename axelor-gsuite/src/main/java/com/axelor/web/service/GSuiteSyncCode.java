@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -21,7 +21,6 @@ import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
 import com.google.inject.servlet.RequestScoped;
-import java.io.IOException;
 import java.net.URI;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -41,7 +40,7 @@ public class GSuiteSyncCode {
       @QueryParam("state") String accountId,
       @QueryParam("code") String code,
       @Context UriInfo uriInfo)
-      throws IOException, AxelorException {
+      throws AxelorException {
 
     if (code != null) {
       gSuiteService.setGoogleCredential(Long.parseLong(accountId), code.trim());

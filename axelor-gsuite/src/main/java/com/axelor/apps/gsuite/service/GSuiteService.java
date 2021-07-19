@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -31,9 +31,9 @@ import com.google.api.client.auth.oauth2.AuthorizationCodeRequestUrl;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestInitializer;
-import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.store.FileDataStoreFactory;
@@ -43,15 +43,17 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
+import com.google.api.services.people.v1.PeopleService;
+import com.google.api.services.people.v1.PeopleServiceScopes;
 import com.google.api.services.tasks.Tasks;
 import com.google.api.services.tasks.TasksScopes;
-import com.google.gdata.client.contacts.ContactsService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
 import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,16 +65,15 @@ public class GSuiteService {
 
   private static final String[] SCOPES =
       new String[] {
-        "https://www.google.com/m8/feeds/",
         DriveScopes.DRIVE,
         CalendarScopes.CALENDAR,
         GmailScopes.MAIL_GOOGLE_COM,
-        TasksScopes.TASKS_READONLY
+        TasksScopes.TASKS_READONLY,
+        PeopleServiceScopes.CONTACTS
       };
 
-  private HttpTransport HTTP_TRANSPORT = new NetHttpTransport();
-  private JacksonFactory JSON_FACTORY = new JacksonFactory();
-  private final FileDataStoreFactory DATA_STORE_FACTORY;
+  private static final JacksonFactory JSON_FACTORY = new JacksonFactory();
+  private final FileDataStoreFactory dataStoreFactory;
 
   protected GoogleAccountRepository googleAccountRepo;
   protected AppGSuiteService appGSuiteService;
@@ -87,10 +88,10 @@ public class GSuiteService {
     try {
       this.googleAccountRepo = googleAccountRepo;
       this.appGSuiteService = appGSuiteService;
-      DATA_STORE_FACTORY =
+      dataStoreFactory =
           new FileDataStoreFactory(new File(AppSettings.get().get("file.upload.dir")));
     } catch (IOException e) {
-      throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
   }
 
@@ -124,15 +125,15 @@ public class GSuiteService {
       try {
         flow =
             new GoogleAuthorizationCodeFlow.Builder(
-                    HTTP_TRANSPORT,
+                    getHttpTransport(),
                     JSON_FACTORY,
                     appGsuite.getClientId(),
                     appGsuite.getClientSecret(),
                     Arrays.asList(SCOPES))
-                .setDataStoreFactory(DATA_STORE_FACTORY)
+                .setDataStoreFactory(dataStoreFactory)
                 .build();
       } catch (IOException e) {
-        throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+        throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
       }
     }
 
@@ -153,7 +154,7 @@ public class GSuiteService {
       response = flow.newTokenRequest(code).setRedirectUri(redirectUrl).execute();
       flow.createAndStoreCredential(response, accountId.toString());
     } catch (IOException e) {
-      throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 
     GoogleAccount account = googleAccountRepo.find(accountId);
@@ -170,7 +171,7 @@ public class GSuiteService {
     try {
       credential = flow.loadCredential(accountId.toString());
     } catch (IOException e) {
-      throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 
     return credential;
@@ -188,7 +189,7 @@ public class GSuiteService {
       LOG.debug("Token refreshed");
 
     } catch (IOException e) {
-      throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 
     return credential;
@@ -198,7 +199,7 @@ public class GSuiteService {
 
     Credential credential = getCredential(accountId);
 
-    return new Drive.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+    return new Drive.Builder(getHttpTransport(), JSON_FACTORY, credential)
         .setHttpRequestInitializer(
             new HttpRequestInitializer() {
               @Override
@@ -212,14 +213,14 @@ public class GSuiteService {
         .build();
   }
 
-  public Calendar getCalendar(Credential credential) {
+  public Calendar getCalendar(Credential credential) throws AxelorException {
 
-    return new Calendar.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+    return new Calendar.Builder(getHttpTransport(), JSON_FACTORY, credential)
         .setApplicationName(APP_NAME)
         .build();
   }
 
-  public ContactsService getContact(Long accountId) throws AxelorException {
+  public PeopleService getPeople(Long accountId) throws AxelorException {
     Credential credential = getCredential(accountId);
     if (credential == null) {
       throw new AxelorException(
@@ -228,13 +229,10 @@ public class GSuiteService {
               I18n.get(IExceptionMessage.AUTH_EXCEPTION_1),
               googleAccountRepo.find(accountId).getName()));
     }
-    return getContact(credential);
-  }
 
-  public ContactsService getContact(Credential credential) {
-    ContactsService contactsService = new ContactsService(ContactsService.CONTACTS_SERVICE);
-    contactsService.setOAuth2Credentials(credential);
-    return contactsService;
+    return new PeopleService.Builder(getHttpTransport(), JSON_FACTORY, credential)
+        .setApplicationName(APP_NAME)
+        .build();
   }
 
   public Gmail getGmail(Long accountId) throws AxelorException {
@@ -246,7 +244,7 @@ public class GSuiteService {
               I18n.get(IExceptionMessage.AUTH_EXCEPTION_1),
               googleAccountRepo.find(accountId).getName()));
     }
-    return new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+    return new Gmail.Builder(getHttpTransport(), JSON_FACTORY, credential)
         .setApplicationName(APP_NAME)
         .build();
   }
@@ -260,8 +258,16 @@ public class GSuiteService {
               I18n.get(IExceptionMessage.AUTH_EXCEPTION_1),
               googleAccountRepo.find(accountId).getName()));
     }
-    return new Tasks.Builder(HTTP_TRANSPORT, JSON_FACTORY, credential)
+    return new Tasks.Builder(getHttpTransport(), JSON_FACTORY, credential)
         .setApplicationName(APP_NAME)
         .build();
+  }
+
+  private NetHttpTransport getHttpTransport() throws AxelorException {
+    try {
+      return GoogleNetHttpTransport.newTrustedTransport();
+    } catch (GeneralSecurityException | IOException e) {
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
+    }
   }
 }

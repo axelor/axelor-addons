@@ -69,5 +69,4 @@ public interface ITranslation {
   public static final String UNIQUE_CLICKS = /*$$(*/ "UniqueClicks"; /*)*/
   public static final String UNIQUE_OPENS = /*$$(*/ "UniqueOpens"; /*)*/
   public static final String SPAM_REPORTS = /*$$(*/ "SpamReports"; /*)*/
-
 }

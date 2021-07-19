@@ -21,8 +21,8 @@
 
 	<action-view name="office365.contact"
 		title="Office365 contacts" model="com.axelor.apps.base.db.Partner">
-		<view type="grid" name="partner-grid" />
-		<view type="form" name="partner-form" />
+		<view type="grid" name="partner-contact-grid" />
+		<view type="form" name="partner-contact-form" />
 		<domain>self.office365Id IS NOT NULL</domain>
 	</action-view>
 
