@@ -13,7 +13,7 @@
 	</action-view>
 	
 	<menuitem name="admin-root-batch-gsuite" parent="admin-root-batch"
-		title="G-Suite batches" action="admin.root.batch.gsuite" />
+		title="G-Suite batches" action="admin.root.batch.gsuite" if="__config__.app.isApp('gsuite')"/>
 
 	<action-view name="admin.root.batch.gsuite" title="G-Suite batches"
 		model="com.axelor.apps.gsuite.db.GSuiteBatch" >

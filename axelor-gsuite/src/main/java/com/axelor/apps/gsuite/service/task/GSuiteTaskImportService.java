@@ -15,27 +15,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.task;
 
 import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.message.db.Message;
 import com.axelor.exception.AxelorException;
-import com.google.api.services.gmail.Gmail;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.List;
-import javax.mail.MessagingException;
+import java.time.LocalDateTime;
 
-public interface GSuiteAOSMessageService {
+public interface GSuiteTaskImportService {
 
-  public GoogleAccount sync(GoogleAccount account) throws AxelorException;
+  public void sync(GoogleAccount account) throws AxelorException;
 
-  public GoogleAccount sync(GoogleAccount account, LocalDate fromDate) throws AxelorException;
-
-  public List<Message> syncMessages(
-      Gmail service, String userId, String query, GoogleAccount googleAccount)
-      throws IOException, MessagingException;
-
-  public com.google.api.services.gmail.model.Message getMessage(
-      Gmail service, String userId, String messageId, String format) throws IOException;
+  public void sync(GoogleAccount account, LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
+      throws AxelorException;
 }

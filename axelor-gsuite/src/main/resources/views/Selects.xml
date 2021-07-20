@@ -11,4 +11,9 @@
 		<option value="5">Drive batch</option>
 	</selection>
 	
+	<selection name="igsuite.batch.type.select">
+		<option value="1">Import</option>
+		<option value="2">Export</option>
+	</selection>
+	
 </object-views>

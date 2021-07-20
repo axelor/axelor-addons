@@ -25,6 +25,9 @@
 		
 		<datetime name="docSyncToGoogleDate" title="Doc Sync To Google Date" />
 		<string name="docSyncToGoogleLog" title="Doc Sync To Google Log" large="true" />
+		
+		<datetime name="taskSyncToGoogleDate" title="Task Sync To Google Date"/>
+		<string name="taskSyncToGoogleLog" title="Task Sync To Google Log" large="true"/>
 				
 	</entity>
 
