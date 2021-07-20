@@ -6,7 +6,7 @@
 	<module name="base" package="com.axelor.apps.base.db"/>
 	
 	<entity name="ICalendarEvent" table="ICAL_EVENT" sequential="true">
-		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount"/>
+		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount" readonly="true"/>
 	</entity>
 
   

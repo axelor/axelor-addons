@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.drive;
 
 import com.axelor.apps.gsuite.db.DriveGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
@@ -24,7 +24,7 @@ import com.axelor.exception.AxelorException;
 import com.google.api.services.drive.model.File;
 import java.util.List;
 
-public interface GSuiteAOSDriveService {
+public interface GSuiteDriveImportService {
 
   GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 

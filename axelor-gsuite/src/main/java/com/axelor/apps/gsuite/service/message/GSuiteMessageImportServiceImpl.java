@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.message;
 
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
@@ -27,6 +27,7 @@ import com.axelor.apps.gsuite.db.MessageRelatedSelect;
 import com.axelor.apps.gsuite.db.repo.EmailGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
+import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
@@ -68,7 +69,7 @@ import javax.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GSuiteAOSMessageServiceImpl implements GSuiteAOSMessageService {
+public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportService {
 
   @Inject private GoogleAccountRepository googleAccountRepo;
   @Inject protected GSuiteService gSuiteService;

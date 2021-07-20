@@ -19,7 +19,9 @@ package com.axelor.apps.gsuite.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.service.GSuiteAOSDriveService;
+import com.axelor.apps.gsuite.db.repo.GSuiteBatchRepository;
+import com.axelor.apps.gsuite.service.drive.GSuiteDriveExportService;
+import com.axelor.apps.gsuite.service.drive.GSuiteDriveImportService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
@@ -32,7 +34,8 @@ import java.util.stream.Collectors;
 public class BatchGSuiteDriveService extends AbstractBatch {
 
   @Inject protected UserRepository userRepo;
-  @Inject protected GSuiteAOSDriveService gsuiteAOSDriveSyncService;
+  @Inject protected GSuiteDriveImportService gSuiteDriveImportService;
+  @Inject GSuiteDriveExportService gSuiteDriveExportService;
 
   @Override
   protected void process() {
@@ -41,7 +44,11 @@ public class BatchGSuiteDriveService extends AbstractBatch {
         users.stream().map(User::getGoogleAccount).collect(Collectors.toSet());
     for (GoogleAccount account : accountSet) {
       try {
-        gsuiteAOSDriveSyncService.sync(account);
+        if (batch.getgSuiteBatch().getTypeSelect() == GSuiteBatchRepository.TYPE_SELECT_IMPORT) {
+          gSuiteDriveImportService.sync(account);
+        } else {
+          gSuiteDriveExportService.sync(account);
+        }
         incrementDone();
       } catch (AxelorException e) {
         TraceBackService.trace(e, "", batch.getId());

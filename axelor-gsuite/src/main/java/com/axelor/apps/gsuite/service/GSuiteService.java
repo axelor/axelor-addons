@@ -68,7 +68,7 @@ public class GSuiteService {
         DriveScopes.DRIVE,
         CalendarScopes.CALENDAR,
         GmailScopes.MAIL_GOOGLE_COM,
-        TasksScopes.TASKS_READONLY,
+        TasksScopes.TASKS,
         PeopleServiceScopes.CONTACTS
       };
 

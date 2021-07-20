@@ -15,11 +15,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.task;
 
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.gsuite.db.TaskGoogleAccount;
+import com.axelor.apps.gsuite.db.repo.TaskGoogleAccountRepository;
+import com.axelor.apps.gsuite.service.GSuiteService;
+import com.axelor.apps.gsuite.service.ICalUserService;
 import com.axelor.apps.gsuite.utils.DateUtils;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
@@ -36,15 +40,17 @@ import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GSuiteAOSTaskServiceImpl implements GSuiteAOSTaskService {
+public class GSuiteTaskImportServiceImpl implements GSuiteTaskImportService {
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
   @Inject protected GSuiteService gSuiteService;
   @Inject protected EventRepository eventRepo;
   @Inject protected ICalUserService iCalUserService;
+  @Inject protected TaskGoogleAccountRepository taskGoogleAccountRepo;
 
   protected GoogleAccount account;
   private Tasks service;
@@ -67,31 +73,29 @@ public class GSuiteAOSTaskServiceImpl implements GSuiteAOSTaskService {
       throws AxelorException {
     this.account = account;
     try {
-      List<Task> tasks = fetchTasks(dueDateTMin, dueDateTMax);
-      List<Event> events = createOrUpdateTasks(tasks);
+      String nextPageToken = null;
+      List<Event> tasks = new ArrayList<>();
+      Tasks.Tasklists.List list = getService().tasklists().list();
+      do {
+        TaskLists result = list.setPageToken(nextPageToken).execute();
+        List<TaskList> taskLists = result.getItems();
+        if (ObjectUtils.notEmpty(taskLists)) {
+          for (TaskList taskList : taskLists) {
+            tasks.addAll(
+                createOrUpdateTasks(
+                    account,
+                    taskList.getId(),
+                    taskList.getTitle(),
+                    fetchTasks(taskList, dueDateTMin, dueDateTMax)));
+          }
+        }
+        nextPageToken = result.getNextPageToken();
+      } while (nextPageToken != null);
       log.debug(
-          "{} Event(task) retrived and processed for {}", events.size(), account.getOwnerUser());
+          "{} Event(task) retrived and processed for {}", tasks.size(), account.getOwnerUser());
     } catch (IOException e) {
       throw new AxelorException(e, TraceBackRepository.CATEGORY_INCONSISTENCY);
     }
-  }
-
-  protected List<Task> fetchTasks(LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
-      throws IOException, AxelorException {
-    String nextPageToken = null;
-    List<Task> tasks = new ArrayList<>();
-    Tasks.Tasklists.List list = getService().tasklists().list();
-    do {
-      TaskLists result = list.setPageToken(nextPageToken).execute();
-      List<TaskList> taskLists = result.getItems();
-      if (ObjectUtils.notEmpty(taskLists)) {
-        for (TaskList taskList : taskLists) {
-          tasks.addAll(fetchTasks(taskList, dueDateTMin, dueDateTMax));
-        }
-      }
-      nextPageToken = result.getNextPageToken();
-    } while (nextPageToken != null);
-    return tasks;
   }
 
   protected List<Task> fetchTasks(
@@ -127,26 +131,29 @@ public class GSuiteAOSTaskServiceImpl implements GSuiteAOSTaskService {
     return tasks;
   }
 
-  protected List<Event> createOrUpdateTasks(List<Task> tasks) {
+  protected List<Event> createOrUpdateTasks(
+      GoogleAccount account, String tasklistId, String taskListName, List<Task> tasks) {
     List<Event> events = new ArrayList<>();
     for (Task task : tasks) {
-      events.add(createOrUpdateTask(task));
+      Event event = createOrUpdateTask(taskListName, task);
+      createOrUpdateTaskAccount(account, tasklistId, task, event);
+      events.add(event);
     }
     return events;
   }
 
   @Transactional
-  protected Event createOrUpdateTask(Task task) {
+  protected Event createOrUpdateTask(String taskListName, Task task) {
     Event event = eventRepo.findByGoogleTaskId(task.getId());
     if (event == null) {
       event = new Event();
       event.setGoogleTaskId(task.getId());
     }
-
     event.setTypeSelect(EventRepository.TYPE_TASK);
     event.setSubject(task.getTitle());
     event.setDescription(task.getNotes());
     event.setStatusSelect(getStatusSelect(task));
+    event.setTasklistName(taskListName);
 
     iCalUserService.parseICalUsers(event, task.getNotes()).forEach(event::addAttendee);
     event.setStartDateTime(DateUtils.toLocalDateTime(task.getUpdated()));
@@ -160,6 +167,20 @@ public class GSuiteAOSTaskServiceImpl implements GSuiteAOSTaskService {
     event.setEndDateTime(DateUtils.toLocalDateTime(endDateTime));
 
     return eventRepo.save(event);
+  }
+
+  @Transactional
+  protected void createOrUpdateTaskAccount(
+      GoogleAccount account, String tasklistId, Task task, Event event) {
+    List<TaskGoogleAccount> taskAccountList = event.getTaskGoogleAccounts();
+    if (CollectionUtils.isEmpty(taskAccountList)) {
+      TaskGoogleAccount taskGoogleAccount = new TaskGoogleAccount();
+      taskGoogleAccount.setTask(event);
+      taskGoogleAccount.setGoogleAccount(account);
+      taskGoogleAccount.setGoogleTaskId(task.getId());
+      taskGoogleAccount.setGoogleTasklistId(tasklistId);
+      taskGoogleAccountRepo.save(taskGoogleAccount);
+    }
   }
 
   protected int getStatusSelect(Task task) {

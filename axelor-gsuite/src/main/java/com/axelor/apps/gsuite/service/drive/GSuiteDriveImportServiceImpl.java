@@ -15,12 +15,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.drive;
 
 import com.axelor.apps.gsuite.db.DriveGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.DriveGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
+import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.AxelorException;
@@ -47,7 +48,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GSuiteAOSDriveServiceImpl implements GSuiteAOSDriveService {
+public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().getClass());
 

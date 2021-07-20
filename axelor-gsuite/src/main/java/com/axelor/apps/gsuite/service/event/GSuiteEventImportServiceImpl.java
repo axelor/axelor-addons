@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.event;
 
 import com.axelor.apps.base.db.ICalendarUser;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
@@ -25,6 +25,8 @@ import com.axelor.apps.gsuite.db.EventGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
+import com.axelor.apps.gsuite.service.GSuiteService;
+import com.axelor.apps.gsuite.service.ICalUserService;
 import com.axelor.apps.gsuite.utils.DateUtils;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.common.ObjectUtils;
@@ -43,7 +45,7 @@ import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GSuiteAOSEventServiceImpl implements GSuiteAOSEventService {
+public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 

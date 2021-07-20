@@ -10,6 +10,7 @@
 		<!-- HEADER -->
 		<string name="code" title="Code" namecolumn="true" unique="true"/>
 		<integer name="actionSelect" title="Action" required="true" selection="igsuite.batch.action.select"/>
+		<integer name="typeSelect" title="Type select" selection="igsuite.batch.type.select" default="1" required="true"/>
 		
 		<!-- OTHERS INFORMATIONS -->
 		<string name="description" title="Description" large="true" />
@@ -23,6 +24,10 @@
 		public static final int ACTION_TASK_SYNC = 3;
 		public static final int ACTION_CONTACT_SYNC = 4;
 		public static final int ACTION_DRIVE_SYNC = 5;
+		
+		//TYPE SELECT
+		public static final int TYPE_SELECT_IMPORT = 1;
+		public static final int TYPE_SELECT_EXPORT = 2;
 	
 	]]></extra-code>	
 				

@@ -20,41 +20,44 @@ package com.axelor.apps.gsuite.module;
 import com.axelor.app.AxelorModule;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountManagementRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
-import com.axelor.apps.gsuite.service.GSuiteAOSDriveService;
-import com.axelor.apps.gsuite.service.GSuiteAOSDriveServiceImpl;
-import com.axelor.apps.gsuite.service.GSuiteAOSEventService;
-import com.axelor.apps.gsuite.service.GSuiteAOSEventServiceImpl;
-import com.axelor.apps.gsuite.service.GSuiteAOSMessageService;
-import com.axelor.apps.gsuite.service.GSuiteAOSMessageServiceImpl;
-import com.axelor.apps.gsuite.service.GSuiteAOSTaskService;
-import com.axelor.apps.gsuite.service.GSuiteAOSTaskServiceImpl;
-import com.axelor.apps.gsuite.service.GSuiteDriveService;
-import com.axelor.apps.gsuite.service.GSuiteDriveServiceImpl;
-import com.axelor.apps.gsuite.service.GSuiteEventService;
-import com.axelor.apps.gsuite.service.GSuiteEventServiceImpl;
 import com.axelor.apps.gsuite.service.ICalUserService;
 import com.axelor.apps.gsuite.service.ICalUserServiceImpl;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
 import com.axelor.apps.gsuite.service.app.AppGSuiteServiceImpl;
+import com.axelor.apps.gsuite.service.drive.GSuiteDriveExportService;
+import com.axelor.apps.gsuite.service.drive.GSuiteDriveExportServiceImpl;
+import com.axelor.apps.gsuite.service.drive.GSuiteDriveImportService;
+import com.axelor.apps.gsuite.service.drive.GSuiteDriveImportServiceImpl;
+import com.axelor.apps.gsuite.service.event.GSuiteEventExportService;
+import com.axelor.apps.gsuite.service.event.GSuiteEventExportServiceImpl;
+import com.axelor.apps.gsuite.service.event.GSuiteEventImportService;
+import com.axelor.apps.gsuite.service.event.GSuiteEventImportServiceImpl;
+import com.axelor.apps.gsuite.service.message.GSuiteMessageImportService;
+import com.axelor.apps.gsuite.service.message.GSuiteMessageImportServiceImpl;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerExporterService;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerExporterServiceImpl;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerImportService;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerImportServiceImpl;
+import com.axelor.apps.gsuite.service.task.GSuiteTaskExportService;
+import com.axelor.apps.gsuite.service.task.GSuiteTaskExportServiceImpl;
+import com.axelor.apps.gsuite.service.task.GSuiteTaskImportService;
+import com.axelor.apps.gsuite.service.task.GSuiteTaskImportServiceImpl;
 
 public class GsuiteModule extends AxelorModule {
 
   @Override
   protected void configure() {
     bind(AppGSuiteService.class).to(AppGSuiteServiceImpl.class);
-    bind(GSuiteEventService.class).to(GSuiteEventServiceImpl.class);
+    bind(GSuiteEventExportService.class).to(GSuiteEventExportServiceImpl.class);
     bind(GoogleAccountRepository.class).to(GoogleAccountManagementRepository.class);
-    bind(GSuiteDriveService.class).to(GSuiteDriveServiceImpl.class);
-    bind(GSuiteAOSDriveService.class).to(GSuiteAOSDriveServiceImpl.class);
-    bind(GSuiteAOSEventService.class).to(GSuiteAOSEventServiceImpl.class);
-    bind(GSuiteAOSMessageService.class).to(GSuiteAOSMessageServiceImpl.class);
-    bind(GSuiteAOSTaskService.class).to(GSuiteAOSTaskServiceImpl.class);
+    bind(GSuiteDriveExportService.class).to(GSuiteDriveExportServiceImpl.class);
+    bind(GSuiteDriveImportService.class).to(GSuiteDriveImportServiceImpl.class);
+    bind(GSuiteEventImportService.class).to(GSuiteEventImportServiceImpl.class);
+    bind(GSuiteMessageImportService.class).to(GSuiteMessageImportServiceImpl.class);
+    bind(GSuiteTaskImportService.class).to(GSuiteTaskImportServiceImpl.class);
     bind(ICalUserService.class).to(ICalUserServiceImpl.class);
     bind(GSuitePartnerImportService.class).to(GSuitePartnerImportServiceImpl.class);
     bind(GSuitePartnerExporterService.class).to(GSuitePartnerExporterServiceImpl.class);
+    bind(GSuiteTaskExportService.class).to(GSuiteTaskExportServiceImpl.class);
   }
 }
