@@ -15,14 +15,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.event;
 
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.calendar.Calendar;
 import java.time.LocalDateTime;
 
-public interface GSuiteAOSEventService {
+public interface GSuiteEventImportService {
 
   GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 

@@ -12,8 +12,9 @@
  
     <form name="gsuite-batch-form" title="G-Suite Batch" model="com.axelor.apps.gsuite.db.GSuiteBatch" onNew="action-gsuite-batch-method-set-action-select" onLoad="action-gsuite-batch-method-set-action-select">
     	<panel name="mainPanel">
-		    <field name="actionSelect" />
+		    <field name="actionSelect" onChange="action-gsuite-batch-record-action-reset-type-select"/>
 		    <field name="code" x-bind="{{code|unaccent|uppercase}}"/>
+		    <field name="typeSelect" hideIf="actionSelect == 1"/>
 		</panel>
 	  	<panel-tabs name="mainPanelTab">
 	    	<panel name="informationPanel" title="Information">
@@ -55,5 +56,9 @@
 	<action-method name="action-gsuite-batch-method-action-drive-sync">
 		<call class="com.axelor.apps.gsuite.web.GSuiteBatchController" method="actionDriveSyncBatch"/>
 	</action-method>
+	
+	<action-record name="action-gsuite-batch-record-action-reset-type-select" model="com.axelor.apps.gsuite.db.GSuiteBatch">
+		<field name="typeSelect" expr="eval: __repo__(GSuiteBatch).TYPE_SELECT_IMPORT"/>
+	</action-record>
 	
 </object-views>

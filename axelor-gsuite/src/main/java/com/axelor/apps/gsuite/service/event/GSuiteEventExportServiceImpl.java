@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.event;
 
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
@@ -24,6 +24,7 @@ import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
+import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
@@ -48,7 +49,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GSuiteEventServiceImpl implements GSuiteEventService {
+public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
 
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -78,10 +79,16 @@ public class GSuiteEventServiceImpl implements GSuiteEventService {
       calendar = gSuiteService.getCalendar(credential);
       List<Event> events;
       if (syncDate == null) {
-        events = eventRepo.all().fetch();
+        events = eventRepo.all().filter("self.typeSelect <> ?1", EventRepository.TYPE_TASK).fetch();
       } else {
         events =
-            eventRepo.all().filter("self.updatedOn > ?1 OR self.createdOn > ?1", syncDate).fetch();
+            eventRepo
+                .all()
+                .filter(
+                    "self.typeSelect <> ?1 AND (self.updatedOn > ?2 OR self.createdOn > ?2)",
+                    EventRepository.TYPE_TASK,
+                    syncDate)
+                .fetch();
       }
       log.debug("total size: {}", events.size());
       for (Event event : events) {
@@ -100,10 +107,6 @@ public class GSuiteEventServiceImpl implements GSuiteEventService {
             log.debug("Event id: {}", eventId);
             break;
           }
-        }
-
-        if (eventId != null) {
-          continue;
         }
 
         eventId = updateGoogleEvent(event, new String[] {eventId, accountName}, false);

@@ -19,7 +19,9 @@ package com.axelor.apps.gsuite.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.service.GSuiteAOSEventService;
+import com.axelor.apps.gsuite.db.repo.GSuiteBatchRepository;
+import com.axelor.apps.gsuite.service.event.GSuiteEventExportService;
+import com.axelor.apps.gsuite.service.event.GSuiteEventImportService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
@@ -32,7 +34,8 @@ import java.util.stream.Collectors;
 public class BatchGSuiteEventSyncService extends AbstractBatch {
 
   @Inject UserRepository userRepo;
-  @Inject GSuiteAOSEventService eventSyncService;
+  @Inject GSuiteEventImportService gSuiteEventImportService;
+  @Inject GSuiteEventExportService gSuiteEventExportService;
 
   @Override
   protected void process() {
@@ -42,7 +45,11 @@ public class BatchGSuiteEventSyncService extends AbstractBatch {
         users.stream().map(User::getGoogleAccount).collect(Collectors.toSet());
     for (GoogleAccount account : accountSet) {
       try {
-        eventSyncService.sync(account);
+        if (batch.getgSuiteBatch().getTypeSelect() == GSuiteBatchRepository.TYPE_SELECT_IMPORT) {
+          gSuiteEventImportService.sync(account);
+        } else {
+          gSuiteEventExportService.sync(account);
+        }
         incrementDone();
       } catch (AxelorException e) {
         TraceBackService.trace(e, "", batch.getId());
