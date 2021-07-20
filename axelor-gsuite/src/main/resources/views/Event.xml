@@ -8,7 +8,8 @@
 		<extend target="//panel[@name='followupPanel']/field[@name='calendar']">
 			<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
 			<insert position="after">
-				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>			
+				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>
+				<field name="tasklistName" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" showIf="typeSelect == 3" requiredIf="typeSelect == 3"/>			
 			</insert>
 		</extend>
 
@@ -19,7 +20,8 @@
 		<extend target="//panel[@name='mainPanel']/field[@name='calendar']">
 			<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
 			<insert position="after">
-				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>			
+				<field name="googleAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>
+				<field name="tasklistName" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" showIf="typeSelect == 3" requiredIf="typeSelect == 3"/>			
 			</insert>
 		</extend>
 		

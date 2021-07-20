@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.service;
+package com.axelor.apps.gsuite.service.event;
 
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.gsuite.db.GoogleAccount;
@@ -23,7 +23,7 @@ import com.axelor.exception.AxelorException;
 import java.io.IOException;
 import java.util.Iterator;
 
-public interface GSuiteEventService {
+public interface GSuiteEventExportService {
 
   public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
 

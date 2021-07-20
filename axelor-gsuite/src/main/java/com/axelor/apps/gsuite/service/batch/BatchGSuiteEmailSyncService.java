@@ -19,7 +19,7 @@ package com.axelor.apps.gsuite.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.service.GSuiteAOSMessageService;
+import com.axelor.apps.gsuite.service.message.GSuiteMessageImportService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 public class BatchGSuiteEmailSyncService extends AbstractBatch {
 
   @Inject UserRepository userRepo;
-  @Inject GSuiteAOSMessageService messageService;
+  @Inject GSuiteMessageImportService messageImportService;
 
   @Override
   protected void process() {
@@ -42,7 +42,7 @@ public class BatchGSuiteEmailSyncService extends AbstractBatch {
         users.stream().map(User::getGoogleAccount).collect(Collectors.toSet());
     for (GoogleAccount account : accountSet) {
       try {
-        messageService.sync(account);
+        messageImportService.sync(account);
         incrementDone();
       } catch (AxelorException e) {
         TraceBackService.trace(e);
