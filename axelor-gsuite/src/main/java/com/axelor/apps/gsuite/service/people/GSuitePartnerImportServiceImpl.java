@@ -271,16 +271,24 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
         partner.getEmailAddress() == null
             ? new com.axelor.apps.message.db.EmailAddress()
             : partner.getEmailAddress();
-    for (EmailAddress personEmailAddr : personEmailAddressList) {
-      if ("work".equalsIgnoreCase(personEmailAddr.getType())) {
-        if (StringUtils.notEmpty(emailAddress.getAddress())
-            && emailAddress.getAddress().equals(personEmailAddr.getValue())) {
-          continue;
-        }
-        emailAddress.setAddress(personEmailAddr.getValue());
-        emailAddress.setPartner(partner);
-        emailRepo.save(emailAddress);
-      }
+    EmailAddress personEmailAddress =
+        personEmailAddressList.stream()
+            .filter(addr -> "work".equalsIgnoreCase(addr.getType()))
+            .findFirst()
+            .orElse(personEmailAddressList.get(0));
+    setEmailAddress(partner, emailAddress, personEmailAddress);
+  }
+
+  protected void setEmailAddress(
+      Partner partner,
+      com.axelor.apps.message.db.EmailAddress emailAddress,
+      EmailAddress personEmailAddr) {
+    if (StringUtils.notEmpty(emailAddress.getAddress())
+        && emailAddress.getAddress().equals(personEmailAddr.getValue())) {
+      return;
     }
+    emailAddress.setAddress(personEmailAddr.getValue());
+    emailAddress.setPartner(partner);
+    emailRepo.save(emailAddress);
   }
 }
