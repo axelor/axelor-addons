@@ -23,6 +23,7 @@ import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
+import com.axelor.apps.office365.service.Office365MailService;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.exception.AxelorException;
@@ -37,6 +38,7 @@ import com.axelor.rpc.Context;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class Office365Controller {
 
@@ -80,5 +82,21 @@ public class Office365Controller {
             .add("form", "message-form")
             .domain("self.office365Id IS NOT NULL")
             .map());
+  }
+
+  public void createUserMessage(ActionRequest request, ActionResponse response) {
+
+    Context context = request.getContext();
+    if (!context.containsKey("data")) {
+      return;
+    }
+
+    try {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> mailMap = (Map<String, Object>) request.getContext().get("data");
+      Beans.get(Office365MailService.class).createEmailMessage(mailMap);
+    } catch (Exception e) {
+      TraceBackService.trace(e);
+    }
   }
 }

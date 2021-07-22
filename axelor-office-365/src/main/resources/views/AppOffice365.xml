@@ -9,9 +9,10 @@
 			<field name="clientId" required="true"/>
 			<field name="redirectUri" required="true"/>
 			<field name="clientSecret" required="true" widget="password"/>
+			<field name="manageMessageRelatedTo"/>
 		</panel>
 	</form>
-
+	
 	<action-view name="action-message-view-office365-mail" title="Office365 mail" model="com.axelor.apps.message.db.Message">
 		<view type="grid" name="message-grid"/>
 		<view type="form" name="message-form"/>

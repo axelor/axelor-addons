@@ -9,6 +9,7 @@
 		<string name="clientId" title="Application (client) ID" />
 		<string name="redirectUri" title="Redirect URI" />
 		<string name="clientSecret" title="Application (client) secret" />
+		<boolean name="manageMessageRelatedTo"/>
 	</entity>
 
 </domain-models>
