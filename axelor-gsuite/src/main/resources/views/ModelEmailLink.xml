@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+        
+	<grid name="model-email-link-grid" title="Model email links" model="com.axelor.apps.gsuite.db.ModelEmailLink">
+		<field name="metaModel"/>
+		<field name="metaField"/>
+	</grid>
+
+	<form name="model-email-link-form" title="Model email link" model="com.axelor.apps.gsuite.db.ModelEmailLink" onLoad="action-model-email-link-attrs-validate">
+		<panel name="mainPanel" colSpan="12">
+			<field name="metaModel" x-target-name="name" onChange="action-model-email-link-record-set-current-domain"/>
+			<field name="$targetMetaField" title="Select target field" type="many-to-one" target="com.axelor.meta.db.MetaField" requiredIf="metaModel" onSelect="action-model-email-link-attr-change-domain" showIf="metaModel"/>
+			<field name="metaField"/>
+			<field name="$isValidate" type="boolean" title="Validate" hidden="true" required="true" readonly="true" colSpan="2"/>
+	        <field name="currentDomain" hidden="true"/>
+	        <field name="$viewerMessage" showTitle="false" readonly="true" showIf="$isValidate">
+		      <viewer><![CDATA[
+	              <h4>
+	                  <span class="label label-success" x-translate>Your selection is valid</span>
+	              </h4>
+				]]></viewer>
+		    </field>
+			<panel name="actionsPanel" colSpan="12">
+	    		<button name="validateFieldSelectionBtn" title="Validate" colSpan="4" onClick="action-model-email-link-method-fill-target-field" readonlyIf="!$targetMetaField || $isValidate"/>
+	    		<button name="clearFieldSelectionBtn" title="Clear selection" colSpan="4" onClick="action-model-email-link-attrs-reset"/>
+    		</panel>
+		</panel>
+	</form>
+	
+	<action-record name="action-model-email-link-record-set-current-domain" model="com.axelor.apps.gsuite.db.ModelEmailLink">
+  		<field name="currentDomain" expr="eval: metaModel.name" if="metaModel"/>
+  		<field name="$targetMetaField" expr="eval: null"/>
+  		<field name="metaField" expr="eval: null"/>
+  	</action-record>
+	
+	<action-attrs name="action-model-email-link-attr-change-domain">
+  		<attribute name="domain" expr="eval: &quot; self.metaModel.name = '${currentDomain}' AND (self.typeName = 'String' OR self.relationship != null) &quot;" for="$targetMetaField"/>
+  	</action-attrs>
+  	
+  	<action-method name="action-model-email-link-method-fill-target-field">
+  		<call class="com.axelor.apps.gsuite.web.ModelEmailLinkController" method="fillTargetField"/>
+  	</action-method>
+  	
+  	<action-attrs name="action-model-email-link-attrs-reset">
+  		<attribute name="value" for="metaModel" expr="eval: null"/>
+  		<attribute name="value" for="metaField" expr="eval: null"/>
+  		<attribute name="value" for="$targetMetaField" expr="eval: null"/>
+  		<attribute name="value" for="currentDomain" expr="eval: metaModel.name" if="metaModel"/>
+  		<attribute name="value" for="$isValidate" expr="eval: false"/>
+  		<attribute name="readonly" for="$targetMetaField" expr="eval: false"/>
+  		<attribute name="readonly" for="metaModel" expr="eval: false"/>
+  	</action-attrs>
+  	
+  	<action-attrs name="action-model-email-link-attrs-validate">
+  		<attribute name="value" for="$isValidate" expr="eval:true"/>
+  	</action-attrs>
+	
+</object-views>	

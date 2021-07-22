@@ -18,18 +18,19 @@
 package com.axelor.apps.gsuite.service.app;
 
 import com.axelor.apps.base.db.AppGsuite;
-import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AppGsuiteRepository;
-import com.axelor.apps.crm.db.Lead;
+import com.axelor.apps.gsuite.db.ModelEmailLink;
 import com.axelor.common.ObjectUtils;
 import com.axelor.db.Model;
 import com.axelor.db.Query;
+import com.axelor.exception.service.TraceBackService;
+import com.axelor.meta.db.MetaModel;
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.collections.CollectionUtils;
 
 public class AppGSuiteServiceImpl implements AppGSuiteService {
 
@@ -40,32 +41,30 @@ public class AppGSuiteServiceImpl implements AppGSuiteService {
     return appRepo.all().cacheable().fetchOne();
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   public Set<String> getRelatedEmailAddressSet() {
-    List<Map> addresses = new ArrayList<>();
     Set<String> addressSet = new HashSet<>();
-    AppGsuite app = getAppGSuite();
+    List<ModelEmailLink> modelEmailLinkList = getAppGSuite().getEmailAddressFilterList();
 
-    if (app.getIsLeadIncluded()) {
-      List<Map> leadAddresses = getRelatedEmailByModel(Lead.class, null);
-      addresses.addAll(leadAddresses);
-    }
+    if (CollectionUtils.isNotEmpty(modelEmailLinkList)) {
+      for (ModelEmailLink modelEmailLink : modelEmailLinkList) {
+        try {
+          String metaField = modelEmailLink.getMetaField();
+          List<Map> addressMapList =
+              getRelatedEmailByModel(
+                  (Class<MetaModel>) Class.forName(modelEmailLink.getMetaModel().getFullName()),
+                  metaField);
+          for (Map map : addressMapList) {
+            String address = (String) map.get(metaField);
+            if (ObjectUtils.notEmpty(address)) {
+              addressSet.add(address);
+            }
+          }
 
-    if (app.getIsPartnerIncluded()) {
-      List<Map> partnerAddresses = getRelatedEmailByModel(Partner.class, "self.isContact = false");
-      addresses.addAll(partnerAddresses);
-    }
-
-    if (app.getIsContactIncluded()) {
-      List<Map> contactAddresses = getRelatedEmailByModel(Partner.class, "self.isContact = true");
-      addresses.addAll(contactAddresses);
-    }
-
-    for (Map map : addresses) {
-      String address = (String) map.get("emailAddress.address");
-      if (!ObjectUtils.isEmpty(address)) {
-        addressSet.add(address);
+        } catch (ClassNotFoundException e) {
+          TraceBackService.trace(e);
+        }
       }
     }
 
@@ -74,11 +73,8 @@ public class AppGSuiteServiceImpl implements AppGSuiteService {
 
   @SuppressWarnings("rawtypes")
   private <T extends Model> List<Map> getRelatedEmailByModel(
-      Class<T> modelConcerned, String filter) {
+      Class<T> modelConcerned, String fieldName) {
     Query<T> query = Query.of(modelConcerned);
-    if (!ObjectUtils.isEmpty(filter)) {
-      query.filter(filter);
-    }
-    return query.cacheable().select("emailAddress.address").fetch(0, 0);
+    return query.cacheable().select(fieldName).fetch(0, 0);
   }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+
+	<module name="gsuite" package="com.axelor.apps.gsuite.db" />
+
+	<entity name="ModelEmailLink" lang="java">
+
+       <many-to-one name="metaModel" title="Meta model" ref="com.axelor.meta.db.MetaModel" required="true"/>
+       <string name="metaField" title="Meta field" required="true" readonly="true"/>
+       
+	</entity>
+
+</domain-models>

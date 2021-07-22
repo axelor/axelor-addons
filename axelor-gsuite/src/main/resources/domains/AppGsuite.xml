@@ -10,10 +10,7 @@
 		<string name="clientId" title="Client ID" encrypted="true"/>
 		<string name="clientSecret" title="Client secret" encrypted="true"/>	
 		
-		<!-- General configuration -->
-		<boolean name="isPartnerIncluded" title="Partner ?"/>
-		<boolean name="isLeadIncluded" title="Lead ?"/>
-		<boolean name="isContactIncluded" title="Contact ?"/>
+		<one-to-many name="emailAddressFilterList" title="Email address filters" ref="com.axelor.apps.gsuite.db.ModelEmailLink"/>
 		
 		<!-- Event/Calendar configuration -->
 		<boolean name="isEventSyncAllowed" title="Event sync allowed?"/>
