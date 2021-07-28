@@ -17,6 +17,9 @@
  */
 package com.axelor.apps.gsuite.service.event;
 
+import com.axelor.apps.base.db.ICalendarUser;
+import com.axelor.apps.base.db.repo.ICalendarEventRepository;
+import com.axelor.apps.base.db.repo.ICalendarUserRepository;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.gsuite.db.EventGoogleAccount;
@@ -25,26 +28,24 @@ import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.gsuite.service.GSuiteService;
+import com.axelor.apps.gsuite.utils.DateUtils;
+import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-import com.google.api.client.util.DateTime;
 import com.google.api.services.calendar.Calendar;
 import com.google.api.services.calendar.Calendar.Events;
-import com.google.api.services.calendar.model.EventDateTime;
+import com.google.api.services.calendar.model.EventAttendee;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TimeZone;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,8 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
   @Inject private EventRepository eventRepo;
 
   @Inject private EventGoogleAccountRepository eventGoogleAccountRepo;
+
+  @Inject private GSuiteEventImportService gSuiteEventImportService;
 
   @Override
   @Transactional
@@ -81,6 +84,7 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
       if (syncDate == null) {
         events = eventRepo.all().filter("self.typeSelect <> ?1", EventRepository.TYPE_TASK).fetch();
       } else {
+        googleAccount = removeEventsFromRemote(googleAccount);
         events =
             eventRepo
                 .all()
@@ -124,6 +128,23 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
     }
 
     return googleAccountRepo.save(googleAccount);
+  }
+
+  protected GoogleAccount removeEventsFromRemote(GoogleAccount googleAccount) {
+    Events events = calendar.events();
+    String removedEventIds = googleAccount.getRemovedEventIds();
+    if (StringUtils.notEmpty(removedEventIds)) {
+      try {
+        String[] removeEventIdsArr = removedEventIds.split(",");
+        for (String eventId : removeEventIdsArr) {
+          events.delete("primary", eventId).execute();
+        }
+      } catch (IOException e) {
+        googleAccount.setEventSyncToGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
+      }
+      googleAccount.setRemovedEventIds(null);
+    }
+    return googleAccount;
   }
 
   @Override
@@ -213,35 +234,47 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
   @Override
   public com.google.api.services.calendar.model.Event extractEvent(
       Event event, com.google.api.services.calendar.model.Event googleEvent) {
+    boolean allDay = event.getAllDay();
 
-    EventDateTime eventDateTime = new EventDateTime();
-    ZonedDateTime zonedDateTime =
-        ZonedDateTime.of(event.getStartDateTime(), ZoneId.of(TimeZone.getDefault().getID()));
-    DateTime dateTime = new DateTime(zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-    eventDateTime.setDateTime(dateTime);
-    googleEvent.setStart(eventDateTime);
-
-    if (event.getEndDateTime() != null) {
-      eventDateTime = new EventDateTime();
-      zonedDateTime =
-          ZonedDateTime.of(event.getEndDateTime(), ZoneId.of(TimeZone.getDefault().getID()));
-      dateTime = new DateTime(zonedDateTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-      eventDateTime.setDateTime(dateTime);
-      googleEvent.setEnd(eventDateTime);
-    } else {
-      googleEvent.setEnd(null);
-    }
-
-    String description = event.getDescription();
-    if (description != null) {
-      //      description = Jsoup.parse(description).text();
-      googleEvent.setDescription(description);
-    } else {
-      googleEvent.setDescription(null);
-    }
+    googleEvent.setStart(DateUtils.toEventDateTime(event.getStartDateTime(), allDay));
+    googleEvent.setEnd(DateUtils.toEventDateTime(event.getEndDateTime(), allDay));
+    googleEvent.setDescription(event.getDescription());
     googleEvent.setLocation(event.getLocation());
     googleEvent.setSummary(event.getSubject());
+    googleEvent.setVisibility(getVisibility(event));
+
+    List<EventAttendee> eventAttendees = new ArrayList<>();
+    for (ICalendarUser icalUser : event.getAttendees()) {
+      EventAttendee eventAttendee = getAttendee(icalUser);
+      eventAttendees.add(eventAttendee);
+    }
+    ICalendarUser organizer = event.getOrganizer();
+    if (organizer != null) {
+      eventAttendees.add(getAttendee(organizer));
+    }
+    googleEvent.setAttendees(eventAttendees);
+
     return googleEvent;
+  }
+
+  protected EventAttendee getAttendee(ICalendarUser iCalUser) {
+    EventAttendee eventAttendee = new EventAttendee();
+    eventAttendee.setDisplayName(iCalUser.getName());
+    eventAttendee.setEmail(iCalUser.getEmail());
+    eventAttendee.setResponseStatus(getReponseStatus(iCalUser));
+    return eventAttendee;
+  }
+
+  protected String getReponseStatus(ICalendarUser iCalUser) {
+    int statusSelect = iCalUser.getStatusSelect();
+    if (statusSelect == ICalendarUserRepository.STATUS_YES) {
+      return "accepted";
+    } else if (statusSelect == ICalendarUserRepository.STATUS_MAYBE) {
+      return "tentative";
+    } else if (statusSelect == ICalendarUserRepository.STATUS_NO) {
+      return "declined";
+    }
+    return null;
   }
 
   @Override
@@ -324,14 +357,7 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
     event.setLocation(googleEvent.getLocation());
     event.setTypeSelect(EventRepository.TYPE_MEETING);
 
-    EventDateTime date = googleEvent.getStart();
-    if (date == null) {
-      return null;
-    }
-    event.setStartDateTime(convertGoogleDate(date));
-    date = googleEvent.getEnd();
-    event.setEndDateTime(convertGoogleDate(date));
-
+    gSuiteEventImportService.setEventDates(googleEvent, event);
     return eventRepo.save(event);
   }
 
@@ -346,19 +372,33 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
     eventGoogleAccountRepo.save(eventAccount);
   }
 
-  public LocalDateTime convertGoogleDate(EventDateTime eventDate) {
-    if (eventDate == null) {
-      return null;
+  @Override
+  @Transactional
+  public void removeEventFromRemote(Event event) {
+    EventGoogleAccount eventGoogleAccount =
+        eventGoogleAccountRepo.all().filter("self.event = ?1", event).fetchOne();
+    if (eventGoogleAccount == null) {
+      return;
     }
-    ZonedDateTime parsed = null;
-    DateTimeFormatter formatter;
-    if (eventDate.getDateTime() != null) {
-      formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-      parsed = ZonedDateTime.parse(eventDate.getDateTime().toString(), formatter);
-    } else if (eventDate.getDate() != null) {
-      formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
-      parsed = ZonedDateTime.parse(eventDate.getDate().toString(), formatter);
+
+    GoogleAccount googleAccount = eventGoogleAccount.getGoogleAccount();
+    String removedEventIds = googleAccount.getRemovedEventIds();
+    if (removedEventIds == null) {
+      googleAccount.setRemovedEventIds(eventGoogleAccount.getGoogleEventId());
+    } else {
+      googleAccount.setRemovedEventIds(
+          removedEventIds + "," + eventGoogleAccount.getGoogleEventId());
     }
-    return parsed.toLocalDateTime();
+    googleAccountRepo.save(googleAccount);
+  }
+
+  protected String getVisibility(Event event) {
+    int visibility = event.getVisibilitySelect();
+    if (visibility == ICalendarEventRepository.VISIBILITY_PUBLIC) {
+      return "public";
+    } else if (visibility == ICalendarEventRepository.VISIBILITY_PRIVATE) {
+      return "private";
+    }
+    return null;
   }
 }

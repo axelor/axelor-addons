@@ -18,6 +18,8 @@
 package com.axelor.apps.gsuite.module;
 
 import com.axelor.app.AxelorModule;
+import com.axelor.apps.crm.db.repo.EventManagementRepository;
+import com.axelor.apps.gsuite.db.repo.GSuiteEventRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountManagementRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.ICalUserService;
@@ -59,5 +61,6 @@ public class GsuiteModule extends AxelorModule {
     bind(GSuitePartnerImportService.class).to(GSuitePartnerImportServiceImpl.class);
     bind(GSuitePartnerExporterService.class).to(GSuitePartnerExporterServiceImpl.class);
     bind(GSuiteTaskExportService.class).to(GSuiteTaskExportServiceImpl.class);
+    bind(EventManagementRepository.class).to(GSuiteEventRepository.class);
   }
 }

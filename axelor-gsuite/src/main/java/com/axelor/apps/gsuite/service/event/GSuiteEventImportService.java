@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.gsuite.service.event;
 
+import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.calendar.Calendar;
@@ -36,4 +37,7 @@ public interface GSuiteEventImportService {
       LocalDateTime startDateT,
       LocalDateTime endDateT)
       throws AxelorException;
+
+  public void setEventDates(
+      com.google.api.services.calendar.model.Event googleEvent, Event aosEvent);
 }

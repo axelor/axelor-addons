@@ -15,26 +15,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.gsuite.utils;
+package com.axelor.apps.gsuite.db.repo;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.axelor.apps.crm.db.Event;
+import com.axelor.apps.crm.db.repo.EventManagementRepository;
+import com.axelor.apps.gsuite.service.event.GSuiteEventExportService;
+import com.google.inject.Inject;
 
-public class StringUtils {
+public class GSuiteEventRepository extends EventManagementRepository {
 
-  private StringUtils() {}
+  @Inject GSuiteEventExportService gSuiteEventExportService;
 
-  public static List<String> parseEmails(String text) {
-    List<String> emails = new ArrayList<>();
-    final String EMAIL_PATTERN =
-        "[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})";
-    Pattern pattern = Pattern.compile(EMAIL_PATTERN);
-    Matcher matcher = pattern.matcher(text);
-    while (matcher.find()) {
-      emails.add(matcher.group().trim());
+  @Override
+  public void remove(Event entity) {
+    removeGSuiteEvent(entity, true);
+  }
+
+  public void removeGSuiteEvent(Event event, boolean removeRemote) {
+    if (removeRemote) {
+      gSuiteEventExportService.removeEventFromRemote(event);
     }
-    return emails;
+    super.remove(event);
   }
 }
