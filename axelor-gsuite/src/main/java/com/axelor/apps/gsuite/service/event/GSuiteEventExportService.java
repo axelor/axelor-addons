@@ -44,4 +44,6 @@ public interface GSuiteEventExportService {
       throws IOException;
 
   void createEventAccount(GoogleAccount account, Event event, String eventId);
+
+  void removeEventFromRemote(Event event);
 }

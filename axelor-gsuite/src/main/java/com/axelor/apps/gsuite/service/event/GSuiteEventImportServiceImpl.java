@@ -24,6 +24,7 @@ import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.gsuite.db.EventGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
+import com.axelor.apps.gsuite.db.repo.GSuiteEventRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.ICalUserService;
@@ -34,7 +35,6 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.calendar.Calendar;
-import com.google.api.services.calendar.Calendar.Events.List;
 import com.google.api.services.calendar.model.EventAttendee;
 import com.google.api.services.calendar.model.EventDateTime;
 import com.google.inject.Inject;
@@ -42,6 +42,7 @@ import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,8 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
   @Inject protected EventGoogleAccountRepository eventGoogleAccountRepo;
 
   @Inject protected EmailAddressRepository emailRepo;
+
+  @Inject protected GSuiteEventRepository eventRepo;
 
   @Inject protected ICalUserService iCalUserService;
 
@@ -97,7 +100,8 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
     do {
       com.google.api.services.calendar.model.Events events = null;
       try {
-        List list = calendar.events().list("primary");
+        com.google.api.services.calendar.Calendar.Events.List list =
+            calendar.events().list("primary");
         if (startDateT != null) {
           list = list.setTimeMin(DateUtils.toGoogleDateTime(startDateT));
         }
@@ -106,9 +110,11 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
         }
 
         events = list.setPageToken(pageToken).execute();
-        String timeZone = events.getTimeZone();
+        List<com.google.api.services.calendar.model.Event> remoteEvents = events.getItems();
 
-        for (com.google.api.services.calendar.model.Event event : events.getItems()) {
+        removeAOSEvents(remoteEvents);
+
+        for (com.google.api.services.calendar.model.Event event : remoteEvents) {
 
           EventGoogleAccount eventGoogleAccount =
               eventGoogleAccountRepo.findByGoogleEventId(event.getId());
@@ -124,7 +130,7 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
               iCalUserService.findOrCreateICalUser(event.getOrganizer(), crmEvent));
           crmEvent.setVisibilitySelect(getEventVisibilitySelect(event.getVisibility()));
           crmEvent.setGoogleAccount(googleAccount);
-          setEventDates(event, crmEvent, timeZone);
+          setEventDates(event, crmEvent);
           setAttendees(crmEvent, event);
 
           crmEventRepo.save(crmEvent);
@@ -146,6 +152,19 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
     } while (pageToken != null);
 
     log.debug("{} Event retrived and processed", total);
+  }
+
+  protected void removeAOSEvents(List<com.google.api.services.calendar.model.Event> events) {
+    List<EventGoogleAccount> eventGoogleAccountList = eventGoogleAccountRepo.all().fetch();
+
+    for (EventGoogleAccount eventGoogleAccount : eventGoogleAccountList) {
+      for (com.google.api.services.calendar.model.Event event : events) {
+        if (event.getId().equals(eventGoogleAccount.getGoogleEventId())) {
+          continue;
+        }
+      }
+      eventRepo.removeGSuiteEvent(eventGoogleAccount.getEvent(), false);
+    }
   }
 
   protected Integer getEventVisibilitySelect(String value) {
@@ -181,8 +200,9 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
         .forEach(aosEvent::addAttendee);
   }
 
-  protected void setEventDates(
-      com.google.api.services.calendar.model.Event googleEvent, Event aosEvent, String timeZone) {
+  @Override
+  public void setEventDates(
+      com.google.api.services.calendar.model.Event googleEvent, Event aosEvent) {
 
     EventDateTime eventStart = googleEvent.getStart();
     EventDateTime eventEnd = googleEvent.getEnd();

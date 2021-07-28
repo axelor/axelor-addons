@@ -28,6 +28,8 @@
 		
 		<datetime name="taskSyncToGoogleDate" title="Task Sync To Google Date"/>
 		<string name="taskSyncToGoogleLog" title="Task Sync To Google Log" large="true"/>
+		
+		<string name="removedEventIds" title="Removed event ids" large="true"/>
 				
 	</entity>
 

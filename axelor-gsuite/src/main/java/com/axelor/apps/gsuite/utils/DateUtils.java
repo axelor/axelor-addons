@@ -18,6 +18,7 @@
 package com.axelor.apps.gsuite.utils;
 
 import com.google.api.client.util.DateTime;
+import com.google.api.services.calendar.model.EventDateTime;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -46,5 +47,19 @@ public class DateUtils {
 
   public static String toRfc3339(LocalDateTime dateTime) {
     return dateTime.atZone(ZoneId.systemDefault()).format(RFC3339_PATTERN);
+  }
+
+  public static EventDateTime toEventDateTime(LocalDateTime dateTime, boolean allDay) {
+    EventDateTime eventDateTime = new EventDateTime();
+    if (allDay) {
+      eventDateTime.setDate(new DateTime(dateTime.format(DateTimeFormatter.ISO_LOCAL_DATE)));
+    } else {
+      eventDateTime.setDateTime(
+          new DateTime(
+              dateTime
+                  .atZone(ZoneId.systemDefault())
+                  .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+    }
+    return eventDateTime;
   }
 }
