@@ -21,26 +21,36 @@ import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.apps.message.db.Message;
 import com.axelor.apps.office365.translation.ITranslation;
+import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
+import com.axelor.dms.db.DMSFile;
+import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.meta.MetaFiles;
 import com.github.scribejava.apis.MicrosoftAzureActiveDirectory20Api;
 import com.github.scribejava.core.builder.ServiceBuilder;
 import com.github.scribejava.core.model.OAuth2AccessToken;
 import com.github.scribejava.core.oauth.OAuth20Service;
+import com.google.common.io.ByteSource;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import java.io.File;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import wslite.http.HTTPClient;
 import wslite.http.HTTPMethod;
 import wslite.http.HTTPRequest;
@@ -53,6 +63,8 @@ public class Office365ServiceImpl implements Office365Service {
   @Inject Office365ContactService contactService;
   @Inject Office365CalendarService calendarService;
   @Inject Office365MailService mailService;
+
+  @Inject private DMSFileRepository dmsFileRepo;
 
   @Transactional
   public String getAccessTocken(AppOffice365 appOffice365) throws AxelorException {
@@ -194,6 +206,66 @@ public class Office365ServiceImpl implements Office365Service {
               appOffice365,
               String.format(Office365Service.MAIL_USER_URL, emailAddress.getAddress()));
     } catch (MalformedURLException | AxelorException e) {
+      TraceBackService.trace(e);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @Transactional
+  public void manageAttachment(Message message, Map<String, Object> mailObj) {
+
+    List<Map<String, Object>> attachmentList =
+        (List<Map<String, Object>>) mailObj.get("attachments");
+    if (ObjectUtils.isEmpty(attachmentList)) {
+      return;
+    }
+
+    try {
+      AppOffice365 appOffice365 = Beans.get(AppOffice365Repository.class).all().fetchOne();
+      String accessToken = getAccessTocken(appOffice365);
+
+      for (Map<String, Object> attachment : attachmentList) {
+        try {
+          String attachmentId = (String) attachment.get("id");
+          URL url =
+              new URL(
+                  String.format(
+                      Office365Service.MAIL_ATTACHMENT_URL + "/%s",
+                      message.getOffice365Id(),
+                      attachmentId));
+          JSONObject attachmentJsonObject = fetchData(url, accessToken);
+          if (attachmentJsonObject == null) {
+            continue;
+          }
+
+          String contentType = (String) attachmentJsonObject.getOrDefault("contentType", "");
+          if ("application/octet-stream".equals(contentType)) {
+            String office365Id = (String) attachmentJsonObject.getOrDefault("id", "");
+            String name = (String) attachmentJsonObject.getOrDefault("name", "");
+            String contentBytes = (String) attachmentJsonObject.getOrDefault("contentBytes", "");
+            byte[] bytes = Base64.getDecoder().decode(contentBytes);
+            DMSFile dmsFile =
+                dmsFileRepo
+                    .all()
+                    .filter("self.office365Id = :office365Id")
+                    .bind("office365Id", office365Id)
+                    .fetchOne();
+
+            if (dmsFile != null) {
+              File file = new File(name);
+              FileUtils.writeByteArrayToFile(file, bytes);
+              dmsFile.setMetaFile(Beans.get(MetaFiles.class).upload(file));
+            } else {
+              InputStream is = ByteSource.wrap(bytes).openStream();
+              dmsFile = Beans.get(MetaFiles.class).attach(is, name, message);
+              dmsFile.setOffice365Id(office365Id);
+            }
+          }
+        } catch (Exception e) {
+          TraceBackService.trace(e);
+        }
+      }
+    } catch (Exception e) {
       TraceBackService.trace(e);
     }
   }

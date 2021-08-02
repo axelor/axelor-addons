@@ -19,9 +19,11 @@ package com.axelor.apps.office365.service;
 
 import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.apps.message.db.Message;
 import com.axelor.exception.AxelorException;
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Map;
 
 public interface Office365Service {
 
@@ -34,6 +36,7 @@ public interface Office365Service {
   static final String CALENDAR_URL = GRAPH_URL + "me/calendars";
   static final String EVENT_URL = GRAPH_URL + "me/calendars/%s/events";
   static final String MAIL_URL = GRAPH_URL + "me/messages";
+  static final String MAIL_ATTACHMENT_URL = GRAPH_URL + "me/messages/%s/attachments";
   static final String MAIL_USER_URL = GRAPH_URL + "users/%s/messages";
   static final String MAIL_ID_URL = GRAPH_URL + "users/%s/messages/%s";
 
@@ -45,4 +48,6 @@ public interface Office365Service {
       throws AxelorException, MalformedURLException;
 
   void syncUserMail(EmailAddress emailAddress, List<String> emailIds);
+
+  void manageAttachment(Message message, Map<String, Object> mailObj);
 }

@@ -40,6 +40,8 @@ public class Office365MailService {
   @Inject private PartnerRepository partnerRepository;
   @Inject private EventRepository eventRepo;
 
+  @Inject private Office365Service office365Service;
+
   @Transactional
   @SuppressWarnings("unchecked")
   public void createMessage(JSONObject jsonObject) {
@@ -237,6 +239,9 @@ public class Office365MailService {
         scheduleEvent(message);
 
         messageRepo.save(message);
+        if (mailObj.containsKey("attachments")) {
+          office365Service.manageAttachment(message, mailObj);
+        }
       } catch (Exception e) {
         TraceBackService.trace(e);
       }
