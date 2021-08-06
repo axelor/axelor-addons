@@ -5,7 +5,10 @@
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
-	<entity name="AppOffice365" lang="java" extends="App">
+	<entity name="AppOffice365" lang="java">
+		
+		<one-to-one ref="com.axelor.apps.base.db.App" name="app"/>
+	
 		<string name="clientId" title="Application (client) ID" />
 		<string name="redirectUri" title="Redirect URI" />
 		<string name="clientSecret" title="Application (client) secret" />

@@ -5,7 +5,7 @@
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
-	<entity name="AppBusinessSupport" lang="java" extends="App">
+	<entity name="AppBusinessSupport" lang="java">
 
 		<string name="taskClosedStatusSelect" title="Task closed status"
 			selection="project.task.status" />

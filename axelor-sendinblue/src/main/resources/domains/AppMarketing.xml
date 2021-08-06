@@ -5,7 +5,7 @@
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
-	<entity name="AppMarketing" lang="java" cacheable="true" extends="App">
+	<entity name="AppMarketing" lang="java" cacheable="true">
 		<boolean name="manageSendinBlueApiEmailingReporting"
 			title="Manage emailing reporting using the SendinBlue API" />
 	</entity>
