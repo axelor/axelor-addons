@@ -8,12 +8,12 @@
 			<replace>
 		        <panel name="relatedToPanel" title="Related to" sidebar="true" colSpan="12" readonlyIf="statusSelect == 4">
 					<field name="company" colSpan="12" form-view="company-form" grid-view="company-grid" canEdit="false"/>
-					<panel colSpan="12" name="relatedTo1SelectPanel">
-						<field name="relatedTo1Select" widget="RefSelect" x-related="relatedTo1SelectId" colSpan="12"/>
-					</panel>
-					<panel colSpan="12"  name="relatedTo2SelectPanel">
-						<field name="relatedTo2Select" widget="RefSelect" x-related="relatedTo2SelectId" colSpan="12" showIf="relatedTo1Select != null"/>
-					</panel>
+					<field name="multiRelatedList">
+						<editor>
+							<field name="relatedToSelect" widget="RefSelect" x-related="relatedToSelectId" colSpan="12" showTitle="false"/>
+							<field name="relatedToSelectId" hidden="true" />
+						</editor> 
+					</field>
 					<panel colSpan="12" name="relatedToSelectO2MPanel" if="__config__.app.getApp('gsuite').getIsEmailSyncAllowed()">
 						<field name="relatedList" form-view="message-related-select-form" grid-view="message-related-select-grid" colSpan="12">
 							<editor x-viewer="true">
@@ -30,10 +30,10 @@
     <action-view id="gsuite-action-lead-view-emails" name="action-lead-view-emails" title="Emails" model="com.axelor.apps.message.db.Message">
 		<view type="grid" name="message-grid"/>
 		<view type="form" name="message-form"/>
-		<domain>self.mediaTypeSelect = 2 AND ((self.relatedTo1Select = 'com.axelor.apps.crm.db.Lead' AND self.relatedTo1SelectId = :id)
-			OR (self.relatedTo2Select = 'com.axelor.apps.crm.db.Lead' AND self.relatedTo2SelectId = :id)
+		<domain>self.mediaTypeSelect = 2 AND (
+			(self.id IN (SELECT message.id FROM MultiRelated as related WHERE related.relatedToSelect = 'com.axelor.apps.crm.db.Lead' AND related.relatedToSelectId = :id)) 
 			OR (self.fromEmailAddress.id = :idEmail)
-		    OR (self.relatedList.relatedToSelect = 'com.axelor.apps.crm.db.Lead' AND self.relatedList.relatedToSelectId = :id ))</domain>
+			OR (self.relatedList.relatedToSelect = 'com.axelor.apps.crm.db.Lead' AND self.relatedList.relatedToSelectId = :id))</domain>
 		<context name="id" expr="eval: id"/>
 		<context name="idEmail" expr="eval: emailAddress?.id"/>
 	</action-view>
