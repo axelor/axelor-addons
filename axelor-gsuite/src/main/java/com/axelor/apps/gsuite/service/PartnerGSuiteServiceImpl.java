@@ -35,17 +35,12 @@ public class PartnerGSuiteServiceImpl extends PartnerServiceImpl {
   @SuppressWarnings("unchecked")
   @Override
   public List<Long> findMailsFromPartner(Partner partner) {
-    String query =
-        "SELECT DISTINCT(email.id) FROM Message as email JOIN email.relatedList relatedList  WHERE email.mediaTypeSelect = 2 AND "
-            + "(email.relatedTo1Select = 'com.axelor.apps.base.db.Partner' AND email.relatedTo1SelectId = "
-            + partner.getId()
-            + ") "
-            + "OR (email.relatedTo2Select = 'com.axelor.apps.base.db.Partner' AND email.relatedTo2SelectId = "
-            + partner.getId()
-            + ")"
-            + "OR (relatedList.relatedToSelect = 'com.axelor.apps.base.db.Partner' AND relatedList.relatedToSelectId = "
-            + partner.getId()
-            + ")";
+    String query = String.format(
+        "SELECT DISTINCT(email.id) FROM Message as email JOIN email.relatedList relatedList WHERE email.mediaTypeSelect = 2 "
+            + "AND (email IN (SELECT message FROM MultiRelated as related WHERE related.relatedToSelect = 'com.axelor.apps.base.db.Partner' AND related.relatedToSelectId = %s)"
+            + "OR (relatedList.relatedToSelect = 'com.axelor.apps.base.db.Partner' AND relatedList.relatedToSelectId = %s))",
+        partner.getId(),
+        partner.getId());
 
     if (partner.getEmailAddress() != null) {
       query += "OR (email.fromEmailAddress.id = " + partner.getEmailAddress().getId() + ")";
