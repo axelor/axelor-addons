@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<grid model="com.axelor.apps.office.db.ContactFolder" title="Office contact folders" name="office-contact-folder-grid" canNew="false" canDelete="false">
+		<field name="name"/>
+		<field name="officeAccount"/>
+	</grid>
+
+	<form model="com.axelor.apps.office.db.ContactFolder" title="Office contact folder" name="office-contact-folder-form" width="large" canNew="false" canDelete="false" canCopy="false">
+		<panel name="mainPanel" >
+			<field name="name" readonly="true"/>
+			<field name="officeAccount" readonly="true"/>
+			<field name="contactDeltaToken" colSpan="12" title="Current token"/>
+			<field name="tokenList" colSpan="12"/>
+		</panel>
+	</form>
+
+</object-views>

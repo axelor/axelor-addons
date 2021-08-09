@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
+
+	<module name="office" package="com.axelor.apps.office.db" />
+
+	<entity name="OfficeMail" lang="java">
+
+		<string name="office365Id" title="Office365 id" copy="false"/>
+
+		<many-to-one name="mailFolder" ref="com.axelor.apps.office.db.MailFolder" title="Mail folder"/>
+		<many-to-one name="message" ref="com.axelor.apps.message.db.Message"/>
+
+		<finder-method name="findByOffice365Id" using="office365Id" />
+
+	</entity>
+
+</domain-models>

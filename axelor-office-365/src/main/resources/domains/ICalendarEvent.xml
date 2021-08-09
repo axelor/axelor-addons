@@ -7,7 +7,9 @@
 	<module name="base" package="com.axelor.apps.base.db" />
 
 	<entity name="ICalendarEvent" table="ICAL_EVENT" sequential="true">
-		<string name="office365Id" title="Office365 id"/>
+
+		<string name="office365Id" title="Office365 id" copy="false"/>
+		<datetime name="lastOfficeSyncOn"/>
 
 		<finder-method name="findByOffice365Id" using="office365Id"/>
 
@@ -17,8 +19,14 @@
 	  		public static final Integer DISPONIBILITY_AWAY = 3;
 	  		public static final Integer DISPONIBILITY_TENTATIVE = 4;
 	  		public static final Integer DISPONIBILITY_WORKING_ELSEWHERE = 5;
+
+	  		// OFFICE EVENT TYPE 
+	  		public static final String EVENT_SINGLE_INSTANCE = "singleInstance";
+	  		public static final String EVENT_SERIES_MASTER = "seriesMaster";
+	  		public static final String EVENT_OCCURRENCE = "occurrence";
 		]]>
 		</extra-code>
+
 	</entity>
 
 </domain-models>

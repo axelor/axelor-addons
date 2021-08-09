@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
 	<form name="app-office365-config-form" title="App office365" model="com.axelor.apps.base.db.AppOffice365" 
 		canDelete="false" canNew="false" width="large">
@@ -9,8 +9,15 @@
 			<field name="clientId" required="true"/>
 			<field name="redirectUri" required="true"/>
 			<field name="clientSecret" required="true" widget="password"/>
-			<field name="manageMessageRelatedTo"/>
+			<field name="manageMessageRelatedTo" colSpan="3"/>
+			<field name="exportMail" colSpan="3"/>
+			<field name="officeAccountSet" colSpan="12" domain="self.isAuthorized = true" canSelect="true"/>
+			<field name="emailLinkList" colSpan="12"/>
 		</panel>
 	</form>
+
+	<action-method name="action-office365-method-create-mail" model="com.axelor.apps.message.db.Message">
+		<call class="com.axelor.apps.office365.web.Office365Controller" method="createUserMessage" />
+	</action-method>
 
 </object-views>

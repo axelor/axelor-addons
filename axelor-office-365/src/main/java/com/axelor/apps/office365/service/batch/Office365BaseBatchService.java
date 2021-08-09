@@ -35,6 +35,10 @@ public class Office365BaseBatchService extends BaseBatchService {
     switch (baseBatch.getActionSelect()) {
       case BaseBatchRepository.ACTION_SYNCHRONIZE_CONTACTS:
         return synchronizeContacts(baseBatch);
+      case BaseBatchRepository.ACTION_SYNCHRONIZE_CALENDAR:
+        return synchronizeContacts(baseBatch);
+      case BaseBatchRepository.ACTION_SYNCHRONIZE_MAILS:
+        return synchronizeMails(baseBatch);
       default:
         return super.run(batchModel);
     }
@@ -42,5 +46,13 @@ public class Office365BaseBatchService extends BaseBatchService {
 
   public Batch synchronizeContacts(BaseBatch baseBatch) {
     return Beans.get(Office365BatchContactSynchronization.class).run(baseBatch);
+  }
+
+  public Batch synchronizeCalendars(BaseBatch baseBatch) {
+    return Beans.get(Office365BatchCalendarSynchronization.class).run(baseBatch);
+  }
+
+  public Batch synchronizeMails(BaseBatch baseBatch) {
+    return Beans.get(Office365BatchMailSynchronization.class).run(baseBatch);
   }
 }

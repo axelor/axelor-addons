@@ -17,41 +17,37 @@
  */
 package com.axelor.apps.office365.service.batch;
 
-import com.axelor.apps.base.db.repo.AppOffice365Repository;
-import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.office.db.OfficeAccount;
-import com.axelor.apps.office.db.repo.OfficeAccountRepository;
+import com.axelor.apps.base.db.ICalendar;
+import com.axelor.apps.base.service.batch.BatchCalendarSynchronization;
 import com.axelor.apps.office365.service.Office365Service;
-import com.axelor.common.ObjectUtils;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Office365BatchContactSynchronization extends AbstractBatch {
+public class BatchOffice365CalendarSynchronization extends BatchCalendarSynchronization {
 
   @Inject Office365Service office365Service;
 
   @Override
   protected void process() {
 
-    List<OfficeAccount> officeAccounts =
-        Beans.get(AppOffice365Repository.class).all().fetchOne().getOfficeAccountSet().stream()
-            .filter(account -> account.getIsAuthorized())
+    super.process();
+
+    final List<ICalendar> calendars =
+        batch.getBaseBatch().getCalendarList().stream()
+            .filter(
+                calendar ->
+                    calendar.getOfficeAccount() != null
+                        && calendar.getOfficeAccount().getIsAuthorized())
             .collect(Collectors.toList());
 
-    if (ObjectUtils.isEmpty(officeAccounts)) {
-      officeAccounts =
-          Beans.get(OfficeAccountRepository.class).all().filter("self.isAuthorized = true").fetch();
-    }
-
-    for (OfficeAccount officeAccount : officeAccounts) {
+    for (ICalendar calendar : calendars) {
       try {
-        office365Service.syncContact(officeAccount);
+        office365Service.syncCalendar(calendar);
         incrementDone();
       } catch (Exception e) {
-        TraceBackService.trace(e, "Contact synchronization", batch.getId());
+        TraceBackService.trace(e, "Calendar synchronization", batch.getId());
         incrementAnomaly();
       }
     }

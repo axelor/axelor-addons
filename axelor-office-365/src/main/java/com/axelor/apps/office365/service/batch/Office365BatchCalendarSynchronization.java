@@ -17,31 +17,38 @@
  */
 package com.axelor.apps.office365.service.batch;
 
-import com.axelor.apps.base.db.ICalendar;
-import com.axelor.apps.base.service.batch.BatchCalendarSynchronization;
+import com.axelor.apps.base.db.repo.AppOffice365Repository;
+import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.office.db.OfficeAccount;
+import com.axelor.apps.office.db.repo.OfficeAccountRepository;
 import com.axelor.apps.office365.service.Office365Service;
+import com.axelor.common.ObjectUtils;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Office365BatchCalendarSynchronization extends BatchCalendarSynchronization {
+public class Office365BatchCalendarSynchronization extends AbstractBatch {
 
   @Inject Office365Service office365Service;
 
   @Override
   protected void process() {
 
-    super.process();
-
-    final List<ICalendar> calendars =
-        batch.getBaseBatch().getCalendarList().stream()
-            .filter(calendar -> calendar.getOfficeAccount() != null)
+    List<OfficeAccount> officeAccounts =
+        Beans.get(AppOffice365Repository.class).all().fetchOne().getOfficeAccountSet().stream()
+            .filter(account -> account.getIsAuthorized())
             .collect(Collectors.toList());
 
-    for (ICalendar calendar : calendars) {
+    if (ObjectUtils.isEmpty(officeAccounts)) {
+      officeAccounts =
+          Beans.get(OfficeAccountRepository.class).all().filter("self.isAuthorized = true").fetch();
+    }
+
+    for (OfficeAccount officeAccount : officeAccounts) {
       try {
-        office365Service.syncCalendar(calendar);
+        office365Service.syncCalendar(officeAccount);
         incrementDone();
       } catch (Exception e) {
         TraceBackService.trace(e, "Calendar synchronization", batch.getId());

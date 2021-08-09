@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
 	<module name="message" package="com.axelor.apps.message.db" />
 
 	<entity name="Message" lang="java">
-		<string name="office365Id" title="Office365 id" />
-		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
+
+		<string name="messageId" title="Office365 id" copy="false"/>
 		<datetime name="receivedDateT" title="Received date" readonly="true"/>
 
-		<finder-method name="findByOffice365Id" using="office365Id" />
+		<many-to-many name="officeAccountSet" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts"/>
+
+		<one-to-many name="officeMailList" ref="com.axelor.apps.office.db.OfficeMail" mappedBy="message" orphanRemoval="true"/>
+
+		<finder-method name="findByMessageId" using="messageId" />
+
 	</entity>
 
 </domain-models>

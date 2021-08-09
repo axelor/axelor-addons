@@ -29,6 +29,11 @@
 				<field name="officeAccount" showIf="typeSelect == 8"/>
 			</insert>
 		</extend>
+		<extend target="//panel-tabs[@name='mainPanelTab']/*[last()]">
+			<insert position="after">
+				<panel-related name="tokenPanel" field="tokenList" showIf="typeSelect == 8"/>
+			</insert>
+		</extend>
 	</form>
 
 </object-views>

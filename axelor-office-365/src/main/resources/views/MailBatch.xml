@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<form id="office365-mail-batch-form" name="mail-batch-form" title="Mail Batch" model="com.axelor.apps.base.db.MailBatch" extension="true">
+		<extend target="//panel[@name='actionsPanel']/*[last()]">
+			<insert position="after">
+				<button name="synchronizeMailBtn" showIf="actionSelect == 4" title="Batch mail synchronization" onClick="save,action-base-batch-method-synchronize-mails"/>
+			</insert>
+		</extend>
+	</form>
+
+	<action-method name="action-base-batch-method-synchronize-mails">
+		<call class="com.axelor.apps.office365.web.Office365BatchController" method="actionSynchronizeMails"/>
+	</action-method>
+
+</object-views>

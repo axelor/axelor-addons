@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<grid model="com.axelor.apps.office.db.Office365Token" title="Office tokens" name="office-token-grid">
+		<field name="fetchOn"/>
+		<field name="token"/>
+	</grid>
+
+	<form model="com.axelor.apps.office.db.Office365Token" title="Office token" name="office-token-form">
+		<panel name="mainPanel" readonly="true">
+			<field name="fetchOn"/>
+			<field name="token" colSpan="12"/>
+		</panel>
+	</form>
+
+</object-views>

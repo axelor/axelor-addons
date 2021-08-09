@@ -1,5 +1,4 @@
-/*
- * Axelor Business Solutions
+/* Axelor Business Solutions
  *
  * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
@@ -29,7 +28,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Office365BatchContactSynchronization extends AbstractBatch {
+public class Office365BatchMailSynchronization extends AbstractBatch {
 
   @Inject Office365Service office365Service;
 
@@ -48,10 +47,10 @@ public class Office365BatchContactSynchronization extends AbstractBatch {
 
     for (OfficeAccount officeAccount : officeAccounts) {
       try {
-        office365Service.syncContact(officeAccount);
+        office365Service.syncMail(officeAccount, Office365Service.MAIL_URL);
         incrementDone();
       } catch (Exception e) {
-        TraceBackService.trace(e, "Contact synchronization", batch.getId());
+        TraceBackService.trace(e, "Mail synchronization", batch.getId());
         incrementAnomaly();
       }
     }

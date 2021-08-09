@@ -6,14 +6,17 @@
 	<module name="base" package="com.axelor.apps.base.db" />
 
 	<entity name="BaseBatch" lang="java">
+
 		<one-to-many name="calendarList" ref="com.axelor.apps.base.db.ICalendar" title="Calendars"/>
-		<one-to-many name="officeAccountList" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts"/>
 
 		<extra-code>
 			<![CDATA[
 				public static final int ACTION_SYNCHRONIZE_CONTACTS = 3;
+				public static final int ACTION_SYNCHRONIZE_CALENDAR = 4;
+				public static final int ACTION_SYNCHRONIZE_MAILS = 5;
 			]]>
  		</extra-code>
+
 	</entity>
 
 </domain-models>

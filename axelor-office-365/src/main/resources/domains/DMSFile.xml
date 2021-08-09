@@ -3,16 +3,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
-	<module name="base" package="com.axelor.apps.base.db" />
+	<module name="dms" package="com.axelor.dms.db"/>
 
-	<entity name="ICalendarUser" table="ICAL_USER" sequential="true">
+	<entity name="DMSFile" table="DMS_FILE" repository="none">
 
-		<extra-code>
-      	<![CDATA[
-	  		public static final Integer STATUS_REQUIRED = 4;
-	  		public static final Integer STATUS_OPTIONAL = 5;
-	  	]]>
-      	</extra-code>
+		<string name="office365Id" title="Office365 id" copy="false"/>
 
 	</entity>
 

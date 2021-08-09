@@ -6,21 +6,30 @@
 	<form name="base-batch-form" id="office365-base-batch-form" title="Base Batch" model="com.axelor.apps.base.db.BaseBatch" extension="true">
 		<extend target="//panel-tabs[@name='targetPanelTab']/*[last()]">
 			<insert position="after">
-				<panel title="Configuration" name="configurationPanel" showIf="[2,3].indexOf(actionSelect) >= 0">
+				<panel title="Configuration" name="configurationPanel" showIf="actionSelect == 2">
 					<field name="calendarList" showIf="actionSelect == 2" colSpan="12" domain="self.officeAccount IS NOT NULL" canSelect="true"/>
-					<field name="officeAccountList" showIf="actionSelect == 3" colSpan="12" domain="self.isAuthorized = true" canSelect="true"/>
 				</panel>
 			</insert>
 		</extend>
 		<extend target="//button[@name='synchronizeBtn']">
 			<insert position="after">
-				<button name="synchronizeContactBtn" showIf="actionSelect == 3" title="Batch contact synchronization" onClick="save,action-base-batch-method-synchronize-contacts"/>
+				<button name="synchronizeContactBtn" showIf="actionSelect == 3" title="Batch office365 contact synchronization" onClick="save,action-base-batch-method-synchronize-contacts"/>
+				<button name="synchronizeCalendarBtn" showIf="actionSelect == 4" title="Batch office365 calendar synchronization" onClick="save,action-base-batch-method-synchronize-calendars"/>
+				<button name="synchronizeMailBtn" showIf="actionSelect == 5" title="Batch office365 mail synchronization" onClick="save,action-base-batch-method-synchronize-mails"/>
 			</insert>
 		</extend>
 	</form>
 
 	<action-method name="action-base-batch-method-synchronize-contacts">
 		<call class="com.axelor.apps.office365.web.Office365BatchController" method="actionSynchronizeContacts"/>
+	</action-method>
+
+	<action-method name="action-base-batch-method-synchronize-calendars">
+		<call class="com.axelor.apps.office365.web.Office365BatchController" method="actionSynchronizeCalendars"/>
+	</action-method>
+
+	<action-method name="action-base-batch-method-synchronize-mails">
+		<call class="com.axelor.apps.office365.web.Office365BatchController" method="actionSynchronizeMails"/>
 	</action-method>
 
 </object-views>

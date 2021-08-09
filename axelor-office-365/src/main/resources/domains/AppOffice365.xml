@@ -1,18 +1,22 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.2.xsd">
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
 	<entity name="AppOffice365" lang="java">
 		
 		<one-to-one ref="com.axelor.apps.base.db.App" name="app"/>
-	
 		<string name="clientId" title="Application (client) ID" />
 		<string name="redirectUri" title="Redirect URI" />
 		<string name="clientSecret" title="Application (client) secret" />
 		<boolean name="manageMessageRelatedTo"/>
+		<boolean name="exportMail"/>
+
+		<many-to-many name="officeAccountSet" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts"/>
+		<one-to-many name="emailLinkList" ref="com.axelor.apps.base.db.ModelEmailLink" title="Email links"/>
+
 	</entity>
 
 </domain-models>

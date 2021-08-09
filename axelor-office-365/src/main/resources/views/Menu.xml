@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
 	<menuitem name="office365-root" title="Office365"
 		if="__config__.app.isApp('office365')" icon="fa-windows"
@@ -54,7 +54,28 @@
 		title="Office365 mails" model="com.axelor.apps.message.db.Message">
 		<view type="grid" name="message-grid"/>
 		<view type="form" name="message-form"/>
-		<domain>self.office365Id IS NOT NULL</domain>
+		<domain>self IN (SELECT message FROM OfficeMail)</domain>
+	</action-view>
+
+	<menuitem name="office365-configuration" parent="office365-root"
+		title="Configuration" order="25"/>
+
+	<menuitem name="office365-contact-folder" parent="office365-configuration"
+		title="Office365 contact folders" action="office365.contact.folder" order="5"/>
+
+	<action-view name="office365.contact.folder"
+		title="Office365 contact folders" model="com.axelor.apps.office.db.ContactFolder">
+		<view type="grid" name="office-contact-folder-grid"/>
+		<view type="form" name="office-contact-folder-form"/>
+	</action-view>
+	
+	<menuitem name="office365-mail-folder" parent="office365-configuration"
+		title="Office365 mail folders" action="office365.mail.folder" order="10"/>
+
+	<action-view name="office365.mail.folder"
+		title="Office365 mail folders" model="com.axelor.apps.office.db.MailFolder">
+		<view type="grid" name="office-mail-folder-grid"/>
+		<view type="form" name="office-mail-folder-form"/>
 	</action-view>
 
 </object-views>

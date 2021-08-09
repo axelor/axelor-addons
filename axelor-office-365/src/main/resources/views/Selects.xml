@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
 	<selection name="i.calendar.user.status.select" id="office365.i.calendar.user.status.select">
 		<option value="4">Required</option>
@@ -19,7 +19,15 @@
 	</selection>
 
 	<selection name="ibase.batch.action.select" id="office365.ibase.batch.action.select">
-		<option value='3'>Contact synchronization</option>
+		<option value='3'>Office Contact synchronization</option>
+		<option value='4'>Office Calendar synchronization</option>
+		<option value='5'>Office Mail synchronization</option>
+	</selection>
+
+	<selection name="office365.folder.type.select">
+		<option value='1'>Contact</option>
+		<option value='2'>Calendar</option>
+		<option value='3'>Mail</option>
 	</selection>
 
 </object-views>

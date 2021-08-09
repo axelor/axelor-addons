@@ -3,27 +3,22 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
-	<module name="base" package="com.axelor.apps.base.db" />
+	<module name="office" package="com.axelor.apps.office.db" />
 
-	<entity name="ICalendar" table="ICAL_CALENDAR" sequential="true">
+	<entity name="MailFolder" lang="java">
 
 		<string name="office365Id" title="Office365 id" copy="false"/>
-		<string name="calendarViewDeltaToken" readonly="true" large="true" copy="false"/>
-		<boolean name="isOfficeDefaultCalendar"/>
-		<boolean name="isOfficeRemovableCalendar"/>
-		<boolean name="isOfficeEditableCalendar"/>
+		<string name="parentFolderId" title="Parent folder" />
+		<string name="messageDeltaToken" large="true" copy="false"/>
+		<string name="name" />
+		<boolean name="isHidden"/>
 
 		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
 		<one-to-many name="tokenList" ref="com.axelor.apps.office.db.Office365Token" title="Tokens"/>
+		<one-to-many name="officeMailList" ref="com.axelor.apps.office.db.OfficeMail" mappedBy="mailFolder" orphanRemoval="true"/>
 
-		<finder-method name="findByOffice365Id" using="office365Id" />
-
-		<extra-code>
-      	<![CDATA[
-      		// TYPE SELECT
-	  		public static final int OFFICE_365 = 8;
-	  	]]>
-      	</extra-code>
+		<finder-method name="findByOffice365Id" using="office365Id"/>
+		<finder-method name="findByName" using="name,officeAccount"/>
 
 	</entity>
 

@@ -41,4 +41,32 @@ public class Office365BatchController {
       response.setReload(true);
     }
   }
+
+  public void actionSynchronizeCalendars(ActionRequest request, ActionResponse response) {
+
+    try {
+      BaseBatch baseBatch = request.getContext().asType(BaseBatch.class);
+      baseBatch = Beans.get(BaseBatchRepository.class).find(baseBatch.getId());
+      Batch batch = Beans.get(Office365BaseBatchService.class).synchronizeCalendars(baseBatch);
+      response.setFlash(batch.getComments());
+    } catch (Exception e) {
+      TraceBackService.trace(response, e);
+    } finally {
+      response.setReload(true);
+    }
+  }
+
+  public void actionSynchronizeMails(ActionRequest request, ActionResponse response) {
+
+    try {
+      BaseBatch baseBatch = request.getContext().asType(BaseBatch.class);
+      baseBatch = Beans.get(BaseBatchRepository.class).find(baseBatch.getId());
+      Batch batch = Beans.get(Office365BaseBatchService.class).synchronizeMails(baseBatch);
+      response.setFlash(batch.getComments());
+    } catch (Exception e) {
+      TraceBackService.trace(response, e);
+    } finally {
+      response.setReload(true);
+    }
+  }
 }
