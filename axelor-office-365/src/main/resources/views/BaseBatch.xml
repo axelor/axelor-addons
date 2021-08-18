@@ -7,7 +7,7 @@
 		<extend target="//panel-tabs[@name='targetPanelTab']/*[last()]">
 			<insert position="after">
 				<panel title="Configuration" name="configurationPanel" showIf="actionSelect == 2">
-					<field name="calendarList" showIf="actionSelect == 2" colSpan="12" domain="self.officeAccount IS NOT NULL" canSelect="true"/>
+					<field name="calendarList" showIf="actionSelect == 2" colSpan="12" domain="self.emailAccount IS NOT NULL" canSelect="true"/>
 				</panel>
 			</insert>
 		</extend>

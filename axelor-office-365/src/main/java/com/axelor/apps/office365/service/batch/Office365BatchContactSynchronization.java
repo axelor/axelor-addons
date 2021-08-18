@@ -19,8 +19,8 @@ package com.axelor.apps.office365.service.batch;
 
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.office.db.OfficeAccount;
-import com.axelor.apps.office.db.repo.OfficeAccountRepository;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.service.TraceBackService;
@@ -36,19 +36,19 @@ public class Office365BatchContactSynchronization extends AbstractBatch {
   @Override
   protected void process() {
 
-    List<OfficeAccount> officeAccounts =
-        Beans.get(AppOffice365Repository.class).all().fetchOne().getOfficeAccountSet().stream()
-            .filter(account -> account.getIsAuthorized())
+    List<EmailAccount> emailAccounts =
+        Beans.get(AppOffice365Repository.class).all().fetchOne().getEmailAccountSet().stream()
+            .filter(account -> account.getIsValid())
             .collect(Collectors.toList());
 
-    if (ObjectUtils.isEmpty(officeAccounts)) {
-      officeAccounts =
-          Beans.get(OfficeAccountRepository.class).all().filter("self.isAuthorized = true").fetch();
+    if (ObjectUtils.isEmpty(emailAccounts)) {
+      emailAccounts =
+          Beans.get(EmailAccountRepository.class).all().filter("self.isValid = true").fetch();
     }
 
-    for (OfficeAccount officeAccount : officeAccounts) {
+    for (EmailAccount emailAccount : emailAccounts) {
       try {
-        office365Service.syncContact(officeAccount);
+        office365Service.syncContact(emailAccount);
         incrementDone();
       } catch (Exception e) {
         TraceBackService.trace(e, "Contact synchronization", batch.getId());

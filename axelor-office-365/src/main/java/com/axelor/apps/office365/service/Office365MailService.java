@@ -23,15 +23,17 @@ import com.axelor.apps.base.db.ICalendarEvent;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.service.message.MessageBaseService;
+import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
 import com.axelor.apps.message.service.MessageService;
 import com.axelor.apps.office.db.MailFolder;
-import com.axelor.apps.office.db.OfficeAccount;
 import com.axelor.apps.office.db.OfficeMail;
 import com.axelor.apps.office.db.repo.MailFolderRepository;
 import com.axelor.apps.office.db.repo.OfficeMailRepository;
@@ -88,6 +90,7 @@ public class Office365MailService {
         private static final long serialVersionUID = 1L;
 
         {
+          put(MessageRepository.STATUS_DRAFT, ITranslation.OFFICE_MAIL_FOLDER_DRAFTS);
           put(MessageRepository.STATUS_IN_PROGRESS, ITranslation.OFFICE_MAIL_FOLDER_SENT_ITEMS);
           put(MessageRepository.STATUS_SENT, ITranslation.OFFICE_MAIL_FOLDER_SENT_ITEMS);
           put(MessageRepository.STATUS_DELETED, ITranslation.OFFICE_MAIL_FOLDER_DELETED_ITEMS);
@@ -95,7 +98,7 @@ public class Office365MailService {
       };
 
   @SuppressWarnings("unchecked")
-  public void syncMailFolder(OfficeAccount officeAccount, String accessToken, List<String> emails) {
+  public void syncMailFolder(EmailAccount emailAccount, String accessToken, List<String> emails) {
 
     Map<String, String> queryParams = new HashMap<>();
     queryParams.put("includeHiddenFolders", "true");
@@ -108,18 +111,17 @@ public class Office365MailService {
 
     for (Object mailFolderObject : mailFolderJsonArray) {
       JSONObject mailFolderJsonObject = (JSONObject) mailFolderObject;
-      MailFolder mailFolder = createMailFolder(mailFolderJsonObject, officeAccount);
+      MailFolder mailFolder = createMailFolder(mailFolderJsonObject, emailAccount);
       if (mailFolder == null || StringUtils.isBlank(mailFolder.getOffice365Id())) {
         continue;
       }
 
       String mailFolderOfficeId = mailFolder.getOffice365Id();
-      office365Service.syncMails(
-          officeAccount, accessToken, mailFolderOfficeId, mailFolder, emails);
+      office365Service.syncMails(emailAccount, accessToken, mailFolderOfficeId, mailFolder, emails);
 
       int totalChild = (int) mailFolderJsonObject.getOrDefault("childFolderCount", 0);
       if (totalChild > 0) {
-        syncChildMailFolder(mailFolderOfficeId, officeAccount, accessToken, queryParams, emails);
+        syncChildMailFolder(mailFolderOfficeId, emailAccount, accessToken, queryParams, emails);
       }
     }
   }
@@ -127,7 +129,7 @@ public class Office365MailService {
   @SuppressWarnings("unchecked")
   public void syncChildMailFolder(
       String parentFolderId,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       Map<String, String> queryParams,
       List<String> emails) {
@@ -145,25 +147,24 @@ public class Office365MailService {
 
     for (Object childMailFolderObject : childMailFolderJsonArray) {
       JSONObject childMailFolderJsonObject = (JSONObject) childMailFolderObject;
-      MailFolder mailFolder = createMailFolder(childMailFolderJsonObject, officeAccount);
+      MailFolder mailFolder = createMailFolder(childMailFolderJsonObject, emailAccount);
       if (mailFolder == null || StringUtils.isBlank(mailFolder.getOffice365Id())) {
         continue;
       }
 
       String mailFolderOfficeId = mailFolder.getOffice365Id();
-      office365Service.syncMails(
-          officeAccount, accessToken, mailFolderOfficeId, mailFolder, emails);
+      office365Service.syncMails(emailAccount, accessToken, mailFolderOfficeId, mailFolder, emails);
 
       int totalChild = (int) childMailFolderJsonObject.getOrDefault("childFolderCount", 0);
       if (totalChild > 0) {
         syncChildMailFolder(
-            mailFolder.getOffice365Id(), officeAccount, accessToken, queryParams, emails);
+            mailFolder.getOffice365Id(), emailAccount, accessToken, queryParams, emails);
       }
     }
   }
 
   @SuppressWarnings("unchecked")
-  private MailFolder createMailFolder(JSONObject jsonObject, OfficeAccount officeAccount) {
+  private MailFolder createMailFolder(JSONObject jsonObject, EmailAccount emailAccount) {
 
     if (jsonObject == null) {
       return null;
@@ -180,7 +181,7 @@ public class Office365MailService {
       if (mailFolder == null) {
         mailFolder = new MailFolder();
         mailFolder.setOffice365Id(officeMailFolderId);
-        mailFolder.setOfficeAccount(officeAccount);
+        mailFolder.setEmailAccount(emailAccount);
       }
 
       mailFolder.setName(office365Service.processJsonValue("displayName", jsonObject));
@@ -203,8 +204,7 @@ public class Office365MailService {
   @Transactional
   public void createMessage(
       JSONObject jsonObject,
-      OfficeAccount officeAccount,
-      LocalDateTime lastSyncOn,
+      EmailAccount emailAccount,
       MailFolder mailFolder,
       String accessToken,
       List<String> emails) {
@@ -216,15 +216,16 @@ public class Office365MailService {
         return;
       }
 
+      LocalDateTime lastSyncOn = emailAccount.getLastMailSyncOn();
       String officeId = office365Service.processJsonValue("id", jsonObject);
       String messageId = office365Service.processJsonValue("internetMessageId", jsonObject);
       Message message = messageRepo.findByMessageId(messageId);
       if (message == null) {
         message = new Message();
         message.setMessageId(messageId);
-        message.addOfficeAccountSetItem(officeAccount);
+        message.addEmailAccountSetItem(emailAccount);
       } else {
-        message.addOfficeAccountSetItem(officeAccount);
+        message.addEmailAccountSetItem(emailAccount);
         manageOfficeMail(officeId, message, mailFolder);
         if (!office365Service.needUpdation(
             jsonObject, lastSyncOn, message.getCreatedOn(), message.getUpdatedOn())) {
@@ -259,11 +260,12 @@ public class Office365MailService {
       JSONObject fromJsonObj = this.getJSONObject(jsonObject, "from");
       message.setFromEmailAddress(getEmailAddress(fromJsonObj));
 
+      message.setMailAccount(manageMailAccount(fromJsonObj, message));
       message.setToEmailAddressSet(getEmailAddressSet(jsonObject, "toRecipients"));
       message.setReplyToEmailAddressSet(getEmailAddressSet(jsonObject, "replyTo"));
       message.setCcEmailAddressSet(getEmailAddressSet(jsonObject, "ccRecipients"));
       message.setBccEmailAddressSet(getEmailAddressSet(jsonObject, "bccRecipients"));
-      setSender(jsonObject, message, officeAccount.getOwnerUser());
+      setSender(jsonObject, message, emailAccount.getOwnerUser());
       messageRepo.save(message);
 
       messageBaseService.manageRelatedTo(message);
@@ -316,19 +318,15 @@ public class Office365MailService {
     message.addOfficeMailListItem(officeMail);
   }
 
-  public void createOffice365Mail(
-      Message message, OfficeAccount officeAccount, String accessToken, List<String> emails) {
+  public String createOffice365Mail(
+      Message message, EmailAccount emailAccount, String accessToken) {
 
     try {
-      if (!isEmailIncluded(message, emails)) {
-        return;
-      }
-
       String mailFolderOfficeId = null;
       MailFolder mailFolder = null;
       if (MAIL_FOLDER_MAP.containsKey(message.getStatusSelect())) {
         String folderName = I18n.get(MAIL_FOLDER_MAP.get(message.getStatusSelect()));
-        mailFolder = mailFolderRepo.findByName(folderName, officeAccount);
+        mailFolder = mailFolderRepo.findByName(folderName, emailAccount);
         if (mailFolder != null) {
           mailFolderOfficeId = mailFolder.getOffice365Id();
         }
@@ -348,16 +346,20 @@ public class Office365MailService {
               url, messageJsonObject, accessToken, null, "messages", "mail");
 
       manageOfficeMail(office365Id, message, mailFolder);
-      message.addOfficeAccountSetItem(officeAccount);
+      message.addEmailAccountSetItem(emailAccount);
       manageMessageAttachment(message.getId(), office365Id, accessToken);
+      Beans.get(MessageBaseService.class).manageRelatedTo(message);
       messageRepo.save(message);
 
+      return office365Id;
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
+
+    return null;
   }
 
-  private boolean isEmailIncluded(Message message, List<String> emails) {
+  public boolean isEmailIncluded(Message message, List<String> emails) {
 
     if (message.getFromEmailAddress() != null
         && emails.contains(message.getFromEmailAddress().getAddress())) {
@@ -575,6 +577,26 @@ public class Office365MailService {
     message.setSenderUser(user);
   }
 
+  private EmailAccount manageMailAccount(JSONObject fromJsonObj, Message message) {
+
+    if (message.getMailAccount() != null) {
+      return message.getMailAccount();
+    }
+
+    EmailAccount emailAccount = null;
+    try {
+      String email = getEmailAdd(fromJsonObj);
+      emailAccount =
+          Beans.get(EmailAccountRepository.class)
+              .all()
+              .filter("self.login = :email")
+              .bind("email", email)
+              .fetchOne();
+    } catch (Exception e) {
+    }
+    return emailAccount;
+  }
+
   @SuppressWarnings("unchecked")
   private void manageAttachments(
       JSONObject jsonObject,
@@ -667,9 +689,14 @@ public class Office365MailService {
 
     if (mailObj != null) {
       try {
-        String messageId = mailObj.get("internetMessageId").toString();
-        Message message = messageRepo.findByMessageId(messageId);
+        String messageId;
+        if (mailObj.containsKey("internetMessageId")) {
+          messageId = mailObj.get("internetMessageId").toString();
+        } else {
+          messageId = mailObj.get("id").toString();
+        }
 
+        Message message = messageRepo.findByMessageId(messageId);
         if (message == null) {
           message = new Message();
           message.setMessageId(messageId);
@@ -690,6 +717,7 @@ public class Office365MailService {
 
         Map<String, Object> fromMap = (Map<String, Object>) mailObj.get("from");
         message.setFromEmailAddress(getMessageEmailAddress(fromMap));
+        message.setMailAccount(getMailAccount());
 
         message.setToEmailAddressSet(getMessageEmailAddressSet(mailObj, "toRecipients"));
         message.setReplyToEmailAddressSet(getMessageEmailAddressSet(mailObj, "replyTo"));
@@ -723,6 +751,23 @@ public class Office365MailService {
         TraceBackService.trace(e);
       }
     }
+  }
+
+  private EmailAccount getMailAccount() {
+
+    User user = Beans.get(UserService.class).getUser();
+    if (user.getEmailAccount() != null) {
+      return user.getEmailAccount();
+    }
+
+    if (ObjectUtils.notEmpty(user.getEmailAccountList())) {
+      return user.getEmailAccountList().get(0);
+    }
+
+    return Beans.get(EmailAccountRepository.class)
+        .all()
+        .filter("self.isDefault = true AND self.isValid = true")
+        .fetchOne();
   }
 
   @Transactional

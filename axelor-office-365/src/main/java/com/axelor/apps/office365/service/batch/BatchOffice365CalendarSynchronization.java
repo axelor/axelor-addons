@@ -38,8 +38,7 @@ public class BatchOffice365CalendarSynchronization extends BatchCalendarSynchron
         batch.getBaseBatch().getCalendarList().stream()
             .filter(
                 calendar ->
-                    calendar.getOfficeAccount() != null
-                        && calendar.getOfficeAccount().getIsAuthorized())
+                    calendar.getEmailAccount() != null && calendar.getEmailAccount().getIsValid())
             .collect(Collectors.toList());
 
     for (ICalendar calendar : calendars) {

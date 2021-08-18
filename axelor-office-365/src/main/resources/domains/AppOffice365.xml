@@ -14,7 +14,7 @@
 		<boolean name="manageMessageRelatedTo"/>
 		<boolean name="exportMail"/>
 
-		<many-to-many name="officeAccountSet" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts"/>
+		<many-to-many name="emailAccountSet" ref="com.axelor.apps.message.db.EmailAccount" title="Office accounts"/>
 		<one-to-many name="emailLinkList" ref="com.axelor.apps.base.db.ModelEmailLink" title="Email links"/>
 
 	</entity>

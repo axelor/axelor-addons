@@ -11,9 +11,10 @@
 		title="Office365 accounts" action="office365.account" order="1"/>
 
 	<action-view name="office365.account"
-		title="Office account" model="com.axelor.apps.office.db.OfficeAccount">
-		<view type="grid" name="office-account-grid" />
-		<view type="form" name="office-account-form" />
+		title="Office account" model="com.axelor.apps.message.db.EmailAccount">
+		<view type="grid" name="office-mail-account-grid" />
+		<view type="form" name="office-mail-account-form" />
+		<domain>self.serverTypeSelect = 4</domain>
 	</action-view>
 
 	<menuitem name="office365-contact" parent="office365-root"

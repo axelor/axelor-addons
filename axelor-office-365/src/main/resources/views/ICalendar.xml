@@ -26,7 +26,7 @@
 		</extend>
 		<extend target="//field[@name='typeSelect']">
 			<insert position="after">
-				<field name="officeAccount" showIf="typeSelect == 8"/>
+				<field name="emailAccount" showIf="typeSelect == 8" domain="self.serverTypeSelect = 4" form-view="office-mail-account-form" grid-view="office-mail-account-grid"/>
 			</insert>
 		</extend>
 		<extend target="//panel-tabs[@name='mainPanelTab']/*[last()]">

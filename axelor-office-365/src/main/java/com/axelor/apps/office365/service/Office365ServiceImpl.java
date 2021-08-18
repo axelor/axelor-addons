@@ -26,15 +26,16 @@ import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.db.repo.ICalendarRepository;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.user.UserService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
 import com.axelor.apps.office.db.ContactFolder;
 import com.axelor.apps.office.db.MailFolder;
 import com.axelor.apps.office.db.Office365Token;
-import com.axelor.apps.office.db.OfficeAccount;
+import com.axelor.apps.office.db.repo.MailFolderRepository;
 import com.axelor.apps.office.db.repo.Office365TokenRepository;
-import com.axelor.apps.office.db.repo.OfficeAccountRepository;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.apps.tool.QueryBuilder;
 import com.axelor.auth.db.User;
@@ -82,7 +83,7 @@ public class Office365ServiceImpl implements Office365Service {
   @Inject Office365MailService mailService;
 
   @Inject AppOffice365Repository appOffice365Repo;
-  @Inject OfficeAccountRepository officeAccountRepo;
+  @Inject EmailAccountRepository emailAccountRepo;
   @Inject UserRepository userRepo;
   @Inject ICalendarRepository iCalendarRepo;
 
@@ -272,7 +273,7 @@ public class Office365ServiceImpl implements Office365Service {
 
   @Transactional
   @Override
-  public String getAccessTocken(OfficeAccount officeAccount) throws AxelorException {
+  public String getAccessTocken(EmailAccount emailAccount) throws AxelorException {
 
     try {
       AppOffice365 appOffice365 = appOffice365Repo.all().fetchOne();
@@ -283,15 +284,15 @@ public class Office365ServiceImpl implements Office365Service {
               .defaultScope(Office365Service.SCOPE)
               .build(MicrosoftAzureActiveDirectory20Api.instance());
       OAuth2AccessToken accessToken;
-      if (StringUtils.isBlank(officeAccount.getRefreshToken())) {
+      if (StringUtils.isBlank(emailAccount.getRefreshToken())) {
         throw new AxelorException(
             AppOffice365.class,
             TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
             I18n.get(ITranslation.OFFICE365_TOKEN_ERROR));
       }
 
-      accessToken = authService.refreshAccessToken(officeAccount.getRefreshToken());
-      officeAccount.setRefreshToken(accessToken.getRefreshToken());
+      accessToken = authService.refreshAccessToken(emailAccount.getRefreshToken());
+      emailAccount.setRefreshToken(accessToken.getRefreshToken());
       appOffice365Repo.save(appOffice365);
 
       Office365Service.LOG.debug(I18n.get(ITranslation.OFFICE365_ACCESS_TOKEN_SUCESS));
@@ -436,19 +437,18 @@ public class Office365ServiceImpl implements Office365Service {
   }
 
   @Transactional
-  public void syncContact(OfficeAccount officeAccount)
-      throws AxelorException, MalformedURLException {
+  public void syncContact(EmailAccount emailAccount) throws AxelorException, MalformedURLException {
 
     LocalDateTime start = Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime();
-    String accessToken = getAccessTocken(officeAccount);
+    String accessToken = getAccessTocken(emailAccount);
     List<Long> removedContactIdList = new ArrayList<>();
-    contactService.syncContactFolders(officeAccount, accessToken, removedContactIdList);
+    contactService.syncContactFolders(emailAccount, accessToken, removedContactIdList);
 
     String queryStr = query;
     QueryBuilder<Partner> partnerQuery = QueryBuilder.of(Partner.class);
-    if (officeAccount.getLastContactSyncOn() != null) {
+    if (emailAccount.getLastContactSyncOn() != null) {
       queryStr = lastSyncQuery;
-      partnerQuery = partnerQuery.bind("lastSync", officeAccount.getLastContactSyncOn());
+      partnerQuery = partnerQuery.bind("lastSync", emailAccount.getLastContactSyncOn());
     }
     if (ObjectUtils.notEmpty(removedContactIdList)) {
       queryStr += " AND self.id NOT IN :removedIds";
@@ -458,21 +458,20 @@ public class Office365ServiceImpl implements Office365Service {
     List<Partner> partnerList =
         partnerQuery
             .add(queryStr)
-            .add(
-                "(self.officeAccount = :officeAccount OR self.user.officeAccount = :officeAccount)")
+            .add("(self.emailAccount = :emailAccount OR self.user.emailAccount = :emailAccount)")
             .bind("start", start)
-            .bind("officeAccount", officeAccount)
+            .bind("emailAccount", emailAccount)
             .build()
             .fetch();
     if (ObjectUtils.notEmpty(partnerList)) {
       for (Partner partner : partnerList) {
-        contactService.createOffice365Contact(partner, officeAccount, accessToken);
+        contactService.createOffice365Contact(partner, emailAccount, accessToken);
       }
     }
 
-    officeAccount.setLastContactSyncOn(
+    emailAccount.setLastContactSyncOn(
         Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime());
-    officeAccountRepo.save(officeAccount);
+    emailAccountRepo.save(emailAccount);
 
     Office365Service.LOG.debug(I18n.get(ITranslation.OFFICE365_CONTACT_SYNC));
   }
@@ -491,9 +490,11 @@ public class Office365ServiceImpl implements Office365Service {
               contactFolder.getContactDeltaToken(),
               null,
               null);
+      int totalFetchRecords = jsonArray != null ? jsonArray.size() : 0;
       contactFolder.setContactDeltaToken(deltaToken);
       contactFolder.addTokenListItem(
-          manageDeltaToken(deltaToken, Office365TokenRepository.FOLDER_TYPE_CONTACT));
+          manageDeltaToken(
+              deltaToken, Office365TokenRepository.FOLDER_TYPE_CONTACT, totalFetchRecords));
     } else {
       jsonArray = fetchData(Office365Service.CONTACT_URL, accessToken, true, null, "contacts");
     }
@@ -514,20 +515,20 @@ public class Office365ServiceImpl implements Office365Service {
   }
 
   @Transactional
-  public void syncCalendar(OfficeAccount officeAccount)
+  public void syncCalendar(EmailAccount emailAccount)
       throws AxelorException, MalformedURLException {
 
     LocalDateTime start = Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime();
-    String accessToken = getAccessTocken(officeAccount);
+    String accessToken = getAccessTocken(emailAccount);
     List<Long> removedEventIdList = new ArrayList<>();
-    calendarService.syncOfficeCalendar(officeAccount, accessToken, removedEventIdList, start);
-    calendarService.syncCalendar(officeAccount, accessToken, removedEventIdList, start);
+    calendarService.syncOfficeCalendar(emailAccount, accessToken, removedEventIdList, start);
+    calendarService.syncCalendar(emailAccount, accessToken, removedEventIdList, start);
 
     LocalDateTime end = Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime();
     long syncDuration = Duration.between(start, end).toNanos();
-    officeAccount.setLastCalendarSyncOn(end);
-    officeAccount.setCalendarSyncDuration(syncDuration);
-    officeAccountRepo.save(officeAccount);
+    emailAccount.setLastCalendarSyncOn(end);
+    emailAccount.setCalendarSyncDuration(syncDuration);
+    emailAccountRepo.save(emailAccount);
     Office365Service.LOG.debug(I18n.get(ITranslation.OFFICE365_CALENDAR_SYNC));
   }
 
@@ -535,13 +536,13 @@ public class Office365ServiceImpl implements Office365Service {
   @Override
   public void syncCalendar(ICalendar calendar) throws AxelorException, MalformedURLException {
 
-    OfficeAccount officeAccount = calendar.getOfficeAccount();
-    if (officeAccount == null) {
+    EmailAccount emailAccount = calendar.getEmailAccount();
+    if (emailAccount == null) {
       return;
     }
 
     LocalDateTime start = Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime();
-    String accessToken = getAccessTocken(calendar.getOfficeAccount());
+    String accessToken = getAccessTocken(calendar.getEmailAccount());
 
     List<Long> removedEventIdList = new ArrayList<>();
     if (StringUtils.isNotBlank(calendar.getOffice365Id())) {
@@ -554,40 +555,31 @@ public class Office365ServiceImpl implements Office365Service {
               "calendars");
       if (calendarArray != null) {
         JSONObject calendarJsonObj = (JSONObject) calendarArray.get(0);
-        calendar =
-            calendarService.createCalendar(
-                calendarJsonObj, officeAccount, officeAccount.getLastCalendarSyncOn());
-        syncEvent(
-            calendar,
-            officeAccount,
-            accessToken,
-            officeAccount.getLastCalendarSyncOn(),
-            start,
-            removedEventIdList);
+        calendar = calendarService.createCalendar(calendarJsonObj, emailAccount);
+        syncEvent(calendar, emailAccount, accessToken, start, removedEventIdList);
       }
     } else {
-      calendarService.createOffice365Calendar(calendar, officeAccount, accessToken);
+      calendarService.createOffice365Calendar(calendar, emailAccount, accessToken);
     }
 
     User currentUser = Beans.get(UserService.class).getUser();
     calendarService.syncOffice365Event(
-        calendar, officeAccount, currentUser, accessToken, start, removedEventIdList);
+        calendar, emailAccount, currentUser, accessToken, start, removedEventIdList);
 
     LocalDateTime lastSync = Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime();
     calendar.setLastSynchronizationDateT(lastSync);
     iCalendarRepo.save(calendar);
 
-    officeAccount.setLastCalendarSyncOn(lastSync);
-    officeAccountRepo.save(officeAccount);
+    emailAccount.setLastCalendarSyncOn(lastSync);
+    emailAccountRepo.save(emailAccount);
     Office365Service.LOG.debug(I18n.get(ITranslation.OFFICE365_CALENDAR_SYNC));
   }
 
   @Override
   public void syncEvent(
       ICalendar iCalendar,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
-      LocalDateTime lastSyncOn,
       LocalDateTime now,
       List<Long> removedEventIdList)
       throws MalformedURLException {
@@ -599,6 +591,7 @@ public class Office365ServiceImpl implements Office365Service {
       return;
     }
 
+    LocalDateTime lastSyncOn = emailAccount.getLastCalendarSyncOn();
     LocalDateTime startDate = null, endDate = null;
     String calendarViewDeltaToken = iCalendar.getCalendarViewDeltaToken();
     if (StringUtils.isBlank(calendarViewDeltaToken)) {
@@ -615,11 +608,12 @@ public class Office365ServiceImpl implements Office365Service {
     JSONArray eventArray =
         fetchIncrementalData(
             eventUrl, accessToken, "events", calendarViewDeltaToken, startDate, endDate);
-
+    int totalFetchRecords = eventArray != null ? eventArray.size() : 0;
     if (StringUtils.isNotBlank(this.deltaToken)) {
       iCalendar.setCalendarViewDeltaToken(this.deltaToken);
       iCalendar.addTokenListItem(
-          manageDeltaToken(deltaToken, Office365TokenRepository.FOLDER_TYPE_CALENDAR));
+          manageDeltaToken(
+              deltaToken, Office365TokenRepository.FOLDER_TYPE_CALENDAR, totalFetchRecords));
     }
     if (eventArray == null) {
       return;
@@ -636,7 +630,7 @@ public class Office365ServiceImpl implements Office365Service {
           recurrenceObjectList.add(jsonObject);
           continue;
         }
-        calendarService.createEvent(jsonObject, officeAccount, iCalendar, lastSyncOn, now);
+        calendarService.createEvent(jsonObject, emailAccount, iCalendar, lastSyncOn, now);
       }
     }
     for (JSONObject jsonObject : recurrenceObjectList) {
@@ -645,43 +639,46 @@ public class Office365ServiceImpl implements Office365Service {
   }
 
   @Transactional
-  public void syncMail(OfficeAccount officeAccount, String urlStr)
+  public void syncMail(EmailAccount emailAccount, String urlStr)
       throws AxelorException, MalformedURLException {
 
     LocalDateTime start = Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime();
-    String accessToken = getAccessTocken(officeAccount);
+    String accessToken = getAccessTocken(emailAccount);
     List<String> emails = getConfiguredModelEmails();
-    mailService.syncMailFolder(officeAccount, accessToken, emails);
+    mailService.syncMailFolder(emailAccount, accessToken, emails);
 
     if (appOffice365Repo.all().fetchOne().getExportMail()) {
       List<Message> messageList =
           Beans.get(MessageRepository.class)
               .all()
               .filter(
-                  "(:officeAccount MEMBER OF self.officeAccountSet OR self.senderUser.officeAccount = :officeAccount) AND "
+                  "(:emailAccount MEMBER OF self.emailAccountSet OR self.senderUser.emailAccount = :emailAccount) AND "
                       + "self.statusSelect != :statusDraft AND self.mediaTypeSelect = :mediaTypeSelect AND self.createdOn < :start AND "
-                      + "self NOT IN (SELECT officeMail.message FROM OfficeMail officeMail WHERE officeMail.mailFolder.officeAccount = :officeAccount)")
-              .bind("officeAccount", officeAccount)
+                      + "self NOT IN (SELECT officeMail.message FROM OfficeMail officeMail WHERE officeMail.mailFolder.emailAccount = :emailAccount)")
+              .bind("emailAccount", emailAccount)
               .bind("statusDraft", MessageRepository.STATUS_DRAFT)
               .bind("mediaTypeSelect", MessageRepository.MEDIA_TYPE_EMAIL)
               .bind("start", start)
               .fetch();
       if (ObjectUtils.notEmpty(messageList)) {
         for (Message message : messageList) {
-          mailService.createOffice365Mail(message, officeAccount, accessToken, emails);
+          if (!mailService.isEmailIncluded(message, emails)) {
+            continue;
+          }
+          mailService.createOffice365Mail(message, emailAccount, accessToken);
         }
       }
     }
 
-    officeAccount.setLastMailSyncOn(
+    emailAccount.setLastMailSyncOn(
         Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime());
-    officeAccountRepo.save(officeAccount);
+    emailAccountRepo.save(emailAccount);
 
     Office365Service.LOG.debug(I18n.get(ITranslation.OFFICE365_MAIL_SYNC));
   }
 
   public void syncMails(
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       String parentFolderId,
       MailFolder mailFolder,
@@ -695,9 +692,10 @@ public class Office365ServiceImpl implements Office365Service {
             mailFolder.getMessageDeltaToken(),
             null,
             null);
+    int totalFetchRecords = jsonArray != null ? jsonArray.size() : 0;
     mailFolder.setMessageDeltaToken(deltaToken);
     mailFolder.addTokenListItem(
-        manageDeltaToken(deltaToken, Office365TokenRepository.FOLDER_TYPE_MAIL));
+        manageDeltaToken(deltaToken, Office365TokenRepository.FOLDER_TYPE_MAIL, totalFetchRecords));
 
     if (jsonArray == null) {
       return;
@@ -709,22 +707,18 @@ public class Office365ServiceImpl implements Office365Service {
       if (jsonObject.containsKey("@removed")) {
         continue;
       } else {
-        mailService.createMessage(
-            jsonObject,
-            officeAccount,
-            officeAccount.getLastMailSyncOn(),
-            mailFolder,
-            accessToken,
-            emails);
+        mailService.createMessage(jsonObject, emailAccount, mailFolder, accessToken, emails);
       }
     }
   }
 
-  protected Office365Token manageDeltaToken(String token, int folderTypeSelect) {
+  protected Office365Token manageDeltaToken(
+      String token, int folderTypeSelect, int totalFetchRecords) {
 
     Office365Token office365Token = new Office365Token();
     office365Token.setToken(token);
     office365Token.setFolderTypeSelect(folderTypeSelect);
+    office365Token.setTotalFetchRecords(totalFetchRecords);
     office365Token.setFetchOn(Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime());
     return Beans.get(Office365TokenRepository.class).save(office365Token);
   }
@@ -739,13 +733,13 @@ public class Office365ServiceImpl implements Office365Service {
     if (user == null) {
       return;
     }
-    OfficeAccount officeAccount = user.getOfficeAccount();
+    EmailAccount emailAccount = user.getEmailAccount();
 
     if (ObjectUtils.notEmpty(emailIds)) {
       for (String emailId : emailIds) {
         try {
           this.createUserMail(
-              officeAccount,
+              emailAccount,
               String.format(Office365Service.MAIL_ID_URL, emailAddress.getAddress(), emailId));
         } catch (MalformedURLException | AxelorException e) {
           TraceBackService.trace(e);
@@ -756,10 +750,10 @@ public class Office365ServiceImpl implements Office365Service {
 
     try {
 
-      if (officeAccount != null) {
+      if (emailAccount != null) {
         Beans.get(Office365Service.class)
             .syncMail(
-                officeAccount,
+                emailAccount,
                 String.format(Office365Service.MAIL_USER_URL, emailAddress.getAddress()));
       }
     } catch (MalformedURLException | AxelorException e) {
@@ -767,21 +761,20 @@ public class Office365ServiceImpl implements Office365Service {
     }
   }
 
-  protected void createUserMail(OfficeAccount officeAccount, String urlStr)
+  protected void createUserMail(EmailAccount emailAccount, String urlStr)
       throws AxelorException, MalformedURLException {
 
-    if (officeAccount == null) {
+    if (emailAccount == null) {
       return;
     }
 
     List<String> emails = getConfiguredModelEmails();
-    String accessToken = getAccessTocken(officeAccount);
+    String accessToken = getAccessTocken(emailAccount);
     JSONArray jsonArr = fetchData(urlStr, accessToken, false, null, "user");
     if (jsonArr.isEmpty()) {
       return;
     }
-    mailService.createMessage(
-        (JSONObject) jsonArr.get(0), officeAccount, null, null, accessToken, emails);
+    mailService.createMessage((JSONObject) jsonArr.get(0), emailAccount, null, accessToken, emails);
   }
 
   protected List<String> getConfiguredModelEmails() {
@@ -804,5 +797,85 @@ public class Office365ServiceImpl implements Office365Service {
     }
 
     return emails;
+  }
+
+  @Transactional
+  public Message sendOffice365Mail(Message message) {
+
+    try {
+      String mailFolderName = I18n.get(ITranslation.OFFICE_MAIL_FOLDER_DRAFTS);
+      MailFolder mailFolder =
+          Beans.get(MailFolderRepository.class)
+              .findByName(mailFolderName, message.getMailAccount());
+      if (mailFolder == null) {
+        mailFolder = new MailFolder();
+        mailFolder.setName(mailFolderName);
+        mailFolder.setEmailAccount(message.getMailAccount());
+        Beans.get(MailFolderRepository.class).save(mailFolder);
+      }
+
+      String accessToken = getAccessTocken(message.getMailAccount());
+      String office365Id =
+          mailService.createOffice365Mail(message, message.getMailAccount(), accessToken);
+      if (StringUtils.isBlank(office365Id)) {
+        return message;
+      }
+
+      URL url = new URL(String.format(Office365Service.MAIL_SEND_URL, office365Id));
+      RequestBody body = RequestBody.create("", MediaType.parse("application/json; charset=utf-8"));
+      Builder builder =
+          new Request.Builder().url(url).addHeader("Authorization", accessToken).post(body);
+      Response response = executeAction(builder);
+      if (response.isSuccessful()) {
+        manageSentMessage(message, accessToken, office365Id);
+      } else {
+        TraceBackService.trace(
+            new AxelorException(
+                TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+                String.format(
+                    I18n.get(ITranslation.OFFICE365_MAIL_SEND_FAILURE),
+                    message,
+                    response.code(),
+                    response.message(),
+                    response.body().string())));
+      }
+    } catch (Exception e) {
+      TraceBackService.trace(e);
+    }
+
+    return message;
+  }
+
+  protected void manageSentMessage(Message message, String accessToken, String office365Id) {
+
+    try {
+      message.setStatusSelect(MessageRepository.STATUS_SENT);
+      Office365Service.LOG.debug(
+          String.format(I18n.get(ITranslation.OFFICE365_MAIL_SEND_SUCESS), message));
+
+      String mailFolderName = I18n.get(ITranslation.OFFICE_MAIL_FOLDER_SENT_ITEMS);
+      String urlStr;
+      MailFolder mailFolder =
+          Beans.get(MailFolderRepository.class)
+              .findByName(mailFolderName, message.getMailAccount());
+      if (mailFolder != null && StringUtils.isNotBlank(mailFolder.getOffice365Id())) {
+        urlStr =
+            String.format(
+                "%s/%s/messages/%s",
+                Office365Service.MAIL_FOLDER_URL, mailFolder.getOffice365Id(), office365Id);
+      } else {
+        urlStr = String.format("%s/%s", Office365Service.MAIL_URL, office365Id);
+      }
+
+      JSONArray jsonArr = fetchData(urlStr, accessToken, false, null, "mails");
+      if (!jsonArr.isEmpty()) {
+        JSONObject jsonObject = (JSONObject) jsonArr.get(0);
+        String messageId = processJsonValue("internetMessageId", jsonObject);
+        message.setMessageId(messageId);
+      }
+      Beans.get(MessageRepository.class).save(message);
+    } catch (Exception e) {
+      TraceBackService.trace(e);
+    }
   }
 }

@@ -28,10 +28,10 @@ import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.base.db.repo.PartnerAddressRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.PartnerService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.office.db.ContactFolder;
-import com.axelor.apps.office.db.OfficeAccount;
 import com.axelor.apps.office.db.repo.ContactFolderRepository;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.auth.db.User;
@@ -67,7 +67,7 @@ public class Office365ContactService {
 
   @SuppressWarnings("unchecked")
   public void syncContactFolders(
-      OfficeAccount officeAccount, String accessToken, List<Long> removedContactIdList) {
+      EmailAccount emailAccount, String accessToken, List<Long> removedContactIdList) {
 
     JSONArray contactFolderJsonArray =
         office365Service.fetchData(
@@ -79,7 +79,7 @@ public class Office365ContactService {
     if (contactFolderJsonArray != null) {
       for (Object contactFolderObject : contactFolderJsonArray) {
         JSONObject contactFolderJsonObject = (JSONObject) contactFolderObject;
-        ContactFolder contactFolder = createContactFolder(contactFolderJsonObject, officeAccount);
+        ContactFolder contactFolder = createContactFolder(contactFolderJsonObject, emailAccount);
         String contactFolderOfficeId = contactFolder.getOffice365Id();
         if (contactFolder == null || StringUtils.isBlank(contactFolderOfficeId)) {
           continue;
@@ -97,7 +97,7 @@ public class Office365ContactService {
         if (totalChild > 0) {
           syncChildContactFolders(
               contactFolderOfficeId,
-              officeAccount,
+              emailAccount,
               accessToken,
               contactFolderIdList,
               removedContactIdList);
@@ -106,14 +106,14 @@ public class Office365ContactService {
     }
 
     manageDefaultContactFolder(
-        officeAccount, defaultContactFolderOfficeId, accessToken, removedContactIdList);
-    removeContactFolder(officeAccount, contactFolderIdList, removedContactIdList);
+        emailAccount, defaultContactFolderOfficeId, accessToken, removedContactIdList);
+    removeContactFolder(emailAccount, contactFolderIdList, removedContactIdList);
   }
 
   @SuppressWarnings("unchecked")
   private void syncChildContactFolders(
       String parentFolderId,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       List<Long> contactFolderIdList,
       List<Long> removedContactIdList) {
@@ -131,8 +131,7 @@ public class Office365ContactService {
 
     for (Object childContactFolderObject : childContactFolderJsonArray) {
       JSONObject childContactFolderJsonObject = (JSONObject) childContactFolderObject;
-      ContactFolder contactFolder =
-          createContactFolder(childContactFolderJsonObject, officeAccount);
+      ContactFolder contactFolder = createContactFolder(childContactFolderJsonObject, emailAccount);
       if (contactFolder == null || StringUtils.isBlank(contactFolder.getOffice365Id())) {
         continue;
       }
@@ -144,7 +143,7 @@ public class Office365ContactService {
       if (totalChild > 0) {
         syncChildContactFolders(
             contactFolder.getOffice365Id(),
-            officeAccount,
+            emailAccount,
             accessToken,
             contactFolderIdList,
             removedContactIdList);
@@ -152,7 +151,7 @@ public class Office365ContactService {
     }
   }
 
-  private ContactFolder createContactFolder(JSONObject jsonObject, OfficeAccount officeAccount) {
+  private ContactFolder createContactFolder(JSONObject jsonObject, EmailAccount emailAccount) {
 
     if (jsonObject == null) {
       return null;
@@ -163,7 +162,7 @@ public class Office365ContactService {
     if (contactFolder == null) {
       contactFolder = new ContactFolder();
       contactFolder.setOffice365Id(officeContactFolderId);
-      contactFolder.setOfficeAccount(officeAccount);
+      contactFolder.setEmailAccount(emailAccount);
     }
 
     contactFolder.setName(office365Service.processJsonValue("displayName", jsonObject));
@@ -181,7 +180,7 @@ public class Office365ContactService {
   }
 
   private void manageDefaultContactFolder(
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String officeId,
       String accessToken,
       List<Long> removedContactIdList) {
@@ -194,11 +193,11 @@ public class Office365ContactService {
     if (contactFolder == null) {
       contactFolder =
           contactFolderRepo.findByName(
-              I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER), officeAccount);
+              I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER), emailAccount);
       if (contactFolder == null) {
         contactFolder = new ContactFolder();
         contactFolder.setOffice365Id(officeId);
-        contactFolder.setOfficeAccount(officeAccount);
+        contactFolder.setEmailAccount(emailAccount);
         contactFolder.setName(I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER));
         contactFolderRepo.save(contactFolder);
         Office365Service.LOG.debug(
@@ -213,17 +212,15 @@ public class Office365ContactService {
   }
 
   private void removeContactFolder(
-      OfficeAccount officeAccount,
-      List<Long> contactFolderIdList,
-      List<Long> removedContactIdList) {
+      EmailAccount emailAccount, List<Long> contactFolderIdList, List<Long> removedContactIdList) {
 
     Query<ContactFolder> contactFolderQuery =
         contactFolderRepo
             .all()
-            .bind("officeAccount", officeAccount)
+            .bind("emailAccount", emailAccount)
             .bind("defaultName", I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER));
     String queryStr =
-        "self.office365Id IS NOT NULL AND self.officeAccount = :officeAccount AND self.name != :defaultName";
+        "self.office365Id IS NOT NULL AND self.emailAccount = :emailAccount AND self.name != :defaultName";
     if (ObjectUtils.notEmpty(contactFolderIdList)) {
       contactFolderQuery =
           contactFolderQuery
@@ -258,24 +255,24 @@ public class Office365ContactService {
     try {
       String officeContactId = office365Service.processJsonValue("id", jsonObject);
       Partner partner = partnerRepo.findByOffice365Id(officeContactId);
-      OfficeAccount officeAccount = contactFolder.getOfficeAccount();
+      EmailAccount emailAccount = contactFolder.getEmailAccount();
       if (partner == null) {
         partner = new Partner();
         partner.setOffice365Id(officeContactId);
-        partner.setOfficeAccount(officeAccount);
+        partner.setEmailAccount(emailAccount);
         partner.setIsContact(true);
         partner.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_INDIVIDUAL);
 
       } else if (!office365Service.needUpdation(
           jsonObject,
-          contactFolder.getOfficeAccount().getLastContactSyncOn(),
+          contactFolder.getEmailAccount().getLastContactSyncOn(),
           partner.getCreatedOn(),
           partner.getUpdatedOn())) {
         return partner;
       }
 
       setPartnerValues(
-          partner, jsonObject, officeAccount.getOwnerUser(), officeAccount, contactFolder);
+          partner, jsonObject, emailAccount.getOwnerUser(), emailAccount, contactFolder);
       Office365Service.LOG.debug(
           String.format(
               I18n.get(ITranslation.OFFICE365_OBJECT_SYNC_SUCESS), "contact", partner.toString()));
@@ -290,12 +287,12 @@ public class Office365ContactService {
       Partner partner,
       JSONObject jsonObject,
       User user,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       ContactFolder contactFolder)
       throws JSONException {
 
     managePartnerName(jsonObject, partner);
-    manageCompany(jsonObject, partner, user, officeAccount);
+    manageCompany(jsonObject, partner, user, emailAccount);
 
     partner.setDepartment(office365Service.processJsonValue("department", jsonObject));
     partner.setMobilePhone(office365Service.processJsonValue("mobilePhone", jsonObject));
@@ -310,9 +307,9 @@ public class Office365ContactService {
       contactFolder =
           contactFolderRepo
               .all()
-              .filter("self.name = :name AND self.officeAccount = :officeAccount")
+              .filter("self.name = :name AND self.emailAccount = :emailAccount")
               .bind("name", I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER))
-              .bind("officeAccount", officeAccount)
+              .bind("emailAccount", emailAccount)
               .fetchOne();
       partner.setContactFolder(contactFolder);
     }
@@ -337,7 +334,7 @@ public class Office365ContactService {
 
   @Transactional
   public void createOffice365Contact(
-      Partner partner, OfficeAccount officeAccount, String accessToken) {
+      Partner partner, EmailAccount emailAccount, String accessToken) {
 
     try {
       if (partner.getOffice365Id() != null
@@ -352,7 +349,7 @@ public class Office365ContactService {
       } else {
         ContactFolder defaultFolder =
             contactFolderRepo.findByName(
-                I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER), officeAccount);
+                I18n.get(ITranslation.OFFICE_CONTACT_DEFAULT_FOLDER), emailAccount);
         if (defaultFolder != null) {
           contactFolderOfficeId = defaultFolder.getOffice365Id();
         }
@@ -368,7 +365,7 @@ public class Office365ContactService {
           office365Service.createOffice365Object(
               url, contactJsonObject, accessToken, partner.getOffice365Id(), "contacts", "contact");
       partner.setOffice365Id(office365Id);
-      partner.setOfficeAccount(officeAccount);
+      partner.setEmailAccount(emailAccount);
       partnerRepo.save(partner);
     } catch (Exception e) {
       TraceBackService.trace(e);
@@ -426,7 +423,7 @@ public class Office365ContactService {
   }
 
   private void manageCompany(
-      JSONObject jsonObject, Partner partner, User user, OfficeAccount officeAccount) {
+      JSONObject jsonObject, Partner partner, User user, EmailAccount emailAccount) {
 
     String companyName = office365Service.processJsonValue("companyName", jsonObject);
     String companyOffice365Id = COMPANY_OFFICE_ID_PREFIX + partner.getOffice365Id();
@@ -458,7 +455,7 @@ public class Office365ContactService {
       company = new Partner();
       company.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_COMPANY);
       company.setIsCustomer(true);
-      company.setOfficeAccount(officeAccount);
+      company.setEmailAccount(emailAccount);
     }
 
     company.setOffice365Id(companyOffice365Id);

@@ -22,16 +22,20 @@ import com.axelor.apps.base.db.repo.ICalendarEventManagementRepository;
 import com.axelor.apps.base.db.repo.ICalendarRepository;
 import com.axelor.apps.base.service.batch.BaseBatchService;
 import com.axelor.apps.base.service.batch.BatchCalendarSynchronization;
+import com.axelor.apps.base.service.message.MessageServiceBaseImpl;
 import com.axelor.apps.crm.db.repo.EventManagementRepository;
 import com.axelor.apps.crm.service.CalendarService;
+import com.axelor.apps.message.web.MessageController;
 import com.axelor.apps.office365.db.repo.Office365EventRepository;
 import com.axelor.apps.office365.db.repo.Office365ICalendarEventRepository;
 import com.axelor.apps.office365.db.repo.Office365ICalendarRepository;
+import com.axelor.apps.office365.service.MessageServiceOffice365Impl;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.apps.office365.service.Office365ServiceImpl;
 import com.axelor.apps.office365.service.batch.BatchOffice365CalendarSynchronization;
 import com.axelor.apps.office365.service.batch.Office365BaseBatchService;
 import com.axelor.apps.office365.service.ical.Office365ICalendarService;
+import com.axelor.apps.office365.web.Office365MessageController;
 
 public class Office365Module extends AxelorModule {
 
@@ -41,8 +45,10 @@ public class Office365Module extends AxelorModule {
     bind(BaseBatchService.class).to(Office365BaseBatchService.class);
     bind(BatchCalendarSynchronization.class).to(BatchOffice365CalendarSynchronization.class);
     bind(CalendarService.class).to(Office365ICalendarService.class);
+    bind(MessageServiceBaseImpl.class).to(MessageServiceOffice365Impl.class);
     bind(ICalendarRepository.class).to(Office365ICalendarRepository.class);
     bind(ICalendarEventManagementRepository.class).to(Office365ICalendarEventRepository.class);
     bind(EventManagementRepository.class).to(Office365EventRepository.class);
+    bind(MessageController.class).to(Office365MessageController.class);
   }
 }

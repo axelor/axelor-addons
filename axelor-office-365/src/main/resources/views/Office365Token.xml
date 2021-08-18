@@ -5,12 +5,14 @@
 
 	<grid model="com.axelor.apps.office.db.Office365Token" title="Office tokens" name="office-token-grid">
 		<field name="fetchOn"/>
+		<field name="totalFetchRecords"/>
 		<field name="token"/>
 	</grid>
 
 	<form model="com.axelor.apps.office.db.Office365Token" title="Office token" name="office-token-form">
 		<panel name="mainPanel" readonly="true">
 			<field name="fetchOn"/>
+			<field name="totalFetchRecords"/>
 			<field name="token" colSpan="12"/>
 		</panel>
 	</form>

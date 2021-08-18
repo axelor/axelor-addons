@@ -10,6 +10,7 @@
 		<string name="token" readonly="true" large="true" copy="false"/>
 		<integer name="folderTypeSelect" selection="office365.folder.type.select"/>
 		<datetime name="fetchOn"/>
+		<integer name="totalFetchRecords"/>
 
 		<extra-code>
 			<![CDATA[

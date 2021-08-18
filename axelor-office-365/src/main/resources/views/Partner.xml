@@ -33,15 +33,15 @@
 		</extend>
 		<extend target="//field[@name='companySet']">
 			<insert position="after">
-				<field name="officeAccount" colSpan="12" onSelect="action-office365-attrs-partner-office-account-domain"/>
+				<field name="emailAccount" colSpan="12" onSelect="action-office365-attrs-partner-office-account-domain" form-view="office-mail-account-form" grid-view="office-mail-account-grid"/>
 				<field name="contactFolder" readonly="true"/>
 			</insert>
 		</extend>
 	</form>
 
 	<action-attrs name="action-office365-attrs-partner-office-account-domain">
-		<attribute for="officeAccount" if="user != null" name="domain" expr="eval: &quot;self.id IN (${user?.officeAccountList?.collect{it.id}.join(',')})&quot;"/>
- 		<attribute for="officeAccount" if="user == null" name="domain" expr="self.id IN (0)"/>
+		<attribute for="emailAccount" if="user != null" name="domain" expr="eval: &quot;self.serverTypeSelect = 4 AND self.id IN (${user?.emailAccountList?.collect{it.id}.join(',')})&quot;"/>
+ 		<attribute for="emailAccount" if="user == null" name="domain" expr="self.id IN (0)"/>
 	</action-attrs>
 
 	<action-group name="action-office365-group-partner-onnew">
@@ -51,7 +51,7 @@
 	</action-group>
 
 	<action-record name="action-office365-record-partner-set-office-account" model="com.axelor.apps.base.db.Partner">
-		<field name="officeAccount" expr="eval: user?.officeAccount"/>
+		<field name="emailAccount" expr="eval: user?.emailAccount"/>
 	</action-record>
 
 </object-views>

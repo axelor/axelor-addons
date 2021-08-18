@@ -18,10 +18,11 @@
 package com.axelor.apps.office365.service;
 
 import com.axelor.apps.base.db.ICalendar;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.apps.message.db.Message;
 import com.axelor.apps.office.db.ContactFolder;
 import com.axelor.apps.office.db.MailFolder;
-import com.axelor.apps.office.db.OfficeAccount;
 import com.axelor.auth.db.User;
 import com.axelor.exception.AxelorException;
 import java.lang.invoke.MethodHandles;
@@ -42,7 +43,7 @@ public interface Office365Service {
   static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   static final String SCOPE =
-      "openid offline_access Contacts.ReadWrite Calendars.ReadWrite Mail.ReadWrite";
+      "openid offline_access Contacts.ReadWrite Calendars.ReadWrite Mail.ReadWrite Mail.Send";
 
   static final String GRAPH_URL = "https://graph.microsoft.com/v1.0/";
 
@@ -59,6 +60,7 @@ public interface Office365Service {
   static final String MAIL_CHILD_FOLDER_URL = GRAPH_URL + "me/mailFolders/%s/childFolders";
   static final String FOLDER_MAILS_URL = GRAPH_URL + "me/mailFolders/%s/messages";
   static final String MAIL_URL = GRAPH_URL + "me/messages";
+  static final String MAIL_SEND_URL = GRAPH_URL + "me/messages/%s/send";
   static final String MAIL_ATTACHMENT_URL = GRAPH_URL + "me/messages/%s/attachments";
   static final String MAIL_USER_URL = GRAPH_URL + "users/%s/messages";
   static final String MAIL_ID_URL = GRAPH_URL + "users/%s/messages/%s";
@@ -90,7 +92,7 @@ public interface Office365Service {
   public void deleteOffice365Object(
       String urlStr, String office365Id, String accessToken, String type);
 
-  public String getAccessTocken(OfficeAccount officeAccount) throws AxelorException;
+  public String getAccessTocken(EmailAccount emailAccount) throws AxelorException;
 
   public JSONArray fetchData(
       String urlStr,
@@ -110,35 +112,34 @@ public interface Office365Service {
   public void putUserEmailAddress(User user, JSONObject jsonObject, String key)
       throws JSONException;
 
-  public void syncContact(OfficeAccount officeAccount)
-      throws AxelorException, MalformedURLException;
+  public void syncContact(EmailAccount emailAccount) throws AxelorException, MalformedURLException;
 
   public void syncContacts(
       String accessToken, ContactFolder contactFolder, List<Long> removedContactIdList);
 
-  public void syncCalendar(OfficeAccount officeAccount)
-      throws AxelorException, MalformedURLException;
+  public void syncCalendar(EmailAccount emailAccount) throws AxelorException, MalformedURLException;
 
   public void syncCalendar(ICalendar calendar) throws AxelorException, MalformedURLException;
 
   public void syncEvent(
       ICalendar iCalendar,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
-      LocalDateTime lastSyncOn,
       LocalDateTime now,
       List<Long> removedEventIdList)
       throws MalformedURLException;
 
-  public void syncMail(OfficeAccount officeAccount, String urlStr)
+  public void syncMail(EmailAccount emailAccount, String urlStr)
       throws AxelorException, MalformedURLException;
 
   public void syncMails(
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       String parentFolderId,
       MailFolder mailFolder,
       List<String> emails);
 
   public void syncUserMail(EmailAddress emailAddress, List<String> emailIds);
+
+  public Message sendOffice365Mail(Message message);
 }

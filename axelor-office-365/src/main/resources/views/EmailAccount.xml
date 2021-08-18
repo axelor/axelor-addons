@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+	<grid name="office-mail-account-grid" title="Office365 accounts" model="com.axelor.apps.message.db.EmailAccount">
+		<field name="name" />
+		<field name="ownerUser"/>
+	</grid>
+
+	<form name="office-mail-account-form" title="Office365 account" model="com.axelor.apps.message.db.EmailAccount" onNew="action-office365-record-email-account-onnew">
+		<panel name="mainPanel">
+			<field name="name" required="true"/>
+			<panel name="validatePanel" colSpan="6" itemSpan="12">
+				<field name="authenticationUrl" showIf="!isValid" showTitle="false" readonly="true" widget="html"/>
+				<field name="isValid" readonly="true" showIf="isValid" widget="inline-checkbox"/>
+			</panel>
+			<field name="ownerUser"/>
+			<field name="login" required="true"/>
+			<field name="refreshToken" hidden="true"/>
+			<field name="host" hidden="true"/>
+		</panel>
+		<panel-tabs name="detailsPanelTab">
+			<panel-dashlet action="office365.account.contact" title="Office365 contacts" canSearch="true"/>
+			<panel name="calendarPanel" title="Office365 calendars">
+				<panel-dashlet action="office365.account.calendar" title="Office365 calendars" colSpan="12" canSearch="true"/>
+				<panel-dashlet action="office365.account.event" title="Office365 events" colSpan="12" canSearch="true"/>
+			</panel>
+			<panel-dashlet action="office365.account.mail" title="Office365 mails" canSearch="true"/>
+		</panel-tabs>
+		<panel name="authenticationPanel" sidebar="true">
+			<button name="getAuthenticationUrlBtn" title="Generate authorization url" onClick="save,action-office365-method-generateUrl,save"/>
+		</panel>
+		<panel name="btnPanel" sidebar="true" showIf="refreshToken">
+			<button name="syncContactBtn" title="Sync contact" onClick="action-office365-method-sync-contact" />
+			<button name="syncCalendarBtn" title="Sync calendar" onClick="action-office365-method-sync-calendar" />
+			<button name="syncMailBtn" title="Sync mail" onClick="action-office365-method-sync-mail" />
+		</panel>
+	</form>
+
+	<form name="mail-account-form" id="office365-mail-account-form" title="Mail account" model="com.axelor.apps.message.db.EmailAccount" extension="true">
+		<extend target="//panel[@name='configPanel']">
+			<attribute name="hideIf" value="serverTypeSelect == 4" />
+			<insert position="after">
+				<panel name="officeConfigPanel" showIf="serverTypeSelect == 4" readonlyIf="isValid">
+					<field name="serverTypeSelect"/>
+					<field name="login" requiredIf="serverTypeSelect == 4"/>
+				</panel>
+			</insert>
+		</extend>
+		<extend target="//panel[@name='loginPanel']">
+			<attribute name="hideIf" value="serverTypeSelect == 4" />
+		</extend>
+		<extend target="//field[@name='newPassword']">
+			<attribute name="requiredIf" value="serverTypeSelect != 4 &amp;&amp; (!id || change)" />
+		</extend>
+		<extend target="//button[@name='fetchEmailsBtn']">
+			<attribute name="showIf" value="isValid &amp;&amp; serverTypeSelect != null &amp;&amp; [2,3].indexOf(serverTypeSelect) != -1"/>
+		</extend>
+		<extend target="//button[@name='testConnectionBtn']">
+			<attribute name="hideIf" value="serverTypeSelect == 4"/>
+			<insert position="before">
+				<field name="authenticationUrl" showIf="!isValid &amp;&amp; serverTypeSelect == 4" showTitle="false" readonly="true" widget="html"/>
+				<button name="getAuthenticationUrlBtn" title="Generate authorization url" onClick="save,action-office365-method-generateUrl,save" showIf="serverTypeSelect == 4"/>
+			</insert>
+		</extend>
+	</form>
+
+	<action-method name="action-office365-method-generateUrl">
+		<call class="com.axelor.apps.office365.web.EmailAccountController" method="generateUrl" />
+	</action-method>
+
+	<action-method name="action-office365-method-sync-contact">
+		<call class="com.axelor.apps.office365.web.EmailAccountController" method="syncContact" />
+	</action-method>
+
+	<action-method name="action-office365-method-sync-calendar">
+		<call class="com.axelor.apps.office365.web.EmailAccountController" method="syncCalendar" />
+	</action-method>
+
+	<action-method name="action-office365-method-sync-mail">
+		<call class="com.axelor.apps.office365.web.EmailAccountController" method="syncMail" />
+	</action-method>
+
+	<action-record name="action-office365-record-email-account-onnew" model="com.axelor.apps.message.db.EmailAccount">
+		<field name="serverTypeSelect" expr="eval: EmailAccountRepository.SERVER_TYPE_OFFICE365"/>
+		<field name="host" expr="office365"/>
+	</action-record>
+
+	<action-view name="office365.account.contact" title="Office365 contacts" model="com.axelor.apps.base.db.Partner">
+		<view type="grid" name="partner-contact-grid" />
+		<view type="form" name="partner-contact-form" />
+		<domain>self.office365Id IS NOT NULL AND (self.emailAccount.id = :emailAccountId OR self.user.emailAccount.id = :emailAccountId)</domain>
+		<context name="emailAccountId" expr="eval:id"/>
+	</action-view>
+
+	<action-view name="office365.account.calendar" title="Office365 calendars" model="com.axelor.apps.base.db.ICalendar">
+		<view type="grid" name="calendar-grid"/>
+		<view type="form" name="calendar-form"/>
+		<domain>self.office365Id IS NOT NULL AND (self.emailAccount.id = :emailAccountId OR self.user.emailAccount.id = :emailAccountId)</domain>
+		<context name="emailAccountId" expr="eval:id"/>
+	</action-view>
+
+	<action-view name="office365.account.event" title="Office365 events" model="com.axelor.apps.base.db.ICalendarEvent">
+		<view type="grid" name="calendar-event-grid"/>
+		<view type="form" name="calendar-event-form"/>
+		<domain>self.office365Id IS NOT NULL AND (self.calendar.emailAccount.id = :emailAccountId 
+			OR self.user.emailAccount.id = :emailAccountId OR self.calendar.user.emailAccount.id = :emailAccountId)</domain>
+		<context name="emailAccountId" expr="eval:id"/>
+	</action-view>
+
+	<action-view name="office365.account.mail" title="Office365 mails" model="com.axelor.apps.message.db.Message">
+		<view type="grid" name="message-grid"/>
+		<view type="form" name="message-form"/>
+		<domain>self IN (SELECT officeMail.message FROM OfficeMail officeMail WHERE officeMail.mailFolder.emailAccount = :emailAccount) 
+			AND (:emailAccount MEMBER OF self.emailAccountSet OR self.senderUser.emailAccount = :emailAccount)</domain>
+		<context name="emailAccount" expr="eval: __this__"/>
+	</action-view>
+
+</object-views>

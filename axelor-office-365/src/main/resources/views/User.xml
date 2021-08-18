@@ -7,8 +7,8 @@
 		<extend target="//panel-tabs[@name='mainPanelTab']/*[last()]">
 			<insert position="after">
 				<panel name="office365Panel" title="Office365" showIf="id">
-					<field name="officeAccount" domain="self IN :officeAccountList"/>
-					<field name="officeAccountList" colSpan="12" domain="self.ownerUser.id = :id" canSelect="true"/>
+					<field name="emailAccount" domain="self IN :emailAccountList AND self.serverTypeSelect = 4" form-view="office-mail-account-form" grid-view="office-mail-account-grid"/>
+					<field name="emailAccountList" colSpan="12" domain="self.ownerUser.id = :id AND self.serverTypeSelect = 4" canSelect="true" form-view="office-mail-account-form" grid-view="office-mail-account-grid"/>
 				</panel>
 			</insert>
 		</extend>

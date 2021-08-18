@@ -30,4 +30,8 @@
 		<option value='3'>Mail</option>
 	</selection>
 
+	<selection name="mail.account.server.type.select" id="office365.mail.account.server.type.select">
+		<option value="4">Office365</option>
+	</selection>
+
 </object-views>

@@ -21,22 +21,26 @@ import com.axelor.apps.base.db.BaseBatch;
 import com.axelor.apps.base.db.ICalendar;
 import com.axelor.apps.base.db.ICalendarEvent;
 import com.axelor.apps.base.db.ICalendarUser;
+import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.BaseBatchRepository;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.db.repo.ICalendarRepository;
 import com.axelor.apps.base.db.repo.ICalendarUserRepository;
+import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.EventCategory;
 import com.axelor.apps.crm.db.EventReminder;
+import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.RecurrenceConfiguration;
 import com.axelor.apps.crm.db.repo.EventCategoryRepository;
 import com.axelor.apps.crm.db.repo.EventReminderRepository;
 import com.axelor.apps.crm.db.repo.EventRepository;
+import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.crm.db.repo.RecurrenceConfigurationRepository;
 import com.axelor.apps.crm.service.EventService;
-import com.axelor.apps.office.db.OfficeAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.auth.AuthUtils;
 import com.axelor.auth.db.User;
@@ -92,7 +96,7 @@ public class Office365CalendarService {
   }
 
   public void syncOfficeCalendar(
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       List<Long> removedEventIdList,
       LocalDateTime start)
@@ -108,30 +112,23 @@ public class Office365CalendarService {
     List<Long> calendarIdList = new ArrayList<>();
     for (Object object : calendarArray) {
       JSONObject jsonObject = (JSONObject) object;
-      ICalendar iCalendar =
-          createCalendar(jsonObject, officeAccount, officeAccount.getLastCalendarSyncOn());
+      ICalendar iCalendar = createCalendar(jsonObject, emailAccount);
       if (iCalendar == null) {
         continue;
       }
 
       calendarIdList.add(iCalendar.getId());
-      office365Service.syncEvent(
-          iCalendar,
-          officeAccount,
-          accessToken,
-          officeAccount.getLastCalendarSyncOn(),
-          start,
-          removedEventIdList);
+      office365Service.syncEvent(iCalendar, emailAccount, accessToken, start, removedEventIdList);
       iCalendar.setLastSynchronizationDateT(
           Beans.get(AppBaseService.class).getTodayDateTime().toLocalDateTime());
       iCalendarRepo.save(iCalendar);
     }
 
-    removeCalendar(calendarIdList, officeAccount);
+    removeCalendar(calendarIdList, emailAccount);
   }
 
   public void syncCalendar(
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       List<Long> removedEventIdList,
       LocalDateTime start) {
@@ -141,38 +138,37 @@ public class Office365CalendarService {
             .all()
             .filter(
                 Office365ServiceImpl.query
-                    + " AND (self.officeAccount = :officeAccount OR self.user.officeAccount = :officeAccount)"
+                    + " AND (self.emailAccount = :emailAccount OR self.user.emailAccount = :emailAccount)"
                     + " AND self.typeSelect = :typeSelect"
                     + " AND COALESCE(self.archived, false) = false")
             .bind("typeSelect", ICalendarRepository.OFFICE_365)
             .bind("start", start)
-            .bind("officeAccount", officeAccount)
+            .bind("emailAccount", emailAccount)
             .fetch();
     for (ICalendar calendar : calendarList) {
-      createOffice365Calendar(calendar, officeAccount, accessToken);
+      createOffice365Calendar(calendar, emailAccount, accessToken);
     }
 
     List<ICalendar> allCalendar =
         Beans.get(ICalendarRepository.class)
             .all()
             .filter(
-                "(self.officeAccount = :officeAccount OR self.user.officeAccount = :officeAccount) "
+                "(self.emailAccount = :emailAccount OR self.user.emailAccount = :emailAccount) "
                     + " AND self.typeSelect = :typeSelect AND self.createdOn < :start "
                     + " AND COALESCE(self.isOfficeEditableCalendar, true) = true")
             .bind("typeSelect", ICalendarRepository.OFFICE_365)
-            .bind("officeAccount", officeAccount)
+            .bind("emailAccount", emailAccount)
             .bind("start", start)
             .fetch();
     User currentUser = Beans.get(UserService.class).getUser();
     for (ICalendar iCalendar : allCalendar) {
       syncOffice365Event(
-          iCalendar, officeAccount, currentUser, accessToken, start, removedEventIdList);
+          iCalendar, emailAccount, currentUser, accessToken, start, removedEventIdList);
     }
   }
 
   @SuppressWarnings("unchecked")
-  public ICalendar createCalendar(
-      JSONObject jsonObject, OfficeAccount officeAccount, LocalDateTime lastSyncOn) {
+  public ICalendar createCalendar(JSONObject jsonObject, EmailAccount emailAccount) {
 
     if (jsonObject == null) {
       return null;
@@ -190,7 +186,7 @@ public class Office365CalendarService {
       if (iCalendar == null) {
         iCalendar = new ICalendar();
         iCalendar.setOffice365Id(office365Id);
-        iCalendar.setOfficeAccount(officeAccount);
+        iCalendar.setEmailAccount(emailAccount);
         iCalendar.setTypeSelect(ICalendarRepository.OFFICE_365);
         iCalendar.setSynchronizationSelect(ICalendarRepository.CRM_SYNCHRO);
         iCalendar.setSynchronizationDuration(DEAFULT_SYNC_DURATION);
@@ -201,7 +197,7 @@ public class Office365CalendarService {
           (boolean) jsonObject.getOrDefault("isRemovable", false));
       iCalendar.setIsOfficeEditableCalendar((boolean) jsonObject.getOrDefault("canEdit", false));
       iCalendar.setName(office365Service.processJsonValue("name", jsonObject));
-      iCalendar.setUser(officeAccount.getOwnerUser());
+      iCalendar.setUser(emailAccount.getOwnerUser());
       iCalendarRepo.save(iCalendar);
       Office365Service.LOG.debug(
           String.format(
@@ -216,7 +212,7 @@ public class Office365CalendarService {
   }
 
   public void createOffice365Calendar(
-      ICalendar calendar, OfficeAccount officeAccount, String accessToken) {
+      ICalendar calendar, EmailAccount emailAccount, String accessToken) {
 
     try {
       JSONObject calendarJsonObject = new JSONObject();
@@ -233,14 +229,14 @@ public class Office365CalendarService {
               "calendar");
 
       calendar.setOffice365Id(office365Id);
-      calendar.setOfficeAccount(officeAccount);
+      calendar.setEmailAccount(emailAccount);
       iCalendarRepo.save(calendar);
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
   }
 
-  private void removeCalendar(List<Long> calendarIdList, OfficeAccount officeAccount) {
+  private void removeCalendar(List<Long> calendarIdList, EmailAccount emailAccount) {
 
     if (ObjectUtils.isEmpty(calendarIdList)) {
       return;
@@ -251,9 +247,9 @@ public class Office365CalendarService {
           iCalendarRepo
               .all()
               .filter(
-                  "self.id NOT IN :ids AND self.office365Id IS NOT NULL AND self.officeAccount = :officeAccount AND COALESCE(self.archived, false) = false")
+                  "self.id NOT IN :ids AND self.office365Id IS NOT NULL AND self.emailAccount = :emailAccount AND COALESCE(self.archived, false) = false")
               .bind("ids", calendarIdList)
-              .bind("officeAccount", officeAccount)
+              .bind("emailAccount", emailAccount)
               .fetch();
       for (ICalendar iCalendar : calendars) {
         List<BaseBatch> batchList =
@@ -287,7 +283,7 @@ public class Office365CalendarService {
   @Transactional
   public ICalendarEvent createEvent(
       JSONObject jsonObject,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       ICalendar iCalendar,
       LocalDateTime lastSyncOn,
       LocalDateTime now) {
@@ -321,7 +317,7 @@ public class Office365CalendarService {
         return event;
       }
 
-      return setEventValues(jsonObject, event, iCalendar, officeAccount.getOwnerUser(), now);
+      return setEventValues(jsonObject, event, iCalendar, emailAccount.getOwnerUser(), now);
     } catch (Exception e) {
       TraceBackService.trace(e);
       return null;
@@ -330,17 +326,17 @@ public class Office365CalendarService {
 
   public void syncOffice365Event(
       ICalendar calendar,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       User currentUser,
       String accessToken,
       LocalDateTime start,
       List<Long> removedEventIdList) {
 
     List<ICalendarEvent> eventList =
-        getICalendarEvents(calendar, officeAccount, start, removedEventIdList);
+        getICalendarEvents(calendar, emailAccount, start, removedEventIdList);
     if (ObjectUtils.notEmpty(eventList)) {
       for (ICalendarEvent event : eventList) {
-        createOffice365Event(event, officeAccount, accessToken, currentUser, start);
+        createOffice365Event(event, emailAccount, accessToken, currentUser, start);
       }
     }
     calendar.setLastSynchronizationDateT(
@@ -350,7 +346,7 @@ public class Office365CalendarService {
 
   private void createOffice365Event(
       ICalendarEvent event,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       String accessToken,
       User currentUser,
       LocalDateTime now) {
@@ -487,7 +483,7 @@ public class Office365CalendarService {
 
   private List<ICalendarEvent> getICalendarEvents(
       ICalendar calendar,
-      OfficeAccount officeAccount,
+      EmailAccount emailAccount,
       LocalDateTime start,
       List<Long> removedEventIdList) {
 
@@ -495,7 +491,7 @@ public class Office365CalendarService {
     bindingMap.put("calendar", calendar);
     bindingMap.put("start", start);
 
-    LocalDateTime lastSync = officeAccount.getLastCalendarSyncOn();
+    LocalDateTime lastSync = emailAccount.getLastCalendarSyncOn();
     String queryStr = "";
     if (lastSync == null) {
       queryStr = "self.createdOn < :start";
@@ -505,7 +501,7 @@ public class Office365CalendarService {
               + "AND COALESCE(self.calendar.keepRemote, false) = false)";
       bindingMap.put("lastSync", lastSync);
       bindingMap.put(
-          "lastOfficeSyncOn", lastSync.minusNanos(officeAccount.getCalendarSyncDuration()));
+          "lastOfficeSyncOn", lastSync.minusNanos(emailAccount.getCalendarSyncDuration()));
     }
     queryStr =
         "self.calendar = :calendar AND COALESCE(self.archived, false) = false AND ("
@@ -778,6 +774,38 @@ public class Office365CalendarService {
         JSONObject emailAddressObj = attendeeObj.getJSONObject("emailAddress");
         ICalendarUser iCalendarUser = getICalendarUser(emailAddressObj, type);
         event.addAttendee(iCalendarUser);
+
+        String address = office365Service.processJsonValue("address", emailAddressObj);
+        Partner partner =
+            Beans.get(PartnerRepository.class)
+                .all()
+                .filter(
+                    "self.emailAddress.address = :address AND (self.isCustomer = true OR self.isSupplier = true OR self.isProspect = true) AND self.isEmployee = false")
+                .bind("address", address)
+                .fetchOne();
+        if (partner != null) {
+          event.setPartner(partner);
+        }
+
+        Partner contact =
+            Beans.get(PartnerRepository.class)
+                .all()
+                .filter("self.emailAddress.address = :address AND self.isContact = true")
+                .bind("address", address)
+                .fetchOne();
+        if (contact != null) {
+          event.setContactPartner(contact);
+        }
+
+        Lead lead =
+            Beans.get(LeadRepository.class)
+                .all()
+                .filter("self.emailAddress.address = :address")
+                .bind("address", address)
+                .fetchOne();
+        if (lead != null) {
+          event.setLead(lead);
+        }
       }
     } else {
       event.clearAttendees();

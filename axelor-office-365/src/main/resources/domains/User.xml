@@ -7,8 +7,8 @@
 
 	<entity name="User" sequential="true" lang="java">
 
-		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Default office account" />
-		<one-to-many name="officeAccountList" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts" mappedBy="ownerUser"/>
+		<many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount" title="Default office account" />
+		<one-to-many name="emailAccountList" ref="com.axelor.apps.message.db.EmailAccount" title="Office accounts" mappedBy="ownerUser"/>
 
 	</entity>
 

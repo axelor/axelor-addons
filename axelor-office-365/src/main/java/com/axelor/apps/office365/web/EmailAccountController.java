@@ -19,8 +19,8 @@ package com.axelor.apps.office365.web;
 
 import com.axelor.apps.base.db.AppOffice365;
 import com.axelor.apps.base.db.repo.AppOffice365Repository;
-import com.axelor.apps.office.db.OfficeAccount;
-import com.axelor.apps.office.db.repo.OfficeAccountRepository;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.office365.service.Office365Service;
 import com.axelor.apps.office365.translation.ITranslation;
 import com.axelor.common.StringUtils;
@@ -34,12 +34,12 @@ import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class OfficeAccountController {
+public class EmailAccountController {
 
   @Inject protected Office365Service office365Service;
 
   @Inject protected AppOffice365Repository appOffice365Repo;
-  @Inject protected OfficeAccountRepository officeAccountRepo;
+  @Inject protected EmailAccountRepository emailAccountRepo;
 
   public void generateUrl(ActionRequest request, ActionResponse response) throws Exception {
 
@@ -50,7 +50,7 @@ public class OfficeAccountController {
       response.setError(I18n.get(ITranslation.OFFICE365_MISSING_CONFIGURATION));
     }
 
-    OfficeAccount officeAccount = request.getContext().asType(OfficeAccount.class);
+    EmailAccount emailAccount = request.getContext().asType(EmailAccount.class);
 
     Map<String, String> additionalParams = new HashMap<>();
     additionalParams.put("access_type", "offline");
@@ -65,7 +65,7 @@ public class OfficeAccountController {
     String authenticationUrl =
         authService
             .createAuthorizationUrlBuilder()
-            .state(officeAccount.getId().toString())
+            .state(emailAccount.getId().toString())
             .additionalParams(additionalParams)
             .build();
     authService.close();
@@ -75,31 +75,31 @@ public class OfficeAccountController {
             authenticationUrl.replace("&", "&amp;"),
             I18n.get(ITranslation.OFFICE365_AUTHETICATE_TITLE));
 
-    response.setValue("isAuthorized", false);
+    response.setValue("isValid", false);
     response.setValue("authenticationUrl", url);
   }
 
   public void syncContact(ActionRequest request, ActionResponse response) throws Exception {
 
-    OfficeAccount officeAccount = request.getContext().asType(OfficeAccount.class);
-    officeAccount = officeAccountRepo.find(officeAccount.getId());
-    office365Service.syncContact(officeAccount);
+    EmailAccount emailAccount = request.getContext().asType(EmailAccount.class);
+    emailAccount = emailAccountRepo.find(emailAccount.getId());
+    office365Service.syncContact(emailAccount);
     response.setReload(true);
   }
 
   public void syncCalendar(ActionRequest request, ActionResponse response) throws Exception {
 
-    OfficeAccount officeAccount = request.getContext().asType(OfficeAccount.class);
-    officeAccount = officeAccountRepo.find(officeAccount.getId());
-    office365Service.syncCalendar(officeAccount);
+    EmailAccount emailAccount = request.getContext().asType(EmailAccount.class);
+    emailAccount = emailAccountRepo.find(emailAccount.getId());
+    office365Service.syncCalendar(emailAccount);
     response.setReload(true);
   }
 
   public void syncMail(ActionRequest request, ActionResponse response) throws Exception {
 
-    OfficeAccount officeAccount = request.getContext().asType(OfficeAccount.class);
-    officeAccount = officeAccountRepo.find(officeAccount.getId());
-    office365Service.syncMail(officeAccount, Office365Service.MAIL_URL);
+    EmailAccount emailAccount = request.getContext().asType(EmailAccount.class);
+    emailAccount = emailAccountRepo.find(emailAccount.getId());
+    office365Service.syncMail(emailAccount, Office365Service.MAIL_URL);
     response.setReload(true);
   }
 }

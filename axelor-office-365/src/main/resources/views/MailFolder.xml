@@ -3,16 +3,16 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
-	<grid model="com.axelor.apps.office.db.MailFolder" title="Office mail folders" name="office-mail-folder-grid" canNew="false" canDelete="false">
+	<grid model="com.axelor.apps.office.db.MailFolder" title="Office mail folders" name="office-mail-folder-grid" canNew="false">
 		<field name="name"/>
 		<field name="isHidden"/>
-		<field name="officeAccount"/>
+		<field name="emailAccount"/>
 	</grid>
 
-	<form model="com.axelor.apps.office.db.MailFolder" title="Office mail folder" name="office-mail-folder-form" width="large" canNew="false" canDelete="false" canCopy="false">
+	<form model="com.axelor.apps.office.db.MailFolder" title="Office mail folder" name="office-mail-folder-form" width="large" canNew="false" canCopy="false">
 		<panel name="mainPanel" >
 			<field name="name" readonly="true"/>
-			<field name="officeAccount" readonly="true"/>
+			<field name="emailAccount" readonly="true" domain="self.serverTypeSelect = 4" form-view="office-mail-account-form" grid-view="office-mail-account-grid"/>
 			<field name="isHidden" readonly="true"/>
 			<field name="messageDeltaToken" colSpan="12" title="Current token"/>
 			<field name="tokenList" colSpan="12"/>

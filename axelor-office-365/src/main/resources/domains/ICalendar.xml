@@ -13,7 +13,7 @@
 		<boolean name="isOfficeRemovableCalendar"/>
 		<boolean name="isOfficeEditableCalendar"/>
 
-		<many-to-one name="officeAccount" ref="com.axelor.apps.office.db.OfficeAccount" title="Office account"/>
+		<many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount" title="Office account"/>
 		<one-to-many name="tokenList" ref="com.axelor.apps.office.db.Office365Token" title="Tokens"/>
 
 		<finder-method name="findByOffice365Id" using="office365Id" />

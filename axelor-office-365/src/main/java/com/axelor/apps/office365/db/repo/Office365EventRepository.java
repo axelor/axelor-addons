@@ -34,11 +34,11 @@ public class Office365EventRepository extends EventManagementRepository {
     ICalendar calendar = event.getCalendar();
     if (event.getOffice365Id() != null
         && calendar != null
-        && calendar.getOfficeAccount() != null
+        && calendar.getEmailAccount() != null
         && !calendar.getIsOfficeEditableCalendar()) {
       try {
         String accessToken =
-            office365Service.getAccessTocken(event.getCalendar().getOfficeAccount());
+            office365Service.getAccessTocken(event.getCalendar().getEmailAccount());
         office365Service.deleteOffice365Object(
             Office365Service.DELETE_EVENT_URL, event.getOffice365Id(), accessToken, "event");
         this.all()

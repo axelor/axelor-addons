@@ -10,7 +10,7 @@
 		<string name="messageId" title="Office365 id" copy="false"/>
 		<datetime name="receivedDateT" title="Received date" readonly="true"/>
 
-		<many-to-many name="officeAccountSet" ref="com.axelor.apps.office.db.OfficeAccount" title="Office accounts"/>
+		<many-to-many name="emailAccountSet" ref="com.axelor.apps.message.db.EmailAccount" title="Office accounts"/>
 
 		<one-to-many name="officeMailList" ref="com.axelor.apps.office.db.OfficeMail" mappedBy="message" orphanRemoval="true"/>
 

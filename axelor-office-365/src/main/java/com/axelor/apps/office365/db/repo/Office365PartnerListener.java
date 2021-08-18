@@ -31,12 +31,12 @@ public class Office365PartnerListener {
   private void onPartnerPreRemove(Partner partner) {
 
     if (partner.getOffice365Id() != null
-        && partner.getOfficeAccount() != null
+        && partner.getEmailAccount() != null
         && !StringUtils.startsWith(
             partner.getOffice365Id(), Office365ContactService.COMPANY_OFFICE_ID_PREFIX)) {
       try {
         Office365Service office365Service = Beans.get(Office365Service.class);
-        String accessToken = office365Service.getAccessTocken(partner.getOfficeAccount());
+        String accessToken = office365Service.getAccessTocken(partner.getEmailAccount());
         office365Service.deleteOffice365Object(
             Office365Service.CONTACT_URL, partner.getOffice365Id(), accessToken, "contact");
       } catch (Exception e) {

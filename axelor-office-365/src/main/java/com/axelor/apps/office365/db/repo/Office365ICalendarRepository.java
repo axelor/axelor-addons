@@ -30,10 +30,10 @@ public class Office365ICalendarRepository extends ICalendarRepository {
   public void remove(ICalendar calendar) {
 
     if (calendar.getOffice365Id() != null
-        && calendar.getOfficeAccount() != null
+        && calendar.getEmailAccount() != null
         && calendar.getIsOfficeRemovableCalendar()) {
       try {
-        String accessToken = office365Service.getAccessTocken(calendar.getOfficeAccount());
+        String accessToken = office365Service.getAccessTocken(calendar.getEmailAccount());
         office365Service.deleteOffice365Object(
             Office365Service.CALENDAR_URL, calendar.getOffice365Id(), accessToken, "calendar");
       } catch (Exception e) {
