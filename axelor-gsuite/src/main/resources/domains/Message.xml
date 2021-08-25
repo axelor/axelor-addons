@@ -8,7 +8,6 @@
   <entity name="Message" lang="java">
   
   	<one-to-many name="emailGoogleAccountList" ref="com.axelor.apps.gsuite.db.EmailGoogleAccount" mappedBy="message"/>
-  	<one-to-many name="relatedList" title="Related to" ref="com.axelor.apps.gsuite.db.MessageRelatedSelect" mappedBy="message"/>
 	  
   </entity>
   

@@ -7,9 +7,6 @@
 		<panel name="mainPanel">
 			<field name="clientId" colSpan="6"/>
 			<field name="clientSecret" colSpan="6"/>
-			<field name="isPartnerIncluded" widget="InlineCheckbox" colSpan="2"/>
-			<field name="isLeadIncluded" widget="InlineCheckbox" colSpan="2"/>
-			<field name="isContactIncluded" widget="InlineCheckbox" colSpan="2"/>
   		</panel>
   		<panel-tabs name="mainPanelTab">
   			<panel name="eventSyncPanel" title="Event/Calendar configuration">

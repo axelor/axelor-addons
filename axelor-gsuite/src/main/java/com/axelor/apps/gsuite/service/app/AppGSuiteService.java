@@ -24,5 +24,5 @@ public interface AppGSuiteService {
 
   public AppGsuite getAppGSuite();
 
-  public Set<String> getRelatedEmailAddressSet();
+  public Set<String> getRelatedEmailAddressSet(Integer fromToTypeSelect);
 }

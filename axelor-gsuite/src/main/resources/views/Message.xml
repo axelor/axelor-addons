@@ -3,29 +3,6 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form name="message-form" id="gsuite-message-form" title="Email" model="com.axelor.apps.message.db.Message" extension="true">
-		<extend target="//panel[@name='relatedToPanel']">
-			<replace>
-		        <panel name="relatedToPanel" title="Related to" sidebar="true" colSpan="12" readonlyIf="statusSelect == 4">
-					<field name="company" colSpan="12" form-view="company-form" grid-view="company-grid" canEdit="false"/>
-					<field name="multiRelatedList">
-						<editor>
-							<field name="relatedToSelect" widget="RefSelect" x-related="relatedToSelectId" colSpan="12" showTitle="false"/>
-							<field name="relatedToSelectId" hidden="true" />
-						</editor> 
-					</field>
-					<panel colSpan="12" name="relatedToSelectO2MPanel" if="__config__.app.getApp('gsuite').getIsEmailSyncAllowed()">
-						<field name="relatedList" form-view="message-related-select-form" grid-view="message-related-select-grid" colSpan="12">
-							<editor x-viewer="true">
-								<field name="relatedToSelect" widget="RefSelect" colSpan="12" x-related="relatedToSelectId" showTitle="false" showIf="relatedToSelectId != null"/>
-							</editor>
-						</field>
-					</panel>
-				</panel>				
-			</replace>
-		</extend>	
-    </form>
-    
     <!--Lead Form Email dashlet -->
     <action-view id="gsuite-action-lead-view-emails" name="action-lead-view-emails" title="Emails" model="com.axelor.apps.message.db.Message">
 		<view type="grid" name="message-grid"/>

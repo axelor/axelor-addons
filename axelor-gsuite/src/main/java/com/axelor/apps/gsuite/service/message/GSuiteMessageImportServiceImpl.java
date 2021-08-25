@@ -17,13 +17,12 @@
  */
 package com.axelor.apps.gsuite.service.message;
 
-import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.base.db.repo.ModelEmailLinkRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
-import com.axelor.apps.crm.db.Lead;
+import com.axelor.apps.base.service.message.MessageBaseService;
 import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.gsuite.db.EmailGoogleAccount;
 import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.db.MessageRelatedSelect;
 import com.axelor.apps.gsuite.db.repo.EmailGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
@@ -31,15 +30,13 @@ import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
+import com.axelor.apps.message.db.MultiRelated;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
 import com.axelor.apps.message.service.MailAccountService;
 import com.axelor.apps.tool.date.DateTool;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.ObjectUtils;
-import com.axelor.db.Model;
-import com.axelor.db.Query;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
@@ -81,9 +78,9 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   @Inject protected UserRepository userRepo;
   @Inject protected EmailGoogleAccountRepository emailGoogleRepo;
   @Inject protected AppGSuiteService appGSuiteService;
+  @Inject protected MessageBaseService messageBaseService;
 
-  private Gmail service;
-  private final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+  private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd");
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   @Override
@@ -95,7 +92,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   @Override
   public GoogleAccount sync(GoogleAccount account, LocalDate fromDate) throws AxelorException {
     try {
-      service = gSuiteService.getGmail(account.getId());
+      Gmail service = gSuiteService.getGmail(account.getId());
       String query = getFilterQuery(fromDate);
       syncMessages(service, service.users().getProfile("me").getUserId(), query, account);
     } catch (Exception e) {
@@ -108,15 +105,16 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   }
 
   protected String getFilterQuery(LocalDate fromDate) {
-    Set<String> addressSet = appGSuiteService.getRelatedEmailAddressSet();
-    String leadEmailsQuery =
-        addressSet.stream()
-            .map(address -> String.format("%s", address))
-            .collect(Collectors.joining(" "))
-            .trim();
+    Set<String> fromAddressSet =
+        appGSuiteService.getRelatedEmailAddressSet(ModelEmailLinkRepository.ADDRESS_TYPE_FROM);
+    Set<String> toAddressSet =
+        appGSuiteService.getRelatedEmailAddressSet(ModelEmailLinkRepository.ADDRESS_TYPE_TO);
+    String fromQuery =
+        fromAddressSet.stream().map(String::trim).collect(Collectors.joining(" ")).trim();
+    String toQuery =
+        toAddressSet.stream().map(String::trim).collect(Collectors.joining(" ")).trim();
     String query =
-        String.format(
-            "(from:{%s} OR to:{%s}) (%s)", leadEmailsQuery, leadEmailsQuery, "in:inbox OR in:sent");
+        String.format("(from:{%s} OR to:{%s}) (%s)", fromQuery, toQuery, "in:inbox OR in:sent");
 
     if (fromDate != null) {
       query = String.format("%s (after:%s)", query, fromDate.format(DATE_FORMAT));
@@ -206,9 +204,9 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
     message.setSubject(parser.getSubject());
     message.setSentDateT(DateTool.toLocalDateT(email.getSentDate()));
     message.setSenderUser(userRepo.findByEmail(message.getFromEmailAddress().getAddress()));
-    setRelatedTo(message);
-    setRelatedUsers(message, googleAccount.getOwnerUser());
 
+    setRelatedUsers(message, googleAccount.getOwnerUser());
+    messageBaseService.manageRelatedTo(message);
     message = messageRepo.save(message);
 
     final MetaFiles files = Beans.get(MetaFiles.class);
@@ -229,41 +227,10 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   }
 
   private void setRelatedUsers(Message message, User user) {
-    MessageRelatedSelect related = new MessageRelatedSelect();
+    MultiRelated related = new MultiRelated();
     related.setRelatedToSelect(User.class.getName());
     related.setRelatedToSelectId(user.getId());
-    message.addRelatedListItem(related);
-  }
-
-  private void setRelatedTo(Message message) {
-
-    Set<EmailAddress> addresses = new HashSet<>();
-
-    addresses.add(message.getFromEmailAddress());
-    addresses.addAll(message.getToEmailAddressSet());
-    addresses.addAll(message.getReplyToEmailAddressSet());
-
-    for (EmailAddress emailAddress : addresses) {
-      List<Lead> leads = findRelatedByEmailAddress(Lead.class, emailAddress);
-      if (ObjectUtils.notEmpty(leads)) {
-        for (Lead lead : leads) {
-          MessageRelatedSelect related = new MessageRelatedSelect();
-          related.setRelatedToSelect(Lead.class.getName());
-          related.setRelatedToSelectId(lead.getId());
-          message.addRelatedListItem(related);
-        }
-      }
-
-      List<Partner> partners = findRelatedByEmailAddress(Partner.class, emailAddress);
-      if (ObjectUtils.notEmpty(partners)) {
-        for (Partner partner : partners) {
-          MessageRelatedSelect related = new MessageRelatedSelect();
-          related.setRelatedToSelect(Partner.class.getName());
-          related.setRelatedToSelectId(partner.getId());
-          message.addRelatedListItem(related);
-        }
-      }
-    }
+    message.addMultiRelatedListItem(related);
   }
 
   private EmailAddress getEmailAddress(InternetAddress address) {
@@ -290,13 +257,5 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
       addressSet.add(emailAddress);
     }
     return addressSet;
-  }
-
-  private <T extends Model> List<T> findRelatedByEmailAddress(
-      Class<T> modelConcerned, EmailAddress emailAddress) {
-    return Query.of(modelConcerned)
-        .filter("self.emailAddress !=null AND self.emailAddress.address = :emailAddress")
-        .bind("emailAddress", emailAddress.getAddress())
-        .fetch();
   }
 }

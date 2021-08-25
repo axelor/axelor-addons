@@ -46,7 +46,7 @@ public class ICalUserServiceImpl implements ICalUserService {
   public ICalendarUser findOrCreateICalUser(Object source, ICalendarEvent event) {
     String email = null;
     boolean isOrganizer;
-    Set<String> relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet();
+    Set<String> relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet(0);
     if (source instanceof Organizer) {
       isOrganizer = true;
     } else if (source instanceof EventAttendee) {
@@ -126,7 +126,7 @@ public class ICalUserServiceImpl implements ICalUserService {
       EmailAddress email, ICalendarEvent event, boolean isOrganizer) {
 
     ICalendarUser user = null;
-    Set<String> relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet();
+    Set<String> relatedEmailSet = appGSuiteService.getRelatedEmailAddressSet(0);
 
     if (!relatedEmailSet.contains(email.getAddress())) {
       return null;

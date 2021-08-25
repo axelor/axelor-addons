@@ -18,67 +18,70 @@
 package com.axelor.apps.gsuite.service.app;
 
 import com.axelor.apps.base.db.AppGsuite;
-import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.base.db.ModelEmailLink;
 import com.axelor.apps.base.db.repo.AppGsuiteRepository;
-import com.axelor.apps.crm.db.Lead;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.common.ObjectUtils;
+import com.axelor.db.JPA;
 import com.axelor.db.Model;
-import com.axelor.db.Query;
+import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AppGSuiteServiceImpl implements AppGSuiteService {
 
-  @Inject AppGsuiteRepository appRepo;
+  @Inject protected AppGsuiteRepository appRepo;
+  @Inject protected AppBaseService appBaseService;
 
   @Override
   public AppGsuite getAppGSuite() {
     return appRepo.all().cacheable().fetchOne();
   }
 
-  @SuppressWarnings("rawtypes")
+  /**
+   * To get list of email address from ModelLink in AppBase
+   *
+   * @param fromToTypeSelect 0 to include all and others based on {@link
+   *     ModelEmailLink#addressTypeSelect}
+   */
   @Override
-  public Set<String> getRelatedEmailAddressSet() {
-    List<Map> addresses = new ArrayList<>();
+  public Set<String> getRelatedEmailAddressSet(Integer fromToTypeSelect) {
     Set<String> addressSet = new HashSet<>();
-    AppGsuite app = getAppGSuite();
-
-    if (app.getIsLeadIncluded()) {
-      List<Map> leadAddresses = getRelatedEmailByModel(Lead.class, null);
-      addresses.addAll(leadAddresses);
+    List<ModelEmailLink> emailLinkList = appBaseService.getAppBase().getEmailLinkList();
+    if (ObjectUtils.isEmpty(emailLinkList)) {
+      return addressSet;
     }
-
-    if (app.getIsPartnerIncluded()) {
-      List<Map> partnerAddresses = getRelatedEmailByModel(Partner.class, "self.isContact = false");
-      addresses.addAll(partnerAddresses);
-    }
-
-    if (app.getIsContactIncluded()) {
-      List<Map> contactAddresses = getRelatedEmailByModel(Partner.class, "self.isContact = true");
-      addresses.addAll(contactAddresses);
-    }
-
-    for (Map map : addresses) {
-      String address = (String) map.get("emailAddress.address");
-      if (!ObjectUtils.isEmpty(address)) {
-        addressSet.add(address);
+    try {
+      for (ModelEmailLink modelEmailLink : emailLinkList) {
+        if (fromToTypeSelect == 0
+            || fromToTypeSelect.equals(modelEmailLink.getAddressTypeSelect())) {
+          addressSet.addAll(getEmailAddresses(modelEmailLink));
+        }
       }
+    } catch (Exception e) {
+      TraceBackService.trace(e);
     }
-
     return addressSet;
   }
 
-  @SuppressWarnings("rawtypes")
-  private <T extends Model> List<Map> getRelatedEmailByModel(
-      Class<T> modelConcerned, String filter) {
-    Query<T> query = Query.of(modelConcerned);
-    if (!ObjectUtils.isEmpty(filter)) {
-      query.filter(filter);
-    }
-    return query.cacheable().select("emailAddress.address").fetch(0, 0);
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  protected Set<String> getEmailAddresses(ModelEmailLink modelEmailLink)
+      throws ClassNotFoundException {
+    String field = modelEmailLink.getEmailField();
+    String className = modelEmailLink.getMetaModel().getFullName();
+    Class<Model> klass = (Class<Model>) Class.forName(className);
+    List<Map> dataMapList = JPA.all(klass).select(field).fetch(0, 0);
+    Set<String> addresses =
+        dataMapList.stream()
+            .map(map -> map.get(field))
+            .filter(Objects::nonNull)
+            .map(Object::toString)
+            .collect(Collectors.toSet());
+    return addresses;
   }
 }
