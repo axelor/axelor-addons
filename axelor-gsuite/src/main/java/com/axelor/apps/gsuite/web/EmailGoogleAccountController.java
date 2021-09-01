@@ -17,28 +17,32 @@
  */
 package com.axelor.apps.gsuite.web;
 
-import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
-import com.axelor.exception.AxelorException;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
+import com.axelor.exception.ResponseMessageType;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Singleton;
-import java.io.IOException;
 
 @Singleton
-public class GoogleAccountController {
+public class EmailGoogleAccountController {
 
-  public void getAuthUrl(ActionRequest request, ActionResponse response)
-      throws AxelorException, IOException {
-    GoogleAccount account = request.getContext().asType(GoogleAccount.class);
-    account = Beans.get(GoogleAccountRepository.class).find(account.getId());
-    String authUrl = Beans.get(GSuiteService.class).getAuthenticationUrl(account.getId());
-    response.setAttr(
-        "authUrl",
-        "title",
-        String.format(
-            "<a href='%s'>Google authentication url (click to authenticate account)</a>", authUrl));
+  public void getAuthUrl(ActionRequest request, ActionResponse response) {
+    try {
+      EmailAccount account = request.getContext().asType(EmailAccount.class);
+      account = Beans.get(EmailAccountRepository.class).find(account.getId());
+      String authUrl = Beans.get(GSuiteService.class).getAuthenticationUrl(account.getId());
+      response.setAttr(
+          "authUrl",
+          "title",
+          String.format(
+              "<a href='%s'>Google authentication url (click to authenticate account)</a>",
+              authUrl));
+    } catch (Exception e) {
+      TraceBackService.trace(response, e, ResponseMessageType.ERROR);
+    }
   }
 }

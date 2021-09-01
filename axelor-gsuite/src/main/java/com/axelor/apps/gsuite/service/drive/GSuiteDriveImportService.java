@@ -18,7 +18,7 @@
 package com.axelor.apps.gsuite.service.drive;
 
 import com.axelor.apps.gsuite.db.DriveGoogleAccount;
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.drive.model.File;
@@ -26,19 +26,16 @@ import java.util.List;
 
 public interface GSuiteDriveImportService {
 
-  GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
+  EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
-  void syncDocs(GoogleAccount googleAccount) throws AxelorException;
+  void syncDocs(EmailAccount emailAccount) throws AxelorException;
 
-  void createFolders(List<File> folders, GoogleAccount googleAccount);
+  void createFolders(List<File> folders, EmailAccount emailAccount);
 
   void createDriveGoogleAccount(
-      GoogleAccount googleAccount,
-      DMSFile dmsFile,
-      File file,
-      DriveGoogleAccount driveGoogleAccount);
+      EmailAccount emailAccount, DMSFile dmsFile, File file, DriveGoogleAccount driveGoogleAccount);
 
-  void createFiles(List<File> files, GoogleAccount googleAccount) throws AxelorException;
+  void createFiles(List<File> files, EmailAccount emailAccount) throws AxelorException;
 
-  void updateParent(List<File> allData, GoogleAccount googleAccount);
+  void updateParent(List<File> allData, EmailAccount emailAccount);
 }

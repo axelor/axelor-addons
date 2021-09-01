@@ -18,7 +18,7 @@
 package com.axelor.apps.gsuite.service.task;
 
 import com.axelor.apps.crm.db.Event;
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.tasks.Tasks.TasksOperations;
 import com.google.api.services.tasks.model.Task;
@@ -26,7 +26,7 @@ import java.io.IOException;
 
 public interface GSuiteTaskExportService {
 
-  GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
+  EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
   String createUpdateGoogleTask(
       TasksOperations taskOperations, Event task, String tasklistId, String taskId)

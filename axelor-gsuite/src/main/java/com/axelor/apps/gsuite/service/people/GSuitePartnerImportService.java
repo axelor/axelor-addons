@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.gsuite.service.people;
 
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.exception.AxelorException;
 
 public interface GSuitePartnerImportService {
 
-  void sync(GoogleAccount account) throws AxelorException;
+  void sync(EmailAccount account) throws AxelorException;
 }

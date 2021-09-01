@@ -9,7 +9,7 @@
 	
 		<many-to-one name="message" ref="com.axelor.apps.message.db.Message" />
 		<string name="googleEmailMessageId" />
-		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount" />
+		<many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount" />
 
 		<finder-method name="findByGoogleMessageId" using="googleEmailMessageId" />
 		

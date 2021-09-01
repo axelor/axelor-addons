@@ -3,13 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="gsuite" package="com.axelor.apps.gsuite.db" />
+	<module name="message" package="com.axelor.apps.message.db" />
 
-	<entity name="GoogleAccount" cacheable="true">
-	
-		<string name="name" title="Name" />
-		<many-to-one name="ownerUser" ref="com.axelor.auth.db.User" title="User"/>
-		<boolean name="isAuthorized" title="Authorized ?"  readonly="true"/>
+	<entity name="EmailAccount" lang="java">
 		
 		<string name="accessToken" />
 		<string name="refreshToken" />
@@ -30,6 +26,13 @@
 		<string name="taskSyncToGoogleLog" title="Task Sync To Google Log" large="true"/>
 		
 		<string name="removedEventIds" title="Removed event ids" large="true"/>
+		
+		<extra-code><![CDATA[
+	
+			// SERVER TYPE SELECT
+			public static final int SERVER_TYPE_GSUITE = 5;
+			
+		]]></extra-code>
 				
 	</entity>
 

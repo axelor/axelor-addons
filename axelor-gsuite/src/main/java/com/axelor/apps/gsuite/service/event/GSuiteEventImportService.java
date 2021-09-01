@@ -18,21 +18,21 @@
 package com.axelor.apps.gsuite.service.event;
 
 import com.axelor.apps.crm.db.Event;
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.calendar.Calendar;
 import java.time.LocalDateTime;
 
 public interface GSuiteEventImportService {
 
-  GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
+  EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
-  public GoogleAccount sync(
-      GoogleAccount googleAccount, LocalDateTime startDateT, LocalDateTime endDateT)
+  public EmailAccount sync(
+      EmailAccount emailAccount, LocalDateTime startDateT, LocalDateTime endDateT)
       throws AxelorException;
 
   public void syncEvents(
-      GoogleAccount googleAccount,
+      EmailAccount emailAccount,
       Calendar calendar,
       LocalDateTime startDateT,
       LocalDateTime endDateT)

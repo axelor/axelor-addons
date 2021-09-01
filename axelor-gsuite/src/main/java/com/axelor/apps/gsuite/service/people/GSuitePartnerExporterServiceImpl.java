@@ -23,11 +23,11 @@ import com.axelor.apps.base.db.Function;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.app.AppService;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.PartnerGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
@@ -57,22 +57,22 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
   protected GSuiteService gSuiteService;
   protected PartnerRepository partnerRepo;
   protected PartnerGoogleAccountRepository partnerAccountRepo;
-  protected GoogleAccountRepository googleAccountRepo;
+  protected EmailAccountRepository emailAccountRepo;
 
   @Inject
   public GSuitePartnerExporterServiceImpl(
       GSuiteService gSuiteService,
       PartnerRepository partnerRepo,
       PartnerGoogleAccountRepository partnerAccountRepo,
-      GoogleAccountRepository googleAccountRepo) {
+      EmailAccountRepository emailAccountRepo) {
     this.gSuiteService = gSuiteService;
     this.partnerRepo = partnerRepo;
     this.partnerAccountRepo = partnerAccountRepo;
-    this.googleAccountRepo = googleAccountRepo;
+    this.emailAccountRepo = emailAccountRepo;
   }
 
   @Override
-  public void sync(GoogleAccount account) throws AxelorException {
+  public void sync(EmailAccount account) throws AxelorException {
     PeopleService service = gSuiteService.getPeople(account.getId());
     LocalDateTime lastSyncDateT = account.getContactSyncToGoogleDate();
     List<Partner> partners = getPartners(lastSyncDateT);
@@ -115,7 +115,7 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
     }
   }
 
-  protected void createContact(PeopleService service, Partner partner, GoogleAccount googleAccount)
+  protected void createContact(PeopleService service, Partner partner, EmailAccount emailAccount)
       throws AxelorException {
     try {
       Person person = new Person();
@@ -127,7 +127,7 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
               .set("sources", "READ_SOURCE_TYPE_CONTACT")
               .execute();
       updateContactPhoto(person.getResourceName(), partner, service);
-      createPartnerGoogleAccount(partner, googleAccount, person);
+      createPartnerGoogleAccount(partner, emailAccount, person);
     } catch (IOException e) {
       throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
@@ -235,11 +235,11 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
   }
 
   protected PartnerGoogleAccount getRelatedPartnerGoogleAccount(
-      GoogleAccount account, Partner partner) {
+      EmailAccount account, Partner partner) {
     PartnerGoogleAccount partnerGoogleAccount = null;
     for (PartnerGoogleAccount partnerGAccount : partner.getPartnerGoogleAccounts()) {
-      if (partnerGAccount.getGoogleAccount() != null
-          && partnerGAccount.getGoogleAccount().equals(account)
+      if (partnerGAccount.getEmailAccount() != null
+          && partnerGAccount.getEmailAccount().equals(account)
           && StringUtils.notBlank(partnerGAccount.getGoogleContactId())) {
         partnerGoogleAccount = partnerGAccount;
         break;
@@ -259,12 +259,12 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
 
   @Transactional(rollbackOn = Exception.class)
   protected void createPartnerGoogleAccount(
-      Partner partner, GoogleAccount googleAccount, Person person) {
+      Partner partner, EmailAccount emailAccount, Person person) {
     String resourceName = person.getResourceName();
     String[] resourceNameParts = resourceName.split("/");
     String googleContactId = resourceNameParts[1];
     PartnerGoogleAccount partnerGoogleAccount = new PartnerGoogleAccount();
-    partnerGoogleAccount.setGoogleAccount(googleAccount);
+    partnerGoogleAccount.setEmailAccount(emailAccount);
     partnerGoogleAccount.setGoogleContactId(googleContactId);
     partnerGoogleAccount.setPartner(partner);
     partnerAccountRepo.save(partnerGoogleAccount);
@@ -281,8 +281,8 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
   }
 
   @Transactional
-  protected void setSyncDateTime(GoogleAccount account) {
+  protected void setSyncDateTime(EmailAccount account) {
     account.setContactSyncToGoogleDate(LocalDateTime.now());
-    googleAccountRepo.save(account);
+    emailAccountRepo.save(account);
   }
 }

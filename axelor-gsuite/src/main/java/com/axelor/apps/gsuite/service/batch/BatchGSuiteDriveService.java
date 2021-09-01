@@ -18,10 +18,10 @@
 package com.axelor.apps.gsuite.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.GSuiteBatchRepository;
 import com.axelor.apps.gsuite.service.drive.GSuiteDriveExportService;
 import com.axelor.apps.gsuite.service.drive.GSuiteDriveImportService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
@@ -39,10 +39,13 @@ public class BatchGSuiteDriveService extends AbstractBatch {
 
   @Override
   protected void process() {
-    List<User> users = userRepo.all().filter("self.googleAccount != null").fetch();
-    Set<GoogleAccount> accountSet =
-        users.stream().map(User::getGoogleAccount).collect(Collectors.toSet());
-    for (GoogleAccount account : accountSet) {
+    List<User> users = userRepo.all().filter("self.emailAccount != null").fetch();
+    Set<EmailAccount> accountSet =
+        users.stream()
+            .map(User::getEmailAccount)
+            .filter(EmailAccount::getIsValid)
+            .collect(Collectors.toSet());
+    for (EmailAccount account : accountSet) {
       try {
         if (batch.getgSuiteBatch().getTypeSelect() == GSuiteBatchRepository.TYPE_SELECT_IMPORT) {
           gSuiteDriveImportService.sync(account);

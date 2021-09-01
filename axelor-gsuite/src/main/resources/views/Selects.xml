@@ -16,4 +16,8 @@
 		<option value="2">Export</option>
 	</selection>
 	
+	<selection name="mail.account.server.type.select" id="gsuite.mail.account.server.type.select">
+		<option value="5">Gsuite</option>
+	</selection>
+	
 </object-views>

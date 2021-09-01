@@ -8,7 +8,7 @@
   <entity name="User" sequential="true" lang="java">
   		
   		<boolean name="isGSuiteSyncAllowed" title="G-Suite sync allowed ?"></boolean>	
-  		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount" title="Google account"/>
+  		<many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount" title="Email account"/>
 	
   </entity>
 

@@ -18,10 +18,10 @@
 package com.axelor.apps.gsuite.module;
 
 import com.axelor.app.AxelorModule;
+import com.axelor.apps.base.service.message.MessageServiceBaseImpl;
 import com.axelor.apps.crm.db.repo.EventManagementRepository;
+import com.axelor.apps.gsuite.db.repo.EmailAccountManagementRepository;
 import com.axelor.apps.gsuite.db.repo.GSuiteEventRepository;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountManagementRepository;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.ICalUserService;
 import com.axelor.apps.gsuite.service.ICalUserServiceImpl;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
@@ -36,6 +36,7 @@ import com.axelor.apps.gsuite.service.event.GSuiteEventImportService;
 import com.axelor.apps.gsuite.service.event.GSuiteEventImportServiceImpl;
 import com.axelor.apps.gsuite.service.message.GSuiteMessageImportService;
 import com.axelor.apps.gsuite.service.message.GSuiteMessageImportServiceImpl;
+import com.axelor.apps.gsuite.service.message.MessageServiceGSuiteImpl;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerExporterService;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerExporterServiceImpl;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerImportService;
@@ -44,23 +45,31 @@ import com.axelor.apps.gsuite.service.task.GSuiteTaskExportService;
 import com.axelor.apps.gsuite.service.task.GSuiteTaskExportServiceImpl;
 import com.axelor.apps.gsuite.service.task.GSuiteTaskImportService;
 import com.axelor.apps.gsuite.service.task.GSuiteTaskImportServiceImpl;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 
 public class GsuiteModule extends AxelorModule {
 
   @Override
   protected void configure() {
     bind(AppGSuiteService.class).to(AppGSuiteServiceImpl.class);
+
+    bind(GSuiteEventImportService.class).to(GSuiteEventImportServiceImpl.class);
     bind(GSuiteEventExportService.class).to(GSuiteEventExportServiceImpl.class);
-    bind(GoogleAccountRepository.class).to(GoogleAccountManagementRepository.class);
+    bind(ICalUserService.class).to(ICalUserServiceImpl.class);
+    bind(EventManagementRepository.class).to(GSuiteEventRepository.class);
+
+    bind(EmailAccountRepository.class).to(EmailAccountManagementRepository.class);
+
     bind(GSuiteDriveExportService.class).to(GSuiteDriveExportServiceImpl.class);
     bind(GSuiteDriveImportService.class).to(GSuiteDriveImportServiceImpl.class);
-    bind(GSuiteEventImportService.class).to(GSuiteEventImportServiceImpl.class);
+
     bind(GSuiteMessageImportService.class).to(GSuiteMessageImportServiceImpl.class);
+    bind(MessageServiceBaseImpl.class).to(MessageServiceGSuiteImpl.class);
+
     bind(GSuiteTaskImportService.class).to(GSuiteTaskImportServiceImpl.class);
-    bind(ICalUserService.class).to(ICalUserServiceImpl.class);
+    bind(GSuiteTaskExportService.class).to(GSuiteTaskExportServiceImpl.class);
+
     bind(GSuitePartnerImportService.class).to(GSuitePartnerImportServiceImpl.class);
     bind(GSuitePartnerExporterService.class).to(GSuitePartnerExporterServiceImpl.class);
-    bind(GSuiteTaskExportService.class).to(GSuiteTaskExportServiceImpl.class);
-    bind(EventManagementRepository.class).to(GSuiteEventRepository.class);
   }
 }

@@ -19,12 +19,12 @@ package com.axelor.apps.gsuite.service.task;
 
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.TaskGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.TaskGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.utils.DateUtils;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.exception.AxelorException;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.tasks.Tasks;
@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
 public class GSuiteTaskExportServiceImpl implements GSuiteTaskExportService {
 
   @Inject private GSuiteService gSuiteService;
-  @Inject private GoogleAccountRepository googleAccountRepo;
+  @Inject private EmailAccountRepository emailAccountRepo;
   @Inject private EventRepository eventRepo;
   @Inject private TaskGoogleAccountRepository taskGoogleAccountRepo;
 
@@ -55,13 +55,13 @@ public class GSuiteTaskExportServiceImpl implements GSuiteTaskExportService {
 
   @Override
   @Transactional
-  public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException {
-    if (googleAccount == null) {
+  public EmailAccount sync(EmailAccount emailAccount) throws AxelorException {
+    if (emailAccount == null) {
       return null;
     }
 
-    googleAccount = googleAccountRepo.find(googleAccount.getId());
-    LocalDateTime syncDate = googleAccount.getTaskSyncToGoogleDate();
+    emailAccount = emailAccountRepo.find(emailAccount.getId());
+    LocalDateTime syncDate = emailAccount.getTaskSyncToGoogleDate();
     LOG.debug("Last sync date: {}", syncDate);
 
     List<Event> events;
@@ -91,7 +91,7 @@ public class GSuiteTaskExportServiceImpl implements GSuiteTaskExportService {
       String tasklistId = tasklistMap.getOrDefault(task.getTasklistName(), null);
 
       for (TaskGoogleAccount account : task.getTaskGoogleAccounts()) {
-        if (googleAccount.equals(account.getGoogleAccount())) {
+        if (emailAccount.equals(account.getEmailAccount())) {
           taskAccount = account;
           taskId = account.getGoogleTaskId();
           tasklistId = account.getGoogleTasklistId();
@@ -100,22 +100,22 @@ public class GSuiteTaskExportServiceImpl implements GSuiteTaskExportService {
         }
       }
 
-      Tasks tasks = gSuiteService.getTask(googleAccount.getId());
+      Tasks tasks = gSuiteService.getTask(emailAccount.getId());
       try {
         tasklistId = insertTaskList(tasklistId, tasks.tasklists(), task);
         taskId = createUpdateGoogleTask(tasks.tasks(), task, tasklistId, taskId);
       } catch (IOException e) {
-        googleAccount.setTaskSyncToGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
+        emailAccount.setTaskSyncToGoogleLog("\n" + ExceptionUtils.getStackTrace(e));
       }
       taskAccount.setTask(task);
-      taskAccount.setGoogleAccount(googleAccount);
+      taskAccount.setEmailAccount(emailAccount);
       taskAccount.setGoogleTaskId(taskId);
       taskAccount.setGoogleTasklistId(tasklistId);
       tasklistMap.put(task.getTasklistName(), tasklistId);
       taskGoogleAccountRepo.save(taskAccount);
     }
-    googleAccount.setTaskSyncToGoogleDate(LocalDateTime.now());
-    return googleAccountRepo.save(googleAccount);
+    emailAccount.setTaskSyncToGoogleDate(LocalDateTime.now());
+    return emailAccountRepo.save(emailAccount);
   }
 
   protected String insertTaskList(String tasklistId, Tasklists tasklists, Event task)

@@ -8,13 +8,13 @@
 			<insert position="after">
 			  <panel name="gSuitePanel" showIf="[1,5].indexOf(stepStatusSelect) > -1" title="G-Suite Configuration" if="__config__.app.isApp('gsuite')">
 	    	  	<field name="isGSuiteSyncAllowed" widget="boolean-switch"/>
-	    	  	<button name="createGoogleAccount" title="Create Google account" showIf="!googleAccount &amp;&amp; isGSuiteSyncAllowed" onClick="save,action-user-record-form-google-account" colSpan="4"/>	
-				<field name="googleAccount" showIf="isGSuiteSyncAllowed" colSpan="12" onChange="action-user-google-account-attrs-reset-authurl"  form-view="google-account-form" grid-view="google-account-grid" showTitle="false" canNew="true">
+	    	  	<button name="createGoogleAccount" title="Create Google account" showIf="!emailAccount &amp;&amp; isGSuiteSyncAllowed" onClick="save,action-user-record-form-google-account" colSpan="4"/>	
+				<field name="emailAccount" showIf="isGSuiteSyncAllowed" colSpan="12" onChange="action-user-google-account-attrs-reset-authurl"  form-view="google-account-form" grid-view="google-account-grid" showTitle="false" canNew="true">
 					<editor x-viewer="true">
 						<panel colSpan="12">
 							<field name="name" colSpan="6"/>
-							<field name="isAuthorized" colSpan="6"/>
-							<panel showIf="!isAuthorized &amp;&amp; id" colSpan="12">
+							<field name="isValid" colSpan="6"/>
+							<panel showIf="!isValid &amp;&amp; id" colSpan="12">
 								<button name="$authorizeAccountBtn" title="Generate authorization url" colSpan="4" onClick="save,action-google-account-method-set-auth-url" />
 								<label name="authUrl" title=""/>
 							</panel>
@@ -32,13 +32,13 @@
 		<extend target="panel[@name='userPreferencesPanel']/*[last()]">
 			<insert position="after">
 				<panel name="gsuiteGooogleAccountPanel" if="__config__.app.isApp('gsuite')">
-					<button name="createGoogleAccount" title="Create Google account" showIf="!googleAccount &amp;&amp; isGSuiteSyncAllowed" onClick="action-user-record-form-google-account" colSpan="4"/>	
-					<field name="googleAccount" showIf="isGSuiteSyncAllowed" colSpan="12" onChange="action-user-google-account-attrs-reset-authurl" form-view="google-account-form" grid-view="google-account-grid" showTitle="false" canNew="true">
+					<button name="createGoogleAccount" title="Create Google account" showIf="!emailAccount &amp;&amp; isGSuiteSyncAllowed" onClick="action-user-record-form-google-account" colSpan="4"/>	
+					<field name="emailAccount" showIf="isGSuiteSyncAllowed" colSpan="12" onChange="action-user-google-account-attrs-reset-authurl" form-view="google-account-form" grid-view="google-account-grid" showTitle="false" canNew="true">
 						<editor x-viewer="true">
 							<panel colSpan="12">
 								<field name="name" colSpan="6"/>
-								<field name="isAuthorized" colSpan="6"/>
-								<panel showIf="!isAuthorized &amp;&amp; id" colSpan="12">
+								<field name="isValid" colSpan="6"/>
+								<panel showIf="!isValid &amp;&amp; id" colSpan="12">
 									<button name="$authorizeAccountBtn" title="Generate authorization url" colSpan="4" onClick="save,action-google-account-method-set-auth-url" />
 									<label name="authUrl" title=""/>
 								</panel>
@@ -53,10 +53,10 @@
 	</form>
 	
 	<action-attrs name="action-user-google-account-attrs-reset-authurl">
-		<attribute name="title" for="googleAccount.authUrl" expr="eval:null"/>
+		<attribute name="title" for="emailAccount.authUrl" expr="eval:null"/>
 	</action-attrs>
 	
-   <action-view name="action-user-record-form-google-account" title="Google account" model="com.axelor.apps.gsuite.db.GoogleAccount">
+   <action-view name="action-user-record-form-google-account" title="Google account" model="com.axelor.apps.message.db.EmailAccount">
  		<view type="form" name="google-account-form" />
  		  <view-param name="show-toolbar" value="false"/>
  		  <view-param name="popup" value="reload"/>

@@ -19,12 +19,12 @@ package com.axelor.apps.gsuite.service.task;
 
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.TaskGoogleAccount;
 import com.axelor.apps.gsuite.db.repo.TaskGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.ICalUserService;
 import com.axelor.apps.gsuite.utils.DateUtils;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -52,7 +52,7 @@ public class GSuiteTaskImportServiceImpl implements GSuiteTaskImportService {
   @Inject protected ICalUserService iCalUserService;
   @Inject protected TaskGoogleAccountRepository taskGoogleAccountRepo;
 
-  protected GoogleAccount account;
+  protected EmailAccount account;
   private Tasks service;
 
   protected Tasks getService() throws AxelorException {
@@ -63,13 +63,13 @@ public class GSuiteTaskImportServiceImpl implements GSuiteTaskImportService {
   }
 
   @Override
-  public void sync(GoogleAccount account) throws AxelorException {
+  public void sync(EmailAccount account) throws AxelorException {
     this.account = account;
     sync(account, null, null);
   }
 
   @Override
-  public void sync(GoogleAccount account, LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
+  public void sync(EmailAccount account, LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
       throws AxelorException {
     this.account = account;
     try {
@@ -91,8 +91,7 @@ public class GSuiteTaskImportServiceImpl implements GSuiteTaskImportService {
         }
         nextPageToken = result.getNextPageToken();
       } while (nextPageToken != null);
-      log.debug(
-          "{} Event(task) retrived and processed for {}", tasks.size(), account.getOwnerUser());
+      log.debug("{} Event(task) retrived and processed for {}", tasks.size(), account.getUser());
     } catch (IOException e) {
       throw new AxelorException(e, TraceBackRepository.CATEGORY_INCONSISTENCY);
     }
@@ -132,7 +131,7 @@ public class GSuiteTaskImportServiceImpl implements GSuiteTaskImportService {
   }
 
   protected List<Event> createOrUpdateTasks(
-      GoogleAccount account, String tasklistId, String taskListName, List<Task> tasks) {
+      EmailAccount account, String tasklistId, String taskListName, List<Task> tasks) {
     List<Event> events = new ArrayList<>();
     for (Task task : tasks) {
       Event event = createOrUpdateTask(taskListName, task);
@@ -171,12 +170,12 @@ public class GSuiteTaskImportServiceImpl implements GSuiteTaskImportService {
 
   @Transactional
   protected void createOrUpdateTaskAccount(
-      GoogleAccount account, String tasklistId, Task task, Event event) {
+      EmailAccount account, String tasklistId, Task task, Event event) {
     List<TaskGoogleAccount> taskAccountList = event.getTaskGoogleAccounts();
     if (CollectionUtils.isEmpty(taskAccountList)) {
       TaskGoogleAccount taskGoogleAccount = new TaskGoogleAccount();
       taskGoogleAccount.setTask(event);
-      taskGoogleAccount.setGoogleAccount(account);
+      taskGoogleAccount.setEmailAccount(account);
       taskGoogleAccount.setGoogleTaskId(task.getId());
       taskGoogleAccount.setGoogleTasklistId(tasklistId);
       taskGoogleAccountRepo.save(taskGoogleAccount);

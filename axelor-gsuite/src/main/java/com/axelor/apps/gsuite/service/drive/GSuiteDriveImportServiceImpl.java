@@ -18,10 +18,10 @@
 package com.axelor.apps.gsuite.service.drive;
 
 import com.axelor.apps.gsuite.db.DriveGoogleAccount;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.DriveGoogleAccountRepository;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.AxelorException;
@@ -53,12 +53,12 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().getClass());
 
   private static Drive drive;
-  private GoogleAccount googleAccount;
+  private EmailAccount emailAccount;
   private Map<String, List<String>> exportFormats;
 
   @Inject private GSuiteService gSuiteService;
 
-  @Inject private GoogleAccountRepository googleAccountRepo;
+  @Inject private EmailAccountRepository emailAccountRepo;
 
   @Inject private DMSFileRepository dmsFileRepo;
 
@@ -68,22 +68,22 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
 
   @Override
   @Transactional
-  public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException {
-    if (googleAccount == null) {
+  public EmailAccount sync(EmailAccount emailAccount) throws AxelorException {
+    if (emailAccount == null) {
       return null;
     }
-    this.googleAccount = googleAccount;
+    this.emailAccount = emailAccount;
     // TODO to make date dynamic
     LocalDateTime syncDate = LocalDateTime.now();
     log.debug("Last sync date: {}", syncDate);
-    googleAccount = googleAccountRepo.find(googleAccount.getId());
-    this.syncDocs(googleAccount);
-    return googleAccountRepo.save(googleAccount);
+    emailAccount = emailAccountRepo.find(emailAccount.getId());
+    this.syncDocs(emailAccount);
+    return emailAccountRepo.save(emailAccount);
   }
 
   @Override
-  public void syncDocs(GoogleAccount googleAccount) throws AxelorException {
-    this.googleAccount = googleAccount;
+  public void syncDocs(EmailAccount emailAccount) throws AxelorException {
+    this.emailAccount = emailAccount;
 
     try {
       String nextPageToken = null;
@@ -117,9 +117,9 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
           }
         }
 
-        this.createFolders(folders, googleAccount);
-        this.createFiles(files, googleAccount);
-        this.updateParent(resultFileList, googleAccount);
+        this.createFolders(folders, emailAccount);
+        this.createFiles(files, emailAccount);
+        this.updateParent(resultFileList, emailAccount);
 
         totalFiles += files.size();
         totalFolders += folders.size();
@@ -136,7 +136,7 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
 
   @Override
   @Transactional
-  public void updateParent(List<File> allData, GoogleAccount googleAccount) {
+  public void updateParent(List<File> allData, EmailAccount emailAccount) {
     for (File file : allData) {
       DriveGoogleAccount driveGoogleAccount =
           driveGoogleAccountRepo.findByGoogleDriveId(file.getId());
@@ -157,7 +157,7 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
 
   @Override
   @Transactional
-  public void createFiles(List<File> files, GoogleAccount googleAccount) throws AxelorException {
+  public void createFiles(List<File> files, EmailAccount emailAccount) throws AxelorException {
     for (File file : files) {
 
       try {
@@ -183,7 +183,7 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
           dmsFile.setParent(parent);
         }
         dmsFileRepo.save(dmsFile);
-        this.createDriveGoogleAccount(googleAccount, dmsFile, file, driveGoogleAccount);
+        this.createDriveGoogleAccount(emailAccount, dmsFile, file, driveGoogleAccount);
       } catch (IOException e) {
         log.error(e.getMessage());
         TraceBackService.trace(e);
@@ -193,7 +193,7 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
 
   @Override
   @Transactional
-  public void createFolders(List<File> folders, GoogleAccount googleAccount) {
+  public void createFolders(List<File> folders, EmailAccount emailAccount) {
     for (File file : folders) {
       DriveGoogleAccount driveGoogleAccount =
           driveGoogleAccountRepo.findByGoogleDriveId(file.getId());
@@ -201,20 +201,20 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
       dmsFile.setIsDirectory(true);
       dmsFile.setFileName(file.getName());
       dmsFileRepo.save(dmsFile);
-      this.createDriveGoogleAccount(googleAccount, dmsFile, file, driveGoogleAccount);
+      this.createDriveGoogleAccount(emailAccount, dmsFile, file, driveGoogleAccount);
     }
   }
 
   @Override
   @Transactional
   public void createDriveGoogleAccount(
-      GoogleAccount googleAccount,
+      EmailAccount emailAccount,
       DMSFile dmsFile,
       File file,
       DriveGoogleAccount driveGoogleAccount) {
     driveGoogleAccount = driveGoogleAccount != null ? driveGoogleAccount : new DriveGoogleAccount();
     driveGoogleAccount.setDms(dmsFile);
-    driveGoogleAccount.setGoogleAccount(googleAccount);
+    driveGoogleAccount.setEmailAccount(emailAccount);
     driveGoogleAccount.setGoogleDriveId(file.getId());
     driveGoogleAccountRepo.save(driveGoogleAccount);
   }
@@ -238,7 +238,7 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
   }
 
   protected Drive getDrive() throws AxelorException {
-    return drive == null ? gSuiteService.getDrive(googleAccount.getId()) : drive;
+    return drive == null ? gSuiteService.getDrive(emailAccount.getId()) : drive;
   }
 
   protected String getExportFormat(String mimeType) throws IOException, AxelorException {

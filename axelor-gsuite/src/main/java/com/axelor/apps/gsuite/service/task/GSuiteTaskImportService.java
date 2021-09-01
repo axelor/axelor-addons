@@ -17,14 +17,14 @@
  */
 package com.axelor.apps.gsuite.service.task;
 
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.exception.AxelorException;
 import java.time.LocalDateTime;
 
 public interface GSuiteTaskImportService {
 
-  public void sync(GoogleAccount account) throws AxelorException;
+  public void sync(EmailAccount account) throws AxelorException;
 
-  public void sync(GoogleAccount account, LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
+  public void sync(EmailAccount account, LocalDateTime dueDateTMin, LocalDateTime dueDateTMax)
       throws AxelorException;
 }

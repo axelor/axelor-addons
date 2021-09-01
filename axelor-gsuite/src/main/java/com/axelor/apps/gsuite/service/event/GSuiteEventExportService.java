@@ -18,14 +18,14 @@
 package com.axelor.apps.gsuite.service.event;
 
 import com.axelor.apps.crm.db.Event;
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.exception.AxelorException;
 import java.io.IOException;
 import java.util.Iterator;
 
 public interface GSuiteEventExportService {
 
-  public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
+  public EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
   Event sync(Event event, boolean remove) throws AxelorException;
 
@@ -34,16 +34,16 @@ public interface GSuiteEventExportService {
   com.google.api.services.calendar.model.Event extractEvent(
       Event event, com.google.api.services.calendar.model.Event googleEvent);
 
-  GoogleAccount updateCrmEvents(GoogleAccount account) throws IOException;
+  EmailAccount updateCrmEvents(EmailAccount account) throws IOException;
 
   void checkEvent(
-      GoogleAccount account, Iterator<com.google.api.services.calendar.model.Event> iterator)
+      EmailAccount account, Iterator<com.google.api.services.calendar.model.Event> iterator)
       throws IOException;
 
   Event createUpdateCrmEvent(Event event, com.google.api.services.calendar.model.Event googleEvent)
       throws IOException;
 
-  void createEventAccount(GoogleAccount account, Event event, String eventId);
+  void createEventAccount(EmailAccount account, Event event, String eventId);
 
   void removeEventFromRemote(Event event);
 }

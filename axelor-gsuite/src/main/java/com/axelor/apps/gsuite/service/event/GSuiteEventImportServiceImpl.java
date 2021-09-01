@@ -22,13 +22,13 @@ import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
 import com.axelor.apps.gsuite.db.EventGoogleAccount;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GSuiteEventRepository;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.ICalUserService;
 import com.axelor.apps.gsuite.utils.DateUtils;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
@@ -54,7 +54,7 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
 
   @Inject protected GSuiteService gSuiteService;
 
-  @Inject protected GoogleAccountRepository googleAccountRepo;
+  @Inject protected EmailAccountRepository emailAccountRepo;
 
   @Inject protected EventGoogleAccountRepository eventGoogleAccountRepo;
 
@@ -66,31 +66,31 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
 
   @Override
   @Transactional
-  public GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException {
-    if (googleAccount == null) {
+  public EmailAccount sync(EmailAccount emailAccount) throws AxelorException {
+    if (emailAccount == null) {
       return null;
     }
-    return sync(googleAccount, null, null);
+    return sync(emailAccount, null, null);
   }
 
   @Override
   @Transactional
-  public GoogleAccount sync(
-      GoogleAccount googleAccount, LocalDateTime startDateT, LocalDateTime endDateT)
+  public EmailAccount sync(
+      EmailAccount emailAccount, LocalDateTime startDateT, LocalDateTime endDateT)
       throws AxelorException {
 
-    googleAccount = googleAccountRepo.find(googleAccount.getId());
-    Credential credential = gSuiteService.getCredential(googleAccount.getId());
+    emailAccount = emailAccountRepo.find(emailAccount.getId());
+    Credential credential = gSuiteService.getCredential(emailAccount.getId());
     Calendar calendar = gSuiteService.getCalendar(credential);
-    syncEvents(googleAccount, calendar, startDateT, endDateT);
+    syncEvents(emailAccount, calendar, startDateT, endDateT);
 
-    return googleAccountRepo.save(googleAccount);
+    return emailAccountRepo.save(emailAccount);
   }
 
   @Override
   @Transactional
   public void syncEvents(
-      GoogleAccount googleAccount,
+      EmailAccount emailAccount,
       Calendar calendar,
       LocalDateTime startDateT,
       LocalDateTime endDateT)
@@ -129,7 +129,7 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
           crmEvent.setOrganizer(
               iCalUserService.findOrCreateICalUser(event.getOrganizer(), crmEvent));
           crmEvent.setVisibilitySelect(getEventVisibilitySelect(event.getVisibility()));
-          crmEvent.setGoogleAccount(googleAccount);
+          crmEvent.setEmailAccount(emailAccount);
           setEventDates(event, crmEvent);
           setAttendees(crmEvent, event);
 
@@ -138,7 +138,7 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
           eventGoogleAccount =
               eventGoogleAccount == null ? new EventGoogleAccount() : eventGoogleAccount;
           eventGoogleAccount.setEvent(crmEvent);
-          eventGoogleAccount.setGoogleAccount(googleAccount);
+          eventGoogleAccount.setEmailAccount(emailAccount);
           eventGoogleAccount.setGoogleEventId(event.getId());
 
           eventGoogleAccountRepo.save(eventGoogleAccount);

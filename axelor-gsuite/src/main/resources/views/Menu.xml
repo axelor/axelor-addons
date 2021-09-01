@@ -7,7 +7,7 @@
 
 	<menuitem name="gsuite-google-account" parent="gsuite-root" title="Google account" action="gsuite.google.account" />
 
-	<action-view name="gsuite.google.account" title="Google account" model="com.axelor.apps.gsuite.db.GoogleAccount">
+	<action-view name="gsuite.google.account" title="Google account" model="com.axelor.apps.message.db.EmailAccount">
 		<view type="grid" name="google-account-grid" />
 		<view type="form" name="google-account-form" />
 	</action-view>

@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.gsuite.service.drive;
 
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.drive.model.File;
@@ -25,7 +25,7 @@ import java.io.IOException;
 
 public interface GSuiteDriveExportService {
 
-  GoogleAccount sync(GoogleAccount googleAccount) throws AxelorException;
+  EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
   DMSFile sync(DMSFile dmsFile, boolean remove) throws AxelorException;
 

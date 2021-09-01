@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+
+	<grid title="Google account" name="google-account-grid"
+		model="com.axelor.apps.message.db.EmailAccount">
+		<field name="name" />
+	</grid>
+	
+	<form name="mail-account-form" id="gsuite-mail-account-form" title="Mail account" model="com.axelor.apps.message.db.EmailAccount" extension="true">
+		<extend target="/">
+	    	<attribute name="onNew" value="action-gsuite-email-account-record-on-new"/>
+	    </extend>
+		<extend target="//panel[@name='configPanel']">
+			<attribute name="hideIf" value="serverTypeSelect == 5" />
+			<insert position="after">
+				<panel name="gsuiteConfigPanel" showIf="serverTypeSelect == 5" readonlyIf="isValid">
+					<field name="serverTypeSelect"/>
+					<field name="login" readonly="true"/>
+				</panel>
+			</insert>
+		</extend>
+		<extend target="//panel[@name='loginPanel']">
+			<attribute name="hideIf" value="serverTypeSelect == 5" />
+		</extend>
+		<extend target="//field[@name='newPassword']">
+			<attribute name="requiredIf" value="serverTypeSelect != 5 &amp;&amp; (!id || change)" />
+		</extend>
+		<extend target="//button[@name='fetchEmailsBtn']">
+			<attribute name="showIf" value="isValid &amp;&amp; serverTypeSelect != null &amp;&amp; [2,3].indexOf(serverTypeSelect) != -1"/>
+		</extend>
+		<extend target="//button[@name='testConnectionBtn']">
+			<attribute name="hideIf" value="serverTypeSelect == 5"/>
+			<insert position="after">
+				<button name="authorizeAccountBtn" title="Generate authorization url"  showIf="!isValid &amp;&amp; serverTypeSelect == 5" colSpan="6" onClick="save,action-google-account-method-set-auth-url" />
+				<label name="authUrl" title="" colSpan="6"/>
+			</insert>
+		</extend>
+	</form>
+
+	<form name="google-account-form" title="Google account" model="com.axelor.apps.message.db.EmailAccount" onNew="action-gsuite-email-account-record-on-new">
+		<panel name="mainPanel" colSpan="12">
+			<field name="name" colSpan="6"/>
+			<field name="isValid" colSpan="6"/>
+			<panel showIf="!isValid &amp;&amp; !$popup()" colSpan="12">
+				<button name="$authorizeAccountBtn" title="Generate authorization url" colSpan="4" onClick="save,action-google-account-method-set-auth-url" />
+				<label name="authUrl" title=""/>
+			</panel>
+		</panel>
+	</form>
+		
+	<action-record name="action-gsuite-email-account-record-on-new" model="com.axelor.apps.message.db.EmailAccount">
+		<field name="user" expr="eval:__user__" if="__config__.app.isApp('gsuite') &amp;&amp; __config__.app.getApp('gsuite').isEmailSyncAllowed"/>
+		<field name="user" expr="eval:__repo__(User).find(user_id)" if="__config__.app.isApp('gsuite') &amp;&amp; __config__.app.getApp('gsuite').isEmailSyncAllowed &amp;&amp; user_id"/>
+		<field name="serverTypeSelect" expr="eval: __repo__(EmailAccount).SERVER_TYPE_GSUITE" if="__config__.app.isApp('gsuite') &amp;&amp; __config__.app.getApp('gsuite').isEmailSyncAllowed" />
+		<field name="host" expr="gsuite" if="__config__.app.isApp('gsuite') &amp;&amp; __config__.app.getApp('gsuite').isEmailSyncAllowed"/>
+	</action-record>
+
+	<action-method name="action-google-account-method-set-auth-url">
+		<call class="com.axelor.apps.gsuite.web.EmailGoogleAccountController" method="getAuthUrl" />
+	</action-method>
+
+</object-views>

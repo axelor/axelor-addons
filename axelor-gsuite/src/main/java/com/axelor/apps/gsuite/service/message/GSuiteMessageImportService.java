@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.gsuite.service.message;
 
-import com.axelor.apps.gsuite.db.GoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.Message;
 import com.axelor.exception.AxelorException;
 import com.google.api.services.gmail.Gmail;
@@ -28,12 +28,12 @@ import javax.mail.MessagingException;
 
 public interface GSuiteMessageImportService {
 
-  public GoogleAccount sync(GoogleAccount account) throws AxelorException;
+  public EmailAccount sync(EmailAccount account) throws AxelorException;
 
-  public GoogleAccount sync(GoogleAccount account, LocalDate fromDate) throws AxelorException;
+  public EmailAccount sync(EmailAccount account, LocalDate fromDate) throws AxelorException;
 
   public List<Message> syncMessages(
-      Gmail service, String userId, String query, GoogleAccount googleAccount)
+      Gmail service, String userId, String query, EmailAccount emailAccount)
       throws IOException, MessagingException;
 
   public com.google.api.services.gmail.model.Message getMessage(

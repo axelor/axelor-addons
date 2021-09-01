@@ -19,10 +19,10 @@ package com.axelor.apps.gsuite.service;
 
 import com.axelor.app.AppSettings;
 import com.axelor.apps.base.db.AppGsuite;
-import com.axelor.apps.gsuite.db.GoogleAccount;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -75,7 +75,7 @@ public class GSuiteService {
   private static final JacksonFactory JSON_FACTORY = new JacksonFactory();
   private final FileDataStoreFactory dataStoreFactory;
 
-  protected GoogleAccountRepository googleAccountRepo;
+  protected EmailAccountRepository emailAccountRepo;
   protected AppGSuiteService appGSuiteService;
 
   private GoogleAuthorizationCodeFlow flow = null;
@@ -83,10 +83,10 @@ public class GSuiteService {
   private static final String APP_NAME = AppSettings.get().get("application.name", "Axelor gsuite");
 
   @Inject
-  public GSuiteService(GoogleAccountRepository googleAccountRepo, AppGSuiteService appGSuiteService)
+  public GSuiteService(EmailAccountRepository googleAccountRepo, AppGSuiteService appGSuiteService)
       throws AxelorException {
     try {
-      this.googleAccountRepo = googleAccountRepo;
+      this.emailAccountRepo = googleAccountRepo;
       this.appGSuiteService = appGSuiteService;
       dataStoreFactory =
           new FileDataStoreFactory(new File(AppSettings.get().get("file.upload.dir")));
@@ -157,10 +157,10 @@ public class GSuiteService {
       throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 
-    GoogleAccount account = googleAccountRepo.find(accountId);
-    account.setIsAuthorized(true);
+    EmailAccount account = emailAccountRepo.find(accountId);
+    account.setIsValid(true);
 
-    googleAccountRepo.save(account);
+    emailAccountRepo.save(account);
   }
 
   public Credential getCredential(Long accountId) throws AxelorException {
@@ -227,7 +227,7 @@ public class GSuiteService {
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
           String.format(
               I18n.get(IExceptionMessage.AUTH_EXCEPTION_1),
-              googleAccountRepo.find(accountId).getName()));
+              emailAccountRepo.find(accountId).getName()));
     }
 
     return new PeopleService.Builder(getHttpTransport(), JSON_FACTORY, credential)
@@ -242,7 +242,7 @@ public class GSuiteService {
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
           String.format(
               I18n.get(IExceptionMessage.AUTH_EXCEPTION_1),
-              googleAccountRepo.find(accountId).getName()));
+              emailAccountRepo.find(accountId).getName()));
     }
     return new Gmail.Builder(getHttpTransport(), JSON_FACTORY, credential)
         .setApplicationName(APP_NAME)
@@ -256,7 +256,7 @@ public class GSuiteService {
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
           String.format(
               I18n.get(IExceptionMessage.AUTH_EXCEPTION_1),
-              googleAccountRepo.find(accountId).getName()));
+              emailAccountRepo.find(accountId).getName()));
     }
     return new Tasks.Builder(getHttpTransport(), JSON_FACTORY, credential)
         .setApplicationName(APP_NAME)

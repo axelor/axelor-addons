@@ -18,14 +18,15 @@
 package com.axelor.apps.gsuite.db.repo;
 
 import com.axelor.apps.gsuite.db.EventGoogleAccount;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
+import com.axelor.apps.message.db.EmailAccount;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.google.inject.Inject;
 import java.util.List;
 
-public class GoogleAccountManagementRepository extends GoogleAccountRepository {
+public class EmailAccountManagementRepository extends EmailAccountRepository {
 
   @Inject private EventGoogleAccountRepository eventGoogleAccountRepo;
 
@@ -34,30 +35,33 @@ public class GoogleAccountManagementRepository extends GoogleAccountRepository {
   @Inject private UserRepository userRepo;
 
   @Override
-  public GoogleAccount save(GoogleAccount entity) {
-    GoogleAccount account = super.save(entity);
-    User user = account.getOwnerUser();
-    user.setGoogleAccount(account);
-    userRepo.save(user);
+  public EmailAccount save(EmailAccount entity) {
+    EmailAccount account = super.save(entity);
+    User user = account.getUser();
+    if (user != null) {
+      user.setEmailAccount(account);
+      userRepo.save(user);
+    }
     return account;
   }
 
   @Override
-  public void remove(GoogleAccount account) {
-
+  public void remove(EmailAccount account) {
     List<PartnerGoogleAccount> partnerAccounts =
-        partnerGoogleAccountRepo.all().filter("self.googleAccount = ?1", account).fetch();
+        partnerGoogleAccountRepo.all().filter("self.emailAccount = ?1", account).fetch();
     for (PartnerGoogleAccount partnerAccount : partnerAccounts) {
       partnerGoogleAccountRepo.remove(partnerAccount);
     }
     List<EventGoogleAccount> eventAccounts =
-        eventGoogleAccountRepo.all().filter("self.googleAccount = ?1", account).fetch();
+        eventGoogleAccountRepo.all().filter("self.emailAccount = ?1", account).fetch();
     for (EventGoogleAccount eventAccount : eventAccounts) {
       eventGoogleAccountRepo.remove(eventAccount);
     }
-    User user = account.getOwnerUser();
-    user.setGoogleAccount(null);
-    userRepo.save(user);
+    User user = account.getUser();
+    if (user != null) {
+      user.setEmailAccount(null);
+      userRepo.save(user);
+    }
     super.remove(account);
   }
 }

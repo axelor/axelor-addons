@@ -22,15 +22,15 @@ import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.message.MessageBaseService;
 import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.gsuite.db.EmailGoogleAccount;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.repo.EmailGoogleAccountRepository;
-import com.axelor.apps.gsuite.db.repo.GoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
 import com.axelor.apps.message.db.MultiRelated;
+import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
 import com.axelor.apps.message.service.MailAccountService;
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
 
 public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportService {
 
-  @Inject private GoogleAccountRepository googleAccountRepo;
+  @Inject private EmailAccountRepository emailAccountRepo;
   @Inject protected GSuiteService gSuiteService;
   @Inject protected MessageRepository messageRepo;
   @Inject protected EmailAddressRepository mailAddressRepo;
@@ -85,12 +85,12 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
 
   @Override
   @Transactional
-  public GoogleAccount sync(GoogleAccount account) throws AxelorException {
+  public EmailAccount sync(EmailAccount account) throws AxelorException {
     return sync(account, null);
   }
 
   @Override
-  public GoogleAccount sync(GoogleAccount account, LocalDate fromDate) throws AxelorException {
+  public EmailAccount sync(EmailAccount account, LocalDate fromDate) throws AxelorException {
     try {
       Gmail service = gSuiteService.getGmail(account.getId());
       String query = getFilterQuery(fromDate);
@@ -101,7 +101,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
           I18n.get(IExceptionMessage.GMAIL_SYNC_FAILURE));
     }
-    return googleAccountRepo.save(account);
+    return emailAccountRepo.save(account);
   }
 
   protected String getFilterQuery(LocalDate fromDate) {
@@ -127,7 +127,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   @Override
   @Transactional
   public List<Message> syncMessages(
-      Gmail service, String userId, String query, GoogleAccount googleAccount)
+      Gmail service, String userId, String query, EmailAccount emailAccount)
       throws IOException, MessagingException {
 
     // TODO fetch all Email at once in raw format
@@ -151,7 +151,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
 
     for (com.google.api.services.gmail.model.Message gmailMessage : gmailMessages) {
       gmailMessage = getMessage(service, userId, gmailMessage.getId(), "raw");
-      messages.add(createOrUpdateMessage(gmailMessage, googleAccount));
+      messages.add(createOrUpdateMessage(gmailMessage, emailAccount));
       log.debug("Message created for Gmail message {}", gmailMessage.getId());
     }
 
@@ -166,7 +166,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   }
 
   protected Message createOrUpdateMessage(
-      com.google.api.services.gmail.model.Message gmailMessage, GoogleAccount googleAccount)
+      com.google.api.services.gmail.model.Message gmailMessage, EmailAccount emailAccount)
       throws MessagingException, IOException {
 
     Properties props = new Properties();
@@ -204,8 +204,9 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
     message.setSubject(parser.getSubject());
     message.setSentDateT(DateTool.toLocalDateT(email.getSentDate()));
     message.setSenderUser(userRepo.findByEmail(message.getFromEmailAddress().getAddress()));
+    message.setMailAccount(emailAccount);
 
-    setRelatedUsers(message, googleAccount.getOwnerUser());
+    setRelatedUsers(message, emailAccount.getUser());
     messageBaseService.manageRelatedTo(message);
     message = messageRepo.save(message);
 
@@ -219,7 +220,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
       emailGoogleAccount = new EmailGoogleAccount();
       emailGoogleAccount.setMessage(message);
       emailGoogleAccount.setGoogleEmailMessageId(gmailMessage.getId());
-      emailGoogleAccount.setGoogleAccount(googleAccount);
+      emailGoogleAccount.setEmailAccount(emailAccount);
       emailGoogleRepo.save(emailGoogleAccount);
     }
 

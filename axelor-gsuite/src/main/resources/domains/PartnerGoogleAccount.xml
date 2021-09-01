@@ -9,9 +9,9 @@
 	
 		<many-to-one name="partner" ref="com.axelor.apps.base.db.Partner" />
 		<string name="googleContactId" />
-		<many-to-one name="googleAccount" ref="com.axelor.apps.gsuite.db.GoogleAccount" />
+		<many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount" />
 
-		<finder-method name="findByGoogleContactIdAndAccount" using="googleContactId,googleAccount" />
+		<finder-method name="findByGoogleContactIdAndAccount" using="googleContactId,emailAccount" />
 		
 	</entity>
 

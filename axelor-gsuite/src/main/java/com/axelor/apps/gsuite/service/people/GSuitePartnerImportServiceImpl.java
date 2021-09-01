@@ -26,10 +26,10 @@ import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.base.db.repo.FunctionRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.AddressService;
-import com.axelor.apps.gsuite.db.GoogleAccount;
 import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
 import com.axelor.apps.gsuite.db.repo.PartnerGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.tool.net.URLService;
 import com.axelor.common.ObjectUtils;
@@ -90,7 +90,7 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
   }
 
   @Override
-  public void sync(GoogleAccount account) throws AxelorException {
+  public void sync(EmailAccount account) throws AxelorException {
 
     try {
       PeopleService peopleService = gSuiteService.getPeople(account.getId());
@@ -116,13 +116,13 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
   }
 
   @Transactional(rollbackOn = Exception.class)
-  protected void createOrUpdatePartner(Person person, GoogleAccount googleAccount)
+  protected void createOrUpdatePartner(Person person, EmailAccount emailAccount)
       throws AxelorException {
     String resourceName = person.getResourceName();
     String[] resourceNameParts = resourceName.split("/");
     String googleContactId = resourceNameParts[1];
     PartnerGoogleAccount partnerGoogleAccount =
-        partnerGoogleAccountRepo.findByGoogleContactIdAndAccount(googleContactId, googleAccount);
+        partnerGoogleAccountRepo.findByGoogleContactIdAndAccount(googleContactId, emailAccount);
     Partner partner = partnerGoogleAccount != null ? partnerGoogleAccount.getPartner() : null;
     if (partner == null) {
       partner = new Partner();
@@ -146,7 +146,7 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
 
     if (partnerGoogleAccount == null) {
       partnerGoogleAccount = new PartnerGoogleAccount();
-      partnerGoogleAccount.setGoogleAccount(googleAccount);
+      partnerGoogleAccount.setEmailAccount(emailAccount);
       partnerGoogleAccount.setGoogleContactId(googleContactId);
       partnerGoogleAccount.setPartner(partner);
       partnerGoogleAccountRepo.save(partnerGoogleAccount);
