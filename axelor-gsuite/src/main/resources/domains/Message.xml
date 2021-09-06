@@ -6,8 +6,12 @@
   <module name="message" package="com.axelor.apps.message.db"/>
   
   <entity name="Message" lang="java">
-  
-  	<one-to-many name="emailGoogleAccountList" ref="com.axelor.apps.gsuite.db.EmailGoogleAccount" mappedBy="message"/>
+    
+    <string name="messageId" title="Global message id" copy="false"/>
+    
+  	<many-to-many name="emailAccountSet"  ref="com.axelor.apps.message.db.EmailAccount" title="Gsuite accounts"/>
+	  
+	<finder-method name="findByMessageId" using="messageId" />
 	  
   </entity>
   

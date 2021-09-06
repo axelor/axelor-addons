@@ -47,7 +47,9 @@ public class GSuiteSyncCode {
     }
 
     String baseUri = uriInfo.getBaseUri().toString();
-    String formUri = baseUri.replace("/ws/", String.format("#/ds/mail.root.email.conf.mail.account/edit/%s", accountId));
+    String formUri =
+        baseUri.replace(
+            "/ws/", String.format("#/ds/mail.root.email.conf.mail.account/edit/%s", accountId));
 
     return Response.seeOther(URI.create(formUri)).build();
   }

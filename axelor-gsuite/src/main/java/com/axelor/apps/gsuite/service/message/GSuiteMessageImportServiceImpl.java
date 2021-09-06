@@ -18,11 +18,7 @@
 package com.axelor.apps.gsuite.service.message;
 
 import com.axelor.apps.base.db.repo.ModelEmailLinkRepository;
-import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.message.MessageBaseService;
-import com.axelor.apps.crm.db.repo.LeadRepository;
-import com.axelor.apps.gsuite.db.EmailGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.EmailGoogleAccountRepository;
 import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.app.AppGSuiteService;
@@ -33,7 +29,6 @@ import com.axelor.apps.message.db.MultiRelated;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
-import com.axelor.apps.message.service.MailAccountService;
 import com.axelor.apps.tool.date.DateTool;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
@@ -53,6 +48,7 @@ import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -68,20 +64,34 @@ import org.slf4j.LoggerFactory;
 
 public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportService {
 
-  @Inject private EmailAccountRepository emailAccountRepo;
-  @Inject protected GSuiteService gSuiteService;
-  @Inject protected MessageRepository messageRepo;
-  @Inject protected EmailAddressRepository mailAddressRepo;
-  @Inject protected MailAccountService accountService;
-  @Inject protected LeadRepository leadRepo;
-  @Inject protected PartnerRepository partnerRepo;
-  @Inject protected UserRepository userRepo;
-  @Inject protected EmailGoogleAccountRepository emailGoogleRepo;
-  @Inject protected AppGSuiteService appGSuiteService;
-  @Inject protected MessageBaseService messageBaseService;
+  protected EmailAccountRepository emailAccountRepo;
+  protected MessageRepository messageRepo;
+  protected EmailAddressRepository mailAddressRepo;
+  protected UserRepository userRepo;
+  protected GSuiteService gSuiteService;
+  protected AppGSuiteService appGSuiteService;
+  protected MessageBaseService messageBaseService;
 
   private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM/dd");
   private final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+  @Inject
+  public GSuiteMessageImportServiceImpl(
+      EmailAccountRepository emailAccountRepo,
+      MessageRepository messageRepo,
+      EmailAddressRepository mailAddressRepo,
+      UserRepository userRepo,
+      GSuiteService gSuiteService,
+      AppGSuiteService appGSuiteService,
+      MessageBaseService messageBaseService) {
+    this.emailAccountRepo = emailAccountRepo;
+    this.messageRepo = messageRepo;
+    this.mailAddressRepo = mailAddressRepo;
+    this.userRepo = userRepo;
+    this.gSuiteService = gSuiteService;
+    this.appGSuiteService = appGSuiteService;
+    this.messageBaseService = messageBaseService;
+  }
 
   @Override
   @Transactional
@@ -130,7 +140,6 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
       Gmail service, String userId, String query, EmailAccount emailAccount)
       throws IOException, MessagingException {
 
-    // TODO fetch all Email at once in raw format
     com.google.api.services.gmail.Gmail.Users.Messages.List list =
         service.users().messages().list(userId).setQ(query);
     ListMessagesResponse response = list.execute();
@@ -151,7 +160,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
 
     for (com.google.api.services.gmail.model.Message gmailMessage : gmailMessages) {
       gmailMessage = getMessage(service, userId, gmailMessage.getId(), "raw");
-      messages.add(createOrUpdateMessage(gmailMessage, emailAccount));
+      messages.add(createMessage(gmailMessage, emailAccount));
       log.debug("Message created for Gmail message {}", gmailMessage.getId());
     }
 
@@ -162,10 +171,16 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
   @Transactional
   public com.google.api.services.gmail.model.Message getMessage(
       Gmail service, String userId, String messageId, String format) throws IOException {
-    return service.users().messages().get(userId, messageId).setFormat(format).execute();
+    return service
+        .users()
+        .messages()
+        .get(userId, messageId)
+        .setFormat(format)
+        .setMetadataHeaders(Arrays.asList("Message-ID"))
+        .execute();
   }
 
-  protected Message createOrUpdateMessage(
+  protected Message createMessage(
       com.google.api.services.gmail.model.Message gmailMessage, EmailAccount emailAccount)
       throws MessagingException, IOException {
 
@@ -175,13 +190,15 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
         new MimeMessage(session, new ByteArrayInputStream(gmailMessage.decodeRaw()));
     MailParser parser = new MailParser((MimeMessage) email);
     parser.parse();
+    
+    String messageId = parser.getHeader("Message-ID");
+    Message message = messageRepo.findByMessageId(messageId);
 
-    EmailGoogleAccount emailGoogleAccount =
-        emailGoogleRepo.findByGoogleMessageId(gmailMessage.getId());
-    Message message =
-        emailGoogleAccount != null && emailGoogleAccount.getMessage() != null
-            ? emailGoogleAccount.getMessage()
-            : new Message();
+    if (message == null) {
+      message = new Message();
+    } else {
+      return message;
+    }
 
     message.setStatusSelect(MessageRepository.STATUS_SENT);
     message.setMediaTypeSelect(MessageRepository.MEDIA_TYPE_EMAIL);
@@ -193,8 +210,8 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
     } else if (lables.contains("INBOX")) {
       typeSelect = MessageRepository.TYPE_RECEIVED;
     }
-    message.setTypeSelect(typeSelect);
 
+    message.setTypeSelect(typeSelect);
     message.setFromEmailAddress(getEmailAddress(parser.getFrom()));
     message.setCcEmailAddressSet(getEmailAddressSet(parser.getCc()));
     message.setBccEmailAddressSet(getEmailAddressSet(parser.getBcc()));
@@ -205,7 +222,8 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
     message.setSentDateT(DateTool.toLocalDateT(email.getSentDate()));
     message.setSenderUser(userRepo.findByEmail(message.getFromEmailAddress().getAddress()));
     message.setMailAccount(emailAccount);
-
+    message.addEmailAccountSetItem(emailAccount);
+    message.setMessageId(messageId);
     setRelatedUsers(message, emailAccount.getUser());
     messageBaseService.manageRelatedTo(message);
     message = messageRepo.save(message);
@@ -214,14 +232,6 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
     for (DataSource ds : parser.getAttachments()) {
       log.info("attaching file: {}", ds.getName());
       files.attach(ds.getInputStream(), ds.getName(), message);
-    }
-
-    if (emailGoogleAccount == null) {
-      emailGoogleAccount = new EmailGoogleAccount();
-      emailGoogleAccount.setMessage(message);
-      emailGoogleAccount.setGoogleEmailMessageId(gmailMessage.getId());
-      emailGoogleAccount.setEmailAccount(emailAccount);
-      emailGoogleRepo.save(emailGoogleAccount);
     }
 
     return message;
