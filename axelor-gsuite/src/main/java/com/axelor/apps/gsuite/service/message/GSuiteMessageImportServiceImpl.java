@@ -190,7 +190,7 @@ public class GSuiteMessageImportServiceImpl implements GSuiteMessageImportServic
         new MimeMessage(session, new ByteArrayInputStream(gmailMessage.decodeRaw()));
     MailParser parser = new MailParser((MimeMessage) email);
     parser.parse();
-    
+
     String messageId = parser.getHeader("Message-ID");
     Message message = messageRepo.findByMessageId(messageId);
 

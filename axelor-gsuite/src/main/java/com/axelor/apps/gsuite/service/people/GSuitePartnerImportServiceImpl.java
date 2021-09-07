@@ -26,8 +26,6 @@ import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.base.db.repo.FunctionRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.AddressService;
-import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.PartnerGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
@@ -57,7 +55,6 @@ import java.util.List;
 
 public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportService {
 
-  protected PartnerGoogleAccountRepository partnerGoogleAccountRepo;
   protected CountryRepository countryRepo;
   protected AddressService addressService;
   protected PartnerRepository partnerRepo;
@@ -69,7 +66,6 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
 
   @Inject
   public GSuitePartnerImportServiceImpl(
-      PartnerGoogleAccountRepository partnerGoogleAccountRepo,
       CountryRepository countryRepo,
       AddressService addressService,
       PartnerRepository partnerRepo,
@@ -78,7 +74,6 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
       CompanyRepository companyRepo,
       FunctionRepository functionRepo,
       GSuiteService gSuiteService) {
-    this.partnerGoogleAccountRepo = partnerGoogleAccountRepo;
     this.countryRepo = countryRepo;
     this.addressService = addressService;
     this.partnerRepo = partnerRepo;
@@ -121,13 +116,13 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
     String resourceName = person.getResourceName();
     String[] resourceNameParts = resourceName.split("/");
     String googleContactId = resourceNameParts[1];
-    PartnerGoogleAccount partnerGoogleAccount =
-        partnerGoogleAccountRepo.findByGoogleContactIdAndAccount(googleContactId, emailAccount);
-    Partner partner = partnerGoogleAccount != null ? partnerGoogleAccount.getPartner() : null;
+    Partner partner = partnerRepo.findByGoogleContactIdAndAccount(googleContactId, emailAccount);
     if (partner == null) {
       partner = new Partner();
       partner.setIsContact(true);
       partner.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_INDIVIDUAL);
+      partner.setGoogleContactId(googleContactId);
+      partner.setEmailAccount(emailAccount);
     }
 
     setNames(person.getNames(), partner);
@@ -143,14 +138,6 @@ public class GSuitePartnerImportServiceImpl implements GSuitePartnerImportServic
     setPhoto(person, partner);
 
     setCompany(person.getOrganizations(), partner);
-
-    if (partnerGoogleAccount == null) {
-      partnerGoogleAccount = new PartnerGoogleAccount();
-      partnerGoogleAccount.setEmailAccount(emailAccount);
-      partnerGoogleAccount.setGoogleContactId(googleContactId);
-      partnerGoogleAccount.setPartner(partner);
-      partnerGoogleAccountRepo.save(partnerGoogleAccount);
-    }
 
     partnerRepo.save(partner);
   }

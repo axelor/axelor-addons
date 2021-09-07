@@ -6,9 +6,12 @@
 	<module name="base" package="com.axelor.apps.base.db" />
 
 	<entity name="Partner" lang="java">
-
-		<one-to-many name="partnerGoogleAccounts" ref="com.axelor.apps.gsuite.db.PartnerGoogleAccount" mappedBy="partner" />
-
+	
+		<string name="googleContactId" title="Gsuite id" copy="false"/>
+		<many-to-one name="emailAccount" title="Gsuite account" ref="com.axelor.apps.message.db.EmailAccount" readonly="true"/>
+		
+		<finder-method name="findByGoogleContactIdAndAccount" using="googleContactId,emailAccount" />
+		
 	</entity>
 
 </domain-models>

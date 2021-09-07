@@ -18,6 +18,7 @@
 package com.axelor.apps.gsuite.service.batch;
 
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.gsuite.db.repo.GSuiteBatchRepository;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerExporterService;
 import com.axelor.apps.gsuite.service.people.GSuitePartnerImportService;
 import com.axelor.apps.message.db.EmailAccount;
@@ -46,7 +47,11 @@ public class BatchGSuitePartnerService extends AbstractBatch {
             .collect(Collectors.toSet());
     for (EmailAccount account : accountSet) {
       try {
-        gSuitePartnerImportService.sync(account);
+        if (batch.getgSuiteBatch().getTypeSelect() == GSuiteBatchRepository.TYPE_SELECT_IMPORT) {
+          gSuitePartnerImportService.sync(account);
+        } else {
+          gSuitePartnerExportService.sync(account);
+        }
         incrementDone();
       } catch (AxelorException e) {
         TraceBackService.trace(e, "", batch.getId());

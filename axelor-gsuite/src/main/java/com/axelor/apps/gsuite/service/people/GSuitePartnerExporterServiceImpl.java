@@ -23,13 +23,10 @@ import com.axelor.apps.base.db.Function;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.app.AppService;
-import com.axelor.apps.gsuite.db.PartnerGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.PartnerGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.common.ObjectUtils;
-import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.exception.service.TraceBackService;
@@ -56,18 +53,15 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
 
   protected GSuiteService gSuiteService;
   protected PartnerRepository partnerRepo;
-  protected PartnerGoogleAccountRepository partnerAccountRepo;
   protected EmailAccountRepository emailAccountRepo;
 
   @Inject
   public GSuitePartnerExporterServiceImpl(
       GSuiteService gSuiteService,
       PartnerRepository partnerRepo,
-      PartnerGoogleAccountRepository partnerAccountRepo,
       EmailAccountRepository emailAccountRepo) {
     this.gSuiteService = gSuiteService;
     this.partnerRepo = partnerRepo;
-    this.partnerAccountRepo = partnerAccountRepo;
     this.emailAccountRepo = emailAccountRepo;
   }
 
@@ -78,12 +72,12 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
     List<Partner> partners = getPartners(lastSyncDateT);
     for (Partner partner : partners) {
       try {
-        PartnerGoogleAccount partnerGoogleAccount =
-            getRelatedPartnerGoogleAccount(account, partner);
-        if (partnerGoogleAccount == null) {
+        String googleContactId = partner.getGoogleContactId();
+        EmailAccount partnerEmailAccount = partner.getEmailAccount();
+        if (ObjectUtils.isEmpty(googleContactId) && ObjectUtils.isEmpty(partnerEmailAccount)) {
           createContact(service, partner, account);
-        } else {
-          updateContact(service, partner, partnerGoogleAccount);
+        } else if (ObjectUtils.notEmpty(googleContactId) && partnerEmailAccount.equals(account)) {
+          updateContact(service, partner);
         }
 
       } catch (AxelorException e) {
@@ -93,11 +87,9 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
     setSyncDateTime(account);
   }
 
-  protected void updateContact(
-      PeopleService service, Partner partner, PartnerGoogleAccount partnerGoogleAccount)
-      throws AxelorException {
+  protected void updateContact(PeopleService service, Partner partner) throws AxelorException {
     try {
-      String contactId = partnerGoogleAccount.getGoogleContactId();
+      String contactId = partner.getGoogleContactId();
       String resourceName = "people/" + contactId;
 
       Person personToUpdate = getContactPerson(service, resourceName);
@@ -126,8 +118,8 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
               .createContact(person)
               .set("sources", "READ_SOURCE_TYPE_CONTACT")
               .execute();
+      setGoogleContactId(person, partner, emailAccount);
       updateContactPhoto(person.getResourceName(), partner, service);
-      createPartnerGoogleAccount(partner, emailAccount, person);
     } catch (IOException e) {
       throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
@@ -153,6 +145,14 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
     organizationsList.add(org);
     person.setOrganizations(organizationsList);
     return person;
+  }
+
+  protected void setGoogleContactId(Person person, Partner partner, EmailAccount emailAccount) {
+    String resourceName = person.getResourceName();
+    String[] resourceNameParts = resourceName.split("/");
+    String googleContactId = resourceNameParts[1];
+    partner.setGoogleContactId(googleContactId);
+    partner.setEmailAccount(emailAccount);
   }
 
   protected void setName(Person person, Partner partner) {
@@ -234,20 +234,6 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
     }
   }
 
-  protected PartnerGoogleAccount getRelatedPartnerGoogleAccount(
-      EmailAccount account, Partner partner) {
-    PartnerGoogleAccount partnerGoogleAccount = null;
-    for (PartnerGoogleAccount partnerGAccount : partner.getPartnerGoogleAccounts()) {
-      if (partnerGAccount.getEmailAccount() != null
-          && partnerGAccount.getEmailAccount().equals(account)
-          && StringUtils.notBlank(partnerGAccount.getGoogleContactId())) {
-        partnerGoogleAccount = partnerGAccount;
-        break;
-      }
-    }
-    return partnerGoogleAccount;
-  }
-
   protected Person getContactPerson(PeopleService service, String resourceName) throws IOException {
     return service
         .people()
@@ -255,19 +241,6 @@ public class GSuitePartnerExporterServiceImpl implements GSuitePartnerExporterSe
         .setPersonFields("names,phoneNumbers,addresses,emailAddresses,photos,organizations")
         .set("sources", "READ_SOURCE_TYPE_CONTACT")
         .execute();
-  }
-
-  @Transactional(rollbackOn = Exception.class)
-  protected void createPartnerGoogleAccount(
-      Partner partner, EmailAccount emailAccount, Person person) {
-    String resourceName = person.getResourceName();
-    String[] resourceNameParts = resourceName.split("/");
-    String googleContactId = resourceNameParts[1];
-    PartnerGoogleAccount partnerGoogleAccount = new PartnerGoogleAccount();
-    partnerGoogleAccount.setEmailAccount(emailAccount);
-    partnerGoogleAccount.setGoogleContactId(googleContactId);
-    partnerGoogleAccount.setPartner(partner);
-    partnerAccountRepo.save(partnerGoogleAccount);
   }
 
   protected List<Partner> getPartners(LocalDateTime lastSyncDateT) {
