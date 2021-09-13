@@ -27,8 +27,6 @@ public interface GSuiteDriveExportService {
 
   EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
-  DMSFile sync(DMSFile dmsFile, boolean remove) throws AxelorException;
-
   String updateGoogleDrive(DMSFile dmsFile, String[] account, boolean remove)
       throws IOException, AxelorException;
 

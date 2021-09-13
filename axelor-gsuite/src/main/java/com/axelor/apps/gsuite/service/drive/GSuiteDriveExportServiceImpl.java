@@ -17,17 +17,13 @@
  */
 package com.axelor.apps.gsuite.service.drive;
 
-import com.axelor.apps.gsuite.db.DriveGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.DriveGoogleAccountRepository;
-import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
+import com.axelor.common.ObjectUtils;
 import com.axelor.dms.db.DMSFile;
 import com.axelor.dms.db.repo.DMSFileRepository;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaFiles;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.FileContent;
@@ -38,7 +34,6 @@ import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -51,13 +46,19 @@ public class GSuiteDriveExportServiceImpl implements GSuiteDriveExportService {
 
   private static Drive drive;
 
-  @Inject private EmailAccountRepository emailAccountRepo;
+  protected EmailAccountRepository emailAccountRepo;
+  protected GSuiteService gSuiteService;
+  protected DMSFileRepository dmsFileRepo;
 
-  @Inject private GSuiteService gSuiteService;
-
-  @Inject private DMSFileRepository dmsFileRepo;
-
-  @Inject private DriveGoogleAccountRepository driveGoogleAccountRepo;
+  @Inject
+  public GSuiteDriveExportServiceImpl(
+      EmailAccountRepository emailAccountRepo,
+      GSuiteService gSuiteService,
+      DMSFileRepository dmsFileRepo) {
+    this.emailAccountRepo = emailAccountRepo;
+    this.gSuiteService = gSuiteService;
+    this.dmsFileRepo = dmsFileRepo;
+  }
 
   @Override
   @Transactional
@@ -85,29 +86,19 @@ public class GSuiteDriveExportServiceImpl implements GSuiteDriveExportService {
                 .fetch();
       }
       for (DMSFile dmsFile : dmsFiles) {
-        DriveGoogleAccount driveAccount = new DriveGoogleAccount();
-        String googleDriveId = null;
-        for (DriveGoogleAccount account : dmsFile.getDriveGoogleAccounts()) {
-          if (emailAccount.equals(account.getEmailAccount())) {
-            driveAccount = account;
-            googleDriveId = account.getGoogleDriveId();
-            break;
-          }
-        }
+        String googleDriveId = dmsFile.getGoogleDriveId();
 
         LOG.debug("Google Drive id: {}", googleDriveId);
-        if (googleDriveId != null) {
+        if (ObjectUtils.notEmpty(googleDriveId)) {
           continue;
         }
 
         drive = gSuiteService.getDrive(emailAccount.getId());
         googleDriveId =
             updateGoogleDrive(dmsFile, new String[] {googleDriveId, accountName}, false);
-        driveAccount.setDms(dmsFile);
-        driveAccount.setEmailAccount(emailAccount);
-        driveAccount.setGoogleDriveId(googleDriveId);
 
-        driveGoogleAccountRepo.save(driveAccount);
+        dmsFile.setGoogleDriveId(googleDriveId);
+        dmsFile.setEmailAccount(emailAccount);
       }
       emailAccount.setDocSyncToGoogleDate(LocalDateTime.now());
     } catch (IOException e) {
@@ -115,50 +106,6 @@ public class GSuiteDriveExportServiceImpl implements GSuiteDriveExportService {
     }
 
     return emailAccountRepo.save(emailAccount);
-  }
-
-  @Override
-  @Transactional
-  public DMSFile sync(DMSFile dmsFile, boolean remove) throws AxelorException {
-
-    List<EmailAccount> accounts = emailAccountRepo.all().filter("self.authorized = true").fetch();
-
-    try {
-      for (EmailAccount emailAccount : accounts) {
-        String accountName = emailAccount.getName();
-
-        DriveGoogleAccount driveAccount = new DriveGoogleAccount();
-        String googleDriveId = null;
-
-        if (dmsFile.getDriveGoogleAccounts() != null) {
-          for (DriveGoogleAccount account : dmsFile.getDriveGoogleAccounts()) {
-            if (emailAccount.equals(account.getEmailAccount())) {
-              driveAccount = account;
-              googleDriveId = account.getGoogleDriveId();
-              break;
-            }
-          }
-        }
-        drive = gSuiteService.getDrive(emailAccount.getId());
-        googleDriveId =
-            updateGoogleDrive(dmsFile, new String[] {googleDriveId, accountName}, remove);
-
-        if (!remove) {
-          driveAccount.setEmailAccount(emailAccount);
-          driveAccount.setGoogleDriveId(googleDriveId);
-          if (driveAccount.getDms() == null) {
-            dmsFile.addDriveGoogleAccount(driveAccount);
-          }
-        }
-      }
-    } catch (IOException e) {
-      throw new AxelorException(
-          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
-          I18n.get(IExceptionMessage.DRIVE_UPDATE_EXCEPTION),
-          e.getLocalizedMessage());
-    }
-
-    return dmsFile;
   }
 
   @Override
@@ -313,24 +260,6 @@ public class GSuiteDriveExportServiceImpl implements GSuiteDriveExportService {
 
   @Override
   public String findParentFolder(DMSFile dmsFile) {
-
-    String parentGoogleDriveId = null;
-    List<Long> inputs = new ArrayList<>();
-    List<DriveGoogleAccount> list = driveGoogleAccountRepo.all().fetch();
-
-    for (DriveGoogleAccount driveAccount : list) {
-      if (dmsFile.getParent().getId().equals(driveAccount.getDms().getId())
-          && driveAccount.getGoogleDriveId() != null) {
-        inputs.add(driveAccount.getId());
-      }
-    }
-    long recentAccountId = Collections.max(inputs);
-    LOG.debug("recentAccountId: {}", recentAccountId);
-    for (DriveGoogleAccount driveAccount : list) {
-      if (driveAccount.getId() == recentAccountId) {
-        parentGoogleDriveId = driveAccount.getGoogleDriveId();
-      }
-    }
-    return parentGoogleDriveId;
+    return dmsFile.getParent().getGoogleDriveId();
   }
 }

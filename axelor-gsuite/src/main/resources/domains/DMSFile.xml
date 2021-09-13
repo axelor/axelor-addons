@@ -1,18 +1,15 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="gsuite" package="com.axelor.apps.gsuite.db" />
+	<module name="dms" package="com.axelor.dms.db" />
 
-	<entity name="DriveGoogleAccount" cacheable="true">
+	<entity name="DMSFile" lang="java">
 	
-		<many-to-one name="dms" ref="com.axelor.dms.db.DMSFile" />
-		<string name="googleDriveId" />
+		<string name="googleDriveId" copy="false" />
 		<many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount" />
-
-		<finder-method name="findByGoogleDriveId" using="googleDriveId" />
-	
+		
 	</entity>
 
 </domain-models>

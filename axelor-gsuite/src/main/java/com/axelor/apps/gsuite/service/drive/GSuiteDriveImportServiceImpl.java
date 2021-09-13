@@ -17,8 +17,6 @@
  */
 package com.axelor.apps.gsuite.service.drive;
 
-import com.axelor.apps.gsuite.db.DriveGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.DriveGoogleAccountRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
@@ -56,15 +54,22 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
   private EmailAccount emailAccount;
   private Map<String, List<String>> exportFormats;
 
-  @Inject private GSuiteService gSuiteService;
+  protected GSuiteService gSuiteService;
+  protected EmailAccountRepository emailAccountRepo;
+  protected DMSFileRepository dmsFileRepo;
+  protected MetaFiles metaFiles;
 
-  @Inject private EmailAccountRepository emailAccountRepo;
-
-  @Inject private DMSFileRepository dmsFileRepo;
-
-  @Inject private DriveGoogleAccountRepository driveGoogleAccountRepo;
-
-  @Inject private MetaFiles metaFiles;
+  @Inject
+  public GSuiteDriveImportServiceImpl(
+      GSuiteService gSuiteService,
+      EmailAccountRepository emailAccountRepo,
+      DMSFileRepository dmsFileRepo,
+      MetaFiles metaFiles) {
+    this.gSuiteService = gSuiteService;
+    this.emailAccountRepo = emailAccountRepo;
+    this.dmsFileRepo = dmsFileRepo;
+    this.metaFiles = metaFiles;
+  }
 
   @Override
   @Transactional
@@ -73,7 +78,6 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
       return null;
     }
     this.emailAccount = emailAccount;
-    // TODO to make date dynamic
     LocalDateTime syncDate = LocalDateTime.now();
     log.debug("Last sync date: {}", syncDate);
     emailAccount = emailAccountRepo.find(emailAccount.getId());
@@ -138,17 +142,12 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
   @Transactional
   public void updateParent(List<File> allData, EmailAccount emailAccount) {
     for (File file : allData) {
-      DriveGoogleAccount driveGoogleAccount =
-          driveGoogleAccountRepo.findByGoogleDriveId(file.getId());
-      if (driveGoogleAccount == null) {
-        continue;
-      }
-      DMSFile dmsFile = driveGoogleAccount.getDms();
+      String googleDriveId = file.getId();
+      DMSFile dmsFile = findByDriveIdAndAccount(googleDriveId, emailAccount);
       if (dmsFile != null
           && file.getParents() != null
-          && driveGoogleAccountRepo.findByGoogleDriveId(file.getParents().get(0)) != null) {
-        DMSFile parent =
-            driveGoogleAccountRepo.findByGoogleDriveId(file.getParents().get(0)).getDms();
+          && findByDriveIdAndAccount(file.getParents().get(0), emailAccount) != null) {
+        DMSFile parent = findByDriveIdAndAccount(file.getParents().get(0), emailAccount);
         dmsFile.setParent(parent);
         dmsFileRepo.save(dmsFile);
       }
@@ -161,9 +160,12 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
     for (File file : files) {
 
       try {
-        DriveGoogleAccount driveGoogleAccount =
-            driveGoogleAccountRepo.findByGoogleDriveId(file.getId());
-        DMSFile dmsFile = driveGoogleAccount != null ? driveGoogleAccount.getDms() : new DMSFile();
+        DMSFile dmsFile = findByDriveIdAndAccount(file.getId(), emailAccount);
+        if (dmsFile == null) {
+          dmsFile = new DMSFile();
+          dmsFile.setGoogleDriveId(file.getId());
+          dmsFile.setEmailAccount(emailAccount);
+        }
         dmsFile.setFileName(file.getName());
         dmsFile.setIsDirectory(false);
         MetaFile metaFile = null;
@@ -171,19 +173,14 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
             MetaFiles.createTempFile(file.getName(), file.getFileExtension()).toFile();
         getFileContent(file, fileDownloaded);
         metaFile = metaFiles.upload(fileDownloaded);
-        if (dmsFile.getMetaFile() != null) {
-          metaFiles.delete(dmsFile.getMetaFile());
-        }
         dmsFile.setMetaFile(metaFile);
 
         if (file.getParents() != null
-            && driveGoogleAccountRepo.findByGoogleDriveId(file.getParents().get(0)) != null) {
-          DMSFile parent =
-              driveGoogleAccountRepo.findByGoogleDriveId(file.getParents().get(0)).getDms();
+            && findByDriveIdAndAccount(file.getParents().get(0), emailAccount) != null) {
+          DMSFile parent = findByDriveIdAndAccount(file.getParents().get(0), emailAccount);
           dmsFile.setParent(parent);
         }
         dmsFileRepo.save(dmsFile);
-        this.createDriveGoogleAccount(emailAccount, dmsFile, file, driveGoogleAccount);
       } catch (IOException e) {
         log.error(e.getMessage());
         TraceBackService.trace(e);
@@ -195,28 +192,16 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
   @Transactional
   public void createFolders(List<File> folders, EmailAccount emailAccount) {
     for (File file : folders) {
-      DriveGoogleAccount driveGoogleAccount =
-          driveGoogleAccountRepo.findByGoogleDriveId(file.getId());
-      DMSFile dmsFile = driveGoogleAccount != null ? driveGoogleAccount.getDms() : new DMSFile();
+      DMSFile dmsFile = findByDriveIdAndAccount(file.getId(), emailAccount);
+      if (dmsFile == null) {
+        dmsFile = new DMSFile();
+        dmsFile.setGoogleDriveId(file.getId());
+        dmsFile.setEmailAccount(emailAccount);
+      }
       dmsFile.setIsDirectory(true);
       dmsFile.setFileName(file.getName());
       dmsFileRepo.save(dmsFile);
-      this.createDriveGoogleAccount(emailAccount, dmsFile, file, driveGoogleAccount);
     }
-  }
-
-  @Override
-  @Transactional
-  public void createDriveGoogleAccount(
-      EmailAccount emailAccount,
-      DMSFile dmsFile,
-      File file,
-      DriveGoogleAccount driveGoogleAccount) {
-    driveGoogleAccount = driveGoogleAccount != null ? driveGoogleAccount : new DriveGoogleAccount();
-    driveGoogleAccount.setDms(dmsFile);
-    driveGoogleAccount.setEmailAccount(emailAccount);
-    driveGoogleAccount.setGoogleDriveId(file.getId());
-    driveGoogleAccountRepo.save(driveGoogleAccount);
   }
 
   protected java.io.File getFileContent(File in, java.io.File out)
@@ -259,5 +244,14 @@ public class GSuiteDriveImportServiceImpl implements GSuiteDriveImportService {
     com.google.api.services.drive.Drive.About.Get get =
         getDrive().about().get().setFields("exportFormats");
     return exportFormats == null ? get.execute().getExportFormats() : exportFormats;
+  }
+
+  protected DMSFile findByDriveIdAndAccount(String googleDriveId, EmailAccount emailAccount) {
+    return dmsFileRepo
+        .all()
+        .filter("self.googleDriveId = :googleDriveId AND self.emailAccount = :emailAccount")
+        .bind("googleDriveId", googleDriveId)
+        .bind("emailAccount", emailAccount)
+        .fetchOne();
   }
 }

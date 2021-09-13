@@ -35,7 +35,7 @@ public class BatchGSuiteDriveService extends AbstractBatch {
 
   @Inject protected UserRepository userRepo;
   @Inject protected GSuiteDriveImportService gSuiteDriveImportService;
-  @Inject GSuiteDriveExportService gSuiteDriveExportService;
+  @Inject protected GSuiteDriveExportService gSuiteDriveExportService;
 
   @Override
   protected void process() {
