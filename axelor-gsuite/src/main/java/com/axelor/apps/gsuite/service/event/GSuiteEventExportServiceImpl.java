@@ -22,17 +22,13 @@ import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.db.repo.ICalendarUserRepository;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
-import com.axelor.apps.gsuite.db.EventGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
-import com.axelor.apps.gsuite.exception.IExceptionMessage;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.utils.DateUtils;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
+import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.i18n.I18n;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.calendar.Calendar;
@@ -61,8 +57,6 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
   @Inject private EmailAccountRepository emailAccountRepo;
 
   @Inject private EventRepository eventRepo;
-
-  @Inject private EventGoogleAccountRepository eventGoogleAccountRepo;
 
   @Inject private GSuiteEventImportService gSuiteEventImportService;
 
@@ -102,22 +96,11 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
           log.debug("event id : {} not synchronized", event.getId());
           continue;
         }
-        EventGoogleAccount eventAccount = new EventGoogleAccount();
-        String eventId = null;
-        for (EventGoogleAccount account : event.getEventGoogleAccounts()) {
-          if (emailAccount.equals(account.getEmailAccount())) {
-            eventAccount = account;
-            eventId = account.getGoogleEventId();
-            log.debug("Event id: {}", eventId);
-            break;
-          }
-        }
-
-        eventId = updateGoogleEvent(event, new String[] {eventId, accountName}, false);
-        eventAccount.setEvent(event);
-        eventAccount.setEmailAccount(emailAccount);
-        eventAccount.setGoogleEventId(eventId);
-        eventGoogleAccountRepo.save(eventAccount);
+        String googleEventId = event.getGoogleEventId();
+        googleEventId = updateGoogleEvent(event, new String[] {googleEventId, accountName}, false);
+        event.setGoogleEventId(googleEventId);
+        event.setEmailAccount(emailAccount);
+        eventRepo.save(event);
       }
 
       emailAccount = updateCrmEvents(emailAccount);
@@ -145,53 +128,6 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
       emailAccount.setRemovedEventIds(null);
     }
     return emailAccount;
-  }
-
-  @Override
-  public Event sync(Event event, boolean remove) throws AxelorException {
-
-    List<EmailAccount> accounts = emailAccountRepo.all().filter("self.isValid = true").fetch();
-
-    try {
-      for (EmailAccount emailAccount : accounts) {
-        Credential credential = gSuiteService.getCredential(emailAccount.getId());
-        String accountName = emailAccount.getName();
-        EventGoogleAccount eventAccount = new EventGoogleAccount();
-        String eventId = null;
-        LocalDateTime syncDate = emailAccount.getEventSyncToGoogleDate();
-        if (syncDate != null
-            && event.getCreatedOn() != null
-            && event.getCreatedOn().isAfter(syncDate)) {
-          continue;
-        }
-
-        if (event.getEventGoogleAccounts() != null) {
-          for (EventGoogleAccount account : event.getEventGoogleAccounts()) {
-            if (emailAccount.equals(account.getEmailAccount())) {
-              eventAccount = account;
-              eventId = account.getGoogleEventId();
-              break;
-            }
-          }
-        }
-        calendar = gSuiteService.getCalendar(credential);
-        eventId = updateGoogleEvent(event, new String[] {eventId, accountName}, remove);
-        if (!remove) {
-          eventAccount.setEmailAccount(emailAccount);
-          eventAccount.setGoogleEventId(eventId);
-          if (eventAccount.getEvent() == null) {
-            event.addEventGoogleAccount(eventAccount);
-          }
-        }
-      }
-    } catch (IOException e) {
-      throw new AxelorException(
-          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
-          I18n.get(IExceptionMessage.EVENT_UPDATE_EXCEPTION),
-          e.getLocalizedMessage());
-    }
-
-    return event;
   }
 
   @Override
@@ -319,25 +255,22 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
     }
     com.google.api.services.calendar.model.Event googleEvent = iterator.next();
     String eventId = googleEvent.getId();
-    EventGoogleAccount eventAccount =
-        eventGoogleAccountRepo
-            .all()
-            .filter("self.emailAccount = ?1 and self.googleEventId = ?2", account, eventId)
-            .fetchOne();
-    Event event = new Event();
-    if (eventAccount != null) {
-      event = eventAccount.getEvent();
-      if (googleEvent.getStatus().equals("cancelled")) {
-        eventRepo.remove(event);
-        checkEvent(account, iterator);
-        return;
-      }
+    Event event = eventRepo.findByGoogleEventIdAndAccount(eventId, account);
+
+    if (event != null && googleEvent.getStatus().equals("cancelled")) {
+      eventRepo.remove(event);
+      checkEvent(account, iterator);
+      return;
     }
+
+    if (event == null) {
+      event = new Event();
+      event.setEmailAccount(account);
+      event.setGoogleEventId(eventId);
+    }
+
     if (!googleEvent.getStatus().equals("cancelled")) {
-      event = createUpdateCrmEvent(event, googleEvent);
-      if (eventAccount == null && event != null) {
-        createEventAccount(account, event, googleEvent.getId());
-      }
+      createUpdateCrmEvent(event, googleEvent);
     }
     checkEvent(account, iterator);
   }
@@ -363,30 +296,17 @@ public class GSuiteEventExportServiceImpl implements GSuiteEventExportService {
 
   @Override
   @Transactional
-  public void createEventAccount(EmailAccount account, Event event, String eventId) {
-
-    EventGoogleAccount eventAccount = new EventGoogleAccount();
-    eventAccount.setEvent(event);
-    eventAccount.setEmailAccount(account);
-    eventAccount.setGoogleEventId(eventId);
-    eventGoogleAccountRepo.save(eventAccount);
-  }
-
-  @Override
-  @Transactional
   public void removeEventFromRemote(Event event) {
-    EventGoogleAccount eventGoogleAccount =
-        eventGoogleAccountRepo.all().filter("self.event = ?1", event).fetchOne();
-    if (eventGoogleAccount == null) {
+    if (ObjectUtils.isEmpty(event.getGoogleEventId())) {
       return;
     }
 
-    EmailAccount account = eventGoogleAccount.getEmailAccount();
+    EmailAccount account = event.getEmailAccount();
     String removedEventIds = account.getRemovedEventIds();
-    if (removedEventIds == null) {
-      account.setRemovedEventIds(eventGoogleAccount.getGoogleEventId());
+    if (ObjectUtils.isEmpty(removedEventIds)) {
+      account.setRemovedEventIds(event.getGoogleEventId());
     } else {
-      account.setRemovedEventIds(removedEventIds + "," + eventGoogleAccount.getGoogleEventId());
+      account.setRemovedEventIds(removedEventIds + "," + event.getGoogleEventId());
     }
     emailAccountRepo.save(account);
   }

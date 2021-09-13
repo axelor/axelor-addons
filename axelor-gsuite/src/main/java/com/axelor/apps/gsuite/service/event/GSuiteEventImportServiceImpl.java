@@ -21,8 +21,6 @@ import com.axelor.apps.base.db.ICalendarUser;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.crm.db.Event;
 import com.axelor.apps.crm.db.repo.EventRepository;
-import com.axelor.apps.gsuite.db.EventGoogleAccount;
-import com.axelor.apps.gsuite.db.repo.EventGoogleAccountRepository;
 import com.axelor.apps.gsuite.db.repo.GSuiteEventRepository;
 import com.axelor.apps.gsuite.service.GSuiteService;
 import com.axelor.apps.gsuite.service.ICalUserService;
@@ -55,8 +53,6 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
   @Inject protected GSuiteService gSuiteService;
 
   @Inject protected EmailAccountRepository emailAccountRepo;
-
-  @Inject protected EventGoogleAccountRepository eventGoogleAccountRepo;
 
   @Inject protected EmailAddressRepository emailRepo;
 
@@ -116,13 +112,14 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
 
         for (com.google.api.services.calendar.model.Event event : remoteEvents) {
 
-          EventGoogleAccount eventGoogleAccount =
-              eventGoogleAccountRepo.findByGoogleEventId(event.getId());
+          Event crmEvent = eventRepo.findByGoogleEventIdAndAccount(event.getId(), emailAccount);
 
-          Event crmEvent =
-              eventGoogleAccount != null
-                  ? crmEventRepo.find(eventGoogleAccount.getEvent().getId())
-                  : new Event();
+          if (crmEvent == null) {
+            crmEvent = new Event();
+            crmEvent.setGoogleEventId(event.getId());
+            crmEvent.setEmailAccount(emailAccount);
+          }
+
           crmEvent.setSubject(event.getSummary());
           crmEvent.setDescription(event.getDescription());
           crmEvent.setLocation(event.getLocation());
@@ -135,13 +132,6 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
 
           crmEventRepo.save(crmEvent);
 
-          eventGoogleAccount =
-              eventGoogleAccount == null ? new EventGoogleAccount() : eventGoogleAccount;
-          eventGoogleAccount.setEvent(crmEvent);
-          eventGoogleAccount.setEmailAccount(emailAccount);
-          eventGoogleAccount.setGoogleEventId(event.getId());
-
-          eventGoogleAccountRepo.save(eventGoogleAccount);
           total++;
         }
 
@@ -155,15 +145,13 @@ public class GSuiteEventImportServiceImpl implements GSuiteEventImportService {
   }
 
   protected void removeAOSEvents(List<com.google.api.services.calendar.model.Event> events) {
-    List<EventGoogleAccount> eventGoogleAccountList = eventGoogleAccountRepo.all().fetch();
 
-    for (EventGoogleAccount eventGoogleAccount : eventGoogleAccountList) {
-      for (com.google.api.services.calendar.model.Event event : events) {
-        if (event.getId().equals(eventGoogleAccount.getGoogleEventId())) {
-          continue;
-        }
+    for (Event crmEvent : crmEventRepo.all().fetch()) {
+
+      final String googleEventId = crmEvent.getGoogleEventId();
+      if (events.stream().noneMatch(event -> event.getId().equals(googleEventId))) {
+        eventRepo.removeGSuiteEvent(crmEvent, false);
       }
-      eventRepo.removeGSuiteEvent(eventGoogleAccount.getEvent(), false);
     }
   }
 

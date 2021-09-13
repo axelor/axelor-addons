@@ -27,8 +27,6 @@ public interface GSuiteEventExportService {
 
   public EmailAccount sync(EmailAccount emailAccount) throws AxelorException;
 
-  Event sync(Event event, boolean remove) throws AxelorException;
-
   String updateGoogleEvent(Event event, String[] account, boolean remove) throws IOException;
 
   com.google.api.services.calendar.model.Event extractEvent(
@@ -42,8 +40,6 @@ public interface GSuiteEventExportService {
 
   Event createUpdateCrmEvent(Event event, com.google.api.services.calendar.model.Event googleEvent)
       throws IOException;
-
-  void createEventAccount(EmailAccount account, Event event, String eventId);
 
   void removeEventFromRemote(Event event);
 }

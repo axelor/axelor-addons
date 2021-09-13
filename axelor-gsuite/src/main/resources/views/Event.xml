@@ -9,7 +9,7 @@
 			<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
 			<insert position="after">
 				<field name="emailAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>
-				<field name="tasklistName" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" showIf="typeSelect == 3" requiredIf="typeSelect == 3"/>			
+				<field name="tasklistName" if="__config__.app.getApp('gsuite').getIsTaskSyncAllowed()" showIf="typeSelect == 3" requiredIf="typeSelect == 3"/>			
 			</insert>
 		</extend>
 
@@ -21,7 +21,7 @@
 			<attribute name="if" value="!__config__.app.getApp('gsuite').getIsEventSyncAllowed()"/>	
 			<insert position="after">
 				<field name="emailAccount" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" canView="false" colSpan="6"/>
-				<field name="tasklistName" if="__config__.app.getApp('gsuite').getIsEventSyncAllowed()" showIf="typeSelect == 3" requiredIf="typeSelect == 3"/>			
+				<field name="tasklistName" if="__config__.app.getApp('gsuite').getIsTaskSyncAllowed()" showIf="typeSelect == 3" requiredIf="typeSelect == 3"/>			
 			</insert>
 		</extend>
 		

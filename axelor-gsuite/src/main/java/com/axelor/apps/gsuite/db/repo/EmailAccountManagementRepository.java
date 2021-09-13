@@ -17,17 +17,13 @@
  */
 package com.axelor.apps.gsuite.db.repo;
 
-import com.axelor.apps.gsuite.db.EventGoogleAccount;
 import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.google.inject.Inject;
-import java.util.List;
 
 public class EmailAccountManagementRepository extends EmailAccountRepository {
-
-  @Inject private EventGoogleAccountRepository eventGoogleAccountRepo;
 
   @Inject private UserRepository userRepo;
 
@@ -44,11 +40,6 @@ public class EmailAccountManagementRepository extends EmailAccountRepository {
 
   @Override
   public void remove(EmailAccount account) {
-    List<EventGoogleAccount> eventAccounts =
-        eventGoogleAccountRepo.all().filter("self.emailAccount = ?1", account).fetch();
-    for (EventGoogleAccount eventAccount : eventAccounts) {
-      eventGoogleAccountRepo.remove(eventAccount);
-    }
     User user = account.getUser();
     if (user != null) {
       user.setEmailAccount(null);
