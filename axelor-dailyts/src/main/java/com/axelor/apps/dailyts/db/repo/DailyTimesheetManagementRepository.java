@@ -19,9 +19,7 @@ package com.axelor.apps.dailyts.db.repo;
 
 import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.hr.db.DailyTimesheet;
-import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
-import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.inject.Beans;
 
 public class DailyTimesheetManagementRepository extends DailyTimesheetRepository {
@@ -31,14 +29,6 @@ public class DailyTimesheetManagementRepository extends DailyTimesheetRepository
 
     dailyTimesheet.setDailyTotal(
         Beans.get(DailyTimesheetService.class).computeDailyTotal(dailyTimesheet));
-
-    Timesheet timesheet = dailyTimesheet.getTimesheet();
-    timesheet.setPeriodTotal(Beans.get(TimesheetService.class).computePeriodTotal(timesheet));
-
-    if (timesheet.getToDate() != null
-        && timesheet.getToDate().isBefore(dailyTimesheet.getDailyTimesheetDate())) {
-      timesheet.setToDate(dailyTimesheet.getDailyTimesheetDate());
-    }
 
     return super.save(dailyTimesheet);
   }

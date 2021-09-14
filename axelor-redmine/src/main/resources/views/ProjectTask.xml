@@ -6,7 +6,7 @@
 	<grid id="redmine-project-task-grid" name="project-task-grid" title="Tasks"
 		model="com.axelor.apps.project.db.ProjectTask" extension="true">
 
-		<extend target="//field[@name='targetVersion']">
+		<extend target="/*[last()]">
 			<insert position="after">
 				<field name="redmineId" />
 			</insert>
