@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2018 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -61,6 +61,20 @@ public class RedmineBatchController {
     redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
 
     Batch batch = Beans.get(RedmineBatchService.class).redmineImportIssues(redmineBatch);
+
+    if (batch != null) {
+      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
+    }
+
+    response.setReload(true);
+  }
+
+  public void redmineImportTimeEntries(ActionRequest request, ActionResponse response) {
+
+    RedmineBatch redmineBatch = request.getContext().asType(RedmineBatch.class);
+    redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
+
+    Batch batch = Beans.get(RedmineBatchService.class).redmineImportTimeEntries(redmineBatch);
 
     if (batch != null) {
       response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);

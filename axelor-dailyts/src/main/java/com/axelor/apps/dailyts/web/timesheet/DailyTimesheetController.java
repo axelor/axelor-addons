@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -41,7 +41,6 @@ public class DailyTimesheetController {
   public void updateFromTimesheet(ActionRequest request, ActionResponse response) {
 
     DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
-    dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
     Beans.get(DailyTimesheetService.class).updateFromTimesheet(dailyTimesheet);
     response.setValue("dailyTimesheetLineList", dailyTimesheet.getDailyTimesheetLineList());
   }
@@ -86,6 +85,7 @@ public class DailyTimesheetController {
 
     try {
       DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+      dailyTimesheet = Beans.get(DailyTimesheetRepository.class).find(dailyTimesheet.getId());
       Timesheet timesheet =
           Beans.get(TimesheetRepository.class).find(dailyTimesheet.getTimesheet().getId());
 
@@ -116,7 +116,8 @@ public class DailyTimesheetController {
       }
 
       // Update daily timesheet status at last after timesheet validation
-      response.setValue("statusSelect", DailyTimesheetRepository.STATUS_COMPLETED);
+      Beans.get(DailyTimesheetService.class).confirmDailyTimesheet(dailyTimesheet);
+      response.setReload(true);
     } catch (Exception e) {
       TraceBackService.trace(response, e);
     }
@@ -127,5 +128,12 @@ public class DailyTimesheetController {
     DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
     response.setValue(
         "dailyTotal", Beans.get(DailyTimesheetService.class).computeDailyTotal(dailyTimesheet));
+  }
+
+  public void updateRelatedTimesheet(ActionRequest request, ActionResponse response) {
+
+    DailyTimesheet dailyTimesheet = request.getContext().asType(DailyTimesheet.class);
+    response.setValue(
+        "timesheet", Beans.get(DailyTimesheetService.class).updateRelatedTimesheet(dailyTimesheet));
   }
 }

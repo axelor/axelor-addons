@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2020 Axelor (<http://axelor.com>).
+ * Copyright (C) 2021 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -17,12 +17,15 @@
  */
 package com.axelor.apps.dailyts.service.timesheet;
 
+import com.axelor.apps.base.db.AppBase;
 import com.axelor.apps.base.db.ICalendarEvent;
+import com.axelor.apps.base.db.repo.AppBaseRepository;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
@@ -33,6 +36,7 @@ import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.auth.db.User;
+import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.google.inject.Inject;
@@ -57,6 +61,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   public ICalendarEventRepository iCalendarEventRepository;
   public TimesheetRepository timesheetRepository;
   public TimesheetService timesheetService;
+  public AppBaseRepository appBaseRepository;
+  public DailyTimesheetRepository dailyTimesheetRepository;
 
   @Inject
   public DailyTimesheetServiceImpl(
@@ -67,7 +73,9 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       TimesheetLineService timesheetLineService,
       ICalendarEventRepository iCalendarEventRepository,
       TimesheetRepository timesheetRepository,
-      TimesheetService timesheetService) {
+      TimesheetService timesheetService,
+      AppBaseRepository appBaseRepository,
+      DailyTimesheetRepository dailyTimesheetRepository) {
     this.appBaseService = appBaseService;
     this.timesheetLineRepository = timesheetLineRepository;
     this.mailMessageRepository = mailMessageRepository;
@@ -76,11 +84,15 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     this.iCalendarEventRepository = iCalendarEventRepository;
     this.timesheetRepository = timesheetRepository;
     this.timesheetService = timesheetService;
+    this.appBaseRepository = appBaseRepository;
+    this.dailyTimesheetRepository = dailyTimesheetRepository;
   }
 
   private final BigDecimal MINUTES_IN_ONE_DAY = new BigDecimal(1440);
   private final BigDecimal HOURS_IN_ONE_DAY = new BigDecimal(24);
   private final BigDecimal MINUTES_IN_ONE_HOUR = new BigDecimal(60);
+
+  private AppBase appBase;
 
   @Override
   public void updateFromTimesheet(DailyTimesheet dailyTimesheet) {
@@ -102,6 +114,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
   @Override
   public int updateFromActivities(DailyTimesheet dailyTimesheet) {
+
+    appBase = appBaseRepository.all().fetchOne();
 
     List<Long> taskIdList = new ArrayList<>();
 
@@ -150,6 +164,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   @Override
   public void updateFromTimesheetAndFavs(DailyTimesheet dailyTimesheet) {
 
+    appBase = appBaseRepository.all().fetchOne();
+
     // Set related timesheet
 
     dailyTimesheet.setTimesheet(getRelatedTimesheet(dailyTimesheet));
@@ -189,7 +205,6 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
           dailyTimesheet.addDailyTimesheetLineListItem(
               createTimesheetLine(
                   projectTask, projectTask.getProject(), dailyTimesheet, null, null));
-          projectIdList.add(projectTask.getProject().getId());
         }
       }
     }
@@ -211,6 +226,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
   @Override
   public int updateFromEvents(DailyTimesheet dailyTimesheet) {
+
+    appBase = appBaseRepository.all().fetchOne();
 
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
     User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
@@ -276,6 +293,12 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
     User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
+    Timesheet timesheet = dailyTimesheet.getTimesheet();
+    String timePref = timesheet.getTimeLoggingPreferenceSelect();
+
+    if (timePref == null && dailyTimesheetUser.getEmployee() != null) {
+      timePref = dailyTimesheetUser.getEmployee().getTimeLoggingPreferenceSelect();
+    }
 
     TimesheetLine timesheetLine =
         timesheetLineService.createTimesheetLine(
@@ -285,7 +308,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
                 : null,
             dailyTimesheetUser,
             dailyTimesheetDate,
-            dailyTimesheet.getTimesheet(),
+            timesheet,
             BigDecimal.ZERO,
             comments);
 
@@ -305,12 +328,23 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
         timesheetLine.setHoursDuration(
             minuteDuration.divide(MINUTES_IN_ONE_HOUR, 2, RoundingMode.HALF_UP));
         timesheetLine.setDuration(
-            computeDurationFromHours(
-                dailyTimesheetUser,
-                timesheetLine.getHoursDuration(),
-                dailyTimesheet.getTimesheet().getTimeLoggingPreferenceSelect()));
+            timePref != null
+                ? computeDurationFromHours(
+                    dailyTimesheetUser, timesheetLine.getHoursDuration(), timePref)
+                : timesheetLine.getHoursDuration());
       }
     }
+
+    timesheetLine.setDurationForCustomer(timesheetLine.getDuration());
+    timesheetLine.setToInvoice(false);
+    timesheetLine.setDurationUnit(
+        timePref != null
+            ? (timePref.equals(EmployeeRepository.TIME_PREFERENCE_DAYS)
+                ? appBase.getUnitDays()
+                : timePref.equals(EmployeeRepository.TIME_PREFERENCE_MINUTES)
+                    ? appBase.getUnitMinutes()
+                    : appBase.getUnitHours())
+            : appBase.getUnitHours());
 
     if (projectTask != null) {
       timesheetLine.setProjectTask(projectTask);
@@ -330,10 +364,6 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   }
 
   public BigDecimal computeDurationFromHours(User user, BigDecimal duration, String timePref) {
-
-    if (timePref == null && user.getEmployee() != null) {
-      timePref = user.getEmployee().getTimeLoggingPreferenceSelect();
-    }
 
     switch (timePref) {
       case EmployeeRepository.TIME_PREFERENCE_DAYS:
@@ -384,5 +414,28 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     }
 
     return BigDecimal.ZERO;
+  }
+
+  @Override
+  @Transactional
+  public void confirmDailyTimesheet(DailyTimesheet dailyTimesheet) {
+
+    dailyTimesheet.setStatusSelect(DailyTimesheetRepository.STATUS_COMPLETED);
+    dailyTimesheetRepository.save(dailyTimesheet);
+  }
+
+  @Override
+  @Transactional
+  public Timesheet updateRelatedTimesheet(DailyTimesheet dailyTimesheet) {
+
+    Timesheet timesheet = dailyTimesheet.getTimesheet();
+    timesheet.setPeriodTotal(Beans.get(TimesheetService.class).computePeriodTotal(timesheet));
+
+    if (timesheet.getToDate() != null
+        && timesheet.getToDate().isBefore(dailyTimesheet.getDailyTimesheetDate())) {
+      timesheet.setToDate(dailyTimesheet.getDailyTimesheetDate());
+    }
+
+    return timesheet;
   }
 }
