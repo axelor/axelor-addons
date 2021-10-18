@@ -65,6 +65,9 @@ import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Journal;
 import com.taskadapter.redmineapi.bean.JournalDetail;
 import com.taskadapter.redmineapi.bean.Version;
+
+import groovy.json.StringEscapeUtils;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -778,7 +781,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
         String oldValue =
             getValue(
                 journalDetail.getOldValue(), journalDetail.getName(), journalDetail.getProperty());
-        trackStrBuilder.append(oldValue);
+        trackStrBuilder.append(StringEscapeUtils.escapeJava(oldValue));
       }
 
       trackStrBuilder.append("\",\"value\":\"");
@@ -787,7 +790,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
         String newValue =
             getValue(
                 journalDetail.getNewValue(), journalDetail.getName(), journalDetail.getProperty());
-        trackStrBuilder.append(newValue);
+        trackStrBuilder.append(StringEscapeUtils.escapeJava(newValue));
       }
 
       trackStrBuilder.append("\"},");
