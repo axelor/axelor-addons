@@ -128,7 +128,8 @@ public class SendinBlueCampaignService {
           }
         }
       }
-      logWriter.append(String.format("%nTotal Campaign Exported : %s%n", totalExportRecord));
+      logWriter.append(
+          String.format("%n%s : %s%n", I18n.get(ITranslation.EXPORT_CAMAPIN), totalExportRecord));
     }
   }
 
@@ -486,7 +487,8 @@ public class SendinBlueCampaignService {
     } catch (ApiException e) {
       TraceBackService.trace(e);
     }
-    logWriter.append(String.format("%nTotal Campaigns Imported : %s", totalImportRecord));
+    logWriter.append(
+        String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_CAMPAIN), totalImportRecord));
   }
 
   private void createCampaign(

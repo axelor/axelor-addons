@@ -32,13 +32,13 @@ import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
+import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.auth.db.User;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
-import com.axelor.team.db.TeamTask;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
@@ -56,7 +56,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   public AppBaseService appBaseService;
   public TimesheetLineRepository timesheetLineRepository;
   public MailMessageRepository mailMessageRepository;
-  public TeamTaskRepository teamTaskRepository;
+  public ProjectTaskRepository projectTaskaRepo;
   public TimesheetLineService timesheetLineService;
   public ICalendarEventRepository iCalendarEventRepository;
   public TimesheetRepository timesheetRepository;
@@ -69,7 +69,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       AppBaseService appBaseService,
       TimesheetLineRepository timesheetLineRepository,
       MailMessageRepository mailMessageRepository,
-      TeamTaskRepository teamTaskRepository,
+      ProjectTaskRepository projectTaskaRepo,
       TimesheetLineService timesheetLineService,
       ICalendarEventRepository iCalendarEventRepository,
       TimesheetRepository timesheetRepository,
@@ -79,7 +79,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     this.appBaseService = appBaseService;
     this.timesheetLineRepository = timesheetLineRepository;
     this.mailMessageRepository = mailMessageRepository;
-    this.teamTaskRepository = teamTaskRepository;
+    this.projectTaskaRepo = projectTaskaRepo;
     this.timesheetLineService = timesheetLineService;
     this.iCalendarEventRepository = iCalendarEventRepository;
     this.timesheetRepository = timesheetRepository;
@@ -125,8 +125,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
       for (TimesheetLine timesheetLine : dailyTimesheetLineList) {
 
-        if (timesheetLine.getTeamTask() != null) {
-          taskIdList.add(timesheetLine.getTeamTask().getId());
+        if (timesheetLine.getProjectTask() != null) {
+          taskIdList.add(timesheetLine.getProjectTask().getId());
         }
       }
     }
@@ -136,7 +136,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
             .all()
             .filter(
                 "self.relatedModel = ?1 and self.author = ?2 and date(self.createdOn) = ?3",
-                TeamTask.class.getName(),
+                ProjectTask.class.getName(),
                 dailyTimesheet.getDailyTimesheetUser(),
                 dailyTimesheet.getDailyTimesheetDate())
             .fetch();
@@ -146,11 +146,12 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     for (MailMessage mailMessage : mailMessageList) {
 
       if (!taskIdList.contains(mailMessage.getRelatedId())) {
-        TeamTask teamTask = teamTaskRepository.find(mailMessage.getRelatedId());
+        ProjectTask projectTask = projectTaskaRepo.find(mailMessage.getRelatedId());
 
-        if (teamTask != null) {
+        if (projectTask != null) {
           dailyTimesheet.addDailyTimesheetLineListItem(
-              createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null));
+              createTimesheetLine(
+                  projectTask, projectTask.getProject(), dailyTimesheet, null, null));
           taskIdList.add(mailMessage.getRelatedId());
           count++;
         }
@@ -173,8 +174,6 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     updateFromTimesheet(dailyTimesheet);
 
-    // Update from favourites
-
     List<Long> taskIdList = new ArrayList<>();
     List<Long> projectIdList = new ArrayList<>();
 
@@ -184,8 +183,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
       for (TimesheetLine timesheetLine : dailyTimesheetLineList) {
 
-        if (timesheetLine.getTeamTask() != null) {
-          taskIdList.add(timesheetLine.getTeamTask().getId());
+        if (timesheetLine.getProjectTask() != null) {
+          taskIdList.add(timesheetLine.getProjectTask().getId());
         }
 
         if (timesheetLine.getProject() != null) {
@@ -194,15 +193,18 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       }
     }
 
-    Set<TeamTask> favouriteTaskSet = dailyTimesheet.getDailyTimesheetUser().getFavouriteTaskSet();
+    // Update from favourites
+    Set<ProjectTask> favouriteTaskSet =
+        dailyTimesheet.getDailyTimesheetUser().getFavouriteTaskSet();
 
     if (CollectionUtils.isNotEmpty(favouriteTaskSet)) {
 
-      for (TeamTask teamTask : favouriteTaskSet) {
+      for (ProjectTask projectTask : favouriteTaskSet) {
 
-        if (!taskIdList.contains(teamTask.getId())) {
+        if (!taskIdList.contains(projectTask.getId())) {
           dailyTimesheet.addDailyTimesheetLineListItem(
-              createTimesheetLine(teamTask, teamTask.getProject(), dailyTimesheet, null, null));
+              createTimesheetLine(
+                  projectTask, projectTask.getProject(), dailyTimesheet, null, null));
         }
       }
     }
@@ -281,8 +283,9 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     return count;
   }
 
+  @Transactional
   public TimesheetLine createTimesheetLine(
-      TeamTask teamTask,
+      ProjectTask projectTask,
       Project project,
       DailyTimesheet dailyTimesheet,
       String comments,
@@ -308,6 +311,9 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
             timesheet,
             BigDecimal.ZERO,
             comments);
+
+    timesheetLine.setDailyTimesheet(dailyTimesheet);
+    timesheetLine.setProjectTask(projectTask);
 
     if (iCalendarEvent != null) {
       timesheetLine.setiCalendarEvent(iCalendarEvent);
@@ -340,13 +346,13 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
                     : appBase.getUnitHours())
             : appBase.getUnitHours());
 
-    if (teamTask != null) {
-      timesheetLine.setTeamTask(teamTask);
+    if (projectTask != null) {
+      timesheetLine.setProjectTask(projectTask);
       timesheetLine.setActivityTypeSelect(TimesheetLineRepository.ACTIVITY_TYPE_ON_TICKET);
 
-      if (teamTask.getInvoicingType() != null
-          && teamTask.getInvoicingType().equals(TeamTaskRepository.INVOICING_TYPE_TIME_SPENT)
-          && teamTask.getToInvoice()) {
+      if (projectTask.getInvoicingType() != null
+          && projectTask.getInvoicingType().equals(ProjectTaskRepository.INVOICING_TYPE_TIME_SPENT)
+          && projectTask.getToInvoice()) {
         timesheetLine.setToInvoice(true);
       }
     } else {

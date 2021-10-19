@@ -19,7 +19,7 @@
 						onSelect="action-user-attrs-set-domain-for-favourite-projects" if="__config__.app.isApp('timesheet')"
 						colSpan="12" canNew="false" />
 					<panel-related name="favouriteTaskSetPanel" field="favouriteTaskSet"
-						form-view="team-task-form" grid-view="team-task-grid"
+						form-view="project-task-form" grid-view="project-task-grid"
 						onSelect="action-user-attrs-set-domain-for-favourite-tasks" if="__config__.app.isApp('timesheet')"
 						colSpan="12" canNew="false" />
 				</panel>
@@ -39,7 +39,7 @@
 						onSelect="action-user-attrs-set-domain-for-favourite-projects" if="__config__.app.isApp('timesheet')"
 						colSpan="12" canNew="false" />
 					<panel-related name="favouriteTaskSetPanel" field="favouriteTaskSet"
-						form-view="team-task-form" grid-view="team-task-grid"
+						form-view="project-task-form" grid-view="project-task-grid"
 						onSelect="action-user-attrs-set-domain-for-favourite-tasks" if="__config__.app.isApp('timesheet')"
 						colSpan="12" canNew="false" />
 				</panel>

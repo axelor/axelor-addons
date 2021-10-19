@@ -30,7 +30,7 @@ public interface IMessage {
   static final String REDMINE_TRANSPORT = /*$$(*/
       "Error connecting redmine server. Please check the configuration" /*)*/;
 
-  static final String REDMINE_IMPORT_TEAMTASK_ERROR = /*$$(*/ "TeamTask" /*)*/;
+  static final String REDMINE_IMPORT_PROJECT_TASK_ERROR = /*$$(*/ "ProjectTask" /*)*/;
 
   static final String REDMINE_IMPORT_PROJECT_ERROR = /*$$(*/ "Project" /*)*/;
 
@@ -48,8 +48,8 @@ public interface IMessage {
   static final String REDMINE_IMPORT_PROJECT_CATEGORY_NOT_FOUND = /*$$(*/
       "Entity not imported, no project category found in OS" /*)*/;
 
-  static final String REDMINE_IMPORT_TEAM_TASK_NOT_FOUND = /*$$(*/
-      "Entity not imported, no teamtask found in OS" /*)*/;
+  static final String REDMINE_IMPORT_PROJECT_TASK_NOT_FOUND = /*$$(*/
+      "Entity not imported, no project task found in OS" /*)*/;
 
   static final String REDMINE_IMPORT_WITH_DEFAULT_STATUS = /*$$(*/
       "Status not found in OS, imported with default status" /*)*/;

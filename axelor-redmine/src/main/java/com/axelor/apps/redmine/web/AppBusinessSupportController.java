@@ -21,7 +21,7 @@ import com.axelor.apps.base.db.AppBusinessSupport;
 import com.axelor.apps.base.db.repo.AppBusinessSupportRepository;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
-import com.axelor.apps.redmine.service.TeamTaskRedmineService;
+import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
 import com.axelor.common.StringUtils;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
@@ -32,7 +32,7 @@ import org.apache.commons.collections.CollectionUtils;
 
 public class AppBusinessSupportController {
 
-  @Inject public TeamTaskRedmineService teamTaskRedmineService;
+  @Inject public ProjectTaskRedmineService projectTaskRedmineService;
 
   public void updateProjectVersionProgress(ActionRequest request, ActionResponse response) {
 
@@ -58,7 +58,7 @@ public class AppBusinessSupportController {
         projectVersionList.stream()
             .forEach(
                 version ->
-                    teamTaskRedmineService.updateProjectVersionProgress(
+                    projectTaskRedmineService.updateProjectVersionProgress(
                         version, taskClosedStatusSelect));
       }
     }

@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<selection name="team.task.status" id="redmine.team.task.status">
+	<selection name="project.task.status" id="redmine.project.task.status">
 		<option value="resolved">Resolved</option>
 		<option value="feedback">Feedback</option>
 		<option value="tested">Tested</option>

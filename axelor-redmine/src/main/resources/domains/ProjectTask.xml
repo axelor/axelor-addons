@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+
+	<module name="project" package="com.axelor.apps.project.db" />
+
+	<entity name="ProjectTask">
+
+		<integer name="redmineId" title="Redmine Id" />
+		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
+		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
+		<string name="fixedVersion" title="Fixed version" />
+		<decimal name="estimatedTime" title="Estimated time" />
+		<boolean name="accountedForMaintenance" />
+		<date name="dueDate" />
+		<boolean name="isOffered" title="Offered" />
+		<boolean name="isTaskAccepted" title="Task Accepted" />
+		<string name="name" required="true" large="true" />
+		<string name="fullName" namecolumn="true" title="Name" search="id,name"
+			large="true" />
+
+		<finder-method name="findByRedmineId" using="redmineId" />
+		
+		<extra-code>
+			<![CDATA[
+				public static final String PROJECT_TASK_DEFAULT_STATUS = "new";
+				public static final String PROJECT_TASK_DEFAULT_PRIORITY = "normal";
+			]]>
+		</extra-code>
+	</entity>
+
+</domain-models>

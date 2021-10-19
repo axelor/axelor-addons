@@ -35,8 +35,10 @@ import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
+import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
@@ -48,8 +50,6 @@ import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
-import com.axelor.team.db.TeamTask;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.bean.TimeEntry;
@@ -85,8 +85,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
       UserRepository userRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
-      TeamTaskRepository teamTaskRepo,
-      TeamTaskCategoryRepository projectCategoryRepo,
+      ProjectTaskRepository projectTaskRepo,
+      ProjectTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       TimesheetLineRepository timesheetLineRepo,
       TimesheetRepository timesheetRepo,
@@ -101,7 +101,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
         userRepo,
         projectRepo,
         productRepo,
-        teamTaskRepo,
+        projectTaskRepo,
         projectCategoryRepo,
         partnerRepo,
         appRedmineRepo,
@@ -116,7 +116,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
 
   Logger LOG = LoggerFactory.getLogger(getClass());
   protected Project project;
-  protected TeamTask teamTask;
+  protected ProjectTask projectTask;
   protected User user;
   protected String unitHoursName = null;
   protected Long defaultCompanyId;
@@ -294,10 +294,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
     Integer issueId = redmineTimeEntry.getIssueId();
 
     if (issueId != null) {
-      teamTask = teamTaskRepo.findByRedmineId(issueId);
+      projectTask = projectTaskRepo.findByRedmineId(issueId);
 
-      if (teamTask == null) {
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_TEAM_TASK_NOT_FOUND)};
+      if (projectTask == null) {
+        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_NOT_FOUND)};
 
         redmineBatch.setFailedRedmineTimeEntriesIds(
             failedRedmineTimeEntriesIds == null
@@ -312,7 +312,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
         return;
       }
     } else {
-      teamTask = null;
+      projectTask = null;
     }
 
     this.setTimesheetLineFields(timesheetLine, redmineTimeEntry);
@@ -343,7 +343,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
     timesheetLine.setUser(user);
     timesheetLine.setRedmineId(redmineTimeEntry.getId());
     timesheetLine.setProject(project);
-    timesheetLine.setTeamTask(teamTask);
+    timesheetLine.setProjectTask(projectTask);
     timesheetLine.setComments(redmineTimeEntry.getComment());
 
     BigDecimal duration = BigDecimal.valueOf(redmineTimeEntry.getHours());

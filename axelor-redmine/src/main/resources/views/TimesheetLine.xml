@@ -117,7 +117,7 @@
 			<replace>
 				<panel name="overviewPanel" title="Overview">
 					<field name="user" form-view="user-form" grid-view="user-grid" canNew="false" canEdit="false" canView="false"/>
-					<field name="teamTask"/>
+					<field name="projectTask"/>
 					<field name="date" />
 					<field name="product" requiredIf="toInvoice" canEdit="false" onSelect="action-hr-timesheet-line-attrs-domain-product" widget="SuggestBox" form-view="product-activity-form" grid-view="product-activity-grid"/>
 					<!-- REDMINE CHANGES remove hidden for hoursDuration -->
@@ -156,7 +156,7 @@
 			<replace>
 				<panel name="overviewPanel" title="Overview">
 					<field name="project" onChange="action-timesheet-line-group-project-onchange" onSelect="action-timesheet-line-attrs-domain-project" form-view="project-form" grid-view="project-grid"/>
-					<field name="teamTask" form-view="team-task-form" grid-view="team-task-grid" onSelect="action-timesheet-line-attrs-domain-team-task" onChange="action-timesheet-line-method-set-default-to-invoice"/>
+					<field name="projectTask" form-view="project-task-form" grid-view="project-task-grid" onSelect="action-timesheet-line-attrs-domain-project-task" onChange="action-timesheet-line-method-set-default-to-invoice"/>
 					<field name="date" />
 					<field name="product" requiredIf="toInvoice" canEdit="false" onSelect="action-hr-timesheet-line-attrs-domain-product" widget="SuggestBox" form-view="product-activity-form" grid-view="product-activity-grid"/>
 					<!-- REDMINE CHANGES remove hidden for hoursDuration -->

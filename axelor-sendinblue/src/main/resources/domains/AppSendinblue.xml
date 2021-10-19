@@ -5,7 +5,10 @@
 
 	<module name="base" package="com.axelor.apps.base.db" />
 
-	<entity name="AppSendinblue" lang="java" extends="App">
+	<entity name="AppSendinblue" lang="java">
+		
+		<one-to-one ref="com.axelor.apps.base.db.App" name="app"/>
+		
 		<string name="uri" title="URI" />
 		<string name="apiKey" title="Api Key" />
 
@@ -14,11 +17,11 @@
 		<many-to-many name="leadFieldSet" ref="com.axelor.meta.db.MetaField"
 			title="Lead fields" />
 
-		<boolean name="isContactExport" title="Export contact" />
+		<boolean name="isContactExport" title="Export contact" help="If this option is activated, then data related to Partner and Lead will be exported during export operation."/>
 		<boolean name="isTemplateExport" title="Export template" />
 		<boolean name="isCampaignExport" title="Export campaign" />
 
-		<boolean name="isContactImport" title="Import contact" />
+		<boolean name="isContactImport" title="Import contact" help="If this option is activated, then data related to Partner and Lead will be imported during import operation."/>
 		<boolean name="isTemplateImport" title="Import template" />
 		<boolean name="isCampaignImport" title="Import campaign" />
 
