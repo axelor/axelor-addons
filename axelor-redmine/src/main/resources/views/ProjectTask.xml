@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+
+	<grid id="redmine-project-task-grid" name="project-task-grid" title="Tasks"
+		model="com.axelor.apps.project.db.ProjectTask" extension="true">
+
+		<extend target="/*[last()]">
+			<insert position="after">
+				<field name="redmineId" />
+			</insert>
+		</extend>
+
+	</grid>
+
+	<form id="redmine-project-task-form" name="project-task-form" title="Task"
+		model="com.axelor.apps.project.db.ProjectTask" extension="true">
+
+		<extend target="panel-tabs[@name='mainPanelTab']/*[last()]">
+			<insert position="after">
+				<panel-dashlet name="timesheetLinePanel" title="Logged Time"
+					action="action-team-task-dashlet-timesheet-line" colSpan="12"
+					canSearch="true" />
+				<panel name="redminePanel" title="Redmine">
+					<field name="redmineId" />
+					<field name="fixedVersion" />
+					<field name="estimatedTime" />
+					<field name="isOffered" colSpan="2" widget="boolean-switch" />
+					<field name="accountedForMaintenance" widget="boolean-switch"
+						colSpan="2" />
+					<field name="isTaskAccepted" widget="boolean-switch" colSpan="2" />
+				</panel>
+			</insert>
+		</extend>
+
+		<extend target="//field[@name='taskEndDate']">
+			<insert position="after">
+				<field name="dueDate" colSpan="4" />
+			</insert>
+		</extend>
+
+		<extend target="//field[@name='name']">
+			<attribute name="widget" value="string"/>
+		</extend>
+
+		<extend target="//field[@name='fullName']">
+			<attribute name="widget" value="string"/>
+		</extend>
+
+		<extend target="/">
+			<attribute name="onSave"
+				value="action-team-task-method-update-target-version-progress" />
+		</extend>
+
+	</form>
+
+	<action-view name="action-team-task-dashlet-timesheet-line"
+		title="Timesheetline" model="com.axelor.apps.hr.db.TimesheetLine">
+		<view type="grid" name="timesheet-line-grid" />
+		<view type="form" name="timesheet-line-timesheet-form" />
+		<view-param name="popup" value="true" />
+		<domain>self.projectTask.id = :id</domain>
+	</action-view>
+
+	<action-method name="action-team-task-method-update-target-version-progress">
+		<call class="com.axelor.apps.redmine.web.RedmineProjectTaskController"
+			method="updateTargetVerionProgress" />
+	</action-method>
+
+</object-views>

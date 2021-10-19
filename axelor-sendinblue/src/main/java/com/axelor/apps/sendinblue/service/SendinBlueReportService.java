@@ -19,6 +19,7 @@ package com.axelor.apps.sendinblue.service;
 
 import com.axelor.apps.base.db.AppMarketing;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.marketing.db.SendinBlueCampaign;
 import com.axelor.apps.marketing.db.repo.SendinBlueCampaignRepository;
 import com.axelor.apps.message.db.EmailAddress;
@@ -34,9 +35,11 @@ import com.axelor.apps.sendinblue.db.repo.SendinBlueContactStatRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueEventRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueReportRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueTagRepository;
+import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -96,19 +99,26 @@ public class SendinBlueReportService {
         totalCampaignReportImported = totalCampaignStatImported = totalContactStatImported = 0;
     if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
       importEvents();
-      logWriter.append(String.format("%nTotal Events Imported : %s", totalEventImported));
+      logWriter.append(
+          String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_EVENT), totalEventImported));
 
       importCampaignReport();
       logWriter.append(
-          String.format("%nTotal Campaign Reports Imported : %s", totalCampaignReportImported));
+          String.format(
+              "%n%s : %s",
+              I18n.get(ITranslation.IMPORT_CAMPAIN_REPORT), totalCampaignReportImported));
 
       importCampaignStat();
       logWriter.append(
-          String.format("%nTotal Campaign Statistics Imported : %s", totalCampaignStatImported));
+          String.format(
+              "%n%s : %s",
+              I18n.get(ITranslation.IMPORT_CAMPAIN_STATISTICS), totalCampaignStatImported));
 
       importContactStat();
       logWriter.append(
-          String.format("%nTotal Contact Statistics Imported : %s%n", totalContactStatImported));
+          String.format(
+              "%n%s : %s%n",
+              I18n.get(ITranslation.IMPORT_CONTACT_STATISTICS), totalContactStatImported));
     }
   }
 
@@ -122,18 +132,22 @@ public class SendinBlueReportService {
     LocalDate localDate = null;
     org.threeten.bp.LocalDate startDate = null;
     org.threeten.bp.LocalDate endDate = null;
+
+    LocalDate today =
+        Beans.get(AppBaseService.class)
+            .getTodayDate(Beans.get(UserService.class).getUserActiveCompany());
+
     sendinBlueReportList = sendinBlueReportRepo.all().fetch();
     Optional<SendinBlueReport> maxDateReport =
         sendinBlueReportList.stream().max(Comparator.comparing(SendinBlueReport::getReportDate));
     if (maxDateReport.isPresent()) {
       localDate = maxDateReport.get().getReportDate();
-      if (localDate.compareTo(Beans.get(AppBaseService.class).getTodayDate()) < 0) {
+      if (today != null && localDate.compareTo(today) < 0) {
         localDate = localDate.plusDays(1L);
       }
       if (localDate != null) {
         startDate = org.threeten.bp.LocalDate.parse(localDate.toString());
         if (startDate != null) {
-          LocalDate today = Beans.get(AppBaseService.class).getTodayDate();
           if (today == null) {
             endDate = org.threeten.bp.LocalDate.now();
           } else {
@@ -202,19 +216,22 @@ public class SendinBlueReportService {
     LocalDateTime localDateTime = null;
     org.threeten.bp.LocalDate startDate = null;
     org.threeten.bp.LocalDate endDate = null;
+
+    LocalDate today =
+        Beans.get(AppBaseService.class)
+            .getTodayDate(Beans.get(UserService.class).getUserActiveCompany());
+
     sendinBlueEventList = sendinBlueEventRepo.all().fetch();
     Optional<SendinBlueEvent> maxDateReport =
         sendinBlueEventList.stream().max(Comparator.comparing(SendinBlueEvent::getEventDate));
     if (maxDateReport.isPresent()) {
       localDateTime = maxDateReport.get().getEventDate();
-      if (localDateTime.compareTo(Beans.get(AppBaseService.class).getTodayDate().atStartOfDay())
-          < 0) {
+      if (today != null && localDateTime.compareTo(today.atStartOfDay()) < 0) {
         localDateTime = localDateTime.plusDays(1L);
       }
       if (localDateTime != null) {
         startDate = org.threeten.bp.LocalDate.parse(localDateTime.toLocalDate().toString());
         if (startDate != null) {
-          LocalDate today = Beans.get(AppBaseService.class).getTodayDate();
           if (today == null) {
             endDate = org.threeten.bp.LocalDate.now();
           } else {

@@ -22,7 +22,7 @@
 				<button name="exportFieldBtn" title="Export fields"
 					onClick="save,action-sendinblue-method-add-contact-fields" />
 			</panel>
-			<panel name="configrationPanel" title="Configration">
+			<panel name="configurationPanel" title="Configurations">
 				<panel name="importPanel" title="Import">
 					<field name="isContactImport" widget="boolean-switch" />
 					<field name="isTemplateImport" widget="boolean-switch" />

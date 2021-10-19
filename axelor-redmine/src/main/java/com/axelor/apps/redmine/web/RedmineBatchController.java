@@ -21,6 +21,7 @@ import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.project.db.Project;
+import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.message.IMessage;
@@ -30,7 +31,6 @@ import com.axelor.inject.Beans;
 import com.axelor.meta.schema.actions.ActionView;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
-import com.axelor.team.db.TeamTask;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -177,10 +177,10 @@ public class RedmineBatchController {
 
     if (!idList.isEmpty()) {
       response.setView(
-          ActionView.define(I18n.get("Teamtasks"))
-              .model(TeamTask.class.getName())
-              .add("grid", "team-task-grid")
-              .add("form", "team-task-form")
+          ActionView.define(I18n.get("Projecttasks"))
+              .model(ProjectTask.class.getName())
+              .add("grid", "project-task-grid")
+              .add("form", "project-task-form")
               .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
               .map());
 
@@ -198,10 +198,10 @@ public class RedmineBatchController {
 
     if (!idList.isEmpty()) {
       response.setView(
-          ActionView.define(I18n.get("Teamtasks"))
-              .model(TeamTask.class.getName())
-              .add("grid", "team-task-grid")
-              .add("form", "team-task-form")
+          ActionView.define(I18n.get("Projecttasks"))
+              .model(ProjectTask.class.getName())
+              .add("grid", "project-task-grid")
+              .add("form", "project-task-form")
               .domain("self.id in (" + Joiner.on(",").join(idList) + ")")
               .map());
 

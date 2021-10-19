@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.dailyts.db.repo;
 
+import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.common.StringUtils;
 import com.axelor.db.mapper.Mapper;
 import com.axelor.db.mapper.Property;
@@ -27,8 +29,6 @@ import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection;
-import com.axelor.team.db.TeamTask;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
@@ -44,11 +44,12 @@ public class MailMessageDailytsRepository extends MailMessageRepository {
 
     message = super.save(message);
 
-    if (message.getRelatedModel().equals(TeamTask.class.getName()) && message.getAuthor() != null) {
-      TeamTask teamTask = Beans.get(TeamTaskRepository.class).find(message.getRelatedId());
+    if (message.getRelatedModel().equals(ProjectTask.class.getName())
+        && message.getAuthor() != null) {
+      ProjectTask projectTask = Beans.get(ProjectTaskRepository.class).find(message.getRelatedId());
 
-      if (teamTask != null
-          && teamTask.getRedmineId() != 0
+      if (projectTask != null
+          && projectTask.getRedmineId() != 0
           && message.getSubject().equals("Record created")) {
         return message;
       }

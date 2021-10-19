@@ -10,8 +10,8 @@
 		<datetime name="exportDateT" title="Export datetime"/>
 		<many-to-one name="exportUser" ref="com.axelor.auth.db.User" title="User"/>
 		<string name="exportLog" title="Export log" large="true" />
-		<boolean name="isExportLatest" title="Export latest" />
-		<boolean name="isNoUpdate" title="No update" />
+		<boolean name="isExportLatest" title="Export latest" help="When 'Export latest' is selected to true then only the data which is created after last Export will be Exported"/>
+		<boolean name="isNoUpdate" title="No update" help="'No update' is selected to true then only the data entries which are newly created after the last Export will be Exported"/>
 
 	</entity>
 

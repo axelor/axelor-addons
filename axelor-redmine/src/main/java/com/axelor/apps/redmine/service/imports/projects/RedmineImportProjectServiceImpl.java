@@ -29,9 +29,10 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.TeamTaskCategory;
+import com.axelor.apps.project.db.ProjectTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.TeamTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
@@ -44,7 +45,6 @@ import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
-import com.axelor.team.db.repo.TeamTaskRepository;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -82,8 +82,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
       UserRepository userRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
-      TeamTaskRepository teamTaskRepo,
-      TeamTaskCategoryRepository projectCategoryRepo,
+      ProjectTaskRepository projectTaskRepo,
+      ProjectTaskCategoryRepository projectCategoryRepo,
       PartnerRepository partnerRepo,
       RedmineImportMappingRepository redmineImportMappingRepository,
       AppRedmineRepository appRedmineRepo,
@@ -95,7 +95,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
         userRepo,
         projectRepo,
         productRepo,
-        teamTaskRepo,
+        projectTaskRepo,
         projectCategoryRepo,
         partnerRepo,
         appRedmineRepo,
@@ -365,6 +365,41 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
             ? ProjectRepository.TYPE_PHASE
             : ProjectRepository.TYPE_PROJECT);
 
+    try {
+      List<Membership> redmineProjectMembers =
+          redmineProjectManager.getProjectMembers(redmineProject.getId());
+
+      if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
+
+        for (Membership membership : redmineProjectMembers) {
+          User user = getOsUser(membership.getUserId());
+
+          if (user != null) {
+            project.addMembersUserSetItem(user);
+          }
+        }
+      } else {
+        project.clearMembersUserSet();
+      }
+    } catch (RedmineException e) {
+      TraceBackService.trace(e, "", batch.getId());
+    }
+
+    Collection<Tracker> redmineTrackers = redmineProject.getTrackers();
+
+    if (redmineTrackers != null && !redmineTrackers.isEmpty()) {
+
+      for (Tracker tracker : redmineTrackers) {
+        ProjectTaskCategory projectCategory =
+            projectCategoryRepo.findByName(fieldMap.get(tracker.getName()));
+
+        if (projectCategory != null) {
+          project.addProjectTaskCategorySetItem(projectCategory);
+        }
+      }
+    } else {
+      project.clearProjectTaskCategorySet();
+    }
     importProjectMembersAndTrackers(redmineProject, project);
 
     if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
@@ -438,15 +473,15 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
     if (redmineTrackers != null && !redmineTrackers.isEmpty()) {
 
       for (Tracker tracker : redmineTrackers) {
-        TeamTaskCategory projectCategory =
+        ProjectTaskCategory projectCategory =
             projectCategoryRepo.findByName(fieldMap.get(tracker.getName()));
 
         if (projectCategory != null) {
-          project.addTeamTaskCategorySetItem(projectCategory);
+          project.addProjectTaskCategorySetItem(projectCategory);
         }
       }
     } else {
-      project.clearTeamTaskCategorySet();
+      project.clearProjectTaskCategorySet();
     }
   }
 

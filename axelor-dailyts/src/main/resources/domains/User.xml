@@ -7,7 +7,7 @@
 
 	<entity name="User" sequential="true" lang="java">
 
-		<many-to-many name="favouriteTaskSet" ref="com.axelor.team.db.TeamTask"
+		<many-to-many name="favouriteTaskSet" ref="com.axelor.apps.project.db.ProjectTask"
 			title="Favourite tasks" />
 		<many-to-many name="favouriteProjectSet" ref="com.axelor.apps.project.db.Project"
 			title="Favourite projects" />
