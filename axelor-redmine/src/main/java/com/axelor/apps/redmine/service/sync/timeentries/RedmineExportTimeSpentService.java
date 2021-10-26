@@ -15,28 +15,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.batch;
+package com.axelor.apps.redmine.service.sync.timeentries;
 
-import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.redmine.service.common.RedmineCommonService;
-import com.axelor.apps.redmine.service.common.RedmineService;
-import com.google.inject.Inject;
+import java.util.Map;
 
-public class BatchImportAllRedmineIssue extends AbstractBatch {
+public interface RedmineExportTimeSpentService {
 
-  @Inject private RedmineService redmineService;
-
-  @Override
-  protected void process() {
-
-    redmineService.redmineImportIssues(
-        batch, ticket -> incrementDone(), error -> incrementAnomaly());
-  }
-
-  @Override
-  protected void stop() {
-    super.stop();
-    String comments = RedmineCommonService.getResult();
-    addComment(comments);
-  }
+  public String exportTimesheetLines(Map<String, Object> paramsMap);
 }
