@@ -22,7 +22,7 @@ import com.axelor.apps.base.exceptions.IExceptionMessage;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.db.Model;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -41,7 +41,7 @@ public class RedmineBatchService extends AbstractBatchService {
 
     Batch batch;
     RedmineBatch redmineBatch = (RedmineBatch) batchModel;
-    RedmineImportCommonService.result = "";
+    RedmineCommonService.setResult("");
 
     switch (redmineBatch.getRedmineActionSelect()) {
       case RedmineBatchRepository.ACTION_SELECT_IMPORT_PROJECT:
@@ -50,8 +50,8 @@ public class RedmineBatchService extends AbstractBatchService {
       case RedmineBatchRepository.ACTION_SELECT_IMPORT_ISSUE:
         batch = redmineImportIssues(redmineBatch);
         break;
-      case RedmineBatchRepository.ACTION_SELECT_IMPORT_TIME_ENTRIES:
-        batch = redmineImportTimeEntries(redmineBatch);
+      case RedmineBatchRepository.ACTION_SELECT_SYNC_TIME_ENTRIES:
+        batch = redmineSyncTimeEntries(redmineBatch);
         break;
       default:
         throw new AxelorException(
@@ -72,7 +72,7 @@ public class RedmineBatchService extends AbstractBatchService {
     return Beans.get(BatchImportAllRedmineIssue.class).run(redmineBatch);
   }
 
-  public Batch redmineImportTimeEntries(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineTimeEntries.class).run(redmineBatch);
+  public Batch redmineSyncTimeEntries(RedmineBatch redmineBatch) {
+    return Beans.get(BatchSyncAllRedmineTimeEntries.class).run(redmineBatch);
   }
 }
