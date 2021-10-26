@@ -13,6 +13,7 @@
 		<!-- REDMINE CONFIGURATION DETAILS -->
 		<string name="uri" title="URI" />
 		<string name="apiAccessKey" title="Api Access Key" />
+		<string name="serverTimezone" title="Redmine server timezone" />
 		<many-to-one name="company"
 			ref="com.axelor.apps.base.db.Company" title="Company" />
 

@@ -15,6 +15,9 @@
 		<!-- Change french translation of durationForCustomer -->
 		<decimal name="durationForCustomer" title="Duration adjust for customer" nullable="true"/>
 
+		<many-to-many name="createdExportBatchSet" ref="com.axelor.apps.base.db.Batch" />
+		<many-to-many name="updatedExportBatchSet" ref="com.axelor.apps.base.db.Batch" />
+
 		<finder-method name="findByRedmineId" using="redmineId" />
 
 	</entity>

@@ -37,7 +37,7 @@ import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -70,7 +70,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
+public class RedmineImportProjectServiceImpl extends RedmineCommonService
     implements RedmineImportProjectService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
@@ -151,6 +151,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
       this.redmineProjectInvoicingSequenceSelectDefault =
           appRedmine.getRedmineProjectInvoicingSequenceSelectDefault();
 
+      serverTimeZone = appRedmine.getServerTimezone();
+
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository
               .all()
@@ -207,7 +209,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
 
     String resultStr =
         String.format("Redmine Project -> ABS Project : Success: %d Fail: %d", success, fail);
-    result += String.format("%s \n", resultStr);
+    setResult(getResult() + String.format("%s \n", resultStr));
     LOG.debug(resultStr);
     success = fail = 0;
   }
@@ -242,8 +244,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
     this.setRedmineCustomFieldsMap(redmineProject.getCustomFields());
 
     Project project = projectRepo.findByRedmineId(redmineProject.getId());
-    LocalDateTime redmineUpdatedOn =
-        redmineProject.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    LocalDateTime redmineUpdatedOn = getRedmineDate(redmineProject.getUpdatedOn());
 
     if (project == null) {
       project = new Project();
