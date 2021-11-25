@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form id="dailyts-hr-batch-form" name="hr-batch-form" title="HR Batch"
-		model="com.axelor.apps.hr.db.HrBatch" extension="true">
+  <form id="dailyts-hr-batch-form" name="hr-batch-form" title="HR Batch"
+    model="com.axelor.apps.hr.db.HrBatch" extension="true">
 
-		<extend target="//panel[@name='informationsPanel']">
-			<insert position="before">
-				<panel name="dailyTimesheetCreatePanel" title="Create daily timesheets"
-					showIf="actionSelect == 8">
-					<field name="dailyTsDate" />
-					<field name="dailyTsUserSet" colSpan="12" widget="TagSelect"
-						canNew="false" form-view="user-form" grid-view="user-grid" />
-					<button name="createDailyTimesheetBtn" title="Create daily timesheets"
-						onClick="save,action-hrbatch-method-hr-batch" />
-				</panel>
-			</insert>
-		</extend>
+    <extend target="//panel[@name='informationsPanel']">
+      <insert position="before">
+        <panel name="dailyTimesheetCreatePanel" title="Create daily timesheets"
+          showIf="actionSelect == 8">
+          <field name="dailyTsDate"/>
+          <field name="dailyTsUserSet" colSpan="12" widget="TagSelect" canNew="false"
+            form-view="user-form" grid-view="user-grid"/>
+          <button name="createDailyTimesheetBtn" title="Create daily timesheets"
+            onClick="save,action-hrbatch-method-hr-batch"/>
+        </panel>
+      </insert>
+    </extend>
 
-	</form>
+  </form>
 
 </object-views>

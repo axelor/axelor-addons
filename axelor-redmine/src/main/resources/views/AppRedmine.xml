@@ -1,51 +1,50 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form name="app-redmine-config-form" title="App Redmine"
-		model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false"
-		width="large">
-		<panel name="mainPanel">
-			<field name="uri" />
-			<field name="apiAccessKey" />
-		</panel>
-		<panel name="fieldsPanel">
-			<field name="company" required="true" />
-		</panel>
-		<panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
-			<field name="redmineProjectInvoiceable" required="true" />
-			<field name="redmineProjectClientPartner" required="true" />
-			<field name="redmineProjectInvoicingSequenceSelect" required="true" />
-			<field name="redmineProjectAssignedTo" required="true" />
-			<field name="redmineVersionDeliveryDate" required="true" />
-			<field name="redmineIssueProduct" required="true" />
-			<field name="redmineIssueDueDate" required="true" />
-			<field name="redmineIssueEstimatedTime" required="true" />
-			<field name="redmineIssueInvoiced" required="true" />
-			<field name="redmineIssueAccountedForMaintenance" required="true" />
-			<field name="redmineIssueIsTaskAccepted" required="true" />
-			<field name="redmineIssueIsOffered" required="true" />
-			<field name="redmineIssueUnitPrice" required="true" />
-			<field name="redmineTimeSpentProduct" required="true" />
-			<field name="redmineTimeSpentDurationForCustomer" required="true" />
-			<field name="redmineTimeSpentDurationUnit" required="true" />
-		</panel>
-		<panel name="redmineCustomFieldDefaultPanel" title="Redmine custom field defaults">
-			<field name="redmineProjectClientPartnerDefault" />
-			<field name="redmineProjectInvoicingSequenceSelectDefault" />
-			<field name="redmineIssueProductDefault" />
-			<field name="redmineIssueDueDateDefault" />
-			<field name="redmineIssueEstimatedTimeDefault" />
-			<field name="redmineIssueUnitPriceDefault" />
-			<field name="redmineTimeSpentProductDefault" />
-			<field name="redmineTimeSpentDurationUnitDefault" />
-		</panel>
-	</form>
+  <form name="app-redmine-config-form" title="App Redmine"
+    model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false" width="large">
+    <panel name="mainPanel">
+      <field name="uri"/>
+      <field name="apiAccessKey"/>
+    </panel>
+    <panel name="fieldsPanel">
+      <field name="company" required="true"/>
+    </panel>
+    <panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
+      <field name="redmineProjectInvoiceable" required="true"/>
+      <field name="redmineProjectClientPartner" required="true"/>
+      <field name="redmineProjectInvoicingSequenceSelect" required="true"/>
+      <field name="redmineProjectAssignedTo" required="true"/>
+      <field name="redmineVersionDeliveryDate" required="true"/>
+      <field name="redmineIssueProduct" required="true"/>
+      <field name="redmineIssueDueDate" required="true"/>
+      <field name="redmineIssueEstimatedTime" required="true"/>
+      <field name="redmineIssueInvoiced" required="true"/>
+      <field name="redmineIssueAccountedForMaintenance" required="true"/>
+      <field name="redmineIssueIsTaskAccepted" required="true"/>
+      <field name="redmineIssueIsOffered" required="true"/>
+      <field name="redmineIssueUnitPrice" required="true"/>
+      <field name="redmineTimeSpentProduct" required="true"/>
+      <field name="redmineTimeSpentDurationForCustomer" required="true"/>
+      <field name="redmineTimeSpentDurationUnit" required="true"/>
+    </panel>
+    <panel name="redmineCustomFieldDefaultPanel" title="Redmine custom field defaults">
+      <field name="redmineProjectClientPartnerDefault"/>
+      <field name="redmineProjectInvoicingSequenceSelectDefault"/>
+      <field name="redmineIssueProductDefault"/>
+      <field name="redmineIssueDueDateDefault"/>
+      <field name="redmineIssueEstimatedTimeDefault"/>
+      <field name="redmineIssueUnitPriceDefault"/>
+      <field name="redmineTimeSpentProductDefault"/>
+      <field name="redmineTimeSpentDurationUnitDefault"/>
+    </panel>
+  </form>
 
-	<action-view name="admin.root.conf.redmine.config" title="Redmine configurations"
-		model="com.axelor.apps.redmine.db.RedmineConfig">
-		<view type="form" name="redmine-config-form" />
-	</action-view>
+  <action-view name="admin.root.conf.redmine.config" title="Redmine configurations"
+    model="com.axelor.apps.redmine.db.RedmineConfig">
+    <view type="form" name="redmine-config-form"/>
+  </action-view>
 
 </object-views>

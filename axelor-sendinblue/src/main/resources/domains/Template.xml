@@ -3,14 +3,14 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="message" package="com.axelor.apps.message.db" />
+  <module name="message" package="com.axelor.apps.message.db"/>
 
-	<entity name="Template" lang="java">
+  <entity name="Template" lang="java">
 
-		<long name="sendinBlueId" title="SendinBlue id" />
+    <long name="sendinBlueId" title="SendinBlue id"/>
 
-		<finder-method name="findBySendinBlueId" using="sendinBlueId" />
+    <finder-method name="findBySendinBlueId" using="sendinBlueId"/>
 
-	</entity>
+  </entity>
 
 </domain-models>
