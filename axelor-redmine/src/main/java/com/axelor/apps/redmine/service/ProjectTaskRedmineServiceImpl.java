@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.service;
 
+import com.axelor.apps.base.db.AppBusinessProject;
 import com.axelor.apps.base.db.repo.AppBusinessSupportRepository;
 import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
@@ -30,6 +31,7 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
@@ -62,16 +64,15 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         productCompanyService);
   }
 
-  //  @Transactional(rollbackOn = {AxelorException.class, Exception.class})
-  //  @Override
-  //  public ProjectTask updateTask(ProjectTask projectTask, AppBusinessProject appBusinessProject)
-  //      throws AxelorException {
-  //    if (!projectTask.getIsOffered()) {
-  //      return super.updateTask(projectTask, appBusinessProject);
-  //    }
-  //    projectTask = computeDefaultInformation(projectTask);
-  //    return projectTaskRepo.save(projectTask);
-  //  }
+  @Transactional(rollbackOn = {AxelorException.class, Exception.class})
+  @Override
+  public ProjectTask updateTaskToInvoice(
+      ProjectTask projectTask, AppBusinessProject appBusinessProject) {
+    if (!projectTask.getIsOffered()) {
+      return super.updateTaskToInvoice(projectTask, appBusinessProject);
+    }
+    return projectTask;
+  }
 
   @Override
   public void updateTargetVerionProgress(ProjectTask projectTask) {

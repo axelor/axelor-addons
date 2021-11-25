@@ -141,8 +141,10 @@
           <field name="durationUnit" colSpan="3" if-module="axelor-business-project"
             if="__config__.app.isApp('business-project')" readonly="true"/>
           <field name="timesheet" grid-view="timesheet-grid" form-view="timesheet-form"/>
+          <field name="toInvoice" readonly="true" if-module="axelor-business-project"
+            if="__config__.app.isApp('business-project') &amp;&amp; __config__.app.getApp('business-project').automaticInvoicing"/>
           <field name="toInvoice" if-module="axelor-business-project"
-            if="__config__.app.isApp('business-project')"/>
+            if="__config__.app.isApp('business-project') &amp;&amp; !__config__.app.getApp('business-project').automaticInvoicing"/>
           <field name="enableEditor"/>
           <field name="comments"/>
           <!-- REDMINE CHANGES add hidden in duration and durationLabel -->
@@ -189,8 +191,10 @@
           <!-- REDMINE CHANGES replace the durationLabel with below durationUnit field -->
           <field name="durationUnit" colSpan="3" if-module="axelor-business-project"
             if="__config__.app.isApp('business-project')" readonly="true"/>
+          <field name="toInvoice" readonly="true" if-module="axelor-business-project"
+            if="__config__.app.isApp('business-project') &amp;&amp; __config__.app.getApp('business-project').automaticInvoicing"/>
           <field name="toInvoice" if-module="axelor-business-project"
-            if="__config__.app.isApp('business-project')"/>
+            if="__config__.app.isApp('business-project') &amp;&amp; !__config__.app.getApp('business-project').automaticInvoicing"/>
           <field name="enableEditor"/>
           <field name="comments"/>
           <!-- REDMINE CHANGES add hidden in duration and durationLabel -->
