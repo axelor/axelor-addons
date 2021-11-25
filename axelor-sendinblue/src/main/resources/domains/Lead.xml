@@ -3,14 +3,14 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="crm" package="com.axelor.apps.crm.db" />
+  <module name="crm" package="com.axelor.apps.crm.db"/>
 
-	<entity name="Lead" lang="java">
+  <entity name="Lead" lang="java">
 
-		<long name="sendinBlueId" title="SendinBlue id" />
+    <long name="sendinBlueId" title="SendinBlue id"/>
 
-		<finder-method name="findBySendinBlueId" using="sendinBlueId" />
+    <finder-method name="findBySendinBlueId" using="sendinBlueId"/>
 
-	</entity>
+  </entity>
 
 </domain-models>

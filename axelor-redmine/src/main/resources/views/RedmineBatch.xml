@@ -1,83 +1,81 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<grid name="redmine-batch-grid" title="Redmine batches"
-		model="com.axelor.apps.redmine.db.RedmineBatch" orderBy="-updatedOn">
-		<field name="redmineActionSelect" />
-		<field name="code" x-bind="{{code|unaccent|uppercase}}" />
-		<field name="batchUser" form-view="user-form" grid-view="user-grid" />
-		<field name="createdOn" />
-		<field name="createdBy" form-view="user-form" grid-view="user-grid" />
-	</grid>
+  <grid name="redmine-batch-grid" title="Redmine batches"
+    model="com.axelor.apps.redmine.db.RedmineBatch" orderBy="-updatedOn">
+    <field name="redmineActionSelect"/>
+    <field name="code" x-bind="{{code|unaccent|uppercase}}"/>
+    <field name="batchUser" form-view="user-form" grid-view="user-grid"/>
+    <field name="createdOn"/>
+    <field name="createdBy" form-view="user-form" grid-view="user-grid"/>
+  </grid>
 
-	<form onNew="action-redmine-batch-record-on-new" name="redmine-batch-form"
-		title="Redmine Batch" model="com.axelor.apps.redmine.db.RedmineBatch"
-		width="large">
-		<panel name="main">
-			<field name="redmineActionSelect" />
-			<field name="code" x-bind="{{code|unaccent|uppercase}}"
-				onChange="action-base-batch-condition-check-unique-code" />
-			<field name="batchUser" canEdit="false" widget="SuggestBox"
-				form-view="user-form" grid-view="user-grid" />
-			<field name="isImportIssuesWithActivities" widget="boolean-switch"
-				help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
-				showIf="redmineActionSelect == 1" />
-			<field name="isOverrideRecords" widget="boolean-switch" showIf="redmineActionSelect == 2" />
-		</panel>
-		<panel-tabs>
-			<panel name="actionPanel" title="Actions">
-				<panel colSpan="3">
-					<button name="redmineImportProjectsBtn" title="Redmine Import Projects"
-						onClick="save,action-redmine-batch-method-import-projects"
-						colSpan="12" hidden="true" showIf="redmineActionSelect == 0" />
-					<button name="redmineImportIssuesBtn" title="Redmine Import Issues"
-						onClick="save,action-redmine-batch-method-import-issues" colSpan="12"
-						hidden="true" showIf="redmineActionSelect == 1" />
-					<button name="redmineImportTimeEntriesBtn" title="Redmine Import Time Entries"
-						onClick="save,action-redmine-batch-method-import-time-entries" colSpan="12"
-						showIf="redmineActionSelect == 2" />
-				</panel>
-			</panel>
-			<panel name="information" title="Information">
-				<field name="createdOn" title="Created on" />
-				<field name="createdBy" title="Created by" form-view="user-form"
-					grid-view="user-grid" />
-				<field name="description" colSpan="12" />
-				<panel-related field="batchList" colSpan="12"
-					form-view="redmine-base-batch-form" grid-view="batch-grid"
-					readonly="true" />
-			</panel>
-		</panel-tabs>
-	</form>
+  <form onNew="action-redmine-batch-record-on-new" name="redmine-batch-form"
+    title="Redmine Batch" model="com.axelor.apps.redmine.db.RedmineBatch" width="large">
+    <panel name="main">
+      <field name="redmineActionSelect"/>
+      <field name="code" x-bind="{{code|unaccent|uppercase}}"
+        onChange="action-base-batch-condition-check-unique-code"/>
+      <field name="batchUser" canEdit="false" widget="SuggestBox" form-view="user-form"
+        grid-view="user-grid"/>
+      <field name="isImportIssuesWithActivities" widget="boolean-switch"
+        help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
+        showIf="redmineActionSelect == 1"/>
+      <field name="isOverrideRecords" widget="boolean-switch"
+        showIf="redmineActionSelect == 2"/>
+    </panel>
+    <panel-tabs>
+      <panel name="actionPanel" title="Actions">
+        <panel colSpan="3">
+          <button name="redmineImportProjectsBtn" title="Redmine Import Projects"
+            onClick="save,action-redmine-batch-method-import-projects" colSpan="12" hidden="true"
+            showIf="redmineActionSelect == 0"/>
+          <button name="redmineImportIssuesBtn" title="Redmine Import Issues"
+            onClick="save,action-redmine-batch-method-import-issues" colSpan="12" hidden="true"
+            showIf="redmineActionSelect == 1"/>
+          <button name="redmineImportTimeEntriesBtn" title="Redmine Import Time Entries"
+            onClick="save,action-redmine-batch-method-import-time-entries" colSpan="12"
+            showIf="redmineActionSelect == 2"/>
+        </panel>
+      </panel>
+      <panel name="information" title="Information">
+        <field name="createdOn" title="Created on"/>
+        <field name="createdBy" title="Created by" form-view="user-form" grid-view="user-grid"/>
+        <field name="description" colSpan="12"/>
+        <panel-related field="batchList" colSpan="12"
+          form-view="redmine-base-batch-form" grid-view="batch-grid" readonly="true"/>
+      </panel>
+    </panel-tabs>
+  </form>
 
-	<!-- ACTIONS -->
+  <!-- ACTIONS -->
 
-	<!-- ACTION RECORD -->
+  <!-- ACTION RECORD -->
 
-	<action-record name="action-redmine-batch-record-on-new"
-		model="com.axelor.apps.redmine.db.RedmineBatch">
-		<field name="createdOn" expr="eval:__config__.app.getTodayDate()" />
-		<field name="createdBy" expr="eval:__user__" />
-		<field name="batchUser" expr="eval:__user__" />
-	</action-record>
+  <action-record name="action-redmine-batch-record-on-new"
+    model="com.axelor.apps.redmine.db.RedmineBatch">
+    <field name="createdOn" expr="eval:__config__.app.getTodayDate()"/>
+    <field name="createdBy" expr="eval:__user__"/>
+    <field name="batchUser" expr="eval:__user__"/>
+  </action-record>
 
-	<!-- ACTION METHOD -->
+  <!-- ACTION METHOD -->
 
-	<action-method name="action-redmine-batch-method-import-projects">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="redmineImportProjects" />
-	</action-method>
+  <action-method name="action-redmine-batch-method-import-projects">
+    <call class="com.axelor.apps.redmine.web.RedmineBatchController"
+      method="redmineImportProjects"/>
+  </action-method>
 
-	<action-method name="action-redmine-batch-method-import-issues">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="redmineImportIssues" />
-	</action-method>
+  <action-method name="action-redmine-batch-method-import-issues">
+    <call class="com.axelor.apps.redmine.web.RedmineBatchController"
+      method="redmineImportIssues"/>
+  </action-method>
 
-	<action-method name="action-redmine-batch-method-import-time-entries">
-		<call class="com.axelor.apps.redmine.web.RedmineBatchController"
-			method="redmineImportTimeEntries" />
-	</action-method>
+  <action-method name="action-redmine-batch-method-import-time-entries">
+    <call class="com.axelor.apps.redmine.web.RedmineBatchController"
+      method="redmineImportTimeEntries"/>
+  </action-method>
 
 </object-views>
