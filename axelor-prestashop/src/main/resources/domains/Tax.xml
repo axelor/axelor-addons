@@ -5,7 +5,7 @@
 
   <module name="account" package="com.axelor.apps.account.db"/>
 
-  <entity name="Tax" lang="java" cachable="true">
+  <entity name="Tax" lang="java" cacheable="true">
     <integer name="prestaShopId" nullable="true" readonly="true"/>
     <integer name="prestaShopVersion" nullable="true"/>
 

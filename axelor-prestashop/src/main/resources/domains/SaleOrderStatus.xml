@@ -5,7 +5,7 @@
 
   <module name="prestashop" package="com.axelor.apps.prestashop.db"/>
 
-  <entity name="SaleOrderStatus" lang="java" cachable="true">
+  <entity name="SaleOrderStatus" lang="java" cacheable="true">
     <integer name="absStatus" selection="sale.order.status.select" title="Sale order status"/>
     <many-to-one name="prestaShopStatus" ref="PrestashopOrderStatusCacheEntry"/>
   </entity>
