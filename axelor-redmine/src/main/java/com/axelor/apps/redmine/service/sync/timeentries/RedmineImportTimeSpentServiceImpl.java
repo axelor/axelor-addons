@@ -350,15 +350,18 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     timesheetLine.setDate(redmineSpentOn);
 
-    String value = redmineCustomFieldsMap.get(redmineTimeSpentDurationForCustomer);
-    timesheetLine.setDurationForCustomer(
-        value != null && !value.equals("") ? new BigDecimal(value) : duration);
-
-    value = redmineCustomFieldsMap.get(redmineTimeSpentDurationUnit);
+    String value = null;
+    try {
+      value = redmineCustomFieldsMap.get(redmineTimeSpentDurationForCustomer);
+      timesheetLine.setDurationForCustomer(
+          !StringUtils.isBlank(value) ? new BigDecimal(value) : duration);
+    } catch (Exception e) {
+      TraceBackService.trace(e, redmineTimeEntry.getId().toString(), batch.getId());
+    }
 
     Unit unit = null;
-
-    if (value != null && !value.isEmpty()) {
+    value = redmineCustomFieldsMap.get(redmineTimeSpentDurationUnit);
+    if (!StringUtils.isBlank(value)) {
       unit = unitRepo.findByName(value);
     }
 
