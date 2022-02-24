@@ -1,34 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="redmine" package="com.axelor.apps.redmine.db" />
+  <module name="redmine" package="com.axelor.apps.redmine.db"/>
 
-	<entity name="RedmineBatch" lang="java">
+  <entity name="RedmineBatch" lang="java">
 
-		<string name="code" title="Code" namecolumn="true" unique="true" />
-		<many-to-one name="batchUser" ref="com.axelor.auth.db.User"
-			title="User" />
-		<string name="description" title="Description" large="true" />
-		<one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch"
-			mappedBy="redmineBatch" title="Batchs" />
-		<integer name="redmineActionSelect" title="Action"
-			selection="redmine.batch.action.select" />
-		<boolean name="isImportIssuesWithActivities" title="Import issues with activities" />
-		<string name="failedRedmineIssuesIds" large="true" />
-		<string name="failedRedmineTimeEntriesIds" large="true" />
-		<boolean name="isOverrideRecords" title="Override records" />
-		<string name="failedAosTimesheetLineIds" large="true" />
+    <string name="code" title="Code" namecolumn="true" unique="true"/>
+    <many-to-one name="batchUser" ref="com.axelor.auth.db.User" title="User"/>
+    <string name="description" title="Description" large="true"/>
+    <one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch"
+      mappedBy="redmineBatch" title="Batchs"/>
+    <integer name="redmineActionSelect" title="Action"
+      selection="redmine.batch.action.select"/>
+    <boolean name="isImportIssuesWithActivities" title="Import issues with activities"/>
+    <string name="failedRedmineIssuesIds" large="true"/>
+    <string name="failedRedmineTimeEntriesIds" large="true"/>
+    <boolean name="isOverrideRecords" title="Override records"/>
+    <string name="failedAosTimesheetLineIds" large="true"/>
 
-		<extra-code>
+    <extra-code>
 			<![CDATA[
 				public static final int ACTION_SELECT_IMPORT_PROJECT = 0;
 				public static final int ACTION_SELECT_IMPORT_ISSUE = 1;
 				public static final int ACTION_SELECT_SYNC_TIME_ENTRIES = 2;
 			]]>
-		</extra-code>
+    </extra-code>
 
-	</entity>
+  </entity>
 
 </domain-models>

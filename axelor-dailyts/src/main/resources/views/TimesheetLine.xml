@@ -1,57 +1,55 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<grid name="timesheet-line-daily-timesheet-grid" title="Daily timesheet lines"
-		model="com.axelor.apps.hr.db.TimesheetLine" editable="true"
-		onNew="action-timesheet-line-attrs-set-default-onnew" orderBy="-teamTask.id">
+  <grid name="timesheet-line-daily-timesheet-grid" title="Daily timesheet lines"
+    model="com.axelor.apps.hr.db.TimesheetLine" editable="true"
+    onNew="action-timesheet-line-attrs-set-default-onnew" orderBy="-teamTask.id">
 
-		<field name="project" form-view="project-form" grid-view="project-grid"
-			onChange="action-timesheet-line-group-project-onchange" onSelect="action-timesheet-line-attrs-domain-project" />
-		<field name="teamTask" form-view="team-task-form" grid-view="team-task-grid"
-			onSelect="action-timesheet-line-attrs-domain-team-task"
-			onChange="action-timesheet-line-method-set-default-to-invoice,action-timesheet-line-attrs-set-default-activity-type" />
-		<field name="date" hidden="true" />
-		<field name="product" requiredIf="toInvoice" widget="SuggestBox"
-			form-view="product-activity-form" grid-view="product-activity-grid"
-			onSelect="action-hr-timesheet-line-attrs-domain-product" />
-		<field name="activityTypeSelect" />
-		<field name="duration"
-			onChange="action-timesheet-line-method-set-stored-duration,action-timesheet-line-attrs-set-default-duration-for-customer"
-			aggregate="sum" hidden="true" />
-		<field name="hoursDuration"
-			onChange="action-timesheet-line-method-set-duration,action-timesheet-line-attrs-set-default-duration-for-customer" />
-		<field name="durationForCustomer" />
-		<field name="durationUnit" />
-		<field name="toInvoice" if-module="axelor-business-project"
-			if="__config__.app.isApp('business-project')" />
-		<field name="comments" />
-		<field name="timesheet" hidden="true" />
-		<field name="user" hidden="true" />
+    <field name="project" form-view="project-form" grid-view="project-grid"
+      onChange="action-timesheet-line-group-project-onchange"
+      onSelect="action-timesheet-line-attrs-domain-project"/>
+    <field name="teamTask" form-view="team-task-form" grid-view="team-task-grid"
+      onSelect="action-timesheet-line-attrs-domain-team-task"
+      onChange="action-timesheet-line-method-set-default-to-invoice,action-timesheet-line-attrs-set-default-activity-type"/>
+    <field name="date" hidden="true"/>
+    <field name="product" requiredIf="toInvoice" widget="SuggestBox"
+      form-view="product-activity-form" grid-view="product-activity-grid"
+      onSelect="action-hr-timesheet-line-attrs-domain-product"/>
+    <field name="activityTypeSelect"/>
+    <field name="duration"
+      onChange="action-timesheet-line-method-set-stored-duration,action-timesheet-line-attrs-set-default-duration-for-customer"
+      aggregate="sum" hidden="true"/>
+    <field name="hoursDuration"
+      onChange="action-timesheet-line-method-set-duration,action-timesheet-line-attrs-set-default-duration-for-customer"/>
+    <field name="durationForCustomer"/>
+    <field name="durationUnit"/>
+    <field name="toInvoice" if-module="axelor-business-project"
+      if="__config__.app.isApp('business-project')"/>
+    <field name="comments"/>
+    <field name="timesheet" hidden="true"/>
+    <field name="user" hidden="true"/>
 
-	</grid>
+  </grid>
 
-	<action-attrs name="action-timesheet-line-attrs-set-default-onnew">
-		<attribute name="value" for="date"
-			expr="eval: __parent__?.dailyTimesheetDate" />
-		<attribute name="value" for="user"
-			expr="eval: __parent__?.dailyTimesheetUser" />
-		<attribute name="value" for="product"
-			expr="eval: __parent__?.dailyTimesheetUser?.employee?.product" />
-		<attribute name="value" for="timesheet" expr="eval: __parent__?.timesheet" />
-		<attribute name="value" for="durationUnit"
-			expr="eval: __parent__?.timesheet?.timeLoggingPreferenceSelect == 'days' ? __repo__(AppBase).all().fetchOne().unitDays : __parent__?.timesheet?.timeLoggingPreferenceSelect == 'minutes' ? __repo__(AppBase).all().fetchOne().unitMinutes : __repo__(AppBase).all().fetchOne().unitHours" />
-	</action-attrs>
+  <action-attrs name="action-timesheet-line-attrs-set-default-onnew">
+    <attribute name="value" for="date" expr="eval: __parent__?.dailyTimesheetDate"/>
+    <attribute name="value" for="user" expr="eval: __parent__?.dailyTimesheetUser"/>
+    <attribute name="value" for="product"
+      expr="eval: __parent__?.dailyTimesheetUser?.employee?.product"/>
+    <attribute name="value" for="timesheet" expr="eval: __parent__?.timesheet"/>
+    <attribute name="value" for="durationUnit"
+      expr="eval: __parent__?.timesheet?.timeLoggingPreferenceSelect == 'days' ? __repo__(AppBase).all().fetchOne().unitDays : __parent__?.timesheet?.timeLoggingPreferenceSelect == 'minutes' ? __repo__(AppBase).all().fetchOne().unitMinutes : __repo__(AppBase).all().fetchOne().unitHours"/>
+  </action-attrs>
 
-	<action-attrs
-		name="action-timesheet-line-attrs-set-default-duration-for-customer">
-		<attribute name="value" for="durationForCustomer" expr="eval: duration" />
-	</action-attrs>
+  <action-attrs name="action-timesheet-line-attrs-set-default-duration-for-customer">
+    <attribute name="value" for="durationForCustomer" expr="eval: duration"/>
+  </action-attrs>
 
-	<action-attrs name="action-timesheet-line-attrs-set-default-activity-type">
-		<attribute name="value" for="activityTypeSelect"
-			expr="eval: teamTask != null ? __repo__(TimesheetLine).ACTIVITY_TYPE_ON_TICKET : null" />
-	</action-attrs>
+  <action-attrs name="action-timesheet-line-attrs-set-default-activity-type">
+    <attribute name="value" for="activityTypeSelect"
+      expr="eval: teamTask != null ? __repo__(TimesheetLine).ACTIVITY_TYPE_ON_TICKET : null"/>
+  </action-attrs>
 
 </object-views>
