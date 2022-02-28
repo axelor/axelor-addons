@@ -8,6 +8,7 @@
     <panel name="mainPanel">
       <field name="uri"/>
       <field name="apiAccessKey"/>
+      <field name="serverTimezone" required="true"/>
     </panel>
     <panel name="fieldsPanel">
       <field name="company" required="true"/>

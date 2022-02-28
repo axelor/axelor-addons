@@ -21,7 +21,10 @@
       mappedBy="updatedBatchSet"/>
     <many-to-many name="updatedTimesheetLinesInOs"
       ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="updatedBatchSet"/>
-
+    <many-to-many name="createdTimeEntriesInRedmine"
+      ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="createdExportBatchSet"/>
+    <many-to-many name="updatedTimeEntriesInRedmine"
+      ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="updatedExportBatchSet"/>
     <many-to-one name="errorLogFile" title="Error log" ref="com.axelor.meta.db.MetaFile"/>
 
   </entity>

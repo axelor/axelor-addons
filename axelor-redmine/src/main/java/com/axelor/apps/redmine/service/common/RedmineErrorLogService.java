@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports.log;
+package com.axelor.apps.redmine.service.common;
 
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
@@ -45,10 +45,8 @@ public class RedmineErrorLogService {
   public static final String EXCEL_FILE_EXTENSION = ".xlsx";
 
   public static final String HEADER_COL1 = "Object";
-  public static final String HEADER_COL2 = "Redmine Ref.";
+  public static final String HEADER_COL2 = "Redmine Ref. (Import) / AOS Ref. (Export)";
   public static final String HEADER_COL3 = "Error";
-
-  private File excelFile;
 
   public MetaFile redmineErrorLogService(List<Object[]> errorObjList) {
 
@@ -56,7 +54,7 @@ public class RedmineErrorLogService {
 
     XSSFWorkbook workbook = new XSSFWorkbook();
     XSSFSheet sheet = workbook.createSheet(EXCEL_SHEET_NAME);
-    Map<String, Object[]> errorData = new TreeMap<String, Object[]>();
+    Map<String, Object[]> errorData = new TreeMap<>();
     errorData.put("1", new Object[] {HEADER_COL1, HEADER_COL2, HEADER_COL3});
 
     int i = 2;
@@ -81,16 +79,18 @@ public class RedmineErrorLogService {
     }
 
     try {
-      excelFile = File.createTempFile(EXCEL_FILE_NAME, EXCEL_FILE_EXTENSION);
+      File excelFile = File.createTempFile(EXCEL_FILE_NAME, EXCEL_FILE_EXTENSION);
       FileOutputStream out = new FileOutputStream(excelFile);
       workbook.write(out);
       out.close();
 
       DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-      errorMetaFile =
-          metaFiles.upload(
-              new FileInputStream(excelFile),
-              EXCEL_FILE_NAME + dateFormat.format(new Date()) + EXCEL_FILE_EXTENSION);
+
+      try (FileInputStream in = new FileInputStream(excelFile)) {
+        errorMetaFile =
+            metaFiles.upload(
+                in, EXCEL_FILE_NAME + dateFormat.format(new Date()) + EXCEL_FILE_EXTENSION);
+      }
     } catch (Exception e) {
       TraceBackService.trace(e);
     }

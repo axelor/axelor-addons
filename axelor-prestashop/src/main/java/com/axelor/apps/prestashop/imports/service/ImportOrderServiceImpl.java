@@ -230,6 +230,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
                     remoteOrder.getReference(),
                     null,
                     customer,
+                    null,
+                    null,
                     null);
           } catch (AxelorException ae) {
             TraceBackService.trace(

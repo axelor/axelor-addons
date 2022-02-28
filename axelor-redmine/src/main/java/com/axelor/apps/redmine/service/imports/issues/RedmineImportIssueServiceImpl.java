@@ -42,7 +42,7 @@ import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -50,6 +50,8 @@ import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
+import com.axelor.meta.MetaStore;
+import com.axelor.meta.schema.views.Selection.Option;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -62,6 +64,7 @@ import com.taskadapter.redmineapi.bean.Issue;
 import com.taskadapter.redmineapi.bean.Journal;
 import com.taskadapter.redmineapi.bean.JournalDetail;
 import com.taskadapter.redmineapi.bean.Version;
+import groovy.json.StringEscapeUtils;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -71,7 +74,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
@@ -79,7 +84,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
+public class RedmineImportIssueServiceImpl extends RedmineCommonService
     implements RedmineImportIssueService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
@@ -189,6 +194,20 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
       this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
 
+      //      serverTimeZone = appRedmine.getServerTimezone();
+
+      List<Option> selectionList = new ArrayList<>();
+      selectionList.addAll(MetaStore.getSelectionList("project.task.status"));
+      selectionList.addAll(MetaStore.getSelectionList("project.task.priority"));
+
+      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
+      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
+
+      for (Option option : selectionList) {
+        selectionMap.put(fr.getString(option.getTitle()), option.getValue());
+        selectionMap.put(en.getString(option.getTitle()), option.getValue());
+      }
+
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository
               .all()
@@ -259,6 +278,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
     String resultStr =
         String.format("Redmine Issue -> ABS ProjectTask : Success: %d Fail: %d", success, fail);
     result += String.format("%s \n", resultStr);
+    setResult(getResult() + String.format("%s \n", resultStr));
     LOG.debug(resultStr);
     success = fail = 0;
   }
@@ -406,8 +426,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
   public void createOpenSuiteIssue(Issue redmineIssue, Boolean isImportIssuesWithActivities) {
 
     ProjectTask projectTask = projectTaskRepo.findByRedmineId(redmineIssue.getId());
-    LocalDateTime redmineUpdatedOn =
-        redmineIssue.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    LocalDateTime redmineUpdatedOn = getRedmineDate(redmineIssue.getUpdatedOn());
 
     if (projectTask == null) {
       projectTask = new ProjectTask();
@@ -791,7 +810,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
         String oldValue =
             getValue(
                 journalDetail.getOldValue(), journalDetail.getName(), journalDetail.getProperty());
-        trackStrBuilder.append(oldValue);
+        trackStrBuilder.append(StringEscapeUtils.escapeJava(oldValue));
       }
 
       trackStrBuilder.append("\",\"value\":\"");
@@ -800,7 +819,7 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
         String newValue =
             getValue(
                 journalDetail.getNewValue(), journalDetail.getName(), journalDetail.getProperty());
-        trackStrBuilder.append(newValue);
+        trackStrBuilder.append(StringEscapeUtils.escapeJava(newValue));
       }
 
       trackStrBuilder.append("\"},");

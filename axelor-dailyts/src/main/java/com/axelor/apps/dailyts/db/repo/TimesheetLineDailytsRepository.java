@@ -30,18 +30,6 @@ public class TimesheetLineDailytsRepository extends TimesheetLineHRRepository {
   @Inject protected DailyTimesheetService dailyTimesheetService;
 
   @Override
-  public void computeFullName(TimesheetLine timesheetLine) {
-
-    timesheetLine.setFullName(
-        (timesheetLine.getTimesheet() != null
-                ? timesheetLine.getTimesheet().getFullName() + " "
-                : "")
-            + timesheetLine.getDate()
-            + " "
-            + timesheetLine.getId());
-  }
-
-  @Override
   public TimesheetLine save(TimesheetLine timesheetLine) {
 
     DailyTimesheet previousDailyTs = timesheetLine.getDailyTimesheet();
@@ -59,11 +47,23 @@ public class TimesheetLineDailytsRepository extends TimesheetLineHRRepository {
       previousDailyTs.setTimesheet(dailyTimesheetService.updateRelatedTimesheet(previousDailyTs));
       dailyTimesheetRepo.save(previousDailyTs);
     }
+    computeFullNameDailyTs(timesheetLine);
 
     return timesheetLine;
   }
 
-  public DailyTimesheet getRelatedDailyTs(TimesheetLine timesheetLine) {
+  protected void computeFullNameDailyTs(TimesheetLine timesheetLine) {
+
+    timesheetLine.setFullName(
+        (timesheetLine.getTimesheet() != null
+                ? timesheetLine.getTimesheet().getFullName() + " "
+                : "")
+            + timesheetLine.getDate()
+            + " "
+            + timesheetLine.getId());
+  }
+
+  protected DailyTimesheet getRelatedDailyTs(TimesheetLine timesheetLine) {
 
     return dailyTimesheetRepo
         .all()
