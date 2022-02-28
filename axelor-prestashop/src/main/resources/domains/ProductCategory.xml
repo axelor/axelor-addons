@@ -5,7 +5,7 @@
 
   <module name="base" package="com.axelor.apps.base.db"/>
 
-  <entity name="ProductCategory" lang="java" cachable="true">
+  <entity name="ProductCategory" lang="java" cacheable="true">
     <integer name="prestaShopId" nullable="true"/>
     <integer name="prestaShopVersion" nullable="true"/>
 
