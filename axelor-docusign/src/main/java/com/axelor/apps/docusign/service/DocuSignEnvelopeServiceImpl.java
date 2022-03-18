@@ -70,6 +70,7 @@ import com.docusign.esign.model.Signer;
 import com.docusign.esign.model.Tabs;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -82,6 +83,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -317,8 +319,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   }
 
   protected void checkEventNotification(
-      EnvelopeDefinition envelopeDefinition, DocuSignEnvelopeSetting envelopeSetting)
-      throws AxelorException {
+      EnvelopeDefinition envelopeDefinition, DocuSignEnvelopeSetting envelopeSetting) {
 
     EventNotification eventNotification = new EventNotification();
     String webhookUrl = AppSettings.get().getBaseURL() + "/ws/public/docusign/update-envelope";
