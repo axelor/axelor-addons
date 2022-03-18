@@ -37,6 +37,10 @@ import org.apache.commons.collections.CollectionUtils;
 
 public class DocuSignUtils {
 
+  private DocuSignUtils() {
+    throw new IllegalStateException("Utility class");
+  }
+
   public static void addSignHere(
       Tabs tabs, DocuSignField docuSignField, String documentId, String recipientId) {
     SignHere signHere = new SignHere();
