@@ -769,7 +769,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
                   envelopeSetting.getDocuSignAccount().getAccountId(), envelopeId);
           String envelopeStatus = envelope.getStatus();
           docuSignEnvelope.setStatusSelect(envelopeStatus);
-          LOG.debug("Envelope id : " + envelopeId + " / status : " + envelopeStatus);
+          LOG.debug("Envelope id : {} / status : {}", envelopeId, envelopeStatus);
 
           updateFields(envelopesApi, docuSignEnvelope);
           if (DocuSignEnvelopeRepository.STATUS_COMPLETED.equals(envelopeStatus)) {

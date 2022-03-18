@@ -40,14 +40,14 @@ import org.xml.sax.InputSource;
 @Path("/public/docusign")
 public class DocuSignWebService {
 
-  private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   @POST
   @Path("/update-envelope")
   @Produces(MediaType.TEXT_PLAIN)
   public Response updateEnvelope(String data) {
 
-    LOG.debug("Data received from DocuSign Connect: " + data);
+    LOG.debug("Data received from DocuSign Connect: {}", data);
     if (StringUtils.notEmpty(data)) {
 
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -68,7 +68,7 @@ public class DocuSignWebService {
                 .item(0)
                 .getNodeValue();
         if (StringUtils.notEmpty(envelopeId)) {
-          LOG.debug("envelopeId=" + envelopeId);
+          LOG.debug("envelopeId={}", envelopeId);
           DocuSignEnvelope envelope =
               Beans.get(DocuSignEnvelopeRepository.class)
                   .all()
@@ -76,14 +76,14 @@ public class DocuSignWebService {
                   .bind("envelopeId", envelopeId)
                   .fetchOne();
           if (ObjectUtils.notEmpty(envelope)) {
-            envelope = Beans.get(DocuSignEnvelopeService.class).synchroniseEnvelopeStatus(envelope);
+            Beans.get(DocuSignEnvelopeService.class).synchroniseEnvelopeStatus(envelope);
           }
         }
 
       } catch (Exception e) {
         LOG.error(
-            "!!!!!! PROBLEM DocuSign Webhook: Couldn't parse the XML sent by DocuSign Connect: "
-                + e.getMessage());
+            "!!!!!! PROBLEM DocuSign Webhook: Couldn't parse the XML sent by DocuSign Connect: {}",
+            e.getMessage());
         TraceBackService.trace(e);
       }
     }
