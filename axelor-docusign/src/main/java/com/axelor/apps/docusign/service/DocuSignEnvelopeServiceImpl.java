@@ -249,25 +249,23 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     docuSignDocument.setFileExtension(documentSetting.getFileExtension());
     docuSignDocument.setSequence(documentSetting.getSequence());
 
-    if (ObjectUtils.notEmpty(scriptContext)) {
-      if (ObjectUtils.notEmpty(documentSetting.getUnsignedMetaFileDefaultPath())) {
-        Object evaluation =
-            templateContextService.computeTemplateContext(
-                documentSetting.getUnsignedMetaFileDefaultPath(), scriptContext);
-        if (evaluation instanceof MetaFile) {
-          MetaFile unsignedMetaFile = (MetaFile) evaluation;
-          docuSignDocument.setUnsignedMetaFile(unsignedMetaFile);
-        }
+    String unsignedMetaFileDefaultPath = documentSetting.getUnsignedMetaFileDefaultPath();
+    if (scriptContext != null && ObjectUtils.notEmpty(unsignedMetaFileDefaultPath)) {
+      Object evaluation =
+          templateContextService.computeTemplateContext(unsignedMetaFileDefaultPath, scriptContext);
+      if (evaluation instanceof MetaFile) {
+        MetaFile unsignedMetaFile = (MetaFile) evaluation;
+        docuSignDocument.setUnsignedMetaFile(unsignedMetaFile);
       }
     }
 
-    if (CollectionUtils.isNotEmpty(documentSetting.getDocuSignFieldSettingList())) {
-      documentSetting
-          .getDocuSignFieldSettingList()
-          .forEach(
-              fieldSetting ->
-                  docuSignDocument.addDocuSignFieldListItem(
-                      createDocuSignField(fieldSetting, docuSignSignerList)));
+    List<DocuSignFieldSetting> docuSignFieldSettings =
+        documentSetting.getDocuSignFieldSettingList();
+    if (CollectionUtils.isNotEmpty(docuSignFieldSettings)) {
+      docuSignFieldSettings.forEach(
+          fieldSetting ->
+              docuSignDocument.addDocuSignFieldListItem(
+                  createDocuSignField(fieldSetting, docuSignSignerList)));
     }
     return docuSignDocument;
   }
@@ -578,107 +576,117 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       List<DocuSignDocument> docuSignDocumentList)
       throws AxelorException {
 
-    if (CollectionUtils.isNotEmpty(docuSignDocumentList)) {
+    if (CollectionUtils.isEmpty(docuSignDocumentList)) {
+      return;
+    }
 
-      for (DocuSignDocument docuSignDocument : docuSignDocumentList) {
+    for (DocuSignDocument docuSignDocument : docuSignDocumentList) {
 
-        if (CollectionUtils.isNotEmpty(docuSignDocument.getDocuSignFieldList())) {
-          for (DocuSignField docuSignField : docuSignDocument.getDocuSignFieldList()) {
-            if (ObjectUtils.notEmpty(docuSignField.getDocuSignSigner())) {
-              String recipientId = docuSignField.getDocuSignSigner().getRecipientId();
-              if (docuSignField.getDocuSignSigner().getIsInPersonSigner()) {
-                InPersonSigner inPersonSigner = findInPersonSigner(inPersonSignerList, recipientId);
-                if (ObjectUtils.notEmpty(inPersonSigner)) {
-                  updateInPersonSigner(inPersonSigner, docuSignField);
-                } else {
-                  throw new AxelorException(
-                      TraceBackRepository.CATEGORY_INCONSISTENCY,
-                      I18n.get(IExceptionMessage.DOCUSIGN_IN_PERSON_SIGNER_NOT_FOUND));
-                }
-
-              } else {
-                Signer signer = findSigner(signerList, recipientId);
-                if (ObjectUtils.notEmpty(signer)) {
-                  updateSigner(signer, docuSignField);
-                } else {
-                  throw new AxelorException(
-                      TraceBackRepository.CATEGORY_INCONSISTENCY,
-                      I18n.get(IExceptionMessage.DOCUSIGN_SIGNER_NOT_FOUND));
-                }
-              }
-            }
-          }
-        }
+      List<DocuSignField> docuSignFields = docuSignDocument.getDocuSignFieldList();
+      if (CollectionUtils.isEmpty(docuSignFields)) {
+        continue;
       }
+
+      for (DocuSignField docuSignField : docuSignFields) {
+        updateDocuSignFieldSigner(signerList, inPersonSignerList, docuSignField);
+      }
+    }
+  }
+
+  private void updateDocuSignFieldSigner(
+      List<Signer> signers, List<InPersonSigner> inPersonSigners, DocuSignField docuSignField)
+      throws AxelorException {
+    DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
+    if (docuSignSigner == null) {
+      return;
+    }
+
+    String recipientId = docuSignSigner.getRecipientId();
+    if (docuSignSigner.getIsInPersonSigner()) {
+      InPersonSigner inPersonSigner = findInPersonSigner(inPersonSigners, recipientId);
+      if (inPersonSigner == null) {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_INCONSISTENCY,
+            I18n.get(IExceptionMessage.DOCUSIGN_IN_PERSON_SIGNER_NOT_FOUND));
+      }
+      updateInPersonSigner(inPersonSigner, docuSignField);
+
+    } else {
+      Signer signer = findSigner(signers, recipientId);
+      if (signer == null) {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_INCONSISTENCY,
+            I18n.get(IExceptionMessage.DOCUSIGN_SIGNER_NOT_FOUND));
+      }
+      updateSigner(signer, docuSignField);
     }
   }
 
   protected InPersonSigner findInPersonSigner(
       List<InPersonSigner> inPersonSignerList, String recipientId) {
-    InPersonSigner inPersonSigner = null;
 
-    if (CollectionUtils.isNotEmpty(inPersonSignerList) && StringUtils.notEmpty(recipientId)) {
-      inPersonSigner =
-          inPersonSignerList.stream()
-              .filter(signerItem -> recipientId.equals(signerItem.getRecipientId()))
-              .findAny()
-              .orElse(null);
+    if (CollectionUtils.isEmpty(inPersonSignerList) || StringUtils.isEmpty(recipientId)) {
+      return null;
     }
 
-    return inPersonSigner;
+    return inPersonSignerList.stream()
+        .filter(signerItem -> recipientId.equals(signerItem.getRecipientId()))
+        .findAny()
+        .orElse(null);
   }
 
   protected InPersonSigner updateInPersonSigner(
       InPersonSigner inPersonSigner, DocuSignField docuSignField) throws AxelorException {
 
-    if (ObjectUtils.notEmpty(docuSignField.getDocuSignSigner())) {
-
-      DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
-      Partner signerPartner = docuSignSigner.getSigner();
-      Company company = docuSignSigner.getCompany();
-      Tabs tabs = inPersonSigner.getTabs();
-      if (ObjectUtils.isEmpty(tabs)) {
-        tabs = new Tabs();
-        inPersonSigner.setTabs(tabs);
-      }
-
-      String documentId = docuSignField.getDocuSignDocument().getDocumentId();
-      processItem(
-          tabs, docuSignField, documentId, inPersonSigner.getRecipientId(), signerPartner, company);
+    if (docuSignField.getDocuSignSigner() == null) {
+      return inPersonSigner;
     }
+
+    DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
+    Partner signerPartner = docuSignSigner.getSigner();
+    Company company = docuSignSigner.getCompany();
+    Tabs tabs = inPersonSigner.getTabs();
+    if (ObjectUtils.isEmpty(tabs)) {
+      tabs = new Tabs();
+      inPersonSigner.setTabs(tabs);
+    }
+
+    String documentId = docuSignField.getDocuSignDocument().getDocumentId();
+    processItem(
+        tabs, docuSignField, documentId, inPersonSigner.getRecipientId(), signerPartner, company);
 
     return inPersonSigner;
   }
 
   protected Signer findSigner(List<Signer> signerList, String recipientId) {
-    Signer signer = null;
 
-    if (CollectionUtils.isNotEmpty(signerList) && StringUtils.notEmpty(recipientId)) {
-      signer =
-          signerList.stream()
-              .filter(signerItem -> recipientId.equals(signerItem.getRecipientId()))
-              .findAny()
-              .orElse(null);
+    if (CollectionUtils.isEmpty(signerList) && StringUtils.isEmpty(recipientId)) {
+      return null;
     }
 
-    return signer;
+    return signerList.stream()
+        .filter(signerItem -> recipientId.equals(signerItem.getRecipientId()))
+        .findAny()
+        .orElse(null);
   }
 
   protected Signer updateSigner(Signer signer, DocuSignField docuSignField) throws AxelorException {
 
-    if (ObjectUtils.notEmpty(docuSignField.getDocuSignSigner())) {
-      DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
-      Partner signerPartner = docuSignSigner.getSigner();
-      Company company = docuSignSigner.getCompany();
-      Tabs tabs = signer.getTabs();
-      if (ObjectUtils.isEmpty(tabs)) {
-        tabs = new Tabs();
-        signer.setTabs(tabs);
-      }
-
-      String documentId = docuSignField.getDocuSignDocument().getDocumentId();
-      processItem(tabs, docuSignField, documentId, signer.getRecipientId(), signerPartner, company);
+    if (docuSignField.getDocuSignSigner() == null) {
+      return signer;
     }
+
+    DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
+    Partner signerPartner = docuSignSigner.getSigner();
+    Company company = docuSignSigner.getCompany();
+    Tabs tabs = signer.getTabs();
+    if (ObjectUtils.isEmpty(tabs)) {
+      tabs = new Tabs();
+      signer.setTabs(tabs);
+    }
+
+    String documentId = docuSignField.getDocuSignDocument().getDocumentId();
+    processItem(tabs, docuSignField, documentId, signer.getRecipientId(), signerPartner, company);
 
     return signer;
   }
@@ -757,70 +765,74 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   public DocuSignEnvelope synchroniseEnvelopeStatus(DocuSignEnvelope docuSignEnvelope)
       throws AxelorException {
     DocuSignEnvelopeSetting envelopeSetting = docuSignEnvelope.getDocuSignEnvelopeSetting();
-    if (ObjectUtils.notEmpty(envelopeSetting)) {
-      EnvelopesApi envelopesApi = getEnvelopesApi(envelopeSetting.getDocuSignAccount());
-
-      String envelopeId = docuSignEnvelope.getEnvelopeId();
-      if (StringUtils.notEmpty(envelopeId)) {
-        try {
-          Envelope envelope =
-              envelopesApi.getEnvelope(
-                  envelopeSetting.getDocuSignAccount().getAccountId(), envelopeId);
-          String envelopeStatus = envelope.getStatus();
-          docuSignEnvelope.setStatusSelect(envelopeStatus);
-          LOG.debug("Envelope id : {} / status : {}", envelopeId, envelopeStatus);
-
-          updateFields(envelopesApi, docuSignEnvelope);
-          if (DocuSignEnvelopeRepository.STATUS_COMPLETED.equals(envelopeStatus)) {
-            downloadDocumentsFile(envelopesApi, docuSignEnvelope);
-            if (StringUtils.notEmpty(envelope.getCompletedDateTime())) {
-              docuSignEnvelope.setCompletedDateTime(
-                  Instant.parse(envelope.getCompletedDateTime())
-                      .atZone(ZoneId.systemDefault())
-                      .toLocalDateTime());
-            }
-            confirmSaleOrder(docuSignEnvelope);
-          } else if (DocuSignEnvelopeRepository.STATUS_DECLINED.equals(envelopeStatus)) {
-            if (StringUtils.notEmpty(envelope.getDeclinedDateTime())) {
-              docuSignEnvelope.setDeclinedDateTime(
-                  Instant.parse(envelope.getDeclinedDateTime())
-                      .atZone(ZoneId.systemDefault())
-                      .toLocalDateTime());
-            }
-          }
-          docuSignEnvelopeRepo.save(docuSignEnvelope);
-
-        } catch (ApiException e) {
-          throw new AxelorException(e, TraceBackRepository.CATEGORY_INCONSISTENCY);
-        }
-      }
-
-    } else {
+    if (envelopeSetting == null) {
       throw new AxelorException(
           TraceBackRepository.CATEGORY_INCONSISTENCY,
           I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_EMPTY));
     }
+
+    DocuSignAccount docuSignAccount = envelopeSetting.getDocuSignAccount();
+    EnvelopesApi envelopesApi = getEnvelopesApi(docuSignAccount);
+
+    String envelopeId = docuSignEnvelope.getEnvelopeId();
+    if (StringUtils.isEmpty(envelopeId)) {
+      return docuSignEnvelope;
+    }
+
+    try {
+      Envelope envelope = envelopesApi.getEnvelope(docuSignAccount.getAccountId(), envelopeId);
+      String envelopeStatus = envelope.getStatus();
+      docuSignEnvelope.setStatusSelect(envelopeStatus);
+      LOG.debug("Envelope id : {} / status : {}", envelopeId, envelopeStatus);
+
+      updateFields(envelopesApi, docuSignEnvelope);
+      if (DocuSignEnvelopeRepository.STATUS_COMPLETED.equals(envelopeStatus)) {
+        downloadDocumentsFile(envelopesApi, docuSignEnvelope);
+        if (StringUtils.notEmpty(envelope.getCompletedDateTime())) {
+          docuSignEnvelope.setCompletedDateTime(
+              Instant.parse(envelope.getCompletedDateTime())
+                  .atZone(ZoneId.systemDefault())
+                  .toLocalDateTime());
+        }
+        confirmSaleOrder(docuSignEnvelope);
+
+      } else if (DocuSignEnvelopeRepository.STATUS_DECLINED.equals(envelopeStatus)
+          && StringUtils.notEmpty(envelope.getDeclinedDateTime())) {
+        docuSignEnvelope.setDeclinedDateTime(
+            Instant.parse(envelope.getDeclinedDateTime())
+                .atZone(ZoneId.systemDefault())
+                .toLocalDateTime());
+      }
+
+      docuSignEnvelopeRepo.save(docuSignEnvelope);
+
+    } catch (ApiException e) {
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_INCONSISTENCY);
+    }
+
     return docuSignEnvelope;
   }
 
   protected void confirmSaleOrder(DocuSignEnvelope docuSignEnvelope) throws AxelorException {
-    if (StringUtils.notEmpty(docuSignEnvelope.getRelatedToSelect())
-        && ObjectUtils.notEmpty(docuSignEnvelope.getRelatedToId())) {
-      try {
-        Class<? extends Model> modelClass =
-            (Class<? extends Model>) Class.forName(docuSignEnvelope.getRelatedToSelect());
-        Model model = JPA.find(modelClass, docuSignEnvelope.getRelatedToId());
+    if (docuSignEnvelope.getRelatedToSelect() == null
+        || docuSignEnvelope.getRelatedToId() == null) {
+      return;
+    }
 
-        if (ObjectUtils.notEmpty(model) && model instanceof SaleOrder) {
-          SaleOrder saleOrder = (SaleOrder) model;
+    try {
+      Class<? extends Model> modelClass =
+          (Class<? extends Model>) Class.forName(docuSignEnvelope.getRelatedToSelect());
+      Model model = JPA.find(modelClass, docuSignEnvelope.getRelatedToId());
 
-          if (saleOrder.getStatusSelect() == SaleOrderRepository.STATUS_FINALIZED_QUOTATION) {
-            this.saleOrderWorkflowService.confirmSaleOrder(saleOrder);
-          }
+      if (ObjectUtils.notEmpty(model) && model instanceof SaleOrder) {
+        SaleOrder saleOrder = (SaleOrder) model;
+
+        if (saleOrder.getStatusSelect() == SaleOrderRepository.STATUS_FINALIZED_QUOTATION) {
+          this.saleOrderWorkflowService.confirmSaleOrder(saleOrder);
         }
-      } catch (ClassNotFoundException e) {
-        throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
       }
+    } catch (ClassNotFoundException e) {
+      throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
   }
 
@@ -893,81 +905,86 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   protected void downloadDocumentsFile(EnvelopesApi envelopesApi, DocuSignEnvelope docuSignEnvelope)
       throws AxelorException {
     try {
-      EnvelopeDocumentsResult result =
-          envelopesApi.listDocuments(
-              docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount().getAccountId(),
-              docuSignEnvelope.getEnvelopeId());
-      if (ObjectUtils.notEmpty(result)) {
-        if (CollectionUtils.isNotEmpty(result.getEnvelopeDocuments())) {
-          for (EnvelopeDocument doc : result.getEnvelopeDocuments()) {
-            if (CERTIFICATE_ID.equals(doc.getDocumentId())) {
-              if (ObjectUtils.isEmpty(docuSignEnvelope.getCertificateMetaFile())) {
-                if (ObjectUtils.notEmpty(docuSignEnvelope.getDocuSignEnvelopeSetting())
-                    && ObjectUtils.notEmpty(
-                        docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount())
-                    && StringUtils.notEmpty(
-                        docuSignEnvelope
-                            .getDocuSignEnvelopeSetting()
-                            .getDocuSignAccount()
-                            .getAccountId())) {
-                  byte[] results =
-                      envelopesApi.getDocument(
-                          docuSignEnvelope
-                              .getDocuSignEnvelopeSetting()
-                              .getDocuSignAccount()
-                              .getAccountId(),
-                          docuSignEnvelope.getEnvelopeId(),
-                          CERTIFICATE_ID);
-                  if (ObjectUtils.notEmpty(results)) {
-                    String fileName = addExtension(CERTIFICATE_FILENAME, PDF_EXTENSION);
-                    MetaFile certificateMetaFile =
-                        metaFiles.upload(new ByteArrayInputStream(results), fileName);
-                    docuSignEnvelope.setCertificateMetaFile(certificateMetaFile);
-                  }
-                }
-              }
-            } else {
-              DocuSignDocument docuSignDocument =
-                  docuSignEnvelope.getDocuSignDocumentList().stream()
-                      .filter(
-                          d ->
-                              ObjectUtils.notEmpty(doc.getDocumentId())
-                                  && doc.getDocumentId().equals(d.getDocumentId()))
-                      .findFirst()
-                      .orElse(null);
-              if (ObjectUtils.notEmpty(docuSignDocument)
-                  && ObjectUtils.isEmpty(docuSignDocument.getSignedMetaFile())) {
-                if (ObjectUtils.notEmpty(docuSignEnvelope.getDocuSignEnvelopeSetting())
-                    && ObjectUtils.notEmpty(
-                        docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount())
-                    && StringUtils.notEmpty(
-                        docuSignEnvelope
-                            .getDocuSignEnvelopeSetting()
-                            .getDocuSignAccount()
-                            .getAccountId())) {
-                  byte[] results =
-                      envelopesApi.getDocument(
-                          docuSignEnvelope
-                              .getDocuSignEnvelopeSetting()
-                              .getDocuSignAccount()
-                              .getAccountId(),
-                          docuSignEnvelope.getEnvelopeId(),
-                          doc.getDocumentId());
-                  if (ObjectUtils.notEmpty(results)) {
-                    String fileName = addExtension(doc.getName(), PDF_EXTENSION);
-                    MetaFile signedMetaFile =
-                        metaFiles.upload(new ByteArrayInputStream(results), fileName);
-                    docuSignDocument.setSignedMetaFile(signedMetaFile);
-                  }
-                }
-              }
-            }
-          }
+      DocuSignEnvelopeSetting docuSignEnvelopeSetting =
+          docuSignEnvelope.getDocuSignEnvelopeSetting();
+      DocuSignAccount docuSignAccount = docuSignEnvelopeSetting.getDocuSignAccount();
+      String accountId = docuSignAccount.getAccountId();
+      String envelopeId = docuSignEnvelope.getEnvelopeId();
+
+      EnvelopeDocumentsResult result = envelopesApi.listDocuments(accountId, envelopeId);
+      if (result == null) {
+        return;
+      }
+
+      List<EnvelopeDocument> envelopeDocuments = result.getEnvelopeDocuments();
+      if (CollectionUtils.isEmpty(envelopeDocuments)) {
+        return;
+      }
+
+      for (EnvelopeDocument doc : envelopeDocuments) {
+        if (CERTIFICATE_ID.equals(doc.getDocumentId())) {
+          setCertificateMetaFileFromCertificate(
+              envelopesApi, docuSignEnvelope, accountId, envelopeId);
+        } else {
+          setCertificateMetaFile(envelopesApi, docuSignEnvelope, accountId, envelopeId, doc);
         }
       }
+
     } catch (ApiException | IOException e) {
       throw new AxelorException(e, TraceBackRepository.CATEGORY_INCONSISTENCY);
     }
+  }
+
+  protected void setCertificateMetaFileFromCertificate(
+      EnvelopesApi envelopesApi,
+      DocuSignEnvelope docuSignEnvelope,
+      String accountId,
+      String envelopeId)
+      throws ApiException, IOException {
+    if (docuSignEnvelope.getCertificateMetaFile() != null || accountId == null) {
+      return;
+    }
+
+    byte[] results = envelopesApi.getDocument(accountId, envelopeId, CERTIFICATE_ID);
+    if (ObjectUtils.isEmpty(results)) {
+      return;
+    }
+
+    String fileName = addExtension(CERTIFICATE_FILENAME, PDF_EXTENSION);
+    MetaFile certificateMetaFile = metaFiles.upload(new ByteArrayInputStream(results), fileName);
+    docuSignEnvelope.setCertificateMetaFile(certificateMetaFile);
+  }
+
+  protected void setCertificateMetaFile(
+      EnvelopesApi envelopesApi,
+      DocuSignEnvelope docuSignEnvelope,
+      String accountId,
+      String envelopeId,
+      EnvelopeDocument doc)
+      throws ApiException, IOException {
+
+    String documentId = doc.getDocumentId();
+
+    DocuSignDocument docuSignDocument =
+        docuSignEnvelope.getDocuSignDocumentList().stream()
+            .filter(d -> StringUtils.notEmpty(documentId) && documentId.equals(d.getDocumentId()))
+            .findFirst()
+            .orElse(null);
+
+    if (docuSignDocument == null
+        || docuSignDocument.getSignedMetaFile() != null
+        || StringUtils.isEmpty(accountId)) {
+      return;
+    }
+
+    byte[] results = envelopesApi.getDocument(accountId, envelopeId, documentId);
+    if (ObjectUtils.isEmpty(results)) {
+      return;
+    }
+
+    String fileName = addExtension(doc.getName(), PDF_EXTENSION);
+    MetaFile signedMetaFile = metaFiles.upload(new ByteArrayInputStream(results), fileName);
+    docuSignDocument.setSignedMetaFile(signedMetaFile);
   }
 
   protected static String addExtension(String fileName, String extension) {
