@@ -838,7 +838,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
                   docuSignEnvelope.getEnvelopeId(),
                   recipientId);
 
-          if (ObjectUtils.notEmpty(tabs)) {
+          if (ObjectUtils.notEmpty(tabs) && LOG.isDebugEnabled()) {
             LOG.debug(tabs.toString());
           }
           if (CollectionUtils.isNotEmpty(docuSignSigner.getDocuSignFieldList())) {
