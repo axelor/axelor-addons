@@ -70,7 +70,6 @@ import com.docusign.esign.model.Signer;
 import com.docusign.esign.model.Tabs;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -83,7 +82,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -91,7 +89,7 @@ import org.slf4j.LoggerFactory;
 
 public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
 
-  private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+  protected final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   protected static final char TEMPLATE_DELIMITER = '$';
 
