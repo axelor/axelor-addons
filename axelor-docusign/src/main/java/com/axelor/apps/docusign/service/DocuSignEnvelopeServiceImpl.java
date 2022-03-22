@@ -70,6 +70,7 @@ import com.docusign.esign.model.Signer;
 import com.docusign.esign.model.Tabs;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -82,6 +83,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -152,7 +154,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     MetaModel metaModel = envelopeSetting.getMetaModel();
 
     Context scriptContext = null;
-    if (ObjectUtils.notEmpty(metaModel) && ObjectUtils.notEmpty(objectId)) {
+    if (metaModel != null && objectId != null) {
       try {
         Class<? extends Model> modelClass =
             (Class<? extends Model>) Class.forName(metaModel.getFullName());
