@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -33,9 +33,14 @@ import com.docusign.esign.model.RadioGroup;
 import com.docusign.esign.model.SignHere;
 import com.docusign.esign.model.Tabs;
 import java.util.ArrayList;
+import java.util.Optional;
 import org.apache.commons.collections.CollectionUtils;
 
 public class DocuSignUtils {
+
+  private DocuSignUtils() {
+    throw new IllegalStateException("Utility class");
+  }
 
   public static void addSignHere(
       Tabs tabs, DocuSignField docuSignField, String documentId, String recipientId) {
@@ -349,163 +354,176 @@ public class DocuSignUtils {
   }
 
   public static void updateSignHereField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getSignHereTabs())) {
-      SignHere signHere =
-          tabs.getSignHereTabs().stream()
-              .filter(
-                  x ->
-                      ObjectUtils.notEmpty(x.getDocumentId())
-                          && ObjectUtils.notEmpty(field.getDocuSignDocument())
-                          && x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && ObjectUtils.notEmpty(x.getName())
-                          && x.getName().equals(field.getName()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(signHere)) {
-        field.setStatus(signHere.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getSignHereTabs())) {
+      return;
+    }
+
+    Optional<SignHere> signHereOpt =
+        tabs.getSignHereTabs().stream()
+            .filter(
+                x ->
+                    ObjectUtils.notEmpty(x.getDocumentId())
+                        && ObjectUtils.notEmpty(field.getDocuSignDocument())
+                        && x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && ObjectUtils.notEmpty(x.getName())
+                        && x.getName().equals(field.getName()))
+            .findFirst();
+    if (signHereOpt.isPresent()) {
+      field.setStatus(signHereOpt.get().getStatus());
     }
   }
 
   public static void updateFullNameField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getFullNameTabs())) {
-      FullName fullName =
-          tabs.getFullNameTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getName().equals(field.getName()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(fullName)) {
-        field.setStatus(fullName.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getFullNameTabs())) {
+      return;
+    }
+
+    Optional<FullName> fullNameOpt =
+        tabs.getFullNameTabs().stream()
+            .filter(
+                x ->
+                    x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && x.getName().equals(field.getName()))
+            .findFirst();
+    if (fullNameOpt.isPresent()) {
+      field.setStatus(fullNameOpt.get().getStatus());
     }
   }
 
   public static void updateEmailField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getEmailTabs())) {
-      Email email =
-          tabs.getEmailTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getName().equals(field.getName()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(email)) {
-        field.setValue(email.getValue());
-        field.setStatus(email.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getEmailTabs())) {
+      return;
+    }
+
+    Optional<Email> emailOpt =
+        tabs.getEmailTabs().stream()
+            .filter(
+                x ->
+                    x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && x.getName().equals(field.getName()))
+            .findFirst();
+    if (emailOpt.isPresent()) {
+      Email email = emailOpt.get();
+      field.setValue(email.getValue());
+      field.setStatus(email.getStatus());
     }
   }
 
   public static void updateCompanyField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getCompanyTabs())) {
-      Company company =
-          tabs.getCompanyTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getName().equals(field.getName()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(company)) {
-        field.setValue(company.getValue());
-        field.setStatus(company.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getCompanyTabs())) {
+      return;
+    }
+
+    Optional<Company> companyOpt =
+        tabs.getCompanyTabs().stream()
+            .filter(
+                x ->
+                    x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && x.getName().equals(field.getName()))
+            .findFirst();
+    if (companyOpt.isPresent()) {
+      Company company = companyOpt.get();
+      field.setValue(company.getValue());
+      field.setStatus(company.getStatus());
     }
   }
 
   public static void updateCheckboxField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getCheckboxTabs())) {
-      Checkbox checkbox =
-          tabs.getCheckboxTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getName().equals(field.getName()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(checkbox)) {
-        field.setValue(checkbox.getSelected());
-        field.setStatus(checkbox.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getCheckboxTabs())) {
+      return;
+    }
+
+    Optional<Checkbox> checkboxOpt =
+        tabs.getCheckboxTabs().stream()
+            .filter(
+                x ->
+                    x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && x.getName().equals(field.getName()))
+            .findFirst();
+    if (checkboxOpt.isPresent()) {
+      Checkbox checkbox = checkboxOpt.get();
+      field.setValue(checkbox.getSelected());
+      field.setStatus(checkbox.getStatus());
     }
   }
 
   public static void updateRadioGroupField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getRadioGroupTabs())) {
-      RadioGroup radioGroup =
-          tabs.getRadioGroupTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getGroupName().equals(field.getName()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(radioGroup)) {
-        java.util.List<Radio> radioList = radioGroup.getRadios();
-        if (CollectionUtils.isNotEmpty(radioList)) {
-          Radio radioSelected =
-              radioList.stream()
-                  .filter(x -> "true".equals(x.getSelected()))
-                  .findFirst()
-                  .orElse(null);
-          if (ObjectUtils.notEmpty(radioSelected)) {
-            field.setValue(radioSelected.getValue());
-          }
-        }
+    if (CollectionUtils.isEmpty(tabs.getRadioGroupTabs())) {
+      return;
+    }
+
+    Optional<RadioGroup> radioGroupOpt =
+        tabs.getRadioGroupTabs().stream()
+            .filter(
+                x ->
+                    x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && x.getGroupName().equals(field.getName()))
+            .findFirst();
+    if (!radioGroupOpt.isPresent()) {
+      return;
+    }
+
+    RadioGroup radioGroup = radioGroupOpt.get();
+    java.util.List<Radio> radios = radioGroup.getRadios();
+    if (CollectionUtils.isNotEmpty(radios)) {
+      Optional<Radio> radioSelectedOpt =
+          radios.stream().filter(x -> "true".equals(x.getSelected())).findFirst();
+      if (radioSelectedOpt.isPresent()) {
+        field.setValue(radioSelectedOpt.get().getValue());
       }
     }
   }
 
   public static void updateListField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getListTabs())) {
-      List list =
-          tabs.getListTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getTabLabel().equals(field.getTabLabel()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(list)) {
-        field.setValue(list.getValue());
-        field.setStatus(list.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getListTabs())) {
+      return;
+    }
+
+    String documentId = field.getDocuSignDocument().getDocumentId();
+    String tabLabel = field.getTabLabel();
+
+    Optional<List> listOpt =
+        tabs.getListTabs().stream()
+            .filter(x -> x.getDocumentId().equals(documentId) && x.getTabLabel().equals(tabLabel))
+            .findFirst();
+    if (listOpt.isPresent()) {
+      List list = listOpt.get();
+      field.setValue(list.getValue());
+      field.setStatus(list.getStatus());
     }
   }
 
   public static void updateApproveField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getApproveTabs())) {
-      Approve approve =
-          tabs.getApproveTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getTabLabel().equals(field.getTabLabel()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(approve)) {
-        field.setStatus(approve.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getApproveTabs())) {
+      return;
+    }
+
+    String documentId = field.getDocuSignDocument().getDocumentId();
+    String tabLabel = field.getTabLabel();
+
+    Optional<Approve> approveOpt =
+        tabs.getApproveTabs().stream()
+            .filter(x -> x.getDocumentId().equals(documentId) && x.getTabLabel().equals(tabLabel))
+            .findFirst();
+    if (approveOpt.isPresent()) {
+      field.setStatus(approveOpt.get().getStatus());
     }
   }
 
   public static void updateDeclineField(DocuSignField field, Tabs tabs) {
-    if (CollectionUtils.isNotEmpty(tabs.getDeclineTabs())) {
-      Decline decline =
-          tabs.getDeclineTabs().stream()
-              .filter(
-                  x ->
-                      x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
-                          && x.getTabLabel().equals(field.getTabLabel()))
-              .findFirst()
-              .orElse(null);
-      if (ObjectUtils.notEmpty(decline)) {
-        field.setStatus(decline.getStatus());
-      }
+    if (CollectionUtils.isEmpty(tabs.getDeclineTabs())) {
+      return;
+    }
+
+    Optional<Decline> declineOpt =
+        tabs.getDeclineTabs().stream()
+            .filter(
+                x ->
+                    x.getDocumentId().equals(field.getDocuSignDocument().getDocumentId())
+                        && x.getTabLabel().equals(field.getTabLabel()))
+            .findFirst();
+    if (declineOpt.isPresent()) {
+      field.setStatus(declineOpt.get().getStatus());
     }
   }
 }
