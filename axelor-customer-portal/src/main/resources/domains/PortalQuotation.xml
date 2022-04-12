@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
+
+  <module name="client-portal" package="com.axelor.apps.client.portal.db"/>
+
+  <entity name="PortalQuotation" lang="java" cacheable="true">
+
+    <many-to-one name="saleOrder" ref="com.axelor.apps.sale.db.SaleOrder"/>
+    <decimal name="exTaxTotal" title="Total W.T." scale="2" precision="20"/>
+    <integer name="statusSelect" title="Status" selection="portal.quotation.status.select"
+      readonly="true"/>
+    <integer name="typeSelect" selection="portal.quotation.type.select"/>
+    <date name="endOfValidity" title="Order end of validity"/>
+    <boolean name="isRequested"/>
+    <many-to-one name="signature" ref="com.axelor.meta.db.MetaFile" title="Signature"/>
+    <many-to-one name="report" ref="com.axelor.meta.db.MetaFile" title="Report"/>
+
+    <extra-code>
+   		<![CDATA[
+            // STATUS
+			public static final int STATUS_PROPOSED_QUOTATION = 1;
+			public static final int STATUS_REQUESTED_QUOTATION = 2;
+			public static final int STATUS_ORDER_CONFIRMED = 3;
+			public static final int STATUS_DECLINED_QUOTATION = 4;
+
+			// TYPE
+			public static final int TYPE_PROPOSED_QUOTATION = 1;
+			public static final int TYPE_QUOTATION_REFUSED = 2;
+   		]]>
+    </extra-code>
+
+  </entity>
+
+</domain-models>

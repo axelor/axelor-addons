@@ -1,0 +1,2 @@
+"name";"code";"installOrder";"description";"imagePath";"modules";"dependsOn";"sequence";"quotationGenerationTemplate";"quotationConfimationCodeTemplate";"quotationConfimationTemplate"
+"Customer Portal";"customer-portal";101;"Customer portal configuration";"app-customer-portal.png";"axelor-customer-portal";"business-production,business-support,client-portal";101;"Quotation generation";"Quotation confirmation code";"Quotation confirmation"

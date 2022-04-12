@@ -1,0 +1,14 @@
+apply plugin: "com.axelor.app-module"
+
+apply {
+	version = "5.0.0-SNAPSHOT"
+}
+
+axelor {
+	title "Axelor Partner Portal"
+	description "Axelor Partner Portal Module"
+}
+
+dependencies {
+	api project(":modules:axelor-customer-portal")
+}
