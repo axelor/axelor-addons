@@ -18,7 +18,7 @@
     width="large" onLoad="action-client-portal-group-idea-onload"
     onNew="action-client-portal-attrs-idea-onload">
     <panel name="mainPanel" readonlyIf="history">
-      <panel name="panelClientReadOnly">
+      <panel name="panelClientReadOnly" colSpan="12">
         <field name="name" required="true" css="label-bold bold large" colSpan="8"
           showTitle="false">
           <viewer depends="name">
@@ -41,10 +41,10 @@
 			]]>
           </viewer>
         </field>
-        <panel name="portalIdeaTagSetlAdminPanel" colSpan="12">
+        <panel name="portalIdeaTagSetlAdminPanel" colSpan="12" itemSpan="12">
           <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"/>
         </panel>
-        <panel name="portalIdeaTagSetClientPanel" colSpan="12">
+        <panel name="portalIdeaTagSetClientPanel" colSpan="12" itemSpan="12">
           <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"
             canNew="false"/>
         </panel>
