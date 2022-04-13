@@ -8,9 +8,11 @@
   <entity name="DocuSignAccount" lang="java">
 
     <string name="name" title="Name"/>
-    <string name="accountId" title="Account id"/>
-    <string name="accessToken" title="Access token" large="true"/>
-    <string name="basePath" title="Base path"/>
+    <string name="userId" title="User id"/>
+    <string name="integrationKey" title="Integration Key"/>
+    <string name="rsaKey" title="RSA key" large="true"/>
+    <string name="baseURI" title="Base uri"/>
+    <string name="oAuthBasePath" title="OAuth base path" help="Do not include https://"/>
 
   </entity>
 

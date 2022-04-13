@@ -12,10 +12,21 @@
     model="com.axelor.apps.docusign.db.DocuSignAccount">
     <panel name="mainPanel" colSpan="12">
       <field name="name"/>
-      <field name="accountId"/>
-      <field name="accessToken" colSpan="12"/>
-      <field name="basePath"/>
+      <field name="userId"/>
+      <field name="integrationKey"/>
+      <field name="baseURI"/>
+      <field name="oAuthBasePath"/>
+      <button name="generateConsentUrlBtn" title="Generate consent url"
+        onClick="action-docusign-account-method-generate-consent-url"
+        readonlyIf="!oAuthBasePath || !integrationKey"/>
+      <label name="$consentURL" title="" colSpan="12"/>
+      <field name="rsaKey" colSpan="12"/>
     </panel>
   </form>
+
+  <action-method name="action-docusign-account-method-generate-consent-url">
+    <call class="com.axelor.apps.docusign.web.DocuSignAccountController"
+      method="generateConsent"/>
+  </action-method>
 
 </object-views>
