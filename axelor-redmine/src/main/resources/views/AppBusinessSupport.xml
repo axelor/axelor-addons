@@ -1,29 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form id="redmine-app-business-support-config-form" name="app-business-support-config-form"
-		title="App Business Support" model="com.axelor.apps.base.db.AppBusinessSupport"
-		extension="true">
+  <form id="redmine-app-business-support-config-form" name="app-business-support-config-form"
+    title="App Business Support" model="com.axelor.apps.base.db.AppBusinessSupport" extension="true">
 
-		<extend target="//field[@name='providerCompany']">
-			<insert position="after">
-				<field name="taskClosedStatusSelect" colSpan="12" widget="MultiSelect" />
-			</insert>
-		</extend>
+    <extend target="//field[@name='providerCompany']">
+      <insert position="after">
+        <field name="taskClosedStatusSelect" colSpan="12" widget="MultiSelect"/>
+      </insert>
+    </extend>
 
-		<extend target="/">
-			<attribute name="onSave"
-				value="action-app-business-support-method-update-project-version-progress" />
-		</extend>
+    <extend target="/">
+      <attribute name="onSave"
+        value="action-app-business-support-method-update-project-version-progress"/>
+    </extend>
 
-	</form>
+  </form>
 
-	<action-method
-		name="action-app-business-support-method-update-project-version-progress">
-		<call class="com.axelor.apps.redmine.web.AppBusinessSupportController"
-			method="updateProjectVersionProgress" />
-	</action-method>
+  <action-method
+    name="action-app-business-support-method-update-project-version-progress">
+    <call class="com.axelor.apps.redmine.web.AppBusinessSupportController"
+      method="updateProjectVersionProgress"/>
+  </action-method>
 
 </object-views>

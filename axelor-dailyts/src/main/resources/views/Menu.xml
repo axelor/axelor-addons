@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<menuitem name="daily-timesheet-root" parent="hr-root"
-		title="Daily timesheets" order="21" action="daily.timesheets.all"
-		if="__config__.app.isApp('timesheet')" />
+  <menuitem name="daily-timesheet-root" parent="hr-root" title="Daily timesheets"
+    order="21" action="daily.timesheets.all" if="__config__.app.isApp('timesheet')"/>
 
-	<action-view name="daily.timesheets.all" model="com.axelor.apps.hr.db.DailyTimesheet"
-		title="Daily timesheets">
-		<view name="daily-timesheet-grid" type="grid" />
-		<view name="daily-timesheet-form" type="form" />
-	</action-view>
+  <action-view name="daily.timesheets.all" model="com.axelor.apps.hr.db.DailyTimesheet"
+    title="Daily timesheets">
+    <view name="daily-timesheet-grid" type="grid"/>
+    <view name="daily-timesheet-form" type="form"/>
+  </action-view>
 
 </object-views>

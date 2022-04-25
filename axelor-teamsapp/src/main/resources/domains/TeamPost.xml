@@ -1,32 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<domain-models xmlns="http://axelor.com/xml/ns/domain-models" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
   <module name="teamsapp" package="com.axelor.apps.teamsapp.db"/>
 
   <entity name="TeamPost">
-	<string name="name" title="Name" required="true"/>
-	<string name="title" title="Title" />
-	<string name="content" title="Content" large="true"/>
-	<integer name="statusSelect" title="Status" selection="team.post.status.select" default="1"/>   
-	<string name="typeSelect" default="discussion" selection="team.post.type.select"/>
-	<many-to-one name="parentTeamPost" ref="TeamPost" title="Parent" />
-	<many-to-one name="project" ref="com.axelor.apps.project.db.Project" title="Project" />
-	<many-to-one name="originalTeamPost" ref="TeamPost"/>
-	<one-to-many name="historyTeamPostList"  ref="TeamPost" mappedBy="originalTeamPost" title="Team post history"/>
-	<many-to-many name="visitedUser" ref="com.axelor.auth.db.User" title="visited User"/>
-	<many-to-many name="membersUserSet" ref="com.axelor.auth.db.User" title="Members"/>
-	<track>
-		<field name="name" if="typeSelect == 'page'"/>
-		<field name="statusSelect" if="typeSelect == 'page'"/>
-		<field name="title" if="typeSelect == 'page'"/>
-		<field name="parentTeamPost" if="typeSelect == 'page'"/>
-		<field name="content" if="typeSelect == 'page'"/>
-		<field name="project" if="typeSelect == 'page'"/>
-		<field name="membersUserSet" if="typeSelect == 'page'"/>
-		<message if="typeSelect == 'page'" on="CREATE">Post created</message>
-		<message if="typeSelect == 'page'" on ="UPDATE" fields="name,statusSelect,title,parentTeamPost,content,project">Post updated</message>
-	</track>
+    <string name="name" title="Name" required="true"/>
+    <string name="title" title="Title"/>
+    <string name="content" title="Content" large="true"/>
+    <integer name="statusSelect" title="Status" selection="team.post.status.select"
+      default="1"/>
+    <string name="typeSelect" default="discussion" selection="team.post.type.select"/>
+    <many-to-one name="parentTeamPost" ref="TeamPost" title="Parent"/>
+    <many-to-one name="project" ref="com.axelor.apps.project.db.Project" title="Project"/>
+    <many-to-one name="originalTeamPost" ref="TeamPost"/>
+    <one-to-many name="historyTeamPostList" ref="TeamPost" mappedBy="originalTeamPost"
+      title="Team post history"/>
+    <many-to-many name="visitedUser" ref="com.axelor.auth.db.User" title="visited User"/>
+    <many-to-many name="membersUserSet" ref="com.axelor.auth.db.User" title="Members"/>
+    <track>
+      <field name="name" if="typeSelect == 'page'"/>
+      <field name="statusSelect" if="typeSelect == 'page'"/>
+      <field name="title" if="typeSelect == 'page'"/>
+      <field name="parentTeamPost" if="typeSelect == 'page'"/>
+      <field name="content" if="typeSelect == 'page'"/>
+      <field name="project" if="typeSelect == 'page'"/>
+      <field name="membersUserSet" if="typeSelect == 'page'"/>
+      <message if="typeSelect == 'page'" on="CREATE">Post created</message>
+      <message if="typeSelect == 'page'" on="UPDATE"
+        fields="name,statusSelect,title,parentTeamPost,content,project">Post updated</message>
+    </track>
   </entity>
-  
+
 </domain-models>

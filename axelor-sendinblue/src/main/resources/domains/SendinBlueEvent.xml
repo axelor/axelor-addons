@@ -3,26 +3,24 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="sendinblue" package="com.axelor.apps.sendinblue.db" />
+  <module name="sendinblue" package="com.axelor.apps.sendinblue.db"/>
 
-	<entity name="SendinBlueEvent" lang="java">
+  <entity name="SendinBlueEvent" lang="java">
 
-		<many-to-one name="emailAddress"
-			ref="com.axelor.apps.message.db.EmailAddress" title="Email Address" />
-		<many-to-one name="partner" ref="com.axelor.apps.base.db.Partner"
-			title="Partner" />
-		<many-to-one name="lead" ref="com.axelor.apps.crm.db.Lead"
-			title="Lead" />
-		<string name="email" title="Email Address" />
-		<string name="event" title="Event" selection="sendinblue.event.type" />
-		<string name="reason" title="Reason" large="true" />
-		<many-to-one name="tag"
-			ref="com.axelor.apps.sendinblue.db.SendinBlueTag" title="Tag" />
-		<string name="tagStr" title="Tag" />
-		<string name="ip" title="IP" />
-		<datetime name="eventDate" title="Date" />
+    <many-to-one name="emailAddress" ref="com.axelor.apps.message.db.EmailAddress"
+      title="Email Address"/>
+    <many-to-one name="partner" ref="com.axelor.apps.base.db.Partner" title="Partner"/>
+    <many-to-one name="lead" ref="com.axelor.apps.crm.db.Lead" title="Lead"/>
+    <string name="email" title="Email Address"/>
+    <string name="event" title="Event" selection="sendinblue.event.type"/>
+    <string name="reason" title="Reason" large="true"/>
+    <many-to-one name="tag" ref="com.axelor.apps.sendinblue.db.SendinBlueTag"
+      title="Tag"/>
+    <string name="tagStr" title="Tag"/>
+    <string name="ip" title="IP"/>
+    <datetime name="eventDate" title="Date"/>
 
-		<extra-code>
+    <extra-code>
 		<![CDATA[
             // event
 			public static final String REQUESTS = "requests";
@@ -42,8 +40,8 @@
 			public static final String ADMIN_UNSUBSCRIPTION = "adminUnsubscription";
 			public static final String USER_UNSUBSCRIPTION = "userUnsubscription";
 		]]>
-		</extra-code>
+    </extra-code>
 
-	</entity>
+  </entity>
 
 </domain-models>

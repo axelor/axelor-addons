@@ -1,31 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form id="redmine-employee-form" name="employee-form" title="Employee"
-		model="com.axelor.apps.hr.db.Employee" extension="true">
+  <form id="redmine-employee-form" name="employee-form" title="Employee"
+    model="com.axelor.apps.hr.db.Employee" extension="true">
 
-		<!-- Make product field required in timesheetsPanel -->
+    <!-- Make product field required in timesheetsPanel -->
 
-		<extend target="//panel[@name='timesheetsPanel']">
-			<replace>
-				<panel name="timesheetsPanel" title="Timesheets"
-					if="__config__.app.isApp('timesheet')">
-					<field name="timeLoggingPreferenceSelect" colSpan="3" />
-					<field name="product" canEdit="false" colSpan="3"
-						domain="self.isActivity = true" form-view="product-form"
-						grid-view="product-grid" requiredIf="stepByStepSelect == 5" />
-					<field name="timesheetReminder" colSpan="3" />
-					<field name="timesheetImputationSelect" colSpan="3"
-						if="__config__.app.getApp('production')?.getEnableTimesheetOnManufOrder()"
-						if-module="axelor-business-production" />
-					<panel-dashlet name="employeeUserTimesheetsPanel"
-						action="action-employee-view-user-timesheets" colSpan="12" />
-				</panel>
-			</replace>
-		</extend>
+    <extend target="//panel[@name='timesheetsPanel']">
+      <replace>
+        <panel name="timesheetsPanel" title="Timesheets"
+          if="__config__.app.isApp('timesheet')">
+          <field name="timeLoggingPreferenceSelect" colSpan="3"/>
+          <field name="product" canEdit="false" colSpan="3" domain="self.isActivity = true"
+            form-view="product-form" grid-view="product-grid" requiredIf="stepByStepSelect == 5"/>
+          <field name="timesheetReminder" colSpan="3"/>
+          <field name="timesheetImputationSelect" colSpan="3"
+            if="__config__.app.getApp('production')?.getEnableTimesheetOnManufOrder()"
+            if-module="axelor-business-production"/>
+          <panel-dashlet name="employeeUserTimesheetsPanel"
+            action="action-employee-view-user-timesheets" colSpan="12"/>
+        </panel>
+      </replace>
+    </extend>
 
-	</form>
+  </form>
 
 </object-views>
