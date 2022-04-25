@@ -1,27 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<menuitem name="admin-root-batch-redmine" parent="admin-root-batch"
-		title="Redmine batches" action="admin.root.batch.redmine" if="__config__.app.isApp('redmine')" />
+  <menuitem name="admin-root-batch-redmine" parent="admin-root-batch"
+    title="Redmine batches" action="admin.root.batch.redmine" if="__config__.app.isApp('redmine')"/>
 
-	<action-view name="admin.root.batch.redmine" title="Redmine batches"
-		model="com.axelor.apps.redmine.db.RedmineBatch">
-		<view type="grid" name="redmine-batch-grid" />
-		<view type="form" name="redmine-batch-form" />
-	</action-view>
+  <action-view name="admin.root.batch.redmine" title="Redmine batches"
+    model="com.axelor.apps.redmine.db.RedmineBatch">
+    <view type="grid" name="redmine-batch-grid"/>
+    <view type="form" name="redmine-batch-form"/>
+  </action-view>
 
-	<menuitem title="Redmine" name="redmine-root"
-		if="__config__.app.isApp('redmine')" />
+  <menuitem title="Redmine" name="redmine-root" if="__config__.app.isApp('redmine')"/>
 
-	<menuitem title="Open suite redmine import" name="redmine-open-suite-import"
-		parent="redmine-root" action="redmine.open.suite.import" />
+  <menuitem title="Open suite redmine import" name="redmine-open-suite-import"
+    parent="redmine-root" action="redmine.open.suite.import"/>
 
-	<action-view name="redmine.open.suite.import" title="Open suite redmine import"
-		model="com.axelor.apps.redmine.db.RedmineImportConfig">
-		<view type="grid" name="redmine-import-config-grid" />
-		<view type="form" name="redmine-import-config-form" />
-	</action-view>
+  <action-view name="redmine.open.suite.import" title="Open suite redmine import"
+    model="com.axelor.apps.redmine.db.RedmineImportConfig">
+    <view type="grid" name="redmine-import-config-grid"/>
+    <view type="form" name="redmine-import-config-form"/>
+  </action-view>
 
 </object-views>

@@ -3,10 +3,10 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="sendinblue" package="com.axelor.apps.sendinblue.db" />
+  <module name="sendinblue" package="com.axelor.apps.sendinblue.db"/>
 
-	<entity name="SendinBlueTag" lang="java">
-		<string name="name" title="Tag" namecolumn="true" />
-	</entity>
+  <entity name="SendinBlueTag" lang="java">
+    <string name="name" title="Tag" namecolumn="true"/>
+  </entity>
 
 </domain-models>
