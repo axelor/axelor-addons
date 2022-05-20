@@ -37,6 +37,7 @@ hs_err_pid*
 *.log
 .clover
 .DS_Store
+.jar
 
 # Profiler and heap dumps
 *.jps
