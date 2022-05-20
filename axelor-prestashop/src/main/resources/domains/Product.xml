@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<domain-models xmlns="http://axelor.com/xml/ns/domain-models" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="base" package="com.axelor.apps.base.db"/>
+  <module name="base" package="com.axelor.apps.base.db"/>
 
-	<entity name="Product" lang="java">
-		<integer name="prestaShopId" nullable="true" copy="false"/>
-		<integer name="prestaShopVersion" nullable="true"/>
-		<!-- LOCAL id of the picture stored on PS, to detect changes -->
-		<long name="prestaShopImageId" nullable="true"/>
-		<integer name="prestaShopImageVersion" nullable="true"/>
-		<boolean name="productSynchronizedInPrestashop" title="Product Synchronized in Prestashop" default="true"/>
+  <entity name="Product" lang="java">
+    <integer name="prestaShopId" nullable="true" copy="false"/>
+    <integer name="prestaShopVersion" nullable="true"/>
+    <!-- LOCAL id of the picture stored on PS, to detect changes -->
+    <long name="prestaShopImageId" nullable="true"/>
+    <integer name="prestaShopImageVersion" nullable="true"/>
+    <boolean name="productSynchronizedInPrestashop"
+      title="Product Synchronized in Prestashop" default="true"/>
 
-		<datetime name="prestaShopUpdateDateTime" nullable="true"/>
+    <datetime name="prestaShopUpdateDateTime" nullable="true"/>
 
-		<unique-constraint columns="prestaShopId"/>
+    <unique-constraint columns="prestaShopId"/>
 
-		<finder-method name="findByPrestaShopId" using="prestaShopId"/>
-	</entity>
+    <finder-method name="findByPrestaShopId" using="prestaShopId"/>
+  </entity>
 
 </domain-models>
