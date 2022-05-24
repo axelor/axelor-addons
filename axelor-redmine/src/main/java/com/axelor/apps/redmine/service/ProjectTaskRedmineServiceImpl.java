@@ -31,7 +31,6 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
-import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -67,13 +66,12 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
   @Override
-  public ProjectTask updateTask(ProjectTask projectTask, AppBusinessProject appBusinessProject)
-      throws AxelorException {
+  public ProjectTask updateTaskToInvoice(
+      ProjectTask projectTask, AppBusinessProject appBusinessProject) {
     if (!projectTask.getIsOffered()) {
-      return super.updateTask(projectTask, appBusinessProject);
+      return super.updateTaskToInvoice(projectTask, appBusinessProject);
     }
-    projectTask = computeDefaultInformation(projectTask);
-    return projectTaskRepo.save(projectTask);
+    return projectTask;
   }
 
   @Override
@@ -114,9 +112,6 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
   public void updateTargetVerionProgress(
       ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd) {
 
-    String taskClosedStatusSelect =
-        appBusinessSupportRepository.all().fetchOne().getTaskClosedStatusSelect();
-
     DoubleSummaryStatistics stats =
         projectTaskRepo
             .all()
@@ -127,12 +122,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
                 targetVersion,
                 projectTask.getId())
             .fetchStream()
-            .mapToDouble(
-                tt ->
-                    !StringUtils.isEmpty(taskClosedStatusSelect)
-                            && taskClosedStatusSelect.contains(tt.getStatus())
-                        ? 100
-                        : tt.getProgressSelect())
+            .mapToDouble(tt -> tt.getStatus().getIsCompleted() ? 100 : tt.getProgressSelect())
             .summaryStatistics();
 
     double sum = stats.getSum();
@@ -141,11 +131,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
     if (isAdd) {
       count = count + 1;
       sum =
-          sum
-              + (!StringUtils.isEmpty(taskClosedStatusSelect)
-                      && taskClosedStatusSelect.contains(projectTask.getStatus())
-                  ? 100
-                  : projectTask.getProgressSelect());
+          sum + (projectTask.getStatus().getIsCompleted() ? 100 : projectTask.getProgressSelect());
     }
 
     targetVersion.setTotalProgress(
@@ -158,20 +144,14 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
   @Override
   @Transactional
-  public void updateProjectVersionProgress(
-      ProjectVersion projectVersion, String taskClosedStatusSelect) {
+  public void updateProjectVersionProgress(ProjectVersion projectVersion) {
 
     double sum =
         projectTaskRepo
             .all()
             .filter("self.targetVersion = ?1", projectVersion)
             .fetchStream()
-            .mapToLong(
-                tt ->
-                    !StringUtils.isEmpty(taskClosedStatusSelect)
-                            && taskClosedStatusSelect.contains(tt.getStatus())
-                        ? 100
-                        : tt.getProgressSelect())
+            .mapToLong(tt -> tt.getStatus().getIsCompleted() ? 100 : tt.getProgressSelect())
             .average()
             .orElse(0);
 

@@ -1,36 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="base" package="com.axelor.apps.base.db" />
+  <module name="base" package="com.axelor.apps.base.db"/>
 
-	<entity name="Batch" lang="java" sequential="true">
+  <entity name="Batch" lang="java" sequential="true">
 
-		<many-to-one name="redmineBatch"
-			ref="com.axelor.apps.redmine.db.RedmineBatch" />
+    <many-to-one name="redmineBatch" ref="com.axelor.apps.redmine.db.RedmineBatch"/>
 
-		<many-to-many name="updatedTasksInOs" ref="com.axelor.apps.project.db.ProjectTask"
-			mappedBy="updatedBatchSet" />
-		<many-to-many name="createdProjectsInOs" ref="com.axelor.apps.project.db.Project"
-			mappedBy="createdBatchSet" />
-		<many-to-many name="createdTimesheetLinesInOs" ref="com.axelor.apps.hr.db.TimesheetLine"
-			mappedBy="createdBatchSet" />
-		<many-to-many name="createdTasksInOs" ref="com.axelor.apps.project.db.ProjectTask"
-			mappedBy="createdBatchSet" />
-		<many-to-many name="updatedProjectsInOs" ref="com.axelor.apps.project.db.Project"
-			mappedBy="updatedBatchSet" />
-		<many-to-many name="updatedTimesheetLinesInOs" ref="com.axelor.apps.hr.db.TimesheetLine"
-			mappedBy="updatedBatchSet" />
+    <many-to-many name="updatedTasksInOs" ref="com.axelor.apps.project.db.ProjectTask"
+      mappedBy="updatedBatchSet"/>
+    <many-to-many name="createdProjectsInOs" ref="com.axelor.apps.project.db.Project"
+      mappedBy="createdBatchSet"/>
+    <many-to-many name="createdTimesheetLinesInOs"
+      ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="createdBatchSet"/>
+    <many-to-many name="createdTasksInOs" ref="com.axelor.apps.project.db.ProjectTask"
+      mappedBy="createdBatchSet"/>
+    <many-to-many name="updatedProjectsInOs" ref="com.axelor.apps.project.db.Project"
+      mappedBy="updatedBatchSet"/>
+    <many-to-many name="updatedTimesheetLinesInOs"
+      ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="updatedBatchSet"/>
+    <many-to-many name="createdTimeEntriesInRedmine"
+      ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="createdExportBatchSet"/>
+    <many-to-many name="updatedTimeEntriesInRedmine"
+      ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="updatedExportBatchSet"/>
+    <many-to-one name="errorLogFile" title="Error log" ref="com.axelor.meta.db.MetaFile"/>
 
-		<many-to-many name="createdTimeEntriesInRedmine" ref="com.axelor.apps.hr.db.TimesheetLine"
-			mappedBy="createdExportBatchSet" />
-		<many-to-many name="updatedTimeEntriesInRedmine" ref="com.axelor.apps.hr.db.TimesheetLine"
-			mappedBy="updatedExportBatchSet" />
-
-		<many-to-one name="errorLogFile" title="Error log"
-			ref="com.axelor.meta.db.MetaFile" />
-
-	</entity>
+  </entity>
 
 </domain-models>

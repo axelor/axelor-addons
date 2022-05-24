@@ -1,35 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
-	
-	<grid name="team-post-grid" title="Team post" model="com.axelor.apps.teamsapp.db.TeamPost">
-		<field name="title" />
-	</grid>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form name="team-post-form" title="Team post" model="com.axelor.apps.teamsapp.db.TeamPost">
-		<panel title="Overview">
-			<field name="statusSelect" widget="NavSelect"/>
-			<field name="name" />
-			<field name="title" />
-			<field name="typeSelect"/>
-			<field name="parentTeamPost" onSelect="action-team-post-attrs-parent-team-post-domain"/>
-			<field name="content"  widget="html" colSpan="12"/>
-		</panel>	
-		<panel title="Project">
-			<field name="project" colSpan="12"></field>
-		</panel>
-		<panel title="Members">
-        	<field name="membersUserSet" widget="TagSelect" colSpan="12" showTitle="false" onSelect="action-task-attrs-project-members-user-set-configurations" form-view="user-form" grid-view="user-grid"/>
-    	</panel>
-		<panel-mail>
-		  <mail-messages limit="4" />
-		  <mail-followers />
-	  	</panel-mail>
-	</form>
-	
-	<action-attrs name="action-team-post-attrs-parent-team-post-domain">
-		<attribute name="domain" for="parentTeamPost" expr="eval:&quot;self.originalTeamPost is null and self.id != ${id}&quot;"/>
-	</action-attrs>
+  <grid name="team-post-grid" title="Team post" model="com.axelor.apps.teamsapp.db.TeamPost">
+    <field name="title"/>
+  </grid>
+
+  <form name="team-post-form" title="Team post" model="com.axelor.apps.teamsapp.db.TeamPost">
+    <panel title="Overview">
+      <field name="statusSelect" widget="NavSelect"/>
+      <field name="name"/>
+      <field name="title"/>
+      <field name="typeSelect"/>
+      <field name="parentTeamPost" onSelect="action-team-post-attrs-parent-team-post-domain"/>
+      <field name="content" widget="html" colSpan="12"/>
+    </panel>
+    <panel title="Project">
+      <field name="project" colSpan="12"></field>
+    </panel>
+    <panel title="Members">
+      <field name="membersUserSet" widget="TagSelect" colSpan="12" showTitle="false"
+        onSelect="action-task-attrs-project-members-user-set-configurations" form-view="user-form"
+        grid-view="user-grid"/>
+    </panel>
+    <panel-mail>
+      <mail-messages limit="4"/>
+      <mail-followers/>
+    </panel-mail>
+  </form>
+
+  <action-attrs name="action-team-post-attrs-parent-team-post-domain">
+    <attribute name="domain" for="parentTeamPost"
+      expr="eval:&quot;self.originalTeamPost is null and self.id != ${id}&quot;"/>
+  </action-attrs>
 
 </object-views>

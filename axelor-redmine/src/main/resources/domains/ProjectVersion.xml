@@ -1,17 +1,17 @@
 <?xml version="1.0" ?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="business-support" package="com.axelor.apps.businesssupport.db" />
+  <module name="business-support" package="com.axelor.apps.businesssupport.db"/>
 
-	<entity name="ProjectVersion">
+  <entity name="ProjectVersion">
 
-		<integer name="redmineId" title="Redmine Id" />
-		<decimal name="totalProgress" title="Total progress" />
+    <integer name="redmineId" title="Redmine Id"/>
+    <decimal name="totalProgress" title="Total progress"/>
 
-		<finder-method name="findByRedmineId" using="redmineId" />
+    <finder-method name="findByRedmineId" using="redmineId"/>
 
-	</entity>
+  </entity>
 
 </domain-models>

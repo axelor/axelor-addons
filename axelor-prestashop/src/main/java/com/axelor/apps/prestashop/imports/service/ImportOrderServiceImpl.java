@@ -146,7 +146,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
   @Override
   @Transactional
   public void importOrder(AppPrestashop appConfig, ZonedDateTime endDate, Writer logWriter)
-      throws IOException, PrestaShopWebserviceException {
+      throws IOException, PrestaShopWebserviceException, AxelorException {
     int done = 0;
     int errors = 0;
 
@@ -230,6 +230,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
                     remoteOrder.getReference(),
                     null,
                     customer,
+                    null,
+                    null,
                     null);
           } catch (AxelorException ae) {
             TraceBackService.trace(

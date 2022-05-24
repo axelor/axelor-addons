@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="project" package="com.axelor.apps.project.db" />
+  <module name="project" package="com.axelor.apps.project.db"/>
 
-	<entity name="Project">
+  <entity name="Project">
 
-		<integer name="redmineId" title="Redmine Id" />
-		<many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch" />
-		<many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch" />
+    <integer name="redmineId" title="Redmine Id"/>
+    <many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch"/>
+    <many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch"/>
 
-		<finder-method name="findByRedmineId" using="redmineId" />
+    <finder-method name="findByRedmineId" using="redmineId"/>
 
-	</entity>
+  </entity>
 
 </domain-models>

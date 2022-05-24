@@ -93,6 +93,7 @@ public class SendinBlueCampaignService {
 
   protected String userLanguage;
   protected ArrayList<Long> partnerRecipients, leadRecipients;
+  protected List<Exception> exceptions;
   private long totalExportRecord, totalImportRecord;
 
   public void exportCampaign(
@@ -466,6 +467,7 @@ public class SendinBlueCampaignService {
   public void importCampaign(
       ImportSendinBlue importSendinBlue, LocalDateTime lastImportDateTime, StringBuilder logWriter)
       throws AxelorException {
+    exceptions = new ArrayList<>();
     totalImportRecord = 0;
     EmailCampaignsApi apiInstance = new EmailCampaignsApi();
     try {
@@ -485,10 +487,14 @@ public class SendinBlueCampaignService {
         }
       } while (total > 0);
     } catch (ApiException e) {
-      TraceBackService.trace(e);
+      exceptions.add(e);
     }
     logWriter.append(
         String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_CAMPAIN), totalImportRecord));
+
+    for (Exception exception : exceptions) {
+      TraceBackService.trace(exception);
+    }
   }
 
   private void createCampaign(
@@ -533,6 +539,7 @@ public class SendinBlueCampaignService {
       marketingCampaign.setIsAllowEditingOfTargets(true);
       marketingCampaign.setEmailAccount(getEmailAccount(campaignObj));
       marketingCampaign.setPartnerTemplate(getTemplate(campaignObj));
+      marketingCampaign.setStageSelect(getCampaignStageSelect(campaignObj));
       setReciepient(campaignObj, marketingCampaign);
       sendinBlueCampaignRepo.save(sendinBlueCampaign);
       totalImportRecord++;
@@ -589,6 +596,23 @@ public class SendinBlueCampaignService {
     return existingTemplate;
   }
 
+  private int getCampaignStageSelect(LinkedTreeMap<String, Object> campaignObj) {
+
+    String status = campaignObj.get("status").toString();
+    switch (status) {
+      case "scheduled":
+        return CampaignRepository.CAMPAIGN_STAGE_SELECT_PLANNED;
+      case "sent":
+        return CampaignRepository.CAMPAIGN_STAGE_SELECT_STARTED;
+      case "suspended":
+        return CampaignRepository.CAMPAIGN_STAGE_SELECT_SUSPENDED;
+      case "archived":
+        return CampaignRepository.CAMPAIGN_STAGE_SELECT_ENDED;
+      default:
+        return CampaignRepository.CAMPAIGN_STAGE_SELECT_DRAFT;
+    }
+  }
+
   private void setReciepient(
       LinkedTreeMap<String, Object> campaignObj, Campaign marketingCampaign) {
     @SuppressWarnings("unchecked")
@@ -631,7 +655,7 @@ public class SendinBlueCampaignService {
           }
         } while (total > 0);
       } catch (ApiException e) {
-        TraceBackService.trace(e);
+        exceptions.add(e);
       }
     }
     marketingCampaign.setPartnerSet(partnerSet);

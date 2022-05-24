@@ -5,14 +5,14 @@
 
   <module name="account" package="com.axelor.apps.account.db"/>
 
-  <entity name="Tax" lang="java" cachable="true">
-	<integer name="prestaShopId" nullable="true" readonly="true"/>
-	<integer name="prestaShopVersion" nullable="true"/>
- 	
- 	<unique-constraint columns="code,name"/>
- 	
- 	<finder-method name="findByPrestaShopId" using="prestaShopId"/>
-  
+  <entity name="Tax" lang="java" cacheable="true">
+    <integer name="prestaShopId" nullable="true" readonly="true"/>
+    <integer name="prestaShopVersion" nullable="true"/>
+
+    <unique-constraint columns="code,name"/>
+
+    <finder-method name="findByPrestaShopId" using="prestaShopId"/>
+
   </entity>
 
 </domain-models>

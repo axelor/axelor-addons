@@ -1,45 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<domain-models xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://axelor.com/xml/ns/domain-models" xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
-	<module name="base" package="com.axelor.apps.base.db"/>
+<domain-models xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://axelor.com/xml/ns/domain-models"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+  <module name="base" package="com.axelor.apps.base.db"/>
 
-	<entity name="AppPrestashop" lang="java" cachable="true">
-		
-		<one-to-one ref="com.axelor.apps.base.db.App" name="app"/>
-		
-		<string name="prestaShopUrl" title="PrestaShop base URL"/>
-		<string name="prestaShopKey" title="PrestaShop webservices key"/>
-		<many-to-one name="prestaShopCountry" ref="com.axelor.apps.base.db.Country" title="PrestaShop's default country"/>
-		<many-to-one name="prestaShopCurrency" ref="com.axelor.apps.base.db.Currency" title="PrestaShop's default currency"/>
-		<many-to-one name="prestaShopWeightUnit" ref="com.axelor.apps.base.db.Unit" title="PrestaShop's weight unit"/>
-		<many-to-one name="prestaShopLengthUnit" ref="com.axelor.apps.base.db.Unit" title="PrestaShop's length unit"/>
-		<many-to-one name="textsLanguage" ref="com.axelor.apps.base.db.Language" title="Axelor texts languages (for descriptions of products, name of countries, aso.)"/>
-		<boolean name="isValid" title="Valid" default="false"/>
+  <entity name="AppPrestashop" lang="java" cacheable="true">
 
-		<integer name="exportPriceScale" title="Number of digits after decimal point for sales price" min="0" max="9" default="2"/>
-		<boolean name="exportNonSoldProducts" title="Export products not flagged as sellable" default="true" help="If checked, all products, event those not marked as non-sellable, will be exported"/>
-		<boolean name="exportNonPrestashopOrders" title="Export non-Prestashop customers' orders" default="true" help="If checked, all orders will be synchronized to prestashop, not only those created on it"/>
-		<boolean name="exportNonPrestashopCustomers" title="Export non-Prestashop customers" default="true" help="If checked, all customers will be synchronized to prestashop, not only those created on it"/>
+    <one-to-one ref="com.axelor.apps.base.db.App" name="app"/>
 
-		<boolean name="prestaShopMasterForCurrencies" title="Currencies are handled on prestashop" default="false" help="If checked, export process will not update existing remote currencies and local currencies data will be overwritten by PrestaShop data"/>
-		<boolean name="prestaShopMasterForCountries" title="Countries are handled on prestashop" default="false" help="If checked, export process will not update existing remote countries and local countries data will be overwritten by PrestaShop data"/>
-		<boolean name="prestaShopMasterForCustomers" title="Customers are handled on prestashop" default="false" help="If checked, export process will not update existing remote customers and local customers' data will be overwritten by PrestaShop data"/>
-		<boolean name="prestaShopMasterForTaxes" title="Taxes are handled on prestashop" default="false" help="If checked, export process will not update existing remote taxes and local taxes's data will be overwritten by PrestaShop data"/>
-		<boolean name="prestaShopMasterForCategories" title="Products categories are handled on prestashop" default="false" help="If checked, export process will not update existing remote categories and local categories' data will be overwritten by PrestaShop data"/>
-		<boolean name="prestaShopMasterForProducts" title="Products are handled on prestashop" default="false" help="If checked, export process will not update existing remote products and local product's data will be overwritten by PrestaShop data"/>
+    <string name="prestaShopUrl" title="PrestaShop base URL"/>
+    <string name="prestaShopKey" title="PrestaShop webservices key"/>
+    <many-to-one name="prestaShopCountry" ref="com.axelor.apps.base.db.Country"
+      title="PrestaShop's default country"/>
+    <many-to-one name="prestaShopCurrency" ref="com.axelor.apps.base.db.Currency"
+      title="PrestaShop's default currency"/>
+    <many-to-one name="prestaShopWeightUnit" ref="com.axelor.apps.base.db.Unit"
+      title="PrestaShop's weight unit"/>
+    <many-to-one name="prestaShopLengthUnit" ref="com.axelor.apps.base.db.Unit"
+      title="PrestaShop's length unit"/>
+    <many-to-one name="textsLanguage" ref="com.axelor.apps.base.db.Language"
+      title="Axelor texts languages (for descriptions of products, name of countries, aso.)"/>
+    <boolean name="isValid" title="Valid" default="false"/>
 
-		<boolean name="prestaShopMasterForOrders" title="Orders are handled exclusively on PrestaShop" default="false" help="If checked, this means that all orders are handled on prestashop. You'll not use Axelor for anything except creating orders that will be sent &amp; managed on PrestaShop. This means, among other things, no stock handling on Axelor side. If unchecked, import process will only create order taken from prestashop and all order management will be done on Axelor."/>
+    <integer name="exportPriceScale"
+      title="Number of digits after decimal point for sales price" min="0" max="9" default="2"/>
+    <boolean name="exportNonSoldProducts" title="Export products not flagged as sellable"
+      default="true"
+      help="If checked, all products, event those not marked as non-sellable, will be exported"/>
+    <boolean name="exportNonPrestashopOrders"
+      title="Export non-Prestashop customers' orders" default="true"
+      help="If checked, all orders will be synchronized to prestashop, not only those created on it"/>
+    <boolean name="exportNonPrestashopCustomers" title="Export non-Prestashop customers"
+      default="true"
+      help="If checked, all customers will be synchronized to prestashop, not only those created on it"/>
 
-		<one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry" name="defaultStatus" title="PrestaShop status for confirmed orders" help="Orders with a Confirmed/Finalized/Finished status but neither paid nor delivered nor invoiced will be set to this status"/>
-		<one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry" name="invoicedStatus" title="PrestaShop status for invoiced orders" help="Orders invoiced but not paid will be set to this status"/>
-		<one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry" name="paidStatus" title="PrestaShop status for paid orders" help="Orders paid but not delivered will be set to this status"/>
-		<one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry" name="deliveredStatus" title="PrestaShop status for delivered orders" help="Delivered orders will be set to this status"/>
-		<one-to-one name="defaultPaymentCondition" ref="com.axelor.apps.account.db.PaymentCondition" title="Default payment condition" help="Used on import if no local payment condition with the same name as the PrestaShop one exists"/>
-		<one-to-one name="defaultPaymentMode" ref="com.axelor.apps.account.db.PaymentMode" title="Default payment mode" help="Used on import if no payment mode matches the remote one cannot be found"/>
-		<one-to-one name="defaultShippingCostsProduct" ref="com.axelor.apps.base.db.Product" title="Default product for deliveries fees" help="Used on import if carrier cannot be mapped to a local shipping cost product"/>
-		<one-to-one name="discountProduct" ref="com.axelor.apps.base.db.Product" title="Product used to apply discount to the whole order, not per product"/>
-		<one-to-one name="defaultTax" ref="com.axelor.apps.account.db.Tax" title="Default tax rate" help="Used when tax rate cannot be determined"/>
-		<one-to-one name="defaultSaleAccountForProduct" ref="com.axelor.apps.account.db.Account" title="Default sale account for product" help="Used when import tax for the product"/>
-		<one-to-one name="defaultSaleAccountForTax" ref="com.axelor.apps.account.db.Account" title="Default sale account for tax" help="Used when import tax for accounting configuration of tax"/>
-	</entity>
+    <boolean name="prestaShopMasterForCurrencies"
+      title="Currencies are handled on prestashop" default="false"
+      help="If checked, export process will not update existing remote currencies and local currencies data will be overwritten by PrestaShop data"/>
+    <boolean name="prestaShopMasterForCountries" title="Countries are handled on prestashop"
+      default="false"
+      help="If checked, export process will not update existing remote countries and local countries data will be overwritten by PrestaShop data"/>
+    <boolean name="prestaShopMasterForCustomers" title="Customers are handled on prestashop"
+      default="false"
+      help="If checked, export process will not update existing remote customers and local customers' data will be overwritten by PrestaShop data"/>
+    <boolean name="prestaShopMasterForTaxes" title="Taxes are handled on prestashop"
+      default="false"
+      help="If checked, export process will not update existing remote taxes and local taxes's data will be overwritten by PrestaShop data"/>
+    <boolean name="prestaShopMasterForCategories"
+      title="Products categories are handled on prestashop" default="false"
+      help="If checked, export process will not update existing remote categories and local categories' data will be overwritten by PrestaShop data"/>
+    <boolean name="prestaShopMasterForProducts" title="Products are handled on prestashop"
+      default="false"
+      help="If checked, export process will not update existing remote products and local product's data will be overwritten by PrestaShop data"/>
+
+    <boolean name="prestaShopMasterForOrders"
+      title="Orders are handled exclusively on PrestaShop" default="false"
+      help="If checked, this means that all orders are handled on prestashop. You'll not use Axelor for anything except creating orders that will be sent &amp; managed on PrestaShop. This means, among other things, no stock handling on Axelor side. If unchecked, import process will only create order taken from prestashop and all order management will be done on Axelor."/>
+
+    <one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry"
+      name="defaultStatus" title="PrestaShop status for confirmed orders"
+      help="Orders with a Confirmed/Finalized/Finished status but neither paid nor delivered nor invoiced will be set to this status"/>
+    <one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry"
+      name="invoicedStatus" title="PrestaShop status for invoiced orders"
+      help="Orders invoiced but not paid will be set to this status"/>
+    <one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry"
+      name="paidStatus" title="PrestaShop status for paid orders"
+      help="Orders paid but not delivered will be set to this status"/>
+    <one-to-one ref="com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry"
+      name="deliveredStatus" title="PrestaShop status for delivered orders"
+      help="Delivered orders will be set to this status"/>
+    <one-to-one name="defaultPaymentCondition"
+      ref="com.axelor.apps.account.db.PaymentCondition" title="Default payment condition"
+      help="Used on import if no local payment condition with the same name as the PrestaShop one exists"/>
+    <one-to-one name="defaultPaymentMode" ref="com.axelor.apps.account.db.PaymentMode"
+      title="Default payment mode"
+      help="Used on import if no payment mode matches the remote one cannot be found"/>
+    <one-to-one name="defaultShippingCostsProduct" ref="com.axelor.apps.base.db.Product"
+      title="Default product for deliveries fees"
+      help="Used on import if carrier cannot be mapped to a local shipping cost product"/>
+    <one-to-one name="discountProduct" ref="com.axelor.apps.base.db.Product"
+      title="Product used to apply discount to the whole order, not per product"/>
+    <one-to-one name="defaultTax" ref="com.axelor.apps.account.db.Tax"
+      title="Default tax rate" help="Used when tax rate cannot be determined"/>
+    <one-to-one name="defaultSaleAccountForProduct"
+      ref="com.axelor.apps.account.db.Account" title="Default sale account for product"
+      help="Used when import tax for the product"/>
+    <one-to-one name="defaultSaleAccountForTax" ref="com.axelor.apps.account.db.Account"
+      title="Default sale account for tax"
+      help="Used when import tax for accounting configuration of tax"/>
+  </entity>
 
 </domain-models>
