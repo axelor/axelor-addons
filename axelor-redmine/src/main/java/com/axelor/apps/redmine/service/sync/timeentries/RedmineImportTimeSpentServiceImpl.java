@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports.timeentries;
+package com.axelor.apps.redmine.service.sync.timeentries;
 
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
@@ -39,9 +39,8 @@ import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
-import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.message.IMessage;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -70,7 +69,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonService
+public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
     implements RedmineImportTimeSpentService {
 
   protected TimesheetLineRepository timesheetLineRepo;
@@ -126,9 +125,11 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
   protected String redmineTimeSpentDurationForCustomer;
   protected String redmineTimeSpentDurationUnit;
 
+  protected String failedRedmineTimeEntriesIds;
+
   @Override
   @SuppressWarnings("unchecked")
-  public void importTimeSpent(
+  public String importTimeSpent(
       List<TimeEntry> redmineTimeEntryList, HashMap<String, Object> paramsMap) {
 
     if (redmineTimeEntryList != null && !redmineTimeEntryList.isEmpty()) {
@@ -158,6 +159,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
         this.unitHoursName = unitHours.getName();
       }
 
+      serverTimeZone = appRedmine.getServerTimezone();
+
       List<Option> selectionList = new ArrayList<Option>();
       selectionList.addAll(
           MetaStore.getSelectionList("redmine.timesheetline.activity.type.select"));
@@ -174,8 +177,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
           (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
       Collections.sort(redmineTimeEntryList, compareByDate);
 
-      RedmineBatch redmineBatch = batch.getRedmineBatch();
-      redmineBatch.setFailedRedmineTimeEntriesIds(null);
+      boolean isOverrideRecords = batch.getRedmineBatch().getIsOverrideRecords();
 
       int i = 0;
 
@@ -183,7 +185,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
         LOG.debug("Importing time entry: " + redmineTimeEntry.getId());
 
         try {
-          this.createOpenSuiteTimesheetLine(redmineTimeEntry, redmineBatch);
+          this.createOpenSuiteTimesheetLine(redmineTimeEntry, isOverrideRecords);
         } finally {
           if (++i % AbstractBatch.FETCH_LIMIT == 0) {
             updateTransaction();
@@ -216,36 +218,31 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
 
     String resultStr =
         String.format(
-            "Redmine SpentTime -> ABS Timesheetline : Success: %d Fail: %d", success, fail);
-    result += String.format("%s \n", resultStr);
+            "Redmine SpentTime -> AOS Timesheetline : Success: %d Fail: %d", success, fail);
+    setResult(getResult() + String.format("%s \n", resultStr));
     LOG.debug(resultStr);
     success = fail = 0;
+
+    return failedRedmineTimeEntriesIds;
   }
 
   @Transactional
-  public void createOpenSuiteTimesheetLine(TimeEntry redmineTimeEntry, RedmineBatch redmineBatch) {
+  public void createOpenSuiteTimesheetLine(TimeEntry redmineTimeEntry, boolean isOverrideRecords) {
 
     TimesheetLine timesheetLine = timesheetLineRepo.findByRedmineId(redmineTimeEntry.getId());
-    LocalDateTime redmineUpdatedOn =
-        redmineTimeEntry
-            .getUpdatedOn()
-            .toInstant()
-            .atZone(ZoneId.systemDefault())
-            .toLocalDateTime();
+    LocalDateTime redmineUpdatedOn = getRedmineDate(redmineTimeEntry.getUpdatedOn());
 
     if (timesheetLine == null) {
       timesheetLine = new TimesheetLine();
-    } else if (!redmineBatch.getIsOverrideRecords()
+    } else if (!isOverrideRecords
         || (lastBatchUpdatedOn != null
-            && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-                || (timesheetLine.getUpdatedOn() != null
-                    && timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
-                    && timesheetLine.getUpdatedOn().isAfter(redmineUpdatedOn))))) {
+            && (timesheetLine.getUpdatedOn() != null
+                && timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+                && timesheetLine.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
       return;
     }
 
     errors = new Object[] {};
-    String failedRedmineTimeEntriesIds = redmineBatch.getFailedRedmineTimeEntriesIds();
 
     setRedmineCustomFieldsMap(redmineTimeEntry.getCustomFields());
 
@@ -256,10 +253,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
     if (user == null) {
       errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_USER_NOT_FOUND)};
 
-      redmineBatch.setFailedRedmineTimeEntriesIds(
+      failedRedmineTimeEntriesIds =
           failedRedmineTimeEntriesIds == null
               ? redmineTimeEntry.getId().toString()
-              : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
+              : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString();
 
       setErrorLog(
           I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
@@ -276,10 +273,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
     if (project == null) {
       errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_NOT_FOUND)};
 
-      redmineBatch.setFailedRedmineTimeEntriesIds(
+      failedRedmineTimeEntriesIds =
           failedRedmineTimeEntriesIds == null
               ? redmineTimeEntry.getId().toString()
-              : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
+              : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString();
 
       setErrorLog(
           I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),
@@ -289,7 +286,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
       return;
     }
 
-    // ERROR AND DON'T IMPORT IF TEAMTASK NOT FOUND
+    // ERROR AND DON'T IMPORT IF PROJECT TASK NOT FOUND
 
     Integer issueId = redmineTimeEntry.getIssueId();
 
@@ -299,10 +296,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineImportCommonServic
       if (projectTask == null) {
         errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_NOT_FOUND)};
 
-        redmineBatch.setFailedRedmineTimeEntriesIds(
+        failedRedmineTimeEntriesIds =
             failedRedmineTimeEntriesIds == null
                 ? redmineTimeEntry.getId().toString()
-                : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString());
+                : failedRedmineTimeEntriesIds + "," + redmineTimeEntry.getId().toString();
 
         setErrorLog(
             I18n.get(IMessage.REDMINE_IMPORT_TIMESHEET_LINE_ERROR),

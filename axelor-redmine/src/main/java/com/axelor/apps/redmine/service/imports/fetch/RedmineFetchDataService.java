@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.redmine.service.imports.common;
+package com.axelor.apps.redmine.service.imports.fetch;
 
 import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;
@@ -144,7 +144,6 @@ public class RedmineFetchDataService {
               .toArray();
 
       for (int id : failedIds) {
-
         try {
           TimeEntry timeEntry = redmineTimeEntryManager.getTimeEntry(id);
 
@@ -167,6 +166,7 @@ public class RedmineFetchDataService {
     Map<String, String> tempParams;
 
     params.put("limit", FETCH_LIMIT.toString());
+    params.put("user_id", "140");
     Long count = 0L;
 
     do {

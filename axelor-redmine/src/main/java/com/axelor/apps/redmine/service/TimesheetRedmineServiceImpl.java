@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -33,6 +33,7 @@ import com.axelor.apps.message.service.TemplateMessageService;
 import com.axelor.apps.project.db.repo.ProjectPlanningTimeRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.project.service.ProjectService;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
@@ -56,7 +57,8 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
       ProjectTaskRepository projectTaskRepository,
       ProductCompanyService productCompanyService,
       TimesheetLineRepository timesheetLineRepo,
-      TimesheetRepository timeSheetRepository) {
+      TimesheetRepository timeSheetRepository,
+      ProjectService projectService) {
     super(
         priceListService,
         appHumanResourceService,
@@ -70,7 +72,8 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
         projectTaskRepository,
         productCompanyService,
         timesheetLineRepo,
-        timeSheetRepository);
+        timeSheetRepository,
+        projectService);
   }
 
   @Override

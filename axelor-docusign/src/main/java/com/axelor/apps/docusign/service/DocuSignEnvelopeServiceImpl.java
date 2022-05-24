@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -55,6 +55,9 @@ import com.axelor.tool.template.TemplateMaker;
 import com.docusign.esign.api.EnvelopesApi;
 import com.docusign.esign.client.ApiClient;
 import com.docusign.esign.client.ApiException;
+import com.docusign.esign.client.auth.OAuth;
+import com.docusign.esign.client.auth.OAuth.OAuthToken;
+import com.docusign.esign.client.auth.OAuth.UserInfo;
 import com.docusign.esign.model.Document;
 import com.docusign.esign.model.Envelope;
 import com.docusign.esign.model.EnvelopeDefinition;
@@ -77,6 +80,7 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
@@ -390,12 +394,11 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       EnvelopeDefinition envelopeDefinition =
           createEnvelopeDefinition(envelopeSetting, docuSignEnvelope);
 
-      EnvelopesApi envelopesApi = getEnvelopesApi(envelopeSetting.getDocuSignAccount());
-
       try {
+        EnvelopesApi envelopesApi = getEnvelopesApi(envelopeSetting.getDocuSignAccount());
         EnvelopeSummary results =
             envelopesApi.createEnvelope(
-                envelopeSetting.getDocuSignAccount().getAccountId(), envelopeDefinition);
+                getAccountId(envelopeSetting.getDocuSignAccount()), envelopeDefinition);
 
         if (StringUtils.notEmpty(results.getEnvelopeId())) {
           docuSignEnvelope.setEnvelopeId(results.getEnvelopeId());
@@ -407,7 +410,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
               I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_ID_NULL));
         }
 
-      } catch (ApiException e) {
+      } catch (ApiException | IllegalArgumentException | IOException e) {
         throw new AxelorException(e, TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
       }
     }
@@ -736,13 +739,16 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     }
   }
 
-  protected EnvelopesApi getEnvelopesApi(DocuSignAccount docuSignAccount) throws AxelorException {
+  protected EnvelopesApi getEnvelopesApi(DocuSignAccount docuSignAccount)
+      throws AxelorException, IllegalArgumentException, ApiException, IOException {
 
     EnvelopesApi envelopesApi = null;
     if (ObjectUtils.notEmpty(docuSignAccount)) {
-      ApiClient apiClient = new ApiClient();
-      apiClient.addDefaultHeader("Authorization", "Bearer " + docuSignAccount.getAccessToken());
-      apiClient.setBasePath(docuSignAccount.getBasePath());
+      String accessToken = getAccessToken(docuSignAccount);
+
+      ApiClient apiClient = new ApiClient(docuSignAccount.getBaseURI());
+      apiClient.setBasePath(docuSignAccount.getBaseURI());
+      apiClient.addDefaultHeader("Authorization", "Bearer " + accessToken);
       envelopesApi = new EnvelopesApi(apiClient);
     } else {
       throw new AxelorException(
@@ -753,20 +759,45 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     return envelopesApi;
   }
 
+  protected String getAccessToken(DocuSignAccount docuSignAccount)
+      throws ApiException, IOException {
+
+    ApiClient apiClient = new ApiClient(docuSignAccount.getBaseURI());
+    apiClient.setOAuthBasePath(docuSignAccount.getoAuthBasePath());
+
+    byte[] privateKeyBytes = docuSignAccount.getRsaKey().getBytes();
+    OAuthToken oAuthToken =
+        apiClient.requestJWTUserToken(
+            docuSignAccount.getIntegrationKey(),
+            docuSignAccount.getUserId(),
+            Arrays.asList(OAuth.Scope_SIGNATURE, OAuth.Scope_IMPERSONATION),
+            privateKeyBytes,
+            3600);
+
+    return oAuthToken.getAccessToken();
+  }
+
+  protected String getAccountId(DocuSignAccount docuSignAccount) throws ApiException, IOException {
+    ApiClient apiClient = new ApiClient(docuSignAccount.getBaseURI());
+    UserInfo userInfo = apiClient.getUserInfo(getAccessToken(docuSignAccount));
+    String accountId = userInfo.getAccounts().get(0).getAccountId();
+    return accountId;
+  }
+
   @Transactional
   @Override
   public DocuSignEnvelope synchroniseEnvelopeStatus(DocuSignEnvelope docuSignEnvelope)
       throws AxelorException {
     DocuSignEnvelopeSetting envelopeSetting = docuSignEnvelope.getDocuSignEnvelopeSetting();
     if (ObjectUtils.notEmpty(envelopeSetting)) {
-      EnvelopesApi envelopesApi = getEnvelopesApi(envelopeSetting.getDocuSignAccount());
 
       String envelopeId = docuSignEnvelope.getEnvelopeId();
       if (StringUtils.notEmpty(envelopeId)) {
         try {
+          EnvelopesApi envelopesApi = getEnvelopesApi(envelopeSetting.getDocuSignAccount());
           Envelope envelope =
               envelopesApi.getEnvelope(
-                  envelopeSetting.getDocuSignAccount().getAccountId(), envelopeId);
+                  getAccountId(envelopeSetting.getDocuSignAccount()), envelopeId);
           String envelopeStatus = envelope.getStatus();
           docuSignEnvelope.setStatusSelect(envelopeStatus);
           LOG.debug("Envelope id : " + envelopeId + " / status : " + envelopeStatus);
@@ -791,7 +822,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
           }
           docuSignEnvelopeRepo.save(docuSignEnvelope);
 
-        } catch (ApiException e) {
+        } catch (ApiException | IllegalArgumentException | IOException e) {
           throw new AxelorException(e, TraceBackRepository.CATEGORY_INCONSISTENCY);
         }
       }
@@ -826,7 +857,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   }
 
   protected void updateFields(EnvelopesApi envelopesApi, DocuSignEnvelope docuSignEnvelope)
-      throws AxelorException {
+      throws AxelorException, IOException {
     try {
       List<DocuSignSigner> docuSignSigners = docuSignEnvelope.getDocuSignSignerList();
       if (CollectionUtils.isNotEmpty(docuSignSigners)) {
@@ -835,7 +866,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
           String recipientId = docuSignSigner.getRecipientId();
           Tabs tabs =
               envelopesApi.listTabs(
-                  docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount().getAccountId(),
+                  getAccountId(docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount()),
                   docuSignEnvelope.getEnvelopeId(),
                   recipientId);
 
@@ -896,7 +927,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     try {
       EnvelopeDocumentsResult result =
           envelopesApi.listDocuments(
-              docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount().getAccountId(),
+              getAccountId(docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount()),
               docuSignEnvelope.getEnvelopeId());
       if (ObjectUtils.notEmpty(result)) {
         if (CollectionUtils.isNotEmpty(result.getEnvelopeDocuments())) {
@@ -907,16 +938,12 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
                     && ObjectUtils.notEmpty(
                         docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount())
                     && StringUtils.notEmpty(
-                        docuSignEnvelope
-                            .getDocuSignEnvelopeSetting()
-                            .getDocuSignAccount()
-                            .getAccountId())) {
+                        getAccountId(
+                            docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount()))) {
                   byte[] results =
                       envelopesApi.getDocument(
-                          docuSignEnvelope
-                              .getDocuSignEnvelopeSetting()
-                              .getDocuSignAccount()
-                              .getAccountId(),
+                          getAccountId(
+                              docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount()),
                           docuSignEnvelope.getEnvelopeId(),
                           CERTIFICATE_ID);
                   if (ObjectUtils.notEmpty(results)) {
@@ -942,16 +969,12 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
                     && ObjectUtils.notEmpty(
                         docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount())
                     && StringUtils.notEmpty(
-                        docuSignEnvelope
-                            .getDocuSignEnvelopeSetting()
-                            .getDocuSignAccount()
-                            .getAccountId())) {
+                        getAccountId(
+                            docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount()))) {
                   byte[] results =
                       envelopesApi.getDocument(
-                          docuSignEnvelope
-                              .getDocuSignEnvelopeSetting()
-                              .getDocuSignAccount()
-                              .getAccountId(),
+                          getAccountId(
+                              docuSignEnvelope.getDocuSignEnvelopeSetting().getDocuSignAccount()),
                           docuSignEnvelope.getEnvelopeId(),
                           doc.getDocumentId());
                   if (ObjectUtils.notEmpty(results)) {

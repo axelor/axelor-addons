@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -19,6 +19,7 @@ package com.axelor.apps.prestashop.imports.service;
 
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.AxelorException;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;
@@ -31,7 +32,8 @@ public interface ImportOrderService {
    * @param logWriter Buffer to receive log messages
    * @throws IOException
    * @throws PrestaShopWebserviceException
+   * @throws AxelorException
    */
   public void importOrder(AppPrestashop appConfig, ZonedDateTime endDate, Writer logWriter)
-      throws IOException, PrestaShopWebserviceException;
+      throws IOException, PrestaShopWebserviceException, AxelorException;
 }

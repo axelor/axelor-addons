@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -21,9 +21,9 @@ import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
-import com.axelor.apps.redmine.service.imports.common.RedmineFetchDataService;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
-import com.axelor.apps.redmine.service.imports.log.RedmineErrorLogService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
+import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
+import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -72,7 +72,7 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
       Consumer<Object> onSuccess,
       Consumer<Throwable> onError) {
 
-    RedmineImportCommonService.result = "";
+    RedmineCommonService.setResult("");
 
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 

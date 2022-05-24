@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
-	<module name="human-resource" package="com.axelor.apps.hr.db" />
+  <module name="human-resource" package="com.axelor.apps.hr.db"/>
 
-	<entity name="HrBatch" lang="java" cacheable="true">
+  <entity name="HrBatch" lang="java" cacheable="true">
 
-		<many-to-many name="dailyTsUserSet" ref="com.axelor.auth.db.User"
-			title="Daily timesheet users" />
-		<date name="dailyTsDate" title="Daily timesheet date" />
+    <many-to-many name="dailyTsUserSet" ref="com.axelor.auth.db.User"
+      title="Daily timesheet users"/>
+    <date name="dailyTsDate" title="Daily timesheet date"/>
 
-		<extra-code><![CDATA[
+    <extra-code><![CDATA[
 	   		// ACTION TYPE
         	public static final int ACTION_CREATE_DAILY_TIMESHEETS = 8;
 		]]></extra-code>
 
-	</entity>
+  </entity>
 
 </domain-models>

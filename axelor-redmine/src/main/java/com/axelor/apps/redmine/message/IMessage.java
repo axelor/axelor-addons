@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -34,7 +34,7 @@ public interface IMessage {
 
   static final String REDMINE_IMPORT_PROJECT_ERROR = /*$$(*/ "Project" /*)*/;
 
-  static final String REDMINE_IMPORT_TIMESHEET_LINE_ERROR = /*$$(*/ "TimesheetLine" /*)*/;
+  static final String REDMINE_IMPORT_TIMESHEET_LINE_ERROR = /*$$(*/ "TimesheetLine (Import)" /*)*/;
 
   static final String REDMINE_IMPORT_PRODUCT_NOT_FOUND = /*$$(*/
       "Entity imported without product" /*)*/;
@@ -71,4 +71,27 @@ public interface IMessage {
 
   static final String REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR = /*$$(*/
       "Custom field %s not found for %s, please check the app configurations" /*)*/;
+
+  static final String REDMINE_IMPORT_PROJECT_TASK_STATUS_NOT_FOUND = /*$$(*/
+      "Entity not imported, no project status found in OS" /*)*/;
+
+  static final String REDMINE_IMPORT_PROJECT_TASK_PRIORITY_NOT_FOUND = /*$$(*/
+      "Entity not imported, no project priority found in OS" /*)*/;
+
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_ERROR = /*$$(*/ "TimesheetLine (Export)" /*)*/;
+
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_AOS_USER_EMAIL_NOT_CONFIGURED = /*$$(*/
+      "Entity not exported, user email is not configured in AOS" /*)*/;
+
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_REDMINE_USER_NOT_FOUND = /*$$(*/
+      "Entity not exported, redmine user not found with similar email address as AOS timesheetline user" /*)*/;
+
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_PROJECT_NOT_FOUND = /*$$(*/
+      "Entity not exported, redmine project not found for AOS timesheetline project" /*)*/;
+
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_ISSUE_NOT_FOUND = /*$$(*/
+      "Entity not exported, redmine issue not found for AOS timesheetline task" /*)*/;
+
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_ACTIVITY_NOT_FOUND = /*$$(*/
+      "Entity not exported, redmine timeentry activity not found for AOS timesheetline activity" /*)*/;
 }

@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -79,14 +79,15 @@ public class ImportSendinBlueController {
 
   public void tagReport(ActionRequest request, ActionResponse response) throws AxelorException {
     List<Map<String, Object>> dataList = null;
+    List<Long> ids = null;
     @SuppressWarnings("unchecked")
     List<LinkedHashMap<String, Integer>> obj =
         (List<LinkedHashMap<String, Integer>>) request.getContext().get("eventTag");
     if (obj != null) {
       Stream<Long> idStream = obj.stream().map(mapObj -> mapObj.get("id").longValue());
-      List<Long> ids = idStream.collect(Collectors.toList());
-      dataList = importSendinBlueService.getTagReport(ids);
+      ids = idStream.collect(Collectors.toList());
     }
+    dataList = importSendinBlueService.getTagReport(ids);
     response.setData(dataList);
   }
 }

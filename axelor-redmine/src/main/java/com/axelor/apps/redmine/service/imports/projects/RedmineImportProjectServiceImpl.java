@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -29,15 +29,19 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.Project;
+import com.axelor.apps.project.db.ProjectPriority;
+import com.axelor.apps.project.db.ProjectStatus;
 import com.axelor.apps.project.db.ProjectTaskCategory;
+import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
+import com.axelor.apps.project.db.repo.ProjectStatusRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
-import com.axelor.apps.redmine.service.imports.common.RedmineImportCommonService;
+import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -70,12 +74,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
+public class RedmineImportProjectServiceImpl extends RedmineCommonService
     implements RedmineImportProjectService {
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
   protected ProjectVersionRepository projectVersionRepo;
   protected AppBaseService appBaseService;
+  protected ProjectStatusRepository projectStatusRepo;
+  protected ProjectPriorityRepository projectPriorityRepo;
 
   @Inject
   public RedmineImportProjectServiceImpl(
@@ -89,7 +95,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo,
       ProjectVersionRepository projectVersionRepo,
-      AppBaseService appBaseService) {
+      AppBaseService appBaseService,
+      ProjectPriorityRepository projectPriorityRepo,
+      ProjectStatusRepository projectStatusRepo) {
 
     super(
         userRepo,
@@ -103,6 +111,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
     this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.projectVersionRepo = projectVersionRepo;
     this.appBaseService = appBaseService;
+    this.projectStatusRepo = projectStatusRepo;
+    this.projectPriorityRepo = projectPriorityRepo;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -150,6 +160,8 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
       this.redmineProjectClientPartnerDefault = appRedmine.getRedmineProjectClientPartnerDefault();
       this.redmineProjectInvoicingSequenceSelectDefault =
           appRedmine.getRedmineProjectInvoicingSequenceSelectDefault();
+
+      serverTimeZone = appRedmine.getServerTimezone();
 
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository
@@ -207,7 +219,7 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
 
     String resultStr =
         String.format("Redmine Project -> ABS Project : Success: %d Fail: %d", success, fail);
-    result += String.format("%s \n", resultStr);
+    setResult(getResult() + String.format("%s \n", resultStr));
     LOG.debug(resultStr);
     success = fail = 0;
   }
@@ -242,13 +254,31 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
     this.setRedmineCustomFieldsMap(redmineProject.getCustomFields());
 
     Project project = projectRepo.findByRedmineId(redmineProject.getId());
-    LocalDateTime redmineUpdatedOn =
-        redmineProject.getUpdatedOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    LocalDateTime redmineUpdatedOn = getRedmineDate(redmineProject.getUpdatedOn());
 
     if (project == null) {
       project = new Project();
       project.setRedmineId(redmineProject.getId());
       project.setCode(redmineProject.getIdentifier().toUpperCase());
+
+      List<ProjectStatus> projectStatuses =
+          projectStatusRepo
+              .all()
+              .filter("self.relatedToSelect = ?1", ProjectStatusRepository.PROJECT_STATUS_TASK)
+              .fetch();
+      if (projectStatuses != null && !projectStatuses.isEmpty()) {
+        for (ProjectStatus projectStatus : projectStatuses) {
+          project.addProjectTaskStatusSetItem(projectStatus);
+        }
+      }
+
+      List<ProjectPriority> projectPriorities = projectPriorityRepo.all().fetch();
+      if (projectPriorities != null && !projectPriorities.isEmpty()) {
+        for (ProjectPriority projectPriority : projectPriorities) {
+          project.addProjectTaskPrioritySetItem(projectPriority);
+        }
+      }
+
     } else if (lastBatchUpdatedOn != null
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
             || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
@@ -360,11 +390,6 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
       project.setClientPartner(null);
     }
 
-    project.setProjectTypeSelect(
-        redmineProject.getParentId() != null
-            ? ProjectRepository.TYPE_PHASE
-            : ProjectRepository.TYPE_PROJECT);
-
     try {
       List<Membership> redmineProjectMembers =
           redmineProjectManager.getProjectMembers(redmineProject.getId());
@@ -402,9 +427,16 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
     }
     importProjectMembersAndTrackers(redmineProject, project);
 
-    if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
-      project.setStatusSelect(ProjectRepository.STATE_FINISHED);
-    }
+    project.setProjectStatus(
+        projectStatusRepo
+            .all()
+            .filter(
+                redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)
+                    ? "self.relatedToSelect = ?1 and self.isDefaultCompleted = true"
+                    : "self.relatedToSelect = ?1",
+                ProjectStatusRepository.PROJECT_STATUS_PROJECT)
+            .order("sequence")
+            .fetchOne());
 
     // ERROR AND IMPORT IF INVOICING TYPE NOT FOUND
 

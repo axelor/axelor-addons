@@ -1,61 +1,75 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<object-views xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://axelor.com/xml/ns/object-views" xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
+<object-views xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://axelor.com/xml/ns/object-views"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-	<form name="app-prestashop-config-form" title="App prestashop" model="com.axelor.apps.base.db.AppPrestashop" canDelete="false" canNew="false" width="large">
-		<panel title="Connection">
-			<field name="prestaShopUrl" pattern="^http(?:s)?://.*$" placeholder="https://my.shop.com" required="true" onChange="action-app-prestashop-attrs-is-valid"/>
-			<field name="prestaShopKey" required="true" onChange="action-app-prestashop-attrs-is-valid"/>
-			<button name="btnTest" title="Test" onClick="com.axelor.apps.prestashop.web.AppPrestaShopController:testConnection"/>
-			<field name="isValid" readonly="true" widget="boolean-switch"/>
-			<field name="prestaShopCountry" required="true"/>
-			<field name="prestaShopCurrency" required="true"/>
-			<field name="prestaShopLengthUnit" required="true"/>
-			<field name="prestaShopWeightUnit" required="true"/>
-			<field name="textsLanguage" required="true"/>
-		</panel>
+  <form name="app-prestashop-config-form" title="App prestashop"
+    model="com.axelor.apps.base.db.AppPrestashop" canDelete="false" canNew="false" width="large">
+    <panel title="Connection">
+      <field name="prestaShopUrl" pattern="^http(?:s)?://.*$"
+        placeholder="https://my.shop.com" required="true"
+        onChange="action-app-prestashop-attrs-is-valid"/>
+      <field name="prestaShopKey" required="true"
+        onChange="action-app-prestashop-attrs-is-valid"/>
+      <button name="btnTest" title="Test"
+        onClick="com.axelor.apps.prestashop.web.AppPrestaShopController:testConnection"/>
+      <field name="isValid" readonly="true" widget="boolean-switch"/>
+      <field name="prestaShopCountry" required="true"/>
+      <field name="prestaShopCurrency" required="true"/>
+      <field name="prestaShopLengthUnit" required="true"/>
+      <field name="prestaShopWeightUnit" required="true"/>
+      <field name="textsLanguage" required="true"/>
+    </panel>
 
-		<panel title="Export options (ABS → PrestaShop)">
-			<field name="exportPriceScale"/>
-			<field name="exportNonSoldProducts" widget="boolean-switch"/>
-			<field name="exportNonPrestashopOrders" widget="boolean-switch"/>
-			<field name="exportNonPrestashopCustomers" widget="boolean-switch"/>
-		</panel>
+    <panel title="Export options (ABS → PrestaShop)">
+      <field name="exportPriceScale"/>
+      <field name="exportNonSoldProducts" widget="boolean-switch"/>
+      <field name="exportNonPrestashopOrders" widget="boolean-switch"/>
+      <field name="exportNonPrestashopCustomers" widget="boolean-switch"/>
+    </panel>
 
-		<panel title="Import options (PrestaShop → ABS)">
-			<button name="importMetaDataBtn" title="Import prestashop status"  onClick="action-app-prestashop-method-fetch-metadata"/>
-			<spacer name="importMetaDataBtnSpacer"/>
-			<field name="defaultStatus" required="true"/>
-			<field name="invoicedStatus" required="true"/>
-			<field name="paidStatus" required="true"/>
-			<field name="deliveredStatus" required="true"/>
+    <panel title="Import options (PrestaShop → ABS)">
+      <button name="importMetaDataBtn" title="Import prestashop status"
+        onClick="action-app-prestashop-method-fetch-metadata"/>
+      <spacer name="importMetaDataBtnSpacer"/>
+      <field name="defaultStatus" required="true"/>
+      <field name="invoicedStatus" required="true"/>
+      <field name="paidStatus" required="true"/>
+      <field name="deliveredStatus" required="true"/>
 
-			<field name="defaultPaymentCondition" required="true"/>
-			<field name="defaultPaymentMode" required="true" form-view="prestaShop-payment-mode-form" grid-view="prestaShop-payment-mode-grid"/>
-			<field name="defaultShippingCostsProduct" required="true"/>
-			<field name="discountProduct" required="true"/>
-			<field name="defaultTax" required="true"/>
-			<field name="defaultSaleAccountForProduct" domain="self.accountType.technicalTypeSelect = 'income'" required="true"/>
-			<field name="defaultSaleAccountForTax" domain="self.accountType.technicalTypeSelect = 'tax'" required="true"/>
-		</panel>
+      <field name="defaultPaymentCondition" required="true"/>
+      <field name="defaultPaymentMode" required="true"
+        form-view="prestaShop-payment-mode-form" grid-view="prestaShop-payment-mode-grid"/>
+      <field name="defaultShippingCostsProduct" required="true"/>
+      <field name="discountProduct" required="true"/>
+      <field name="defaultTax" required="true"/>
+      <field name="defaultSaleAccountForProduct"
+        domain="self.accountType.technicalTypeSelect = 'income'" required="true"/>
+      <field name="defaultSaleAccountForTax"
+        domain="self.accountType.technicalTypeSelect = 'tax'" required="true"/>
+    </panel>
 
-		<panel title="Reference data">
-			<label title="This allows to tweak which &quot;side&quot; has reference data on various entities to avoid back and forth overwrites." colSpan="12"/>
-			<field name="prestaShopMasterForCurrencies" widget="boolean-switch"/>
-			<field name="prestaShopMasterForCountries" widget="boolean-switch"/>
-			<field name="prestaShopMasterForCustomers" widget="boolean-switch"/>
-			<field name="prestaShopMasterForTaxes" widget="boolean-switch"/>
-			<field name="prestaShopMasterForCategories" widget="boolean-switch"/>
-			<field name="prestaShopMasterForProducts" widget="boolean-switch"/>
-			<field name="prestaShopMasterForOrders" widget="boolean-switch"/>
-		</panel>
-	</form>
+    <panel title="Reference data">
+      <label
+        title="This allows to tweak which &quot;side&quot; has reference data on various entities to avoid back and forth overwrites."
+        colSpan="12"/>
+      <field name="prestaShopMasterForCurrencies" widget="boolean-switch"/>
+      <field name="prestaShopMasterForCountries" widget="boolean-switch"/>
+      <field name="prestaShopMasterForCustomers" widget="boolean-switch"/>
+      <field name="prestaShopMasterForTaxes" widget="boolean-switch"/>
+      <field name="prestaShopMasterForCategories" widget="boolean-switch"/>
+      <field name="prestaShopMasterForProducts" widget="boolean-switch"/>
+      <field name="prestaShopMasterForOrders" widget="boolean-switch"/>
+    </panel>
+  </form>
 
-	<action-method name="action-app-prestashop-method-fetch-metadata">
-		<call class="com.axelor.apps.prestashop.web.AppPrestaShopController" method="importMetadata"/>
-	</action-method>
+  <action-method name="action-app-prestashop-method-fetch-metadata">
+    <call class="com.axelor.apps.prestashop.web.AppPrestaShopController"
+      method="importMetadata"/>
+  </action-method>
 
-	<action-attrs name="action-app-prestashop-attrs-is-valid">
-		<attribute name="value" for="isValid" expr="eval: false"/>
-	</action-attrs>
+  <action-attrs name="action-app-prestashop-attrs-is-valid">
+    <attribute name="value" for="isValid" expr="eval: false"/>
+  </action-attrs>
 
 </object-views>

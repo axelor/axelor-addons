@@ -1,7 +1,7 @@
 /*
  * Axelor Business Solutions
  *
- * Copyright (C) 2021 Axelor (<http://axelor.com>).
+ * Copyright (C) 2022 Axelor (<http://axelor.com>).
  *
  * This program is free software: you can redistribute it and/or  modify
  * it under the terms of the GNU Affero General Public License, version 3,
@@ -53,7 +53,7 @@ public interface ITranslation {
   public static final String IMPORT_CAMPAIN = /*$$(*/ "Total Campaigns Imported"; /*)*/
   public static final String IMPORT_EVENT = /*$$(*/ "Total Events Imported"; /*)*/
   public static final String IMPORT_CONTACT = /*$$(*/ "Total Contacts Imported"; /*)*/
-  public static final String IMPORT_LEAD = /*$$(*/ "Total Contacts Leads"; /*)*/
+  public static final String IMPORT_LEAD = /*$$(*/ "Total Leads Imported"; /*)*/
   public static final String IMPORT_CAMPAIN_REPORT = /*$$(*/
       "Total Campaign Reports Imported"; /*)*/
   public static final String IMPORT_CAMPAIN_STATISTICS = /*$$(*/
@@ -64,4 +64,9 @@ public interface ITranslation {
   public static final String EXPORT_TEMPLATE = /*$$(*/ "Total Template Exported"; /*)*/
   public static final String EXPORT_CAMAPIN = /*$$(*/ "Total Campaign Exported"; /*)*/
   public static final String EXPORT_CONTACT = /*$$(*/ "Total Contact(%s) Exported"; /*)*/
+
+  public static final String EVENT_TAG = /*$$(*/ "Event tag"; /*)*/
+  public static final String UNIQUE_CLICKS = /*$$(*/ "UniqueClicks"; /*)*/
+  public static final String UNIQUE_OPENS = /*$$(*/ "UniqueOpens"; /*)*/
+  public static final String SPAM_REPORTS = /*$$(*/ "SpamReports"; /*)*/
 }
