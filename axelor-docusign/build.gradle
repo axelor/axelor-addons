@@ -7,12 +7,12 @@ apply plugin: "com.axelor.app-module"
 apply from: "../libs.gradle"
 
 apply {
-	version = "6.1-SNAPSHOT"
+  version = "6.1-SNAPSHOT"
 }
 
 axelor {
-	title "Axelor DocuSign"
-	description "Axelor DocuSign Module"
+  title "Axelor DocuSign"
+  description "Axelor DocuSign Module"
 }
 
 configurations {
@@ -20,27 +20,27 @@ configurations {
 }
 
 ext {
-	docusignVersion = "3.8.0"
-	docusignJarDir = ".jar"
-    docusignJarName = 'shadow-docusign.jar'    
+  docusignVersion = "3.8.0"
+  docusignJarDir = ".jar"
+    docusignJarName = 'shadow-docusign.jar'
 }
 
 dependencies {
-	api project(":modules:axelor-base")
-	api project(":modules:axelor-sale")     
- 
-	docusignDeps "com.docusign:docusign-esign-java:${docusignVersion}"	                      
-	implementation files("${docusignJarDir}/${docusignJarName}")	
+  api project(":modules:axelor-base")
+  api project(":modules:axelor-sale")
+
+  docusignDeps "com.docusign:docusign-esign-java:${docusignVersion}"
+  implementation files("${docusignJarDir}/${docusignJarName}")
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-task shadowDocusignDeps(type: ShadowJar) {    
-    destinationDir = file(docusignJarDir)
-    archiveName = docusignJarName
-    zip64 true    
+task shadowDocusignDeps(type: ShadowJar) {
+    destinationDirectory = file(docusignJarDir)
+    archiveFileName = docusignJarName
+    zip64 true
     configurations = [project.configurations.docusignDeps]
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'    
-    
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+
     relocate "com.auth0","shadow.docusign.com.auth0"
     relocate "com.fasterxml","shadow.docusign.com.fasterxml"
     relocate "com.migcomponents","shadow.docusign.com.migcomponents"
@@ -49,12 +49,12 @@ task shadowDocusignDeps(type: ShadowJar) {
     relocate "javax.activation","shadow.docusign.javax.activation"
     relocate "javax.annotation","shadow.docusign.javax.annotation"
     relocate "javax.inject","shadow.docusign.javax.inject"
-    relocate "javax.ws","shadow.docusign.javax.ws"      
+    relocate "javax.ws","shadow.docusign.javax.ws"
     relocate "org.aopalliance","shadow.docusign.org.aopalliance"
-    relocate "org.apache","shadow.docusign.org.apache"    
+    relocate "org.apache","shadow.docusign.org.apache"
     relocate "org.joda","shadow.docusign.org.joda"
-    relocate "org.json","shadow.docusign.org.json"    
-    relocate "org.slf4j","shadow.docusign.org.slf4j"        
+    relocate "org.json","shadow.docusign.org.json"
+    relocate "org.slf4j","shadow.docusign.org.slf4j"
 }
 
 task cleanDocusignJarDir(type: Delete){
