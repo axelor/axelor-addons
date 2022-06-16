@@ -26,7 +26,7 @@
     onLoad="action-client-portal-group-discussion-post-onload"
     onNew="action-client-portal-attrs-discussion-post-onnew"
     onSave="save,action-client-portal-method-discussion-post-onsave">
-    <panel name="mainPanel" readonlyIf="$isAdd &amp;&amp; discussionGroup == null">
+    <panel name="mainPanel">
       <field name="title" required="true" colSpan="8"/>
       <button onClick="save,action-client-portal-attrs-discussion-post-onload" name="postBtn"
         title="Post" colSpan="4" showIf="discussionGroup"/>
@@ -45,7 +45,8 @@
   </form>
 
   <action-attrs name="action-client-portal-attrs-discussion-post-onload">
-    <attribute name="readonly" for="mainPanel" expr="eval: createdBy != __user__"/>
+    <attribute name="readonly" for="mainPanel"
+      expr="eval: createdBy != __user__ || ($isAdd &amp;&amp; discussionGroup == null)"/>
     <attribute name="value" for="$postBy" expr="eval: createdBy?.partner?.fullName"/>
     <attribute name="value" for="$postBy"
       expr="eval: createdBy?.partner?.mainPartner?.fullName"

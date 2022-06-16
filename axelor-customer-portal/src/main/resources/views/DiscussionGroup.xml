@@ -15,7 +15,8 @@
   <form name="discussion-group-form" title="Discussion group"
     model="com.axelor.apps.client.portal.db.DiscussionGroup">
     <toolbar>
-      <button name="openPostBtn" title="Open post" onClick=":openGroup"/>
+      <button name="openPostBtn" title="Open post"
+        onClick="action-discussion-group-method-open-post"/>
     </toolbar>
     <panel name="mainPanel">
       <field name="name" required="true"/>

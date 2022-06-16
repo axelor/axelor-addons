@@ -28,7 +28,7 @@
 	        <div class="span7">
 	          <h5>
 	            <span class="label label-info" ng-show="record.typeSelect == 1" x-translate>Quotation sent to the customer</span>
-	            <span class="label label-important" ng-show="record.typeSelect == 2" x-translate>Quotation refused</span>
+	            <span class="label label-important" ng-show="record.typeSelect == 2" x-translate>Quotation declined</span>
 	          </h5>
 	        </div>
 	      ]]></viewer>

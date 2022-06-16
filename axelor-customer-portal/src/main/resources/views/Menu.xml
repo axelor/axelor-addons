@@ -223,7 +223,7 @@
     <context name="isContact" expr="eval: __user__.partner?.isContact"/>
     <context name="partner"
       expr="eval: __user__.partner != null ? __user__.partner.isContact ? __user__.partner.mainPartner : __user__.partner : null"/>
-    <context name="typeSelect" expr="eval: ProjectTaskRepository.TYPE_TICKET"/>
+    <context name="_typeSelect" expr="eval: ProjectTaskRepository.TYPE_TICKET"/>
   </action-view>
 
   <menuitem title="New ticket" name="client-portal-new-ticket" icon="fa-plus-square"
@@ -310,5 +310,10 @@
   <action-view name="purchases.portal.root" title="Purchases">
     <view type="html" name="purchase"/>
   </action-view>
+
+  <menuitem name="project-task-customer-treated-by-provider"
+    id="portal-project-task-customer-treated-by-provider" title="Tasks to be treated by provider"
+    parent="project-task-customer" action="project.task.customer.treated.by.provider" order="4"
+    groups="CLT"/>
 
 </object-views>

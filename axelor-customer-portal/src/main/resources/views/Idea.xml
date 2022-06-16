@@ -18,19 +18,20 @@
     width="large" onLoad="action-client-portal-group-idea-onload"
     onNew="action-client-portal-attrs-idea-onload">
     <panel name="mainPanel" readonlyIf="history">
-      <field name="name" required="true" css="label-bold bold large" colSpan="8"
-        showTitle="false">
-        <viewer depends="name">
+      <panel name="panelClientReadOnly" colSpan="12">
+        <field name="name" required="true" css="label-bold bold large" colSpan="8"
+          showTitle="false">
+          <viewer depends="name">
         	<![CDATA[
         		<h4><span>{{record.name}}</span></h4>
         	]]>
-        </viewer>
-        <editor>
-          <field name="name" required="true" colSpan="12" showTitle="false"/>
-        </editor>
-      </field>
-      <field name="$ideaStatus" showTitle="false" colSpan="4" readonly="true">
-        <viewer depends="accepted,close,$voted">
+          </viewer>
+          <editor>
+            <field name="name" required="true" colSpan="12" showTitle="false"/>
+          </editor>
+        </field>
+        <field name="$ideaStatus" showTitle="false" colSpan="4" readonly="true">
+          <viewer depends="accepted,close,$voted">
         	<![CDATA[
         		<h4 style="text-align: right;">
         			<span class="label label-success" style="margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.accepted" x-translate>Accepted</span>
@@ -38,33 +39,34 @@
 					<span class="label label-default" style="margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.$voted" x-translate><i class="fa fa-thumbs-up"></i>Voted</span>
 				</h4>
 			]]>
-        </viewer>
-      </field>
-      <panel name="portalIdeaTagSetlAdminPanel" colSpan="12" itemSpan="12">
-        <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"/>
+          </viewer>
+        </field>
+        <panel name="portalIdeaTagSetlAdminPanel" colSpan="12" itemSpan="12">
+          <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"/>
+        </panel>
+        <panel name="portalIdeaTagSetClientPanel" colSpan="12" itemSpan="12">
+          <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"
+            canNew="false"/>
+        </panel>
+        <field name="totalVote" readonly="true" colSpan="6"/>
+        <field name="createdOn" title="Date" colSpan="3"/>
+        <field name="createdBy" colSpan="3"/>
+        <field name="voterSet" widget="TagSelect" colSpan="12" hidden="true" onChange="action-client-portal-record-idea-voterset-onchange"/>
+        <field name="description" colSpan="12" widget="html"/>
+        <field name="$voted" showTitle="false" type="boolean" hidden="true"/>
+        <field name="$isAuthor" hidden="true"/>
+        <field name="accepted" hidden="true"/>
+        <field name="close" hidden="true"/>
       </panel>
-      <panel name="portalIdeaTagSetClientPanel" colSpan="12" itemSpan="12">
-        <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"
-          canNew="false"/>
-      </panel>
-      <field name="totalVote" readonly="true" colSpan="6"/>
-      <field name="createdOn" title="Date" colSpan="3"/>
-      <field name="createdBy" colSpan="3"/>
-      <field name="voterSet" widget="TagSelect" colSpan="12" hidden="true"/>
-      <field name="description" colSpan="12" widget="html"/>
-      <field name="$voted" showTitle="false" type="boolean" hidden="true"/>
-      <field name="$isAuthor" hidden="true"/>
-      <field name="accepted" hidden="true"/>
-      <field name="close" hidden="true"/>
     </panel>
     <panel name="actionPanel" sidebar="true" readonlyIf="history">
       <button name="voteBtn" title="Vote" icon="fa-thumbs-up" hidden="true"
         onClick="action-client-portal-group-idea-vote"/>
       <button name="unvoteBtn" title="Unvote" icon="fa-thumbs-down" hidden="true"
         onClick="action-client-portal-group-idea-unvote"/>
-      <button name="acceptBtn" title="Accept" showIf="!accepted"
+      <button name="acceptBtn" title="Accept" showIf="!accepted &amp;&amp; !close"
         onClick="save,action-client-portal-method-idea-accept"/>
-      <button name="rejectBtn" title="Reject" showIf="accepted"
+      <button name="rejectBtn" title="Unaccept" showIf="accepted &amp;&amp; !close"
         onClick="save,action-client-portal-method-idea-accept"/>
       <button name="closeBtn" title="Close" showIf="!close"
         onClick="save,action-client-portal-method-idea-close"/>
@@ -84,11 +86,11 @@
       || (!__user__.partner?.isContact &amp;&amp; voterSet?.contains(__user__.partner))
       || (__user__.partner?.isContact &amp;&amp; __user__.partner.mainPartner == null &amp;&amp; voterSet?.contains(__user__.partner))"/>
     <attribute name="hidden" for="voteBtn"
-      expr="eval:!id || __user__.partner == null
+      expr="eval:!id  || close || __user__.partner == null
       || (__user__.partner?.isContact &amp;&amp; ((__user__.partner.mainPartner == null &amp;&amp; voterSet?.contains(__user__.partner)) || (__user__.partner.mainPartner != null &amp;&amp; voterSet?.contains(__user__.partner.mainPartner))))
       || (!__user__.partner?.isContact &amp;&amp; voterSet?.contains(__user__.partner))"/>
     <attribute name="hidden" for="unvoteBtn"
-      expr="eval:!id || __user__.partner == null
+      expr="eval:!id  || close || __user__.partner == null
       || (__user__.partner?.isContact &amp;&amp; ((__user__.partner.mainPartner == null &amp;&amp; !voterSet?.contains(__user__.partner)) || (__user__.partner.mainPartner != null &amp;&amp; !voterSet?.contains(__user__.partner.mainPartner))))
       || (!__user__.partner?.isContact &amp;&amp; !voterSet?.contains(__user__.partner))"/>
     <attribute name="hidden" for="voterSet" expr="eval:__user__.group?.code != 'admins'"/>
@@ -102,6 +104,11 @@
       expr="eval:__user__.group?.code != 'admins'"/>
     <attribute name="hidden" for="portalIdeaTagSetClientPanel"
       expr="eval:__user__.group?.code =='admins'"/>
+  </action-attrs>
+
+  <action-attrs name="action-client-portal-attrs-idea-readonly">
+    <attribute name="readonly" for="panelClientReadOnly"
+      expr="eval: __user__.group?.code != 'admins' &amp;&amp; createdBy != null &amp;&amp; createdBy?.code != __user__.code"/>
   </action-attrs>
 
   <action-attrs name="action-client-portal-attrs-idea-vote">
@@ -134,6 +141,7 @@
 
   <action-group name="action-client-portal-group-idea-onload">
     <action name="action-client-portal-attrs-idea-onload"/>
+    <action name="action-client-portal-attrs-idea-readonly"/>
     <action name="action-client-portal-method-idea-onload" if="createdBy != __user__"/>
   </action-group>
 
@@ -148,5 +156,10 @@
   <action-method name="action-client-portal-method-idea-onload">
     <call class="com.axelor.apps.customer.portal.web.IdeaController" method="markRead"/>
   </action-method>
+
+  <action-record name="action-client-portal-record-idea-voterset-onchange" model="com.axelor.apps.client.portal.db.Idea">
+  	<field name="totalVote" expr="eval: voterSet?.size()" if="voterSet != null"/>
+  	<field name="totalVote" expr="eval: 0" if="voterSet == null"/>
+  </action-record>
 
 </object-views>

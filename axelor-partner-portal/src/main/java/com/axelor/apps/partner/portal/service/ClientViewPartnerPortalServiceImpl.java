@@ -98,7 +98,7 @@ public class ClientViewPartnerPortalServiceImpl extends ClientViewPortalServiceI
       query.bind("ids", idList);
     }
 
-    return query.filter(filter).bind("userId", null).count(); // getClientUser().getId()).count();
+    return query.filter(filter).bind("userId", getClientUser().getId()).count();
   }
 
   @Override
@@ -115,7 +115,7 @@ public class ClientViewPartnerPortalServiceImpl extends ClientViewPortalServiceI
       filter += " AND self.id IN (0)";
     }
 
-    return query.filter(filter).bind("userId", null).count(); // getClientUser().getId()).count();
+    return query.filter(filter).bind("userId", getClientUser().getId()).count();
   }
 
   @Override

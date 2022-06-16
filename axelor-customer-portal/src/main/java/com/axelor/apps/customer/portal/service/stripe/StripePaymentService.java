@@ -53,6 +53,6 @@ public interface StripePaymentService {
       Customer customer, BigDecimal amount, String currencyCode, String cardId, String description)
       throws StripeException, AxelorException;
 
-  public Charge checkout(Invoice invoice, Customer customer, String cardId)
+  public Charge checkout(Invoice invoice, Customer customer, String cardId, BigDecimal payAmount)
       throws StripeException, AxelorException;
 }

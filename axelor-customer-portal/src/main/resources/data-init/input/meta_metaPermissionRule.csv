@@ -34,6 +34,11 @@
 "characteristicsPanel";;;;"metaperm.client.ProjectTask";;
 "internalDescriptionPanel";;;;"metaperm.client.ProjectTask";;
 "financialDataPanel";;;;"metaperm.client.ProjectTask";;
+"planningPanel";;;;"metaperm.client.ProjectTask";;
+"treeViewPanel";;;;"metaperm.client.ProjectTask";;
+"frequencyPanel";;;;"metaperm.client.ProjectTask";;
+"timeSpentPanel";;;;"metaperm.client.ProjectTask";;
+"timerPanel";;;;"metaperm.client.ProjectTask";;
 "createPartnerBtn";;;;"metaperm.client.User";;
 "createEmployeeBtn";;;;"metaperm.client.User";;
 "statusSelect";;;;"metaperm.client.Invoice";;

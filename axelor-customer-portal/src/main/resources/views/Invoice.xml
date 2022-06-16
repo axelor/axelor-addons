@@ -30,7 +30,7 @@
     <button name="showInvoiceBtn" title="Print" icon="fa-print"
       onClick="action-invoice-method-show-invoice"/>
     <button name="payBtn" title="Pay invoice" icon="fa-cc-stripe"
-      onClick="action-cient-portal-view-invoice-payment"
+      onClick="action-client-portal-view-invoice-payment"
       readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"
       if="__config__.app.getApp('customer-portal').getIsStripeActivated()"/>
   </grid>
@@ -49,7 +49,7 @@
     </panel>
     <panel name="actionPanel" sidebar="true">
       <button name="payBtn" title="Pay invoice"
-        onClick="action-cient-portal-view-invoice-payment"
+        onClick="action-client-portal-view-invoice-payment"
         readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"
         if="__config__.app.getApp('customer-portal').getIsStripeActivated()"/>
       <button name="showInvoiceBtn" title="Print"
@@ -142,9 +142,10 @@
     <panel name="manPanel">
       <field name="$card" title="Card" type="many-to-one"
         domain="self.partner = :currentPartner" target="com.axelor.apps.client.portal.db.Card"
-        required="true" canNew="true"/>
-      <spacer/>
-      <field name="amountRemaining" title="Total amount" colSpan="8"/>
+        required="true" colSpan="8"/>
+      <spacer colSpan="4"/>
+      <field name="amountRemaining" title="Total amount" colSpan="4"/>
+      <field name="$paymentAmount" title="Payment amount" colSpan="4" type="decimal" min="1"/>
       <button title="OK" onClick="action-client-portal-method-invoice-payment" name="payBtn"
         colSpan="4"/>
       <field name="$currentPartner" type="many-to-one"
@@ -152,7 +153,7 @@
     </panel>
   </form>
 
-  <action-view name="action-cient-portal-view-invoice-payment" title="Payment"
+  <action-view name="action-client-portal-view-invoice-payment" title="Payment"
     model="com.axelor.apps.account.db.Invoice">
     <view type="form" name="client-portal-pay-invoice-form"/>
     <view-param name="popup" value="reload"/>
@@ -169,6 +170,7 @@
 
   <action-attrs name="action-client-portal-attrs-invoice-payment-onload">
     <attribute name="value" for="$currentPartner" expr="eval: __user__.partner"/>
+    <attribute name="value" for="$paymentAmount" expr="eval: amountRemaining"/>
   </action-attrs>
 
 </object-views>

@@ -112,7 +112,7 @@ public class ClientViewPortalServiceImpl extends ClientViewServiceImpl
         .all()
         .filter(
             "(self.saleOrder.clientPartner = :clientPartner OR self.saleOrder.contactPartner = :clientPartner) AND "
-                + "((self.endOfValidity < :today AND self.signature IS NULL) OR (self.statusSelect >= :status))")
+                + "((self.endOfValidity < :today AND self.signature IS NULL) OR (self.saleOrder.statusSelect >= :status))")
         .bind("today", Beans.get(AppBaseService.class).getTodayDateTime().toLocalDate())
         .bind("status", SaleOrderRepository.STATUS_ORDER_COMPLETED)
         .bind("clientPartner", getClientUser().getPartner())

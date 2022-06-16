@@ -164,9 +164,11 @@ public class SaleOrderWorkflowServicePortalImpl
       PortalQuotation portalQuotation =
           Beans.get(PortalQuotationRepository.class)
               .all()
-              .filter("self.saleOrder = :saleOrder AND self.statusSelect = :status")
+              .filter(
+                  "self.saleOrder = :saleOrder AND (self.statusSelect = :proposed_status OR self.statusSelect = :request_status")
               .bind("saleOrder", saleOrder)
-              .bind("status", PortalQuotationRepository.STATUS_PROPOSED_QUOTATION)
+              .bind("proposed_status", PortalQuotationRepository.STATUS_PROPOSED_QUOTATION)
+              .bind("request_status", PortalQuotationRepository.STATUS_REQUESTED_QUOTATION)
               .fetchOne();
       if (portalQuotation == null) {
         return;

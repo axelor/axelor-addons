@@ -236,12 +236,12 @@ public class StripePaymentServiceImpl implements StripePaymentService {
 
   @Override
   @Transactional
-  public Charge checkout(Invoice invoice, Customer customer, String cardId)
+  public Charge checkout(Invoice invoice, Customer customer, String cardId, BigDecimal payAmount)
       throws StripeException, AxelorException {
     Charge charge =
         createCharge(
             customer,
-            invoice.getInTaxTotal(),
+            payAmount,
             invoice.getCurrency().getCode(),
             cardId,
             invoice.getCompany().getName());
@@ -250,7 +250,7 @@ public class StripePaymentServiceImpl implements StripePaymentService {
           Beans.get(InvoicePaymentCreateService.class)
               .createInvoicePayment(
                   invoice,
-                  invoice.getInTaxTotal(),
+                  payAmount,
                   LocalDate.now(),
                   invoice.getCurrency(),
                   invoice.getPaymentMode(),

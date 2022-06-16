@@ -34,10 +34,12 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.rpc.Context;
 import com.google.inject.Inject;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
+import java.math.BigDecimal;
 import java.util.Map;
 
 public class InvoiceController {
@@ -54,21 +56,24 @@ public class InvoiceController {
           I18n.get(IExceptionMessage.STRIPE_CONFIGIRATION_ERROR));
     }
 
+    Context context = request.getContext();
     Invoice invoice = request.getContext().asType(Invoice.class);
     invoice = Beans.get(InvoiceRepository.class).find(invoice.getId());
     @SuppressWarnings("unchecked")
-    Map<String, Object> cardObj = (Map<String, Object>) request.getContext().get("card");
+    Map<String, Object> cardObj = (Map<String, Object>) context.get("card");
     if (cardObj == null) {
       response.setError(I18n.get(IExceptionMessage.STRIPE_NO_CARD_SPECIFIED));
       return;
     }
 
     Card card = Beans.get(CardRepository.class).find(Long.parseLong(cardObj.get("id").toString()));
+    BigDecimal payAmount = new BigDecimal(context.get("paymentAmount").toString());
 
     Customer customer =
         stripePaymentService.getOrCreateCustomer(Beans.get(UserService.class).getUserPartner());
     if (StringUtils.notBlank(card.getStripeCardId())) {
-      Charge charge = stripePaymentService.checkout(invoice, customer, card.getStripeCardId());
+      Charge charge =
+          stripePaymentService.checkout(invoice, customer, card.getStripeCardId(), payAmount);
       if (charge != null) {
         response.setCanClose(true);
         response.setNotify(I18n.get(ITranslation.PORTAL_STRIPE_PAYMENT_SUCCESS));

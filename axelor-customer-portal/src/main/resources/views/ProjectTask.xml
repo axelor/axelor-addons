@@ -14,6 +14,19 @@
           form-view="user-form" grid-view="user-grid"/>
       </replace>
     </extend>
+    <extend target="//panel[@name='actionPanel']/*[last()]">
+      <insert position="after">
+        <button onClick="action-project-task-record-cancel-task,save" name="cancelBtn"
+          title="Cancel" showIf="id &amp;&amp; !status.isCompleted" colSpan="12"/>
+        <field name="status.isCompleted" hidden="true"/>
+      </insert>
+    </extend>
   </form>
+
+  <action-record name="action-project-task-record-cancel-task"
+    model="com.axelor.apps.project.db.ProjectTask">
+    <field name="status"
+      expr="eval:__repo__(ProjectStatus).all().filter('self.relatedToSelect = 2 AND self.isCompleted = true AND self.isDefaultCompleted = false').fetchOne()"/>
+  </action-record>
 
 </object-views>

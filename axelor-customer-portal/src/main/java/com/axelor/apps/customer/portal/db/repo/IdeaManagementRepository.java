@@ -82,4 +82,16 @@ public class IdeaManagementRepository extends IdeaRepository {
 
     return map;
   }
+
+  @Override
+  public Idea copy(Idea entity, boolean deep) {
+
+    entity = super.copy(entity, deep);
+    entity.setAccepted(null);
+    entity.setClose(null);
+    entity.setTotalVote(null);
+    entity.setVoterSet(null);
+
+    return entity;
+  }
 }
