@@ -40,10 +40,10 @@
 			]]>
         </viewer>
       </field>
-      <panel name="portalIdeaTagSetlAdminPanel" colSpan="12">
+      <panel name="portalIdeaTagSetlAdminPanel" colSpan="12" itemSpan="12">
         <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"/>
       </panel>
-      <panel name="portalIdeaTagSetClientPanel" colSpan="12">
+      <panel name="portalIdeaTagSetClientPanel" colSpan="12" itemSpan="12">
         <field name="portalIdeaTagSet" widget="TagSelect" x-color-field="tagColorSelect"
           canNew="false"/>
       </panel>

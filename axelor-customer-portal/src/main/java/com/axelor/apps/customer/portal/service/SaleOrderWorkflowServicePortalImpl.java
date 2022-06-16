@@ -37,9 +37,11 @@ import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.exception.BlockedSaleOrderException;
 import com.axelor.apps.sale.service.app.AppSaleService;
+import com.axelor.apps.sale.service.config.SaleConfigService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
 import com.axelor.apps.supplychain.service.AccountingSituationSupplychainService;
 import com.axelor.apps.supplychain.service.PartnerSupplychainService;
+import com.axelor.apps.supplychain.service.SaleOrderCheckAnalyticService;
 import com.axelor.apps.supplychain.service.SaleOrderPurchaseService;
 import com.axelor.apps.supplychain.service.SaleOrderStockService;
 import com.axelor.apps.supplychain.service.app.AppSupplychainService;
@@ -76,6 +78,8 @@ public class SaleOrderWorkflowServicePortalImpl
       AppProductionService appProductionService,
       AnalyticMoveLineRepository analyticMoveLineRepository,
       PartnerSupplychainService partnerSupplychainService,
+      SaleConfigService saleConfigService,
+      SaleOrderCheckAnalyticService saleOrderCheckAnalyticService,
       AppCustomerPortalRepository appRepo,
       TemplateMessageService templateService,
       MessageService messageService) {
@@ -93,7 +97,9 @@ public class SaleOrderWorkflowServicePortalImpl
         productionOrderSaleOrderService,
         appProductionService,
         analyticMoveLineRepository,
-        partnerSupplychainService);
+        partnerSupplychainService,
+        saleConfigService,
+        saleOrderCheckAnalyticService);
     this.appRepo = appRepo;
     this.templateService = templateService;
     this.messageService = messageService;
@@ -148,7 +154,8 @@ public class SaleOrderWorkflowServicePortalImpl
   @Override
   @Transactional
   public void cancelSaleOrder(
-      SaleOrder saleOrder, CancelReason cancelReason, String cancelReasonStr) {
+      SaleOrder saleOrder, CancelReason cancelReason, String cancelReasonStr)
+      throws AxelorException {
 
     super.cancelSaleOrder(saleOrder, cancelReason, cancelReasonStr);
     AppCustomerPortal app = Beans.get(AppCustomerPortalRepository.class).all().fetchOne();

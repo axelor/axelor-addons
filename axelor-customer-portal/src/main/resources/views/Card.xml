@@ -22,7 +22,7 @@
       <field name="partner" colSpan="4" readonly="true" canView="false"/>
       <field name="cardNumber" colSpan="12" pattern="^[0-9]{13,16}$" widget="string"
         readonlyIf="version" hideIf="$readonly()"/>
-      <field name="last4" colSpan="12" readonly="true" showIf="version"/>
+      <field name="last4" colSpan="12" readonly="true" hideIf="!last4"/>
       <field name="expiryMonth" min="1" max="12" required="true" colSpan="3"/>
       <field name="expiryYear" min="1" max="99" required="true" colSpan="3"/>
       <field name="cvc" min="0" max="999" required="true" colSpan="3" readonlyIf="version">
