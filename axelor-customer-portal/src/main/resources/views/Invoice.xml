@@ -29,7 +29,7 @@
     <field name="amountRemaining" hidden="true"/>
     <button name="showInvoiceBtn" title="Print" icon="fa-print"
       onClick="action-invoice-method-show-invoice"/>
-    <button name="payBtn" title="Pay invoice" icon="fa-cc-stripe"
+    <button name="payBtn" title="Pay invoice" icon="fa-credit-card"
       onClick="action-client-portal-view-invoice-payment"
       readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"
       if="__config__.app.getApp('customer-portal').getIsStripeActivated()"/>

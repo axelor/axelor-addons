@@ -19,7 +19,7 @@
     <extend target="//field[@name='saleOrderTypeSelect']">
       <insert position="after">
         <field name="$quotationTypeSelect" showTitle="false" readonly="true"
-          css="label-bold bold">
+          css="label-bold bold" showIf="statusSelect &lt; 3">
           <viewer depends="typeSelect"><![CDATA[
 			        <div class="span7">
 			          <h5>

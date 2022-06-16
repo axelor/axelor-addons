@@ -143,6 +143,7 @@ public class SaleOrderWorkflowServicePortalImpl
         PortalQuotation portalQuotation =
             Beans.get(PortalQuotationService.class).createPortalQuotation(saleOrder);
         portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_ORDER_CONFIRMED);
+        portalQuotation.setTypeSelect(null);
         Beans.get(PortalQuotationRepository.class).save(portalQuotation);
       } catch (MessagingException | AxelorException e) {
         TraceBackService.trace(e);
