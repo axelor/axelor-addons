@@ -41,6 +41,7 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
+import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.paypal.PaypalService;
 import com.axelor.apps.customer.portal.service.stripe.StripePaymentService;
 import com.axelor.apps.message.db.Message;
@@ -57,6 +58,7 @@ import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
 import com.axelor.apps.stock.db.StockLocation;
 import com.axelor.apps.stock.service.StockLocationService;
 import com.axelor.apps.supplychain.service.SaleOrderInvoiceService;
+import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
@@ -317,6 +319,16 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
       clientPartner = contactPartner.getMainPartner();
     } else {
       clientPartner = currentPartner;
+    }
+
+    if (clientPartner == null) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+          I18n.get(IExceptionMessage.CUSTOMER_MISSING));
+    } else if (ObjectUtils.isEmpty(clientPartner.getPartnerAddressList())) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+          I18n.get(IExceptionMessage.ADDRESS_MISSING));
     }
 
     return saleOrdeCreateService.createSaleOrder(

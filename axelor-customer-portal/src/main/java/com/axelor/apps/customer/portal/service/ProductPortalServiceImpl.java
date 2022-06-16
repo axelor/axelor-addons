@@ -93,6 +93,10 @@ public class ProductPortalServiceImpl implements ProductPortalService {
         sumAvailableQty = sumAvailableQty.add(productAvailableQty);
       }
     }
+
+    if (sumAvailableQty.compareTo(BigDecimal.ZERO) < 0) {
+      sumAvailableQty = BigDecimal.ZERO;
+    }
     return sumAvailableQty;
   }
 

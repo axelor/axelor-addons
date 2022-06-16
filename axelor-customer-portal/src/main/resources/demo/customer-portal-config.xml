@@ -9,5 +9,11 @@
   <input file="auth_user.csv" separator=";" search="self.importId = :importId"
     type="com.axelor.auth.db.User" update="true"/>
 
+  <input file="project_project.csv" type="com.axelor.apps.project.db.Project" separator=";"
+    search="self.importId = :importId">
+    <bind to="membersUserSet" column="membersUserSet" search="self.importId in :membersUserSet"
+      eval="membersUserSet.split('\\|') as List"/>
+  </input>
+
 </csv-inputs>
 

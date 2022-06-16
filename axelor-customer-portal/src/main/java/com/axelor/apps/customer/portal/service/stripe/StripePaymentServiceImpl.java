@@ -74,6 +74,11 @@ public class StripePaymentServiceImpl implements StripePaymentService {
 
   @Override
   public Customer getOrCreateCustomer(Partner partner) throws StripeException, AxelorException {
+    if (partner == null) {
+      throw new AxelorException(
+          TraceBackRepository.CATEGORY_NO_VALUE, I18n.get(IExceptionMessage.CUSTOMER_MISSING));
+    }
+
     Customer customer = null;
     if (StringUtils.notBlank(partner.getStripeCustomerId())) {
       customer = getCustomer(partner.getStripeCustomerId());

@@ -31,6 +31,11 @@ public interface IExceptionMessage {
   public static final String STRIPE_CARD_NOT_FOUND = /*$$(*/
       "No Stripe card found with given id %s" /*)*/;
 
+  public static final String CUSTOMER_MISSING = /*$$(*/
+      "User doesn't have associated partner" /*)*/;
+
+  public static final String ADDRESS_MISSING = /*$$(*/ "Address is missing" /*)*/;
+
   public static final String STRIPE_CUSTOMER_NAME_MISSING = /*$$(*/
       "Customer name is missing on stripe" /*)*/;
 
