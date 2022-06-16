@@ -23,7 +23,7 @@
           selection-in="[2,3,4]"/>
       </panel>
       <field name="typeSelect" showTitle="false" readonly="true" css="label-bold bold"
-        colSpan="4">
+        colSpan="4" showIf="statusSelect != 2">
         <viewer depends="typeSelect"><![CDATA[
 	        <div class="span7">
 	          <h5>

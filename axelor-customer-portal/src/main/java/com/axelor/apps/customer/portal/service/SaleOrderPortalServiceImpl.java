@@ -322,9 +322,13 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
     }
 
     if (clientPartner == null) {
-      throw new AxelorException(
-          TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
-          I18n.get(IExceptionMessage.CUSTOMER_MISSING));
+      if (currentPartner != null) {
+        clientPartner = currentPartner;
+      } else {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
+            I18n.get(IExceptionMessage.CUSTOMER_MISSING));
+      }
     } else if (ObjectUtils.isEmpty(clientPartner.getPartnerAddressList())) {
       throw new AxelorException(
           TraceBackRepository.CATEGORY_CONFIGURATION_ERROR,
