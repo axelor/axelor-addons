@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+  <selection name="portal.quotation.status.select">
+    <option value="1">Proposed quotation</option>
+    <option value="2">Quotation requested</option>
+    <option value="3">Order confirmed</option>
+    <option value="4">Canceled</option>
+  </selection>
+
+  <selection name="portal.quotation.type.select">
+    <option value="1">Proposed quotation</option>
+    <option value="2">Quotation refused</option>
+  </selection>
+
+</object-views>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
+
+  <module name="base" package="com.axelor.apps.base.db"/>
+
+  <entity name="Partner" lang="java">
+
+    <string name="stripeCustomerId" title="Strike id"/>
+    <boolean name="isDMSPanelSideActive" title="Allow panel side for customers DMS"
+      default="false"/>
+    <one-to-many name="cardList" ref="com.axelor.apps.client.portal.db.Card"
+      mappedBy="partner" title="Cards"/>
+
+  </entity>
+
+</domain-models>
