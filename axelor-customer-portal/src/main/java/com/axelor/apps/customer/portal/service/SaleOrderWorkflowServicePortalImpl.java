@@ -165,7 +165,7 @@ public class SaleOrderWorkflowServicePortalImpl
         return;
       }
 
-      portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_CANCELED);
+      portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_DECLINED_QUOTATION);
       Beans.get(PortalQuotationRepository.class).save(portalQuotation);
     }
   }

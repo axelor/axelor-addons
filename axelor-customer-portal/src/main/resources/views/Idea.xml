@@ -10,6 +10,7 @@
     <field name="accepted"/>
     <field name="close"/>
     <field name="createdOn" title="Date"/>
+    <field name="createdBy"/>
     <field name="$unread" type="boolean" hidden="true"/>
   </grid>
 
@@ -47,11 +48,12 @@
           canNew="false"/>
       </panel>
       <field name="totalVote" readonly="true" colSpan="6"/>
-      <field name="createdOn" title="Date" colSpan="6"/>
+      <field name="createdOn" title="Date" colSpan="3"/>
+      <field name="createdBy" colSpan="3"/>
       <field name="voterSet" widget="TagSelect" colSpan="12" hidden="true"/>
       <field name="description" colSpan="12" widget="html"/>
       <field name="$voted" showTitle="false" type="boolean" hidden="true"/>
-      <field name="createdBy" hidden="true"/>
+      <field name="$isAuthor" hidden="true"/>
       <field name="accepted" hidden="true"/>
       <field name="close" hidden="true"/>
     </panel>
@@ -76,6 +78,7 @@
   </form>
 
   <action-attrs name="action-client-portal-attrs-idea-onload">
+    <attribute name="value" for="$isAuthor" expr="eval: createdBy == __user__"/>
     <attribute name="value" for="$voted"
       expr="eval:(__user__.partner?.isContact &amp;&amp; voterSet?.contains(__user__.partner.mainPartner))
       || (!__user__.partner?.isContact &amp;&amp; voterSet?.contains(__user__.partner))

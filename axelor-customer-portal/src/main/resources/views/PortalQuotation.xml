@@ -47,6 +47,7 @@
       <field name="exTaxTotal"/>
       <field name="endOfValidity"/>
       <field name="createdOn" title="Order date"/>
+      <field name="signature" widget="image" readonly="true"/>
       <field name="report" widget="binary-link" showIf="report"/>
       <field name="isRequested" hidden="true"/>
       <panel-dashlet name="historyPanel" colSpan="12" title="Quotation history"

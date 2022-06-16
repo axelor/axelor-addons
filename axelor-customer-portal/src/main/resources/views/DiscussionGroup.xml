@@ -7,7 +7,7 @@
     model="com.axelor.apps.client.portal.db.DiscussionGroup">
     <toolbar>
       <button name="openPostBtn" title="Open post"
-        onClick="com.axelor.apps.customer.portal.web.DiscussionGroupController:openGroup"/>
+        onClick="save,action-discussion-group-method-open-post"/>
     </toolbar>
     <field name="name"/>
   </grid>
@@ -15,8 +15,7 @@
   <form name="discussion-group-form" title="Discussion group"
     model="com.axelor.apps.client.portal.db.DiscussionGroup">
     <toolbar>
-      <button name="openPostBtn" title="Open post"
-        onClick="com.axelor.apps.customer.portal.web.DiscussionGroupController:openGroup"/>
+      <button name="openPostBtn" title="Open post" onClick=":openGroup"/>
     </toolbar>
     <panel name="mainPanel">
       <field name="name" required="true"/>
@@ -42,5 +41,10 @@
 		  </div>
 		]]></template>
   </cards>
+
+  <action-method name="action-discussion-group-method-open-post">
+    <call class="com.axelor.apps.customer.portal.web.DiscussionGroupController"
+      method="openGroup"/>
+  </action-method>
 
 </object-views>

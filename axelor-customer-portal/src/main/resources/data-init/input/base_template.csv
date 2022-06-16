@@ -8,7 +8,7 @@
 
 <p>Quotation confirmation code : $confirmationCode$</p>
 
-<p>Best regards<br/></p>";;;;2;
+<p>Best regards<br/></p>";"$toEmailAddress$";;;2;
 "Quotation confirmation";"PortalQuotation";"en";"true";"Quotation confirmation";"<p>Hello , $PortalQuotation.saleOrder.contactPartner.firstName$<br/></p>
 <p>Confirmed quotation : $QCquotationLink$</p>
 

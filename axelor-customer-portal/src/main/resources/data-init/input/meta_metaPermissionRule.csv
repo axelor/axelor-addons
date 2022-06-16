@@ -15,9 +15,10 @@
 "rejectBtn";;;;"metaperm.client.Idea";;
 "closeBtn";;;;"metaperm.client.Idea";;
 "openBtn";;;;"metaperm.client.Idea";;
-"name";"x";"x";;"metaperm.client.Idea";"createdBy.code != __user__.code";
-"description";"x";"x";;"metaperm.client.Idea";"createdBy.code != __user__.code";
-"portalIdeaTagSet";"x";"x";;"metaperm.client.Idea";"createdBy.code != __user__.code";
+"name";"x";"x";;"metaperm.client.Idea";"createdBy.code == __user__.code";
+"description";"x";"x";;"metaperm.client.Idea";"createdBy.code == __user__.code";
+"portalIdeaTagSet";"x";"x";;"metaperm.client.Idea";"createdBy.code == __user__.code";
+"createdBy";;;;"metaperm.client.Idea";;
 "partnerCategorySet";;;;"metaperm.client.ClientResource";;
 "resourceFile";"x";;;"metaperm.client.ClientResource";;"resourceFile == null"
 "partner";;;;"metaperm.client.Card";;
@@ -25,6 +26,14 @@
 "status";;;;"metaperm.client.ProjectTask";;
 "grabEventBtn";;;;"metaperm.client.ProjectTask";;
 "doneBtn";;;;"metaperm.client.ProjectTask";;
+"assigningCustomerBtn";;;;"metaperm.client.ProjectTask";;
+"parentTask";;;;"metaperm.client.ProjectTask";;
+"customerReferral";;;;"metaperm.client.ProjectTask";;
+"isPrivate";;;;"metaperm.client.ProjectTask";;
+"isOrderAccepted";;;;"metaperm.client.ProjectTask";;
+"characteristicsPanel";;;;"metaperm.client.ProjectTask";;
+"internalDescriptionPanel";;;;"metaperm.client.ProjectTask";;
+"financialDataPanel";;;;"metaperm.client.ProjectTask";;
 "createPartnerBtn";;;;"metaperm.client.User";;
 "createEmployeeBtn";;;;"metaperm.client.User";;
 "statusSelect";;;;"metaperm.client.Invoice";;

@@ -48,7 +48,8 @@
       (self.saleOrder.statusSelect >= :SOStatus OR self.statusSelect = :PQStatus)</domain>
     <context name="today" expr="eval: __date__"/>
     <context name="SOStatus" expr="eval: SaleOrderRepository.STATUS_ORDER_COMPLETED"/>
-    <context name="PQStatus" expr="eval: PortalQuotationRepository.STATUS_CANCELED"/>
+    <context name="PQStatus"
+      expr="eval: PortalQuotationRepository.STATUS_DECLINED_QUOTATION"/>
     <context name="isHistory" expr="eval: true"/>
   </action-view>
 

@@ -36,6 +36,9 @@ public interface IExceptionMessage {
 
   public static final String ADDRESS_MISSING = /*$$(*/ "Address is missing" /*)*/;
 
+  public static final String EMAIL_ADDRESS_MISSING = /*$$(*/
+      "Partner Email Address is missing" /*)*/;
+
   public static final String STRIPE_CUSTOMER_NAME_MISSING = /*$$(*/
       "Customer name is missing on stripe" /*)*/;
 

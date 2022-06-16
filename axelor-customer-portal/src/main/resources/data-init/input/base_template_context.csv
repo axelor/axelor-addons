@@ -1,6 +1,7 @@
 "name";"value";"template.name"
 "QGquotationLink";;"Quotation generation"
 "confirmationCode";;"Quotation confirmation code"
+"toEmailAddess";"__user__.partner != null && __user__.partner.emailAddress != null  ?  __user__.partner.emailAddress.address : ''";"Quotation confirmation code"
 "signatureImageByte";"com.axelor.inject.Beans.get(com.axelor.apps.client.portal.db.repo.PortalQuotationRepository.class).find(id).getSignature() != null ? com.axelor.meta.MetaFiles.getPath(com.axelor.inject.Beans.get(com.axelor.apps.client.portal.db.repo.PortalQuotationRepository.class).find(id).getSignature()).toFile().getBytes().encodeBase64() : null";"Quotation confirmation"
 "signatureName";;"Quotation confirmation"
 "QCquotationLink";;"Quotation confirmation"

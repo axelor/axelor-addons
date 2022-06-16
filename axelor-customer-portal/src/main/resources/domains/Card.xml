@@ -8,6 +8,16 @@
   <entity name="Card" lang="java" cacheable="true">
 
     <string name="name"/>
+    <string name="last4" namecolumn="true" search="cardNumber" title="Card number"
+      readonly="true">
+    	<![CDATA[
+   	    	String last4 = "";
+	  		if(cardNumber != null){
+	  			last4 += "**** **** **** " + cardNumber.toString().substring(12);
+	  		}
+	  		return last4;
+	    ]]>
+    </string>
     <long name="cardNumber"/>
     <integer name="expiryMonth"/>
     <integer name="expiryYear"/>

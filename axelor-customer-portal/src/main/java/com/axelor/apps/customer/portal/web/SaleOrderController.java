@@ -41,13 +41,14 @@ public class SaleOrderController {
     PortalQuotation portalQuotation =
         Beans.get(PortalQuotationService.class).getRequestedPortalQuotation(saleOrder);
     if (portalQuotation != null) {
-      portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_CANCELED);
+      portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_DECLINED_QUOTATION);
       Beans.get(PortalQuotationRepository.class).save(portalQuotation);
     }
 
     saleOrder = Beans.get(SaleOrderRepository.class).find(saleOrder.getId());
     Beans.get(PortalQuotationService.class).createPortalQuotation(saleOrder);
     response.setNotify(I18n.get(ITranslation.PORTAL_QUATATION_SENT));
+    response.setReload(true);
   }
 
   public void checkPortalQuatation(ActionRequest request, ActionResponse response) {

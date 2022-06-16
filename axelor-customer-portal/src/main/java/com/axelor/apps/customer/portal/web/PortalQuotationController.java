@@ -17,10 +17,14 @@
  */
 package com.axelor.apps.customer.portal.web;
 
+import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
+import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.PortalQuotationService;
 import com.axelor.apps.customer.portal.translation.ITranslation;
+import com.axelor.auth.db.User;
+import com.axelor.common.StringUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
@@ -42,6 +46,14 @@ public class PortalQuotationController {
 
   public void sendConfirmCode(ActionRequest request, ActionResponse response)
       throws MessagingException, AxelorException {
+
+    User user = Beans.get(UserService.class).getUser();
+    if (user.getPartner() == null
+        || user.getPartner().getEmailAddress() == null
+        || StringUtils.isBlank(user.getPartner().getEmailAddress().getAddress())) {
+      response.setError(I18n.get(IExceptionMessage.EMAIL_ADDRESS_MISSING));
+      return;
+    }
 
     PortalQuotation portalQuotation = request.getContext().asType(PortalQuotation.class);
     Integer code = portalQuotationService.sendConfirmCode(portalQuotation);
@@ -80,7 +92,7 @@ public class PortalQuotationController {
 
     PortalQuotation portalQuotation = request.getContext().asType(PortalQuotation.class);
     portalQuotation = Beans.get(PortalQuotationRepository.class).find(portalQuotation.getId());
-    portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_CANCELED);
+    portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_DECLINED_QUOTATION);
     portalQuotation.setTypeSelect(PortalQuotationRepository.TYPE_QUOTATION_REFUSED);
     Beans.get(PortalQuotationRepository.class).save(portalQuotation);
     response.setNotify(I18n.get(ITranslation.PORTAL_QUATATION_CANCEL));

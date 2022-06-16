@@ -31,7 +31,8 @@
       onClick="action-invoice-method-show-invoice"/>
     <button name="payBtn" title="Pay invoice" icon="fa-cc-stripe"
       onClick="action-cient-portal-view-invoice-payment"
-      readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"/>
+      readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"
+      if="__config__.app.getApp('customer-portal').getIsStripeActivated()"/>
   </grid>
 
   <form name="client-portal-invoice-form" model="com.axelor.apps.account.db.Invoice"
@@ -49,7 +50,8 @@
     <panel name="actionPanel" sidebar="true">
       <button name="payBtn" title="Pay invoice"
         onClick="action-cient-portal-view-invoice-payment"
-        readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"/>
+        readonlyIf="!(operationTypeSelect == 3 &amp;&amp; statusSelect == 3 &amp;&amp; amountRemaining > 0)"
+        if="__config__.app.getApp('customer-portal').getIsStripeActivated()"/>
       <button name="showInvoiceBtn" title="Print"
         onClick="action-invoice-method-show-invoice"/>
     </panel>
@@ -138,7 +140,7 @@
     model="com.axelor.apps.account.db.Invoice"
     onLoad="action-client-portal-attrs-invoice-payment-onload">
     <panel name="manPanel">
-      <field name="$card" title="Card" type="many-to-one" target-name="cardNumber"
+      <field name="$card" title="Card" type="many-to-one"
         domain="self.partner = :currentPartner" target="com.axelor.apps.client.portal.db.Card"
         required="true" canNew="true"/>
       <spacer/>

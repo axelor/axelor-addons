@@ -16,6 +16,22 @@
           if="__config__.app.isApp('portal') &amp;&amp; __config__.app.getApp('customer-portal').getManageQuotations()"/>
       </insert>
     </extend>
+    <extend target="//field[@name='saleOrderTypeSelect']">
+      <insert position="after">
+        <field name="$quotationTypeSelect" showTitle="false" readonly="true"
+          css="label-bold bold">
+          <viewer depends="typeSelect"><![CDATA[
+			        <div class="span7">
+			          <h5>
+			            <span class="label label-info" ng-show="record.$quotationStatusSelect != 2 &amp;&amp; record.$quotationTypeSelect == 1" x-translate>Quotation sent to the customer</span>
+			            <span class="label label-important" ng-show="record.$quotationTypeSelect == 2" x-translate>Quotation refused</span>
+			            <span class="label label-info" ng-show="record.$quotationStatusSelect == 2" x-translate>Quotation requested</span>
+			          </h5>
+			        </div>
+			    ]]></viewer>
+        </field>
+      </insert>
+    </extend>
   </form>
 
   <action-group name="action-client-portal-group-sale-order-send-quatation">
