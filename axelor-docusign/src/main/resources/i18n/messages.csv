@@ -101,6 +101,7 @@
 "The envelope setting is empty",,,
 "The in person signer is not found",,,
 "The signer is not found",,,
+"There is no user set in one of the docusign signer",,,
 "Type",,,
 "Unsigned file",,,
 "User id",,,

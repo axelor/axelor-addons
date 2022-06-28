@@ -506,6 +506,11 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       for (DocuSignSigner docuSignSigner : docuSignSignerList) {
         Partner signerPartner = docuSignSigner.getSigner();
         String recipientId = docuSignSigner.getRecipientId();
+        if (signerPartner == null) {
+          throw new AxelorException(
+              TraceBackRepository.CATEGORY_INCONSISTENCY,
+              I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
+        }
 
         if (!docuSignSigner.getIsInPersonSigner()) {
           Signer signer = new Signer();
@@ -546,7 +551,11 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       for (DocuSignSigner docuSignSigner : docuSignSignerList) {
         Partner signerPartner = docuSignSigner.getSigner();
         String recipientId = docuSignSigner.getRecipientId();
-
+        if (signerPartner == null) {
+          throw new AxelorException(
+              TraceBackRepository.CATEGORY_INCONSISTENCY,
+              I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
+        }
         if (docuSignSigner.getIsInPersonSigner()) {
           InPersonSigner inPersonSigner = new InPersonSigner();
           inPersonSigner.setRecipientId(recipientId);
