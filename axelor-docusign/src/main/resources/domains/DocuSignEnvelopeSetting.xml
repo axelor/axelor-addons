@@ -9,7 +9,7 @@
 
     <string name="name" title="Name"/>
     <many-to-one name="metaModel" title="Model" ref="com.axelor.meta.db.MetaModel"/>
-    <string name="emailSubject" title="Email subject"/>
+    <string name="emailSubject" title="Email subject" large="true"/>
     <many-to-one name="docuSignAccount" title="DocuSign account"
       ref="com.axelor.apps.docusign.db.DocuSignAccount"/>
     <one-to-many name="docuSignDocumentSettingList" title="Document settings"
