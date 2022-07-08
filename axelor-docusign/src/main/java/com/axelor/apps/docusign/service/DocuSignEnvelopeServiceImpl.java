@@ -156,6 +156,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     MetaModel metaModel = envelopeSetting.getMetaModel();
 
     Context scriptContext = null;
+    TemplateMaker maker = null;
     if (ObjectUtils.notEmpty(metaModel) && ObjectUtils.notEmpty(objectId)) {
       try {
         Class<? extends Model> modelClass =
@@ -168,7 +169,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
           if (activeCompany != null) {
             timezone = activeCompany.getTimezone();
           }
-          TemplateMaker maker =
+          maker =
               new TemplateMaker(timezone, Locale.FRENCH, TEMPLATE_DELIMITER, TEMPLATE_DELIMITER);
           maker.setContext(model);
           if (StringUtils.notEmpty(envelopeSetting.getName())) {
@@ -201,7 +202,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       for (DocuSignDocumentSetting documentSetting :
           envelopeSetting.getDocuSignDocumentSettingList()) {
         envelope.addDocuSignDocumentListItem(
-            createDocuSignDocument(documentSetting, scriptContext, docuSignSignerList));
+            createDocuSignDocument(documentSetting, scriptContext, docuSignSignerList, maker));
       }
     }
 
@@ -246,9 +247,15 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   protected DocuSignDocument createDocuSignDocument(
       DocuSignDocumentSetting documentSetting,
       Context scriptContext,
-      List<DocuSignSigner> docuSignSignerList) {
+      List<DocuSignSigner> docuSignSignerList,
+      TemplateMaker maker) {
     DocuSignDocument docuSignDocument = new DocuSignDocument();
-    docuSignDocument.setName(documentSetting.getName());
+
+    if (ObjectUtils.notEmpty(maker) && StringUtils.notEmpty(documentSetting.getName())) {
+      maker.setTemplate(documentSetting.getName());
+      docuSignDocument.setName(maker.make());
+    }
+
     docuSignDocument.setDocumentId(documentSetting.getDocumentId());
     docuSignDocument.setFileExtension(documentSetting.getFileExtension());
     docuSignDocument.setSequence(documentSetting.getSequence());
