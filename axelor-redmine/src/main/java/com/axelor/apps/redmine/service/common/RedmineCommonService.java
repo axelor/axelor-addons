@@ -22,6 +22,8 @@ import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.hr.db.Employee;
+import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
@@ -58,6 +60,7 @@ import org.apache.commons.lang3.StringUtils;
 public class RedmineCommonService {
 
   protected UserRepository userRepo;
+  protected EmployeeRepository empRepo;
   protected ProjectRepository projectRepo;
   protected ProductRepository productRepo;
   protected ProjectTaskRepository projectTaskRepo;
@@ -69,6 +72,7 @@ public class RedmineCommonService {
   @Inject
   public RedmineCommonService(
       UserRepository userRepo,
+      EmployeeRepository empRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       ProjectTaskRepository projectTaskRepo,
@@ -78,6 +82,7 @@ public class RedmineCommonService {
       CompanyRepository companyRepo) {
 
     this.userRepo = userRepo;
+    this.empRepo = empRepo;
     this.projectRepo = projectRepo;
     this.productRepo = productRepo;
     this.projectTaskRepo = projectTaskRepo;
@@ -159,6 +164,17 @@ public class RedmineCommonService {
         redmineCustomFieldsMap.put(customField.getName(), customField.getValue());
       }
     }
+  }
+
+  public Employee getOsEmployee(Integer redmineId) {
+    return empRepo
+        .all()
+        .filter(
+            "self.contactPartner.emailAddress.address = ?1 "
+                + "OR self.user.email = ?1 "
+                + "OR self.user.partner.emailAddress.address = ?1",
+            redmineUserMap.get(redmineId))
+        .fetchOne();
   }
 
   public User getOsUser(Integer redmineId) {

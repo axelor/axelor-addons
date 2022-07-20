@@ -7,8 +7,8 @@
 
   <entity name="HrBatch" lang="java" cacheable="true">
 
-    <many-to-many name="dailyTsUserSet" ref="com.axelor.auth.db.User"
-      title="Daily timesheet users"/>
+    <many-to-many name="dailyTsEmployeeSet" ref="com.axelor.apps.hr.db.Employee"
+      title="Daily timesheet employees"/>
     <date name="dailyTsDate" title="Daily timesheet date"/>
 
     <extra-code><![CDATA[

@@ -68,8 +68,8 @@ public class TimesheetLineDailytsRepository extends TimesheetLineHRRepository {
     return dailyTimesheetRepo
         .all()
         .filter(
-            "self.dailyTimesheetUser = ?1 AND self.dailyTimesheetDate = ?2 AND self.timesheet = ?3",
-            timesheetLine.getUser(),
+            "self.dailyTimesheetEmployee = ?1 AND self.dailyTimesheetDate = ?2 AND self.timesheet = ?3",
+            timesheetLine.getEmployee(),
             timesheetLine.getDate(),
             timesheetLine.getTimesheet())
         .order("-dailyTimesheetDate")

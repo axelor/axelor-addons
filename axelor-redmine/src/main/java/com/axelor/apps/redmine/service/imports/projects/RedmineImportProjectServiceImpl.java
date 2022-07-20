@@ -28,6 +28,7 @@ import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
+import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectPriority;
 import com.axelor.apps.project.db.ProjectStatus;
@@ -86,6 +87,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   @Inject
   public RedmineImportProjectServiceImpl(
       UserRepository userRepo,
+      EmployeeRepository employeeRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       ProjectTaskRepository projectTaskRepo,
@@ -101,6 +103,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
     super(
         userRepo,
+        employeeRepo,
         projectRepo,
         productRepo,
         projectTaskRepo,

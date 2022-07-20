@@ -27,7 +27,6 @@ import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.service.batch.BatchStrategy;
 import com.axelor.apps.hr.service.leave.LeaveService;
 import com.axelor.apps.hr.service.publicHoliday.PublicHolidayHrService;
-import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
@@ -53,39 +52,37 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
   protected void process() {
 
     HrBatch hrBatch = batch.getHrBatch();
-    Set<User> dailyTsUserSet = hrBatch.getDailyTsUserSet();
+    Set<Employee> dailyTsEmployeeSet = hrBatch.getDailyTsEmployeeSet();
     LocalDate dailyTsDate = hrBatch.getDailyTsDate();
 
     if (dailyTsDate == null) {
       dailyTsDate = appBaseService.getTodayDate(null);
     }
 
-    for (User dailyTsUser : dailyTsUserSet) {
+    for (Employee dailyTsEmployee : dailyTsEmployeeSet) {
 
       try {
         long count =
             dailyTimesheetRepository
                 .all()
                 .filter(
-                    "self.dailyTimesheetUser = ?1 and self.dailyTimesheetDate = ?2",
-                    dailyTsUser,
+                    "self.dailyTimesheetEmployee = ?1 and self.dailyTimesheetDate = ?2",
+                    dailyTsEmployee,
                     dailyTsDate)
                 .count();
 
-        Employee employee = dailyTsUser.getEmployee();
-
         if (count == 0
-            && employee != null
-            && employee.getWeeklyPlanning() != null
+            && dailyTsEmployee != null
+            && dailyTsEmployee.getWeeklyPlanning() != null
             && weeklyPlanningService.getWorkingDayValueInDays(
-                    employee.getWeeklyPlanning(), dailyTsDate)
+                    dailyTsEmployee.getWeeklyPlanning(), dailyTsDate)
                 > 0
-            && !isFullDayLeave(dailyTsUser, dailyTsDate)
+            && !isFullDayLeave(dailyTsEmployee, dailyTsDate)
             && !publicHolidayHrService.checkPublicHolidayDay(
-                dailyTsDate, employee.getPublicHolidayEventsPlanning())) {
+                dailyTsDate, dailyTsEmployee.getPublicHolidayEventsPlanning())) {
           DailyTimesheet dailyTimesheet = new DailyTimesheet();
           dailyTimesheet.setDailyTimesheetDate(dailyTsDate);
-          dailyTimesheet.setDailyTimesheetUser(dailyTsUser);
+          dailyTimesheet.setDailyTimesheetEmployee(dailyTsEmployee);
           dailyTimesheetService.updateFromTimesheetAndFavs(dailyTimesheet);
           dailyTimesheetRepository.save(dailyTimesheet);
           incrementDone();
@@ -97,9 +94,10 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
     }
   }
 
-  protected boolean isFullDayLeave(User dailyTsUser, LocalDate dailyTsDate) throws AxelorException {
+  protected boolean isFullDayLeave(Employee dailyTsEmployee, LocalDate dailyTsDate)
+      throws AxelorException {
 
-    List<LeaveRequest> leaveRequestList = leaveService.getLeaves(dailyTsUser, dailyTsDate);
+    List<LeaveRequest> leaveRequestList = leaveService.getLeaves(dailyTsEmployee, dailyTsDate);
 
     if (CollectionUtils.isNotEmpty(leaveRequestList)) {
 

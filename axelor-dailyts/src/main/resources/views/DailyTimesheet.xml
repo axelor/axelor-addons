@@ -4,10 +4,11 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.2.xsd">
 
   <grid name="daily-timesheet-grid" title="Daily timesheets"
-    model="com.axelor.apps.hr.db.DailyTimesheet" orderBy="-dailyTimesheetDate,dailyTimesheetUser">
+    model="com.axelor.apps.hr.db.DailyTimesheet"
+    orderBy="-dailyTimesheetDate,dailyTimesheetEmployee">
 
     <field name="dailyTimesheetDate"/>
-    <field name="dailyTimesheetUser"/>
+    <field name="dailyTimesheetEmployee"/>
     <field name="statusSelect"/>
     <field name="dailyTotal"/>
     <button name="confirmBtn" showIf="statusSelect == 0" icon="fa-check" help="Confirm"
@@ -25,7 +26,7 @@
       <field name="statusSelect" readonly="true" widget="NavSelect" showTitle="false"
         colSpan="12"/>
       <field name="dailyTimesheetDate" readonly="true"/>
-      <field name="dailyTimesheetUser" readonly="true"/>
+      <field name="dailyTimesheetEmployee" readonly="true"/>
       <field name="timesheet" readonly="true" form-view="timesheet-form"/>
       <panel-dashlet action="action-daily-timesheet-dashlet-tasks-activities"
         name="activityPanel" title="Tasks activities" colSpan="12"/>
@@ -57,7 +58,7 @@
 
   <action-attrs name="action-daily-timesheet-attrs-default-values">
     <attribute name="value" for="dailyTimesheetDate" expr="eval: __date__"/>
-    <attribute name="value" for="dailyTimesheetUser" expr="eval: __user__"/>
+    <attribute name="value" for="dailyTimesheetEmployee" expr="eval: __user__.employee"/>
   </action-attrs>
 
   <action-method name="action-daily-timesheet-method-update-from-timesheet">
@@ -95,17 +96,19 @@
     title="Tasks activities" model="com.axelor.mail.db.MailMessage">
     <view type="grid" name="daily-timesheet-activity-grid"/>
     <view type="form" name="daily-timesheet-activity-form"/>
-    <domain>self.author = :dailyTimesheetUser and self.relatedModel =
+    <domain>self.author = :_dailyTimesheetUser and self.relatedModel =
       'com.axelor.apps.project.db.ProjectTask' and date(self.createdOn) = :dailyTimesheetDate</domain>
+    <context name="_dailyTimesheetUser" expr="eval: dailyTimesheetEmployee?.user"/>
   </action-view>
 
   <action-view name="action-daily-timesheet-dashlet-events" title="Events"
     model="com.axelor.apps.base.db.ICalendarEvent">
     <view type="grid" name="calendar-event-grid"/>
     <view type="form" name="calendar-event-form"/>
-    <domain>(self.user = :dailyTimesheetUser or self.organizer.user = :dailyTimesheetUser or
-      self.attendees.user in (:dailyTimesheetUser)) and date(self.startDateTime) &lt;=
+    <domain>(self.user = :_dailyTimesheetUser or self.organizer.user = :_dailyTimesheetUser or
+      self.attendees.user in (:_dailyTimesheetUser)) and date(self.startDateTime) &lt;=
       :dailyTimesheetDate and date(self.endDateTime) &gt;= :dailyTimesheetDate</domain>
+    <context name="_dailyTimesheetUser" expr="eval: dailyTimesheetEmployee?.user"/>
   </action-view>
 
   <action-method name="action-daily-timesheet-method-compute-daily-total">
