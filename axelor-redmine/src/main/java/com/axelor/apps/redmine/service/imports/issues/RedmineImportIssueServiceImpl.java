@@ -20,16 +20,14 @@ package com.axelor.apps.redmine.service.imports.issues;
 import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.CompanyRepository;
-import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
-import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.Project;
+import com.axelor.apps.project.db.ProjectPriority;
+import com.axelor.apps.project.db.ProjectStatus;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.ProjectTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
@@ -39,6 +37,7 @@ import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
+import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
@@ -54,10 +53,14 @@ import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.CustomFieldManager;
 import com.taskadapter.redmineapi.Include;
+import com.taskadapter.redmineapi.IssueManager;
+import com.taskadapter.redmineapi.Params;
+import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.CustomFieldDefinition;
@@ -70,6 +73,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -82,66 +87,35 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RedmineImportIssueServiceImpl extends RedmineCommonService
     implements RedmineImportIssueService {
 
-  protected RedmineImportMappingRepository redmineImportMappingRepository;
-  protected ProjectVersionRepository projectVersionRepository;
-  protected AppBaseService appBaseService;
+  protected ProductRepository productRepo;
+  protected ProjectTaskRepository projectTaskRepo;
+  protected ProjectTaskCategoryRepository projectTaskCategoryRepo;
+  protected ProjectVersionRepository projectVersionRepo;
   protected ProjectTaskRedmineService projectTaskRedmineService;
-  protected MailMessageRepository mailMessageRepository;
+  protected MailMessageRepository mailMessageRepo;
   protected ProjectStatusRepository projectStatusRepo;
   protected ProjectPriorityRepository projectPriorityRepo;
+  protected RedmineBatchRepository redmineBatchRepo;
 
-  @Inject
-  public RedmineImportIssueServiceImpl(
-      UserRepository userRepo,
-      EmployeeRepository employeeRepo,
-      ProjectRepository projectRepo,
-      ProductRepository productRepo,
-      ProjectTaskRepository projectTaskRepo,
-      ProjectTaskCategoryRepository projectCategoryRepo,
-      PartnerRepository partnerRepo,
-      RedmineImportMappingRepository redmineImportMappingRepository,
-      AppRedmineRepository appRedmineRepo,
-      CompanyRepository companyRepo,
-      ProjectVersionRepository projectVersionRepository,
-      AppBaseService appBaseService,
-      ProjectTaskRedmineService projectTaskRedmineService,
-      MailMessageRepository mailMessageRepository,
-      ProjectStatusRepository projectStatusRepo,
-      ProjectPriorityRepository projectPriorityRepo) {
+  protected ProjectManager redmineProjectManager;
+  protected IssueManager redmineIssueManager;
 
-    super(
-        userRepo,
-        employeeRepo,
-        projectRepo,
-        productRepo,
-        projectTaskRepo,
-        projectCategoryRepo,
-        partnerRepo,
-        appRedmineRepo,
-        companyRepo);
-    this.redmineImportMappingRepository = redmineImportMappingRepository;
-    this.projectVersionRepository = projectVersionRepository;
-    this.appBaseService = appBaseService;
-    this.projectTaskRedmineService = projectTaskRedmineService;
-    this.mailMessageRepository = mailMessageRepository;
-    this.projectStatusRepo = projectStatusRepo;
-    this.projectPriorityRepo = projectPriorityRepo;
-  }
+  protected Map<String, String> userMap = new HashMap<>();
+  protected Map<String, String> projectMap = new HashMap<>();
+  protected Map<String, String> projectTaskMap = new HashMap<>();
+  protected Map<String, String> versionMap = new HashMap<>();
+  protected Map<String, String> redmineStatusMap = new HashMap<>();
+  protected Map<String, String> redminePriorityMap = new HashMap<>();
+  protected Map<String, String> redmineTrackerMap = new HashMap<>();
+  protected Map<String, String> redmineCfNameMap = new HashMap<>();
+  protected Map<String, String> redmineCfTypeMap = new HashMap<>();
 
-  Logger LOG = LoggerFactory.getLogger(getClass());
-  protected Product product;
-  protected Project project;
-  protected ProjectTaskCategory projectCategory;
-  protected String redmineIssueProductDefault;
-  protected LocalDate redmineIssueDueDateDefault;
-  protected BigDecimal redmineIssueEstimatedTimeDefault;
-  protected BigDecimal redmineIssueUnitPriceDefault;
+  protected List<Long> projectVersionIdList = new ArrayList<>();
+
   protected String redmineIssueProduct;
   protected String redmineIssueDueDate;
   protected String redmineIssueEstimatedTime;
@@ -150,283 +124,230 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
   protected String redmineIssueIsTaskAccepted;
   protected String redmineIssueIsOffered;
   protected String redmineIssueUnitPrice;
+  protected String redmineIssueProductDefault;
+  protected LocalDate redmineIssueDueDateDefault;
+  protected BigDecimal redmineIssueEstimatedTimeDefault;
+  protected BigDecimal redmineIssueUnitPriceDefault;
 
-  protected List<Long> projectVersionIdList = new ArrayList<>();
+  protected Product product;
+  protected Project project;
+  protected ProjectTaskCategory projectTaskCategory;
+  protected ProjectStatus projectTaskStatus;
+  protected ProjectPriority projectTaskPriority;
+
+  protected boolean isImportIssuesWithActivities;
   protected boolean isAppBusinessSupport;
 
-  // Maps used for issue activity import
+  @Inject
+  public RedmineImportIssueServiceImpl(
+      UserRepository userRepo,
+      EmployeeRepository employeeRepo,
+      ProjectRepository projectRepo,
+      RedmineImportMappingRepository redmineImportMappingRepo,
+      AppBaseService appBaseService,
+      ProductRepository productRepo,
+      ProjectTaskRepository projectTaskRepo,
+      ProjectTaskCategoryRepository projectTaskCategoryRepo,
+      ProjectVersionRepository projectVersionRepo,
+      ProjectTaskRedmineService projectTaskRedmineService,
+      MailMessageRepository mailMessageRepo,
+      ProjectStatusRepository projectStatusRepo,
+      ProjectPriorityRepository projectPriorityRepo,
+      RedmineBatchRepository redmineBatchRepo) {
 
-  protected HashMap<String, String> redmineStatusMap;
-  protected HashMap<String, String> redminePriorityMap;
-  protected HashMap<String, String> redmineTrackerMap;
-  protected HashMap<String, String> redmineCfNameMap;
-  protected HashMap<String, String> redmineCfTypeMap;
-  protected HashMap<String, String> userMap;
-  protected HashMap<String, String> projectMap;
-  protected HashMap<String, String> versionMap;
-  protected HashMap<String, String> projectTaskMap;
+    super(userRepo, employeeRepo, projectRepo, redmineImportMappingRepo, appBaseService);
+
+    this.productRepo = productRepo;
+    this.projectTaskRepo = projectTaskRepo;
+    this.projectTaskCategoryRepo = projectTaskCategoryRepo;
+    this.projectVersionRepo = projectVersionRepo;
+    this.projectTaskRedmineService = projectTaskRedmineService;
+    this.mailMessageRepo = mailMessageRepo;
+    this.projectStatusRepo = projectStatusRepo;
+    this.projectPriorityRepo = projectPriorityRepo;
+    this.redmineBatchRepo = redmineBatchRepo;
+  }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public void importIssue(List<Issue> redmineIssueList, HashMap<String, Object> paramsMap) {
+  public String redmineIssuesImportProcess(
+      RedmineManager redmineManager,
+      ZonedDateTime lastBatchEndDate,
+      AppRedmine appRedmine,
+      Map<Integer, String> redmineUserMap,
+      Batch batch,
+      Consumer<Object> onSuccess,
+      Consumer<Throwable> onError,
+      List<Object[]> errorObjList) {
 
-    if (redmineIssueList != null && !redmineIssueList.isEmpty()) {
-      this.onError = (Consumer<Throwable>) paramsMap.get("onError");
-      this.onSuccess = (Consumer<Object>) paramsMap.get("onSuccess");
-      this.batch = (Batch) paramsMap.get("batch");
-      this.errorObjList = (List<Object[]>) paramsMap.get("errorObjList");
-      this.lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
-      this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
-      this.fieldMap = new HashMap<>();
+    this.redmineManager = redmineManager;
+    this.onError = onError;
+    this.onSuccess = onSuccess;
+    this.batch = batch;
+    this.lastBatchEndDate = lastBatchEndDate != null ? lastBatchEndDate.toLocalDateTime() : null;
+    this.appRedmine = appRedmine;
+    this.errorObjList = errorObjList;
+    this.redmineUserMap = redmineUserMap;
 
-      AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
-      isAppBusinessSupport = appBaseService.isApp("business-support");
+    try {
+      prepareParamsAndImportRedmineIssues(lastBatchEndDate);
+    } catch (RedmineException e) {
+      onError.accept(e);
+      TraceBackService.trace(e, "", batch.getId());
+    }
 
-      this.redmineIssueProduct = appRedmine.getRedmineIssueProduct();
-      this.redmineIssueDueDate = appRedmine.getRedmineIssueDueDate();
-      this.redmineIssueEstimatedTime = appRedmine.getRedmineIssueEstimatedTime();
-      this.redmineIssueInvoiced = appRedmine.getRedmineIssueInvoiced();
-      this.redmineIssueAccountedForMaintenance =
-          appRedmine.getRedmineIssueAccountedForMaintenance();
-      this.redmineIssueIsTaskAccepted = appRedmine.getRedmineIssueIsTaskAccepted();
-      this.redmineIssueIsOffered = appRedmine.getRedmineIssueIsOffered();
-      this.redmineIssueUnitPrice = appRedmine.getRedmineIssueUnitPrice();
+    updateTransaction();
 
-      this.redmineIssueProductDefault = appRedmine.getRedmineIssueProductDefault();
-      this.redmineIssueDueDateDefault = appRedmine.getRedmineIssueDueDateDefault();
-      this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
-      this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
-
-      //      serverTimeZone = appRedmine.getServerTimezone();
-
-      List<Option> selectionList = new ArrayList<>();
-      selectionList.addAll(MetaStore.getSelectionList("project.task.status"));
-      selectionList.addAll(MetaStore.getSelectionList("project.task.priority"));
-
-      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
-      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
-
-      for (Option option : selectionList) {
-        selectionMap.put(fr.getString(option.getTitle()), option.getValue());
-        selectionMap.put(en.getString(option.getTitle()), option.getValue());
-      }
-
-      List<RedmineImportMapping> redmineImportMappingList =
-          redmineImportMappingRepository
-              .all()
-              .filter(
-                  "self.redmineImportConfig.redmineMappingFieldSelect in (?1, ?2, ?3)",
-                  RedmineImportConfigRepository.MAPPING_FIELD_PROJECT_TRACKER,
-                  RedmineImportConfigRepository.MAPPING_FIELD_TASK_PRIORITY,
-                  RedmineImportConfigRepository.MAPPING_FIELD_TASK_STATUS)
-              .fetch();
-
-      for (RedmineImportMapping redmineImportMapping : redmineImportMappingList) {
-        fieldMap.put(redmineImportMapping.getRedmineValue(), redmineImportMapping.getOsValue());
-      }
-
-      RedmineBatch redmineBatch = batch.getRedmineBatch();
-      redmineBatch.setFailedRedmineIssuesIds(null);
-
-      if (redmineBatch.getIsImportIssuesWithActivities()) {
-        configureRedmineManagersAndMaps((RedmineManager) paramsMap.get("redmineManager"));
-      }
-
-      LOG.debug("Total issues to import: {}", redmineIssueList.size());
-
-      this.importIssuesFromList(redmineIssueList, redmineBatch);
-
+    if (!parentMap.isEmpty()) {
+      setParentTasks();
       updateTransaction();
+    }
 
-      // SET ISSUES PARENTS
-
-      if (!parentMap.isEmpty()) {
-        LOG.debug("Setting parent tasks on imported tasks..");
-        this.setParentTasks();
-        updateTransaction();
-      }
-
-      LOG.debug("Setting updateOn datetime on imported tasks..");
-
-      if (!updatedOnMap.isEmpty()) {
-        String values =
-            updatedOnMap.entrySet().stream()
-                .map(
-                    entry ->
-                        "("
-                            + entry.getKey()
-                            + ",TO_TIMESTAMP('"
-                            + entry.getValue()
-                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
-                .collect(Collectors.joining(","));
-
-        String query =
-            String.format(
-                "UPDATE project_project_task as projectTask SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where projectTask.id = v.id",
-                values);
-
-        JPA.em().createNativeQuery(query).executeUpdate();
-
-        if (redmineBatch.getIsImportIssuesWithActivities()) {
-          deleteUnwantedMailMessages();
-        }
-      }
-
-      if (CollectionUtils.isNotEmpty(projectVersionIdList)) {
-        LOG.debug("Setting project versions total progress..");
-        this.updateProjectVersionsProgress();
-      }
+    if (CollectionUtils.isNotEmpty(projectVersionIdList)) {
+      updateProjectVersionsProgress();
+      updateTransaction();
     }
 
     String resultStr =
-        String.format("Redmine Issue -> ABS ProjectTask : Success: %d Fail: %d", success, fail);
-    result += String.format("%s \n", resultStr);
-    setResult(getResult() + String.format("%s \n", resultStr));
+        String.format("Redmine Issue -> AOS ProjectTask : Success: %d Fail: %d", success, fail);
     LOG.debug(resultStr);
     success = fail = 0;
+
+    return resultStr;
   }
 
-  public void importIssuesFromList(List<Issue> redmineIssueList, RedmineBatch redmineBatch) {
+  public void prepareParamsAndImportRedmineIssues(ZonedDateTime lastBatchEndDate)
+      throws RedmineException {
 
-    int i = 0;
-    Boolean isImportIssuesWithActivities = redmineBatch.getIsImportIssuesWithActivities();
+    LOG.debug("Preparing params, managers, maps and other variables for issues import process..");
 
-    for (Issue redmineIssue : redmineIssueList) {
-      LOG.debug("Importing issue: " + redmineIssue.getId());
+    RedmineBatch redmineBatch = batch.getRedmineBatch();
+    String failedRedmineIssuesIds = redmineBatch.getFailedRedmineIssuesIds();
 
-      errors = new Object[] {};
-      String failedRedmineIssuesIds = redmineBatch.getFailedRedmineIssuesIds();
+    Params params = prepareParams(failedRedmineIssuesIds, lastBatchEndDate);
+    Params failedIdsParams = prepareFailedIdsParams(failedRedmineIssuesIds);
 
-      setRedmineCustomFieldsMap(redmineIssue.getCustomFields());
+    redmineIssueManager = redmineManager.getIssueManager();
 
-      // ERROR AND DON'T IMPORT IF PRODUCT IS SELECTED IN REDMINE AND NOT FOUND IN OS
+    setDefaultFieldsAndMaps();
 
-      String value =
-          StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineIssueProduct))
-              ? redmineCustomFieldsMap.get(redmineIssueProduct)
-              : redmineIssueProductDefault;
+    String newFailedRedmineIssuesIds = null;
 
-      if (value != null) {
-        this.product = productRepo.findByCode(value);
+    try {
+      newFailedRedmineIssuesIds = importRedmineIssues(params, newFailedRedmineIssuesIds);
 
-        if (product == null) {
-          errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)};
+      if (CollectionUtils.isNotEmpty(failedIdsParams.getList())) {
 
-          redmineBatch.setFailedRedmineIssuesIds(
-              failedRedmineIssuesIds == null
-                  ? redmineIssue.getId().toString()
-                  : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
+        LOG.debug("Start fetching and importing failed issues from previous batch run..");
 
-          setErrorLog(
-              I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR),
-              redmineIssue.getId().toString());
-
-          fail++;
-          continue;
-        }
-      } else {
-        this.product = null;
+        newFailedRedmineIssuesIds = importRedmineIssues(failedIdsParams, newFailedRedmineIssuesIds);
       }
-
-      // ERROR AND DON'T IMPORT IF PROJECT NOT FOUND
-
-      this.project = projectRepo.findByRedmineId(redmineIssue.getProjectId());
-
-      if (project == null) {
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_NOT_FOUND)};
-
-        redmineBatch.setFailedRedmineIssuesIds(
-            failedRedmineIssuesIds == null
-                ? redmineIssue.getId().toString()
-                : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
-
-        setErrorLog(
-            I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), redmineIssue.getId().toString());
-
-        fail++;
-        continue;
-      }
-
-      // ERROR AND DON'T IMPORT IF PROJECT CATEGORY NOT FOUND
-
-      String trackerName = fieldMap.get(redmineIssue.getTracker().getName());
-
-      this.projectCategory = projectCategoryRepo.findByName(trackerName);
-
-      if (projectCategory == null) {
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_CATEGORY_NOT_FOUND)};
-
-        redmineBatch.setFailedRedmineIssuesIds(
-            failedRedmineIssuesIds == null
-                ? redmineIssue.getId().toString()
-                : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
-
-        setErrorLog(
-            I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), redmineIssue.getId().toString());
-
-        fail++;
-        continue;
-      }
-
-      if (projectStatusRepo
-              .all()
-              .filter(
-                  "self.name = ?1 and self.relatedToSelect = ?2",
-                  fieldMap.get(redmineIssue.getStatusName()),
-                  ProjectStatusRepository.PROJECT_STATUS_TASK)
-              .count()
-          == 0) {
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_STATUS_NOT_FOUND)};
-
-        redmineBatch.setFailedRedmineIssuesIds(
-            failedRedmineIssuesIds == null
-                ? redmineIssue.getId().toString()
-                : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
-
-        setErrorLog(
-            I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), redmineIssue.getId().toString());
-
-        fail++;
-        continue;
-      }
-
-      if (projectPriorityRepo
-              .all()
-              .filter("self.name = ?1", fieldMap.get(redmineIssue.getPriorityText()))
-              .count()
-          == 0) {
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_PRIORITY_NOT_FOUND)};
-
-        redmineBatch.setFailedRedmineIssuesIds(
-            failedRedmineIssuesIds == null
-                ? redmineIssue.getId().toString()
-                : failedRedmineIssuesIds + "," + redmineIssue.getId().toString());
-
-        setErrorLog(
-            I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), redmineIssue.getId().toString());
-
-        fail++;
-        continue;
-      }
-
-      try {
-        this.createOpenSuiteIssue(redmineIssue, isImportIssuesWithActivities);
-
-        if (errors.length > 0) {
-          setErrorLog(
-              I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR),
-              redmineIssue.getId().toString());
-        }
-      } finally {
-        if (++i % AbstractBatch.FETCH_LIMIT == 0) {
-          updateTransaction();
-        }
-      }
+    } catch (Exception e) {
+      onError.accept(e);
+      TraceBackService.trace(e, "", batch.getId());
     }
+
+    redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
+    redmineBatch.setFailedRedmineIssuesIds(newFailedRedmineIssuesIds);
+  }
+
+  public String importRedmineIssues(Params params, String newFailedRedmineIssuesIds)
+      throws RedmineException {
+
+    totalFetchCount = 0;
+    LOG.debug("Fetching issues from redmine as per fetch limit..");
+
+    List<Issue> redmineIssueList = fetchRedmineIssuesList(params);
+
+    if (CollectionUtils.isNotEmpty(redmineIssueList)) {
+      do {
+        for (Issue redmineIssue : redmineIssueList) {
+          LOG.debug("Importing issue: {}", redmineIssue.getId());
+
+          setRedmineCustomFieldsMap(redmineIssue.getCustomFields());
+
+          if (!validateRequiredFields(
+              redmineIssue.getProjectId(),
+              redmineIssue.getTracker().getName(),
+              redmineIssue.getStatusName(),
+              redmineIssue.getPriorityText())) {
+            newFailedRedmineIssuesIds =
+                StringUtils.isEmpty(newFailedRedmineIssuesIds)
+                    ? String.valueOf(redmineIssue.getId())
+                    : newFailedRedmineIssuesIds + "," + redmineIssue.getId();
+            setErrorLog(redmineIssue.getId());
+            fail++;
+            continue;
+          }
+
+          try {
+            importRedmineIssue(redmineIssue);
+            setErrorLog(redmineIssue.getId());
+          } finally {
+            updateTransaction();
+          }
+        }
+        setUpdatedOnFromRedmine();
+        LOG.debug("Fetching issues from redmine as per fetch limit..");
+        redmineIssueList = fetchRedmineIssuesList(params);
+
+      } while (CollectionUtils.isNotEmpty(redmineIssueList));
+    }
+    return newFailedRedmineIssuesIds;
+  }
+
+  public boolean validateRequiredFields(
+      Integer redmineIssueProjectId,
+      String redmineIssueTrackerName,
+      String redmineIssueStatusName,
+      String redmineIssuePrioriy) {
+
+    String value =
+        StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineIssueProduct))
+            ? redmineCustomFieldsMap.get(redmineIssueProduct)
+            : redmineIssueProductDefault;
+
+    if (!StringUtils.isEmpty(value)) {
+      product = productRepo.findByCode(value);
+      if (product == null) {
+        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PRODUCT_NOT_FOUND)};
+        return false;
+      }
+    } else {
+      product = null;
+    }
+
+    project = projectRepo.findByRedmineId(redmineIssueProjectId);
+    if (project == null) {
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_NOT_FOUND)};
+      return false;
+    }
+
+    projectTaskCategory = projectTaskCategoryRepo.findByName(fieldMap.get(redmineIssueTrackerName));
+
+    if (projectTaskCategory == null) {
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_CATEGORY_NOT_FOUND)};
+      return false;
+    }
+
+    projectTaskStatus = projectStatusRepo.findByName(fieldMap.get(redmineIssueStatusName));
+
+    if (projectTaskStatus == null) {
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_STATUS_NOT_FOUND)};
+      return false;
+    }
+
+    projectTaskPriority = projectPriorityRepo.findByName(fieldMap.get(redmineIssuePrioriy));
+
+    if (projectTaskPriority == null) {
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_PRIORITY_NOT_FOUND)};
+      return false;
+    }
+
+    return true;
   }
 
   @Transactional
-  public void createOpenSuiteIssue(Issue redmineIssue, Boolean isImportIssuesWithActivities) {
+  public void importRedmineIssue(Issue redmineIssue) {
 
     ProjectTask projectTask = projectTaskRepo.findByRedmineId(redmineIssue.getId());
     LocalDateTime redmineUpdatedOn = getRedmineDate(redmineIssue.getUpdatedOn());
@@ -434,17 +355,16 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
     if (projectTask == null) {
       projectTask = new ProjectTask();
       projectTask.setTypeSelect(ProjectTaskRepository.TYPE_TASK);
-    } else if (lastBatchUpdatedOn != null
-        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-            || (projectTask.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+    } else if (lastBatchEndDate != null
+        && (redmineUpdatedOn.isBefore(lastBatchEndDate)
+            || (projectTask.getUpdatedOn().isAfter(lastBatchEndDate)
                 && projectTask.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
       return;
     }
 
-    this.setProjectTaskFields(projectTask, redmineIssue);
+    setProjectTaskFields(projectTask, redmineIssue);
 
     try {
-
       if (projectTask.getId() == null) {
         projectTask.addCreatedBatchSetItem(batch);
       } else {
@@ -452,18 +372,16 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       }
 
       projectTaskRepo.save(projectTask);
+
       updatedOnMap.put(projectTask.getId(), redmineUpdatedOn);
 
-      // CREATE MAP FOR CHILD-PARENT TASKS
-
-      if (redmineIssue.getParentId() != null) {
-        parentMap.put(projectTask.getId(), redmineIssue.getParentId());
+      Integer parentId = redmineIssue.getParentId();
+      if (parentId != null) {
+        parentMap.put(projectTask.getId(), parentId);
       }
 
-      // Import journals
-
       if (isImportIssuesWithActivities) {
-        importIssueJournals(projectTask, redmineIssue);
+        importIssueJournals(redmineIssue.getId(), projectTask.getId(), projectTask.getFullName());
       }
 
       onSuccess.accept(projectTask);
@@ -475,50 +393,17 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
     }
   }
 
-  @Transactional
-  public void setParentTasks() {
-
-    ProjectTask task;
-    ProjectTask parentTask;
-    HashMap<Integer, ProjectTask> parentTaskMap = new HashMap<>();
-
-    for (Map.Entry<Long, Integer> entry : parentMap.entrySet()) {
-
-      if (parentTaskMap.containsKey(entry.getValue())) {
-        parentTask = parentTaskMap.get(entry.getValue());
-      } else {
-        parentTask = projectTaskRepo.findByRedmineId(entry.getValue());
-        parentTaskMap.put(entry.getValue(), parentTask);
-      }
-
-      if (parentTask != null) {
-        task = projectTaskRepo.find(entry.getKey());
-        task.setParentTask(parentTask);
-
-        projectTaskRepo.save(task);
-      }
-    }
-  }
-
-  @Transactional
-  public void updateProjectVersionsProgress() {
-
-    for (Long id : projectVersionIdList) {
-      projectTaskRedmineService.updateProjectVersionProgress(projectVersionRepository.find(id));
-    }
-  }
-
   public void setProjectTaskFields(ProjectTask projectTask, Issue redmineIssue) {
 
     try {
       projectTask.setRedmineId(redmineIssue.getId());
       projectTask.setProject(project);
-      projectTask.setProjectTaskCategory(projectCategory);
+      projectTask.setProjectTaskCategory(projectTaskCategory);
       projectTask.setName("#" + redmineIssue.getId() + " " + redmineIssue.getSubject());
       projectTask.setDescription(getHtmlFromTextile(redmineIssue.getDescription()));
 
       Integer assigneeId = redmineIssue.getAssigneeId();
-      User assignedTo = assigneeId != null ? getOsUser(assigneeId) : null;
+      User assignedTo = assigneeId != null ? getAosUser(assigneeId) : null;
 
       if (assignedTo == null) {
         assignedTo = project.getAssignedTo();
@@ -558,8 +443,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
         }
 
         if (targetVersion != null) {
-          ProjectVersion projectVersion =
-              projectVersionRepository.findByRedmineId(targetVersion.getId());
+          ProjectVersion projectVersion = projectVersionRepo.findByRedmineId(targetVersion.getId());
           projectTask.setTargetVersion(projectVersion);
 
           if (projectVersion != null && !projectVersionIdList.contains(projectVersion.getId())) {
@@ -572,25 +456,21 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
 
       String value = redmineCustomFieldsMap.get(redmineIssueDueDate);
       projectTask.setDueDate(
-          value != null && !value.equals("") ? LocalDate.parse(value) : redmineIssueDueDateDefault);
+          StringUtils.isNotEmpty(value) ? LocalDate.parse(value) : redmineIssueDueDateDefault);
 
       value = redmineCustomFieldsMap.get(redmineIssueEstimatedTime);
       projectTask.setEstimatedTime(
-          value != null && !value.equals("")
-              ? new BigDecimal(value)
-              : redmineIssueEstimatedTimeDefault);
+          StringUtils.isNotEmpty(value) ? new BigDecimal(value) : redmineIssueEstimatedTimeDefault);
 
       value = redmineCustomFieldsMap.get(redmineIssueInvoiced);
 
       if (!projectTask.getInvoiced()) {
-        projectTask.setInvoiced(value != null ? (value.equals("1") ? true : false) : false);
+        projectTask.setInvoiced(StringUtils.isNotEmpty(value) ? value.equals("1") : false);
         projectTask.setProduct(product);
 
         value = redmineCustomFieldsMap.get(redmineIssueUnitPrice);
         projectTask.setUnitPrice(
-            value != null && !value.equals("")
-                ? new BigDecimal(value)
-                : redmineIssueUnitPriceDefault);
+            StringUtils.isNotEmpty(value) ? new BigDecimal(value) : redmineIssueUnitPriceDefault);
         projectTask.setUnit(null);
         projectTask.setQuantity(BigDecimal.ZERO);
         projectTask.setExTaxTotal(BigDecimal.ZERO);
@@ -602,13 +482,13 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       value = redmineCustomFieldsMap.get(redmineIssueAccountedForMaintenance);
 
       projectTask.setAccountedForMaintenance(
-          value != null ? (value.equals("1") ? true : false) : false);
+          StringUtils.isNotEmpty(value) ? value.equals("1") : false);
 
       value = redmineCustomFieldsMap.get(redmineIssueIsOffered);
-      projectTask.setIsOffered(value != null ? (value.equals("1") ? true : false) : false);
+      projectTask.setIsOffered(StringUtils.isNotEmpty(value) ? value.equals("1") : false);
 
       value = redmineCustomFieldsMap.get(redmineIssueIsTaskAccepted);
-      projectTask.setIsTaskAccepted(value != null ? (value.equals("1") ? true : false) : false);
+      projectTask.setIsTaskAccepted(StringUtils.isNotEmpty(value) ? value.equals("1") : false);
 
       projectTask.setStatus(
           projectStatusRepo
@@ -619,32 +499,139 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
                   ProjectStatusRepository.PROJECT_STATUS_TASK)
               .fetchOne());
 
-      projectTask.setPriority(
-          projectPriorityRepo
-              .all()
-              .filter("self.name = ?1", fieldMap.get(redmineIssue.getPriorityText()))
-              .fetchOne());
+      projectTask.setPriority(projectTaskPriority);
 
-      setCreatedByUser(projectTask, getOsUser(redmineIssue.getAuthorId()), "setCreatedBy");
+      setCreatedByUser(projectTask, getAosUser(redmineIssue.getAuthorId()), "setCreatedBy");
       setLocalDateTime(projectTask, redmineIssue.getCreatedOn(), "setCreatedOn");
     } catch (Exception e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
   }
 
+  public Params prepareParams(String failedRedmineIssuesIds, ZonedDateTime lastBatchEndDate) {
+    Params params = new Params();
+
+    if (lastBatchEndDate != null) {
+      ZonedDateTime endOn = lastBatchEndDate.withZoneSameInstant(ZoneOffset.UTC).withNano(0);
+
+      params
+          .add("set_filter", "1")
+          .add("f[]", "updated_on")
+          .add("op[updated_on]", ">=")
+          .add("v[updated_on][]", endOn.toString());
+
+      if (!StringUtils.isEmpty(failedRedmineIssuesIds)) {
+        params
+            .add("f[]", "issue_id")
+            .add("op[issue_id]", "!=")
+            .add("v[issue_id][]", failedRedmineIssuesIds);
+      }
+    } else {
+      params.add("status_id", "*");
+    }
+    params.add("sort", "updated_on");
+    return params;
+  }
+
+  public Params prepareFailedIdsParams(String failedRedmineIssuesIds) {
+    Params errorIdsParams = new Params();
+
+    if (lastBatchEndDate != null && !StringUtils.isEmpty(failedRedmineIssuesIds)) {
+      errorIdsParams
+          .add("set_filter", "1")
+          .add("f[]", "issue_id")
+          .add("op[issue_id]", "=")
+          .add("v[issue_id][]", failedRedmineIssuesIds)
+          .add("sort", "updated_on");
+    }
+    return errorIdsParams;
+  }
+
+  public List<Issue> fetchRedmineIssuesList(Params params) throws RedmineException {
+    List<Issue> importIssueList = new ArrayList<>();
+    List<Issue> tempImportIssueList;
+
+    Integer limit = redmineMaxFetchLimit;
+    Integer remainingFetchItems = redmineFetchLimit;
+
+    do {
+      if (remainingFetchItems > redmineMaxFetchLimit) {
+        remainingFetchItems = remainingFetchItems - redmineMaxFetchLimit;
+      } else {
+        limit = remainingFetchItems;
+        remainingFetchItems = 0;
+      }
+
+      params.add("offset", totalFetchCount.toString());
+      params.add("limit", limit.toString());
+
+      tempImportIssueList = redmineIssueManager.getIssues(params).getResults();
+
+      params.getList().removeIf(p -> p.getName().equals("offset") || p.getName().equals("limit"));
+
+      if (CollectionUtils.isNotEmpty(tempImportIssueList)) {
+        importIssueList.addAll(tempImportIssueList);
+        totalFetchCount += tempImportIssueList.size();
+      } else {
+        remainingFetchItems = 0;
+      }
+    } while (remainingFetchItems != 0);
+
+    return importIssueList;
+  }
+
+  public void setDefaultFieldsAndMaps() {
+    redmineIssueProduct = appRedmine.getRedmineIssueProduct();
+    redmineIssueDueDate = appRedmine.getRedmineIssueDueDate();
+    redmineIssueEstimatedTime = appRedmine.getRedmineIssueEstimatedTime();
+    redmineIssueInvoiced = appRedmine.getRedmineIssueInvoiced();
+    redmineIssueAccountedForMaintenance = appRedmine.getRedmineIssueAccountedForMaintenance();
+    redmineIssueIsTaskAccepted = appRedmine.getRedmineIssueIsTaskAccepted();
+    redmineIssueIsOffered = appRedmine.getRedmineIssueIsOffered();
+    redmineIssueUnitPrice = appRedmine.getRedmineIssueUnitPrice();
+    redmineIssueProductDefault = appRedmine.getRedmineIssueProductDefault();
+    redmineIssueDueDateDefault = appRedmine.getRedmineIssueDueDateDefault();
+    redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
+    redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
+
+    isAppBusinessSupport = appBaseService.isApp("business-support");
+    isImportIssuesWithActivities = batch.getRedmineBatch().getIsImportIssuesWithActivities();
+
+    redmineFetchLimit = batch.getRedmineBatch().getRedmineFetchLimit();
+
+    List<Option> selectionList = new ArrayList<>();
+    selectionList.addAll(MetaStore.getSelectionList("project.task.status"));
+    selectionList.addAll(MetaStore.getSelectionList("project.task.priority"));
+
+    ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
+    ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
+
+    for (Option option : selectionList) {
+      selectionMap.put(fr.getString(option.getTitle()), option.getValue());
+      selectionMap.put(en.getString(option.getTitle()), option.getValue());
+    }
+
+    List<RedmineImportMapping> redmineImportMappingList =
+        redmineImportMappingRepo
+            .all()
+            .filter(
+                "self.redmineImportConfig.redmineMappingFieldSelect in (?1, ?2, ?3)",
+                RedmineImportConfigRepository.MAPPING_FIELD_PROJECT_TRACKER,
+                RedmineImportConfigRepository.MAPPING_FIELD_TASK_PRIORITY,
+                RedmineImportConfigRepository.MAPPING_FIELD_TASK_STATUS)
+            .fetch();
+
+    for (RedmineImportMapping redmineImportMapping : redmineImportMappingList) {
+      fieldMap.put(redmineImportMapping.getRedmineValue(), redmineImportMapping.getOsValue());
+    }
+
+    if (isImportIssuesWithActivities) {
+      configureRedmineManagersAndMaps(redmineManager);
+    }
+  }
+
   public void configureRedmineManagersAndMaps(RedmineManager redmineManager) {
-
-    redmineStatusMap = new HashMap<>();
-    redminePriorityMap = new HashMap<>();
-    redmineTrackerMap = new HashMap<>();
-    redmineCfNameMap = new HashMap<>();
-    redmineCfTypeMap = new HashMap<>();
-    userMap = new HashMap<>();
-    projectMap = new HashMap<>();
-    versionMap = new HashMap<>();
-    projectTaskMap = new HashMap<>();
-
-    redmineIssueManager = redmineManager.getIssueManager();
     redmineProjectManager = redmineManager.getProjectManager();
 
     try {
@@ -671,104 +658,192 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
         }
       }
     } catch (RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
   }
 
-  @Transactional
-  public void importIssueJournals(ProjectTask projectTask, Issue redmineIssue) {
+  public void setParentTasks() {
+    LOG.debug("Setting parent task of imported records..");
 
+    if (!JPA.em().getTransaction().isActive()) {
+      JPA.em().getTransaction().begin();
+    }
+
+    String values =
+        parentMap.entrySet().stream()
+            .map(entry -> "(" + entry.getKey() + "," + entry.getValue() + ")")
+            .collect(Collectors.joining(","));
+
+    String query =
+        String.format(
+            "UPDATE project_project_task as projectTask SET parent_task = (SELECT id from project_project_task where project_project_task.redmine_id = v.redmine_id) from (values %s) as v(id,redmine_id) where projectTask.id = v.id",
+            values);
+
+    JPA.em().createNativeQuery(query).executeUpdate();
+    JPA.em().getTransaction().commit();
+  }
+
+  public void setUpdatedOnFromRedmine() {
+    if (!updatedOnMap.isEmpty()) {
+
+      LOG.debug("Setting updated on time of imported records as per redmine..");
+
+      if (!JPA.em().getTransaction().isActive()) {
+        JPA.em().getTransaction().begin();
+      }
+
+      String values =
+          updatedOnMap.entrySet().stream()
+              .map(
+                  entry ->
+                      "("
+                          + entry.getKey()
+                          + ",TO_TIMESTAMP('"
+                          + entry.getValue()
+                          + "', 'YYYY-MM-DD HH24:MI:SS'))")
+              .collect(Collectors.joining(","));
+
+      String query =
+          String.format(
+              "UPDATE project_project_task as projectTask SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where projectTask.id = v.id",
+              values);
+
+      JPA.em().createNativeQuery(query).executeUpdate();
+      JPA.em().getTransaction().commit();
+
+      LOG.debug("Deleting unwanted mail messages created during import..");
+
+      try {
+        deleteUnwantedMailMessages();
+      } catch (Exception e) {
+        onError.accept(e);
+        TraceBackService.trace(e, "", batch.getId());
+      }
+      updatedOnMap = new HashMap<>();
+    }
+  }
+
+  @Transactional
+  public void deleteUnwantedMailMessages() {
+    List<Long> idList = updatedOnMap.keySet().stream().collect(Collectors.toList());
+
+    mailMessageRepo
+        .all()
+        .filter(
+            "self.relatedId IN ("
+                + Joiner.on(",").join(idList)
+                + ") AND self.relatedModel = ?1 AND (self.redmineId = null OR self.redmineId = 0) AND (self.createdOn >= ?2 OR self.updatedOn >= ?2)",
+            ProjectTask.class.getName(),
+            batch.getStartDate().toLocalDateTime())
+        .delete();
+  }
+
+  public void updateProjectVersionsProgress() {
+
+    LOG.debug("Setting project versions total progress..");
+
+    List<ProjectVersion> projectVersions =
+        projectVersionRepo
+            .all()
+            .filter("self.id IN (:versionIds)")
+            .bind("versionIds", projectVersionIdList)
+            .fetch();
+
+    for (ProjectVersion projectVersion : projectVersions) {
+      LOG.debug("Updating project version: {}", projectVersion.getId());
+      projectTaskRedmineService.updateProjectVersionProgress(projectVersion);
+    }
+  }
+
+  @Transactional
+  public void importIssueJournals(
+      Integer redmineIssueId, Long projectTaskId, String projectTaskFullName) {
     try {
-      Issue issueWithJournal =
-          redmineIssueManager.getIssueById(redmineIssue.getId(), Include.journals);
+      Issue issueWithJournal = redmineIssueManager.getIssueById(redmineIssueId, Include.journals);
       Collection<Journal> journals = issueWithJournal.getJournals();
 
       for (Journal redmineJournal : journals) {
 
-        if (lastBatchUpdatedOn != null
+        if (lastBatchEndDate != null
             && redmineJournal
                 .getCreatedOn()
                 .toInstant()
                 .atZone(ZoneId.systemDefault())
                 .toLocalDateTime()
-                .isBefore(lastBatchUpdatedOn)) {
+                .isBefore(lastBatchEndDate)) {
           continue;
         }
 
-        MailMessage mailMessage = getMailMessage(redmineJournal, projectTask);
+        MailMessage mailMessage =
+            getMailMessage(redmineJournal, projectTaskId, projectTaskFullName);
 
         if (mailMessage != null) {
-          mailMessageRepository.save(mailMessage);
+          mailMessageRepo.save(mailMessage);
         }
       }
     } catch (RedmineException e) {
+      onError.accept(e);
       TraceBackService.trace(e, "", batch.getId());
     }
   }
 
-  public MailMessage getMailMessage(Journal redmineJournal, ProjectTask projectTask) {
+  public MailMessage getMailMessage(
+      Journal redmineJournal, Long projectTaskId, String projectTaskFullName) {
 
     String body = "";
     MailMessage mailMessage =
-        mailMessageRepository
+        mailMessageRepo
             .all()
             .filter(
                 "self.redmineId = ?1 AND self.relatedId = ?2",
                 redmineJournal.getId(),
-                projectTask.getId())
+                projectTaskId)
             .fetchOne();
 
     if (mailMessage != null) {
       body = mailMessage.getBody();
-      String note = getHtmlFromTextile(redmineJournal.getNotes()).replaceAll("\"", "'");
+      String note = getHtmlFromTextile(redmineJournal.getNotes()).replace("\"", "'");
 
       if (!StringUtils.isBlank(body)) {
 
         if (!StringUtils.isBlank(note)) {
-
-          try {
-            body = body.replaceAll(",\"content\":\".*\",", ",\"content\":\"" + note + "\",");
-          } catch (Exception e) {
-          }
+          body = body.replaceAll(",\"content\":\".*\",", ",\"content\":\"" + note + "\",");
         } else {
           body = body.replaceAll(",\"content\":\".*\",", ",\"content\":\"\",");
         }
+        mailMessage.setBody(body);
       }
     } else {
-      body = getJournalDetails(redmineJournal, projectTask);
+      body = getJournalDetails(redmineJournal);
 
       if (!StringUtils.isBlank(body)) {
         mailMessage = new MailMessage();
-        mailMessage.setRelatedId(projectTask.getId());
+        mailMessage.setBody(body);
+        mailMessage.setRelatedId(projectTaskId);
         mailMessage.setRelatedModel(ProjectTask.class.getName());
-        mailMessage.setRelatedName(projectTask.getFullName());
+        mailMessage.setRelatedName(projectTaskFullName);
         mailMessage.setSubject("Task updated (Redmine)");
-        mailMessage.setType(
-            CollectionUtils.isNotEmpty(redmineJournal.getDetails()) ? "notification" : "comment");
+        mailMessage.setType(body.contains("Task updated (Redmine)") ? "notification" : "comment");
         mailMessage.setRedmineId(redmineJournal.getId());
-        User redmineUser = getOsUser(redmineJournal.getUser().getId());
+        User redmineUser = getAosUser(redmineJournal.getUser().getId());
         mailMessage.setAuthor(redmineUser);
         setCreatedByUser(mailMessage, redmineUser, "setCreatedBy");
         setLocalDateTime(mailMessage, redmineJournal.getCreatedOn(), "setCreatedOn");
       }
     }
-
-    if (!StringUtils.isBlank(body)) {
-      mailMessage.setBody(body);
-    }
-
     return mailMessage;
   }
 
-  public String getJournalDetails(Journal redmineJournal, ProjectTask projectTask) {
+  public String getJournalDetails(Journal redmineJournal) {
 
     List<JournalDetail> journalDetails = redmineJournal.getDetails();
 
-    if (journalDetails != null && !journalDetails.isEmpty()) {
+    if (CollectionUtils.isNotEmpty(journalDetails)) {
       StringBuilder strBuilder = new StringBuilder();
       StringBuilder trackStrBuilder = new StringBuilder();
       strBuilder.append("{\"title\":\"Task updated (Redmine)\",\"tracks\":[");
-      getTrack(journalDetails, trackStrBuilder, projectTask);
+      getTrack(journalDetails, trackStrBuilder);
 
       if (trackStrBuilder.length() > 0) {
         trackStrBuilder.deleteCharAt(trackStrBuilder.length() - 1);
@@ -779,7 +854,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       String note = redmineJournal.getNotes();
 
       if (!StringUtils.isBlank(note)) {
-        strBuilder.append(getHtmlFromTextile(note).replaceAll("\"", "'"));
+        strBuilder.append(getHtmlFromTextile(note).replace("\"", "'"));
       }
 
       strBuilder.append("\",\"tags\":[]}");
@@ -793,27 +868,21 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
     }
 
     String note = redmineJournal.getNotes();
-    return getHtmlFromTextile(note).replaceAll("\"", "'");
+    return getHtmlFromTextile(note).replace("\"", "'");
   }
 
-  public void getTrack(
-      List<JournalDetail> journalDetails, StringBuilder trackStrBuilder, ProjectTask projectTask) {
+  public void getTrack(List<JournalDetail> journalDetails, StringBuilder trackStrBuilder) {
 
     for (JournalDetail journalDetail : journalDetails) {
 
       String[] fieldNames = getFieldName(journalDetail.getName(), journalDetail.getProperty());
-      trackStrBuilder.append(
-          "{\"name\":\""
-              + fieldNames[0]
-              + "\",\"title\":\""
-              + fieldNames[1]
-              + "\",\"oldValue\":\"");
+      trackStrBuilder.append("{\"name\":\"" + fieldNames[0] + "\",\"title\":\"" + fieldNames[1]);
 
       if (!StringUtils.isBlank(journalDetail.getOldValue())) {
         String oldValue =
             getValue(
                 journalDetail.getOldValue(), journalDetail.getName(), journalDetail.getProperty());
-        trackStrBuilder.append(StringEscapeUtils.escapeJava(oldValue));
+        trackStrBuilder.append("\",\"oldValue\":\"" + oldValue);
       }
 
       trackStrBuilder.append("\",\"value\":\"");
@@ -884,8 +953,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
   }
 
   public String getValue(String value, String journalDetailName, String journalDetailProperty) {
-
-    value = value.replaceAll("\"", "'");
+    value = value.replace("\"", "'");
 
     if (journalDetailProperty.equals("attr")) {
 
@@ -910,8 +978,10 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
           break;
         case "parent_id":
           value = getProjectTaskName(value);
+          break;
         case "description":
           value = getHtmlFromTextile(value);
+          break;
         default:
           break;
       }
@@ -932,84 +1002,60 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
           break;
       }
     }
-
     return value;
   }
 
   public String getUserName(String value) {
-
     if (!userMap.containsKey(value)) {
-      User user = getOsUser(Integer.parseInt(value));
+      User user = getAosUser(Integer.parseInt(value));
       String name = user != null ? user.getFullName() : "Unknown user";
       userMap.put(value, name);
       return name;
     }
-
     return userMap.get(value);
   }
 
   public String getProjectName(String value) {
-
     if (!projectMap.containsKey(value)) {
       project = projectRepo.findByRedmineId(Integer.parseInt(value));
       String name = project != null ? project.getFullName() : "Unknown project";
       projectMap.put(value, name);
       return name;
     }
-
     return projectMap.get(value);
   }
 
-  // May not found projectTask name if parent task is not imported already
-
   public String getProjectTaskName(String value) {
-
     if (!projectTaskMap.containsKey(value)) {
       ProjectTask projectTask = projectTaskRepo.findByRedmineId(Integer.parseInt(value));
       String name = projectTask != null ? projectTask.getFullName() : "Unknown task";
       projectTaskMap.put(value, name);
       return name;
     }
-
     return projectTaskMap.get(value);
   }
 
-  // Need to modify after completion of Feature #32081
-
   public String getVersionName(String value) {
-
-    String redmineProjectVersionName = "";
-
     if (!versionMap.containsKey(value)) {
-
-      try {
-        Version redmineProjectVersion =
-            redmineProjectManager.getVersionById(Integer.parseInt(value));
-        redmineProjectVersionName = redmineProjectVersion.getName();
-      } catch (Exception e) {
-        TraceBackService.trace(e, "", batch.getId());
-      }
-      versionMap.put(value, redmineProjectVersionName);
-    } else {
-      redmineProjectVersionName = versionMap.get(value);
+      ProjectVersion projectVersion = projectVersionRepo.findByRedmineId(Integer.parseInt(value));
+      String name = projectVersion != null ? projectVersion.getTitle() : "Unknown version";
+      versionMap.put(value, name);
+      return name;
     }
-
-    return redmineProjectVersionName;
+    return versionMap.get(value);
   }
 
-  @Transactional
-  public void deleteUnwantedMailMessages() {
+  public void setErrorLog(Integer redmineIssueId) {
+    if (errors.length > 0) {
+      errorObjList.add(
+          ObjectArrays.concat(
+              new Object[] {
+                I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_ERROR), String.valueOf(redmineIssueId)
+              },
+              errors,
+              Object.class));
 
-    List<Long> idList = updatedOnMap.keySet().stream().collect(Collectors.toList());
-
-    mailMessageRepository
-        .all()
-        .filter(
-            "self.relatedId IN ("
-                + Joiner.on(",").join(idList)
-                + ") AND self.relatedModel = ?1 AND (self.redmineId = null OR self.redmineId = 0) AND (self.createdOn >= ?2 OR self.updatedOn >= ?2)",
-            ProjectTask.class.getName(),
-            batch.getStartDate().toLocalDateTime())
-        .delete();
+      errors = new Object[] {};
+    }
   }
 }

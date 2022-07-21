@@ -65,11 +65,11 @@ public class RedmineBatchService extends AbstractBatchService {
   }
 
   public Batch redmineImportProjects(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineProject.class).run(redmineBatch);
+    return Beans.get(RedmineBatchImportProjects.class).run(redmineBatch);
   }
 
   public Batch redmineImportIssues(RedmineBatch redmineBatch) {
-    return Beans.get(BatchImportAllRedmineIssue.class).run(redmineBatch);
+    return Beans.get(RedmineBatchImportIssues.class).run(redmineBatch);
   }
 
   public Batch redmineSyncTimeEntries(RedmineBatch redmineBatch) {

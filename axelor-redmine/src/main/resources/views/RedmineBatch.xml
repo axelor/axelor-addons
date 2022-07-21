@@ -20,6 +20,10 @@
         onChange="action-base-batch-condition-check-unique-code"/>
       <field name="batchUser" canEdit="false" widget="SuggestBox" form-view="user-form"
         grid-view="user-grid"/>
+      <field name="redmineFetchLimit"
+        help="Please set fetch limit before starting import process, if not set it will take 25 by default as per redmine api rule"
+        showIf="redmineActionSelect == 1 || redmineActionSelect == 2"
+        requiredIf="redmineActionSelect == 1 || redmineActionSelect == 2"/>
       <field name="isImportIssuesWithActivities" widget="boolean-switch"
         help="Import time may increase significantly more than usual, it is advisable to do not enable this option on the first-time batch run"
         showIf="redmineActionSelect == 1"/>

@@ -18,83 +18,87 @@
 package com.axelor.apps.redmine.service.common;
 
 import com.axelor.exception.service.TraceBackService;
+import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
-import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
+import java.util.stream.IntStream;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-public class RedmineErrorLogService {
+public class RedmineExcelLogService {
 
-  @Inject MetaFiles metaFiles;
-
-  public static final String EXCEL_SHEET_NAME = "Error Data";
-  public static final String EXCEL_FILE_NAME = "Redmine_Error_Log_";
-  public static final String EXCEL_FILE_EXTENSION = ".xlsx";
-
-  public static final String HEADER_COL1 = "Object";
-  public static final String HEADER_COL2 = "Redmine Ref. (Import) / AOS Ref. (Export)";
-  public static final String HEADER_COL3 = "Error";
-
-  public MetaFile redmineErrorLogService(List<Object[]> errorObjList) {
-
-    MetaFile errorMetaFile = null;
-
+  public MetaFile generateExcelLog(
+      String sheetName, String fileName, Object[] headers, List<Object[]> dataObjList) {
     XSSFWorkbook workbook = new XSSFWorkbook();
-    XSSFSheet sheet = workbook.createSheet(EXCEL_SHEET_NAME);
-    Map<String, Object[]> errorData = new TreeMap<>();
-    errorData.put("1", new Object[] {HEADER_COL1, HEADER_COL2, HEADER_COL3});
+    XSSFSheet sheet = workbook.createSheet(sheetName);
+
+    XSSFFont font = workbook.createFont();
+    font.setBold(true);
+    XSSFCellStyle style = workbook.createCellStyle();
+    style.setFont(font);
+
+    Map<String, Object[]> data = new LinkedHashMap<>();
+    data.put("1", headers);
 
     int i = 2;
-    for (Object[] object : errorObjList) {
-      errorData.put(String.valueOf(i++), object);
+    for (Object[] dataObject : dataObjList) {
+      data.put(String.valueOf(i++), dataObject);
     }
 
-    Set<String> keyset = errorData.keySet();
+    Set<String> keyset = data.keySet();
     int rownum = 0;
 
     for (String key : keyset) {
       Row row = sheet.createRow(rownum++);
-      Object[] objArr = errorData.get(key);
+      Object[] dataObjArr = data.get(key);
+
       int cellnum = 0;
 
-      for (Object obj : objArr) {
+      for (Object dataObj : dataObjArr) {
         Cell cell = row.createCell(cellnum++);
+        cell.setCellValue((String) dataObj);
 
-        if (obj instanceof String) cell.setCellValue((String) obj);
-        else if (obj instanceof Integer) cell.setCellValue((Integer) obj);
+        if (rownum == 1) {
+          cell.setCellStyle(style);
+        }
       }
     }
 
+    IntStream.range(0, headers.length + 1)
+        .forEach(columnIndex -> sheet.autoSizeColumn(columnIndex));
+
+    MetaFile metaFile = null;
+
     try {
-      File excelFile = File.createTempFile(EXCEL_FILE_NAME, EXCEL_FILE_EXTENSION);
+      File excelFile = File.createTempFile(fileName, ".xlsx");
       FileOutputStream out = new FileOutputStream(excelFile);
       workbook.write(out);
       out.close();
 
       DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 
-      try (FileInputStream in = new FileInputStream(excelFile)) {
-        errorMetaFile =
-            metaFiles.upload(
-                in, EXCEL_FILE_NAME + dateFormat.format(new Date()) + EXCEL_FILE_EXTENSION);
+      try (FileInputStream fileInputStream = new FileInputStream(excelFile)) {
+        metaFile =
+            Beans.get(MetaFiles.class)
+                .upload(fileInputStream, fileName + dateFormat.format(new Date()) + ".xlsx");
       }
     } catch (Exception e) {
       TraceBackService.trace(e);
     }
-
-    return errorMetaFile;
+    return metaFile;
   }
 }

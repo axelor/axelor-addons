@@ -17,27 +17,23 @@
  */
 package com.axelor.apps.redmine.service.common;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
-import com.axelor.apps.base.db.repo.CompanyRepository;
-import com.axelor.apps.base.db.repo.PartnerRepository;
-import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.Employee;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
-import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
-import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
-import com.taskadapter.redmineapi.IssueManager;
-import com.taskadapter.redmineapi.ProjectManager;
+import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.CustomField;
 import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.ParseException;
@@ -56,68 +52,63 @@ import net.java.textilej.parser.builder.HtmlDocumentBuilder;
 import net.java.textilej.parser.markup.textile.TextileDialect;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RedmineCommonService {
+
+  public static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
   protected UserRepository userRepo;
   protected EmployeeRepository empRepo;
   protected ProjectRepository projectRepo;
-  protected ProductRepository productRepo;
-  protected ProjectTaskRepository projectTaskRepo;
-  protected ProjectTaskCategoryRepository projectCategoryRepo;
-  protected PartnerRepository partnerRepo;
-  protected AppRedmineRepository appRedmineRepo;
-  protected CompanyRepository companyRepo;
+  protected RedmineImportMappingRepository redmineImportMappingRepo;
+  protected AppBaseService appBaseService;
+
+  protected Map<String, String> fieldMap = new HashMap<>();
+  protected Map<String, Object> selectionMap = new HashMap<>();
+  protected Map<Long, LocalDateTime> updatedOnMap = new HashMap<>();
+  protected Map<Long, Integer> parentMap = new HashMap<>();
+  protected Map<String, String> redmineCustomFieldsMap = new HashMap<>();
+
+  protected RedmineManager redmineManager;
+  protected LocalDateTime lastBatchEndDate;
+  protected Consumer<Object> onSuccess;
+  protected Consumer<Throwable> onError;
+  protected Batch batch;
+  protected AppRedmine appRedmine;
+  protected Map<Integer, String> redmineUserMap;
+
+  protected List<Object[]> errorObjList;
+  protected Object[] errors = new Object[] {};
+
+  protected Integer redmineFetchLimit;
+  protected Integer totalFetchCount;
+  protected Integer redmineMaxFetchLimit = 100;
+
+  protected SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
+  protected String serverTimeZone;
+
+  protected static String result = "";
+  protected int success = 0;
+  protected int fail = 0;
 
   @Inject
   public RedmineCommonService(
       UserRepository userRepo,
       EmployeeRepository empRepo,
       ProjectRepository projectRepo,
-      ProductRepository productRepo,
-      ProjectTaskRepository projectTaskRepo,
-      ProjectTaskCategoryRepository projectCategoryRepo,
-      PartnerRepository partnerRepo,
-      AppRedmineRepository appRedmineRepo,
-      CompanyRepository companyRepo) {
+      RedmineImportMappingRepository redmineImportMappingRepo,
+      AppBaseService appBaseService) {
 
     this.userRepo = userRepo;
     this.empRepo = empRepo;
     this.projectRepo = projectRepo;
-    this.productRepo = productRepo;
-    this.projectTaskRepo = projectTaskRepo;
-    this.projectCategoryRepo = projectCategoryRepo;
-    this.partnerRepo = partnerRepo;
-    this.appRedmineRepo = appRedmineRepo;
-    this.companyRepo = companyRepo;
+    this.redmineImportMappingRepo = redmineImportMappingRepo;
+    this.appBaseService = appBaseService;
   }
 
-  protected static String result = "";
-  protected int success = 0;
-  protected int fail = 0;
-  protected Consumer<Object> onSuccess;
-  protected Consumer<Throwable> onError;
-
-  protected Batch batch;
-  protected ProjectManager redmineProjectManager;
-  protected IssueManager redmineIssueManager;
-  protected List<Object[]> errorObjList;
-  protected Map<String, String> redmineCustomFieldsMap;
-  protected LocalDateTime lastBatchUpdatedOn;
-  protected HashMap<String, Object> selectionMap;
-  protected HashMap<String, String> fieldMap;
-
-  protected HashMap<Integer, String> redmineUserMap;
-  protected HashMap<Long, Integer> parentMap = new HashMap<>();
-  protected HashMap<Long, LocalDateTime> updatedOnMap = new HashMap<>();
-  protected Object[] errors;
-
-  protected SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy HH:mm:ss");
-  protected String serverTimeZone;
-
-  public static final Integer REDMINE_PROJECT_STATUS_CLOSED = 5;
-
-  protected void setCreatedByUser(AuditableModel obj, User objUser, String methodName) {
+  public void setCreatedByUser(AuditableModel obj, User objUser, String methodName) {
 
     if (objUser == null) {
       return;
@@ -142,7 +133,7 @@ public class RedmineCommonService {
     }
   }
 
-  protected void invokeMethod(Method method, AuditableModel obj, Object value) {
+  public void invokeMethod(Method method, AuditableModel obj, Object value) {
 
     try {
       method.setAccessible(true);
@@ -166,7 +157,7 @@ public class RedmineCommonService {
     }
   }
 
-  public Employee getOsEmployee(Integer redmineId) {
+  public Employee getAosEmployee(Integer redmineId) {
     return empRepo
         .all()
         .filter(
@@ -177,23 +168,16 @@ public class RedmineCommonService {
         .fetchOne();
   }
 
-  public User getOsUser(Integer redmineId) {
-
+  public User getAosUser(Integer redmineId) {
     return userRepo
         .all()
         .filter(
-            "self.email = ?1 OR self.partner.emailAddress.address = ?1",
+            "self.employee.contactPartner.emailAddress.address = ?1 OR self.partner.emailAddress.address = ?1 OR self.email = ?1",
             redmineUserMap.get(redmineId))
         .fetchOne();
   }
 
-  public void setErrorLog(String object, String redmineRef) {
-
-    errorObjList.add(ObjectArrays.concat(new Object[] {object, redmineRef}, errors, Object.class));
-  }
-
-  protected String getHtmlFromTextile(String textile) {
-
+  public String getHtmlFromTextile(String textile) {
     if (!StringUtils.isBlank(textile)) {
       MarkupParser parser = new MarkupParser(new TextileDialect());
       StringWriter sw = new StringWriter();
@@ -205,18 +189,15 @@ public class RedmineCommonService {
 
       return sw.toString();
     }
-
     return "";
   }
 
-  protected void updateTransaction() {
-
-    JPA.em().getTransaction().commit();
-
+  public void updateTransaction() {
     if (!JPA.em().getTransaction().isActive()) {
       JPA.em().getTransaction().begin();
     }
 
+    JPA.em().getTransaction().commit();
     JPA.clear();
 
     if (!JPA.em().contains(batch)) {
@@ -233,12 +214,13 @@ public class RedmineCommonService {
   }
 
   public LocalDateTime getRedmineDate(Date date) {
-
     dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     String dateGmtStr = dateFormat.format(date);
 
     try {
-      dateFormat.setTimeZone(TimeZone.getTimeZone(serverTimeZone));
+      if (serverTimeZone != null) {
+        dateFormat.setTimeZone(TimeZone.getTimeZone(serverTimeZone));
+      }
       date = dateFormat.parse(dateGmtStr);
     } catch (ParseException e) {
       TraceBackService.trace(e, "", batch.getId());

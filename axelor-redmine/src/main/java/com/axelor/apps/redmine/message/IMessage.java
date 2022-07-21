@@ -30,6 +30,12 @@ public interface IMessage {
   static final String REDMINE_TRANSPORT = /*$$(*/
       "Error connecting redmine server. Please check the configuration" /*)*/;
 
+  static final String REDMINE_USERS_NOT_FETCHED = /*$$(*/
+      "Unable to fetch users from redmine" /*)*/;
+
+  static final String REDMINE_CFS_NOT_FETCHED = /*$$(*/
+      "Unable to fetch custom fields from redmine" /*)*/;
+
   static final String REDMINE_IMPORT_PROJECT_TASK_ERROR = /*$$(*/ "ProjectTask" /*)*/;
 
   static final String REDMINE_IMPORT_PROJECT_ERROR = /*$$(*/ "Project" /*)*/;

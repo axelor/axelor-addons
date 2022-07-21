@@ -21,45 +21,34 @@ import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.redmine.service.imports.issues.RedmineImportIssueService;
-import com.axelor.apps.redmine.service.sync.timeentries.RedmineExportTimeSpentService;
-import com.axelor.apps.redmine.service.sync.timeentries.RedmineImportTimeSpentService;
+import com.axelor.apps.redmine.service.imports.projects.RedmineImportProjectService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineManager;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 
-public class BatchSyncAllRedmineTimeEntries extends AbstractBatch {
+public class RedmineBatchImportProjects extends AbstractBatch {
 
   protected AppRedmineRepository appRedmineRepo;
-  protected RedmineImportIssueService redmineImportIssueService;
-  protected RedmineImportTimeSpentService redmineImportTimeSpentService;
-  protected RedmineExportTimeSpentService redmineExportTimeSpentService;
+  protected RedmineImportProjectService redmineImportProjectService;
   protected RedmineBatchCommonService redmineBatchCommonService;
 
   @Inject
-  public BatchSyncAllRedmineTimeEntries(
+  public RedmineBatchImportProjects(
       AppRedmineRepository appRedmineRepo,
-      RedmineImportIssueService redmineImportIssueService,
-      RedmineImportTimeSpentService redmineImportTimeSpentService,
-      RedmineExportTimeSpentService redmineExportTimeSpentService,
+      RedmineImportProjectService redmineImportProjectService,
       RedmineBatchCommonService redmineBatchCommonService) {
 
     this.appRedmineRepo = appRedmineRepo;
-    this.redmineImportIssueService = redmineImportIssueService;
-    this.redmineImportTimeSpentService = redmineImportTimeSpentService;
+    this.redmineImportProjectService = redmineImportProjectService;
     this.redmineBatchCommonService = redmineBatchCommonService;
-    this.redmineExportTimeSpentService = redmineExportTimeSpentService;
   }
 
   protected List<Object[]> errorObjList = new ArrayList<>();
-  protected String timeSpentResultStr;
-  protected String timeSpentImportResultStr;
-  protected String timeSpentExportResultStr;
+  protected String projectResultStr;
 
   @Override
   protected void process() {
@@ -73,7 +62,7 @@ public class BatchSyncAllRedmineTimeEntries extends AbstractBatch {
     }
 
     // Validate different custom fields names filled in redmine app config
-    redmineBatchCommonService.validateCustomFieldConfigTimeEntry(
+    redmineBatchCommonService.validateCustomFieldConfigProject(
         redmineManager.getCustomFieldManager(), appRedmine);
 
     Batch lastBatch =
@@ -88,40 +77,18 @@ public class BatchSyncAllRedmineTimeEntries extends AbstractBatch {
 
     ZonedDateTime lastBatchEndDate = lastBatch != null ? lastBatch.getEndDate() : null;
 
-    Map<Integer, String> redmineUserMap =
-        redmineBatchCommonService.getRedmineUserMap(redmineManager.getUserManager());
+    LOG.debug("Start process for redmine projects import..");
 
-    Map<String, String> redmineUserLoginMap =
-        redmineBatchCommonService.getRedmineUserLoginMap(redmineManager.getUserManager());
-
-    LOG.debug("Start process for AOS timesheetlines export..");
-
-    timeSpentExportResultStr =
-        redmineExportTimeSpentService.redmineTimeEntryExportProcess(
+    projectResultStr =
+        redmineImportProjectService.redmineProjectsImportProcess(
             redmineManager,
             lastBatchEndDate,
-            appRedmineRepo.all().fetchOne(),
-            redmineUserMap,
-            redmineUserLoginMap,
-            batchRepo.find(batch.getId()),
+            appRedmine,
+            redmineBatchCommonService.getRedmineUserMap(redmineManager.getUserManager()),
+            batch,
             success -> incrementDone(),
             error -> incrementAnomaly(),
             errorObjList);
-
-    LOG.debug("Start process for redmine time entries import..");
-
-    timeSpentImportResultStr =
-        redmineImportTimeSpentService.redmineTimeEntriesImportProcess(
-            redmineManager,
-            lastBatchEndDate,
-            appRedmineRepo.all().fetchOne(),
-            redmineUserMap,
-            batchRepo.find(batch.getId()),
-            success -> incrementDone(),
-            error -> incrementAnomaly(),
-            errorObjList);
-
-    timeSpentResultStr = timeSpentExportResultStr + "\n" + timeSpentImportResultStr;
 
     if (CollectionUtils.isNotEmpty(errorObjList)) {
       MetaFile errorLogFile = redmineBatchCommonService.generateErrorLog(errorObjList);
@@ -135,6 +102,6 @@ public class BatchSyncAllRedmineTimeEntries extends AbstractBatch {
   @Override
   protected void stop() {
     super.stop();
-    addComment(timeSpentResultStr);
+    addComment(projectResultStr);
   }
 }

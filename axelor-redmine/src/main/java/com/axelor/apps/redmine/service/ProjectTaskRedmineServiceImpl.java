@@ -31,6 +31,7 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -145,17 +146,18 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
   @Override
   @Transactional
   public void updateProjectVersionProgress(ProjectVersion projectVersion) {
+    String qry =
+        "UPDATE businesssupport_project_version SET total_progress = "
+            + "(SELECT ROUND(AVG(CAST(CASE WHEN status.is_completed = true THEN 100 ELSE task.progress_select END AS decimal)), 0) "
+            + "FROM project_project_task AS task "
+            + "LEFT JOIN project_project_status AS status ON status.id = task.status "
+            + "LEFT JOIN businesssupport_project_version AS project_version ON project_version.id = task.target_version "
+            + "WHERE project_version.id = :projectVersionId) "
+            + "WHERE id = :projectVersionId";
 
-    double sum =
-        projectTaskRepo
-            .all()
-            .filter("self.targetVersion = ?1", projectVersion)
-            .fetchStream()
-            .mapToLong(tt -> tt.getStatus().getIsCompleted() ? 100 : tt.getProgressSelect())
-            .average()
-            .orElse(0);
-
-    projectVersion.setTotalProgress(BigDecimal.valueOf(sum).setScale(0, BigDecimal.ROUND_HALF_UP));
-    projectVersionRepository.save(projectVersion);
+    JPA.em()
+        .createNativeQuery(qry)
+        .setParameter("projectVersionId", projectVersion.getId())
+        .executeUpdate();
   }
 }

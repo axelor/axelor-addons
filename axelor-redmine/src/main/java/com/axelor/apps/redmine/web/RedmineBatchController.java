@@ -177,7 +177,7 @@ public class RedmineBatchController {
 
     if (!idList.isEmpty()) {
       response.setView(
-          ActionView.define(I18n.get("Projecttasks"))
+          ActionView.define(I18n.get("Project tasks"))
               .model(ProjectTask.class.getName())
               .add("grid", "project-task-grid")
               .add("form", "project-task-form")
@@ -198,7 +198,7 @@ public class RedmineBatchController {
 
     if (!idList.isEmpty()) {
       response.setView(
-          ActionView.define(I18n.get("Projecttasks"))
+          ActionView.define(I18n.get("Project tasks"))
               .model(ProjectTask.class.getName())
               .add("grid", "project-task-grid")
               .add("form", "project-task-form")

@@ -19,6 +19,7 @@
     <string name="failedRedmineTimeEntriesIds" large="true"/>
     <boolean name="isOverrideRecords" title="Override records"/>
     <string name="failedAosTimesheetLineIds" large="true"/>
+    <integer name="redmineFetchLimit" title="Fetch limit"/>
 
     <extra-code>
 			<![CDATA[

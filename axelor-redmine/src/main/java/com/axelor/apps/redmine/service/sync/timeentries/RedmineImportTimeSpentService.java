@@ -17,11 +17,23 @@
  */
 package com.axelor.apps.redmine.service.sync.timeentries;
 
-import com.taskadapter.redmineapi.bean.TimeEntry;
-import java.util.HashMap;
+import com.axelor.apps.base.db.AppRedmine;
+import com.axelor.apps.base.db.Batch;
+import com.taskadapter.redmineapi.RedmineManager;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public interface RedmineImportTimeSpentService {
 
-  String importTimeSpent(List<TimeEntry> importTimeEntryList, HashMap<String, Object> paramsMap);
+  String redmineTimeEntriesImportProcess(
+      RedmineManager redmineManager,
+      ZonedDateTime lastBatchEndDate,
+      AppRedmine appRedmine,
+      Map<Integer, String> redmineUserMap,
+      Batch batch,
+      Consumer<Object> onSuccess,
+      Consumer<Throwable> onError,
+      List<Object[]> errorObjList);
 }

@@ -17,11 +17,23 @@
  */
 package com.axelor.apps.redmine.service.imports.projects;
 
-import com.taskadapter.redmineapi.bean.Project;
-import java.util.HashMap;
+import com.axelor.apps.base.db.AppRedmine;
+import com.axelor.apps.base.db.Batch;
+import com.taskadapter.redmineapi.RedmineManager;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 public interface RedmineImportProjectService {
 
-  void importProject(List<Project> importProjectList, HashMap<String, Object> paramsMap);
+  String redmineProjectsImportProcess(
+      RedmineManager redmineManager,
+      ZonedDateTime lastBatchEndDate,
+      AppRedmine appRedmine,
+      Map<Integer, String> redmineUserMap,
+      Batch batch,
+      Consumer<Object> onSuccess,
+      Consumer<Throwable> onError,
+      List<Object[]> errorObjList);
 }
