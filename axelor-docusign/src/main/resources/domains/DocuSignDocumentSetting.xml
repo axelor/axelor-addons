@@ -7,7 +7,7 @@
 
   <entity name="DocuSignDocumentSetting" lang="java">
 
-    <string name="name" title="Name"/>
+    <string name="name" title="Name" large="true"/>
     <string name="documentId" title="Document id"/>
     <many-to-one name="docuSignEnvelopeSetting" title="DocuSign envelope setting"
       ref="com.axelor.apps.docusign.db.DocuSignEnvelopeSetting"/>
