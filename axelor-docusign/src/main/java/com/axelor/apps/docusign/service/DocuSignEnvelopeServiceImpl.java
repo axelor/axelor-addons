@@ -36,6 +36,7 @@ import com.axelor.apps.message.service.TemplateContextService;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
+import com.axelor.apps.tool.StringTool;
 import com.axelor.auth.AuthUtils;
 import com.axelor.auth.db.User;
 import com.axelor.common.ObjectUtils;
@@ -430,7 +431,8 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       throws AxelorException {
 
     EnvelopeDefinition envelopeDefinition = new EnvelopeDefinition();
-    envelopeDefinition.setEmailSubject(envelopeSetting.getEmailSubject());
+    envelopeDefinition.setEmailSubject(
+        StringTool.cutTooLongStringWithOffset(docuSignEnvelope.getEmailSubject(), 155));
 
     List<DocuSignDocument> docuSignDocumentList = docuSignEnvelope.getDocuSignDocumentList();
     List<Document> documentList = createDocuments(docuSignDocumentList);
