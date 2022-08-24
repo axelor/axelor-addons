@@ -276,9 +276,15 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       documentSetting
           .getDocuSignFieldSettingList()
           .forEach(
-              fieldSetting ->
-                  docuSignDocument.addDocuSignFieldListItem(
-                      createDocuSignField(fieldSetting, docuSignSignerList)));
+              fieldSetting -> {
+                DocuSignField childField = createDocuSignField(fieldSetting, docuSignSignerList);
+                docuSignDocument.addDocuSignFieldListItem(childField);
+                if (CollectionUtils.isNotEmpty(childField.getDocuSignFieldList())) {
+                  childField
+                      .getDocuSignFieldList()
+                      .forEach(docuSignDocument::addDocuSignFieldListItem);
+                }
+              });
     }
     return docuSignDocument;
   }
