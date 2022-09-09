@@ -1,60 +1,90 @@
+buildscript {
+  ext.repos = {
+    mavenCentral() {
+      content { excludeGroupByRegex "com\\.axelor.*" }
+    }
+    maven {
+      url 'https://plugins.gradle.org/m2/'
+      content { excludeGroupByRegex "com\\.axelor.*" }
+    }
+    maven { url 'https://repository.axelor.com/nexus/repository/maven-public/' }
+  }
+  ext.aopVersion = '5.+'
+  ext.aosVersion = '6.+'
+  repositories repos
+  dependencies {
+    classpath "com.axelor:axelor-gradle:${aopVersion}"
+  }
+}
+
+repositories repos
+
+apply from: "version.gradle"
+
 plugins {
   id 'com.github.johnrengelman.shadow' version '5.2.0'
   id 'java'
 }
+
 apply plugin: "com.axelor.app-module"
 
 apply from: "../libs.gradle"
 
-apply {
-	version = "6.1-SNAPSHOT"
-}
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+group = "com.axelor.apps.addons"
+description "Axelor Docusign Module"
+
+//
+// Axelor module
+//
 
 axelor {
-	title "Axelor DocuSign"
-	description "Axelor DocuSign Module"
+  title "Axelor DocuSign"
+  description "Axelor DocuSign Module"
 }
 
 configurations {
-    docusignDeps
+  docusignDeps
 }
 
 ext {
-	docusignVersion = "3.8.0"
-	docusignJarDir = ".jar"
-    docusignJarName = 'shadow-docusign.jar'    
+  docusignVersion = "3.8.0"
+  docusignJarDir = ".jar"
+  docusignJarName = 'shadow-docusign.jar'
 }
 
 dependencies {
-	api project(":modules:axelor-base")
-	api project(":modules:axelor-sale")     
+  api "com.axelor.apps:axelor-base:${aosVersion}"
+  api "com.axelor.apps:axelor-sale:${aosVersion}"
  
-	docusignDeps "com.docusign:docusign-esign-java:${docusignVersion}"	                      
-	implementation files("${docusignJarDir}/${docusignJarName}")	
+  docusignDeps "com.docusign:docusign-esign-java:${docusignVersion}"
+  implementation files("${docusignJarDir}/${docusignJarName}")
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-task shadowDocusignDeps(type: ShadowJar) {    
-    destinationDir = file(docusignJarDir)
-    archiveName = docusignJarName
-    zip64 true    
-    configurations = [project.configurations.docusignDeps]
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'    
-    
-    relocate "com.auth0","shadow.docusign.com.auth0"
-    relocate "com.fasterxml","shadow.docusign.com.fasterxml"
-    relocate "com.migcomponents","shadow.docusign.com.migcomponents"
-    relocate "io.swagger","shadow.docusign.io.swagger"
-    relocate "javassist","shadow.docusign.javassist"
-    relocate "javax.activation","shadow.docusign.javax.activation"
-    relocate "javax.annotation","shadow.docusign.javax.annotation"
-    relocate "javax.inject","shadow.docusign.javax.inject"
-    relocate "javax.ws","shadow.docusign.javax.ws"      
-    relocate "org.aopalliance","shadow.docusign.org.aopalliance"
-    relocate "org.apache","shadow.docusign.org.apache"    
-    relocate "org.joda","shadow.docusign.org.joda"
-    relocate "org.json","shadow.docusign.org.json"    
-    relocate "org.slf4j","shadow.docusign.org.slf4j"        
+task shadowDocusignDeps(type: ShadowJar) {
+  destinationDir = file(docusignJarDir)
+  archiveName = docusignJarName
+  zip64 true
+  configurations = [project.configurations.docusignDeps]
+  exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
+
+  relocate "com.auth0","shadow.docusign.com.auth0"
+  relocate "com.fasterxml","shadow.docusign.com.fasterxml"
+  relocate "com.migcomponents","shadow.docusign.com.migcomponents"
+  relocate "io.swagger","shadow.docusign.io.swagger"
+  relocate "javassist","shadow.docusign.javassist"
+  relocate "javax.activation","shadow.docusign.javax.activation"
+  relocate "javax.annotation","shadow.docusign.javax.annotation"
+  relocate "javax.inject","shadow.docusign.javax.inject"
+  relocate "javax.ws","shadow.docusign.javax.ws"
+  relocate "org.aopalliance","shadow.docusign.org.aopalliance"
+  relocate "org.apache","shadow.docusign.org.apache"
+  relocate "org.joda","shadow.docusign.org.joda"
+  relocate "org.json","shadow.docusign.org.json"
+  relocate "org.slf4j","shadow.docusign.org.slf4j"
 }
 
 task cleanDocusignJarDir(type: Delete){
@@ -63,3 +93,31 @@ task cleanDocusignJarDir(type: Delete){
 
 clean.finalizedBy cleanDocusignJarDir
 compileJava.dependsOn shadowDocusignDeps
+
+//
+// Publish
+//
+
+apply plugin: 'maven-publish'
+
+ext {
+    mavenUsername = project.findProperty( 'axelorMavenUsername' )
+    mavenPassword = project.findProperty( 'axelorMavenPassword' )
+}
+
+rootProject.tasks.war.dependsOn copyWebapp
+publishing {
+    repositories {
+        maven {
+      def repoPath = project.hasProperty("finalRelease")
+          ? "maven-enterprise-releases"
+          : "maven-enterprise-snapshots";
+            name = "maven-enterprise"
+            url = "https://repository.axelor.com/nexus/repository/" + repoPath
+            credentials {
+                username = project.mavenUsername
+                password = project.mavenPassword
+            }
+        }
+    }
+}
