@@ -105,7 +105,6 @@ ext {
     mavenPassword = project.findProperty( 'axelorMavenPassword' )
 }
 
-rootProject.tasks.war.dependsOn copyWebapp
 publishing {
     repositories {
         maven {
