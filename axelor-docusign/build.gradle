@@ -17,14 +17,14 @@ buildscript {
   }
 }
 
-repositories repos
-
-apply from: "version.gradle"
-
 plugins {
   id 'com.github.johnrengelman.shadow' version '5.2.0'
   id 'java'
 }
+
+repositories repos
+
+apply from: "version.gradle"
 
 apply plugin: "com.axelor.app-module"
 
