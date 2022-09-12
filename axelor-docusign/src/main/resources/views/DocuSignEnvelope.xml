@@ -40,7 +40,7 @@
         onClick="save,action-docusign-envelope-method-send-envelope" showIf="envelopeId == null"/>
     </panel>
     <panel name="relatedToPanel" title="Related to" sidebar="true" canCollapse="true"
-      collapseIf="relatedTo == null">
+      collapseIf="relatedToSelect == null">
       <field name="relatedToSelect" widget="RefSelect" x-related="relatedToId"/>
       <field name="relatedToId" hidden="true"/>
     </panel>
