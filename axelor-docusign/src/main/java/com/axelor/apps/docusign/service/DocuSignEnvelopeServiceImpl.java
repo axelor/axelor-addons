@@ -106,6 +106,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   protected TemplateContextService templateContextService;
   protected MetaFiles metaFiles;
   protected SaleOrderWorkflowService saleOrderWorkflowService;
+  protected DocuSignEnvelopeSettingService docuSignEnvelopSettingService;
 
   @Inject
   public DocuSignEnvelopeServiceImpl(
@@ -113,11 +114,13 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       TemplateContextService templateContextService,
       MetaFiles metaFiles,
       SaleOrderRepository saleOrderRepo,
-      SaleOrderWorkflowService saleOrderWorkflowService) {
+      SaleOrderWorkflowService saleOrderWorkflowService,
+      DocuSignEnvelopeSettingService docuSignEnvelopSettingService) {
     this.docuSignEnvelopeRepo = docuSignEnvelopeRepo;
     this.templateContextService = templateContextService;
     this.metaFiles = metaFiles;
     this.saleOrderWorkflowService = saleOrderWorkflowService;
+    this.docuSignEnvelopSettingService = docuSignEnvelopSettingService;
   }
 
   @Override
@@ -181,7 +184,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
             maker.setTemplate(envelopeSetting.getEmailSubject());
             envelope.setEmailSubject(maker.make());
           }
-
+          docuSignEnvelopSettingService.addItemToReferenceSelection(metaModel);
           envelope.setRelatedToSelect(metaModel.getFullName());
           envelope.setRelatedToId(objectId);
           scriptContext = new Context(Mapper.toMap(model), modelClass);

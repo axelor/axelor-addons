@@ -23,10 +23,18 @@ import com.axelor.meta.db.MetaSelect;
 import com.axelor.meta.db.MetaSelectItem;
 import com.axelor.meta.db.repo.MetaSelectItemRepository;
 import com.axelor.meta.db.repo.MetaSelectRepository;
+import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.util.List;
 
 public class DocuSignEnvelopeSettingServiceImpl implements DocuSignEnvelopeSettingService {
+
+  protected final MetaSelectItemRepository metaSelectItemRepository;
+
+  @Inject
+  public DocuSignEnvelopeSettingServiceImpl(MetaSelectItemRepository metaSelectItemRepository) {
+    this.metaSelectItemRepository = metaSelectItemRepository;
+  }
 
   @Override
   @Transactional
@@ -34,12 +42,17 @@ public class DocuSignEnvelopeSettingServiceImpl implements DocuSignEnvelopeSetti
     MetaSelect metaSelect =
         Beans.get(MetaSelectRepository.class).findByName("docusign.envelope.related.to.select");
     List<MetaSelectItem> items = metaSelect.getItems();
-    if (items != null && !items.stream().anyMatch(x -> x.getValue().equals(model.getFullName()))) {
-      MetaSelectItem metaSelectItem = new MetaSelectItem();
-      metaSelectItem.setTitle(model.getName());
-      metaSelectItem.setValue(model.getFullName());
-      metaSelectItem.setSelect(metaSelect);
-      Beans.get(MetaSelectItemRepository.class).save(metaSelectItem);
+
+    String fullName = model.getFullName();
+    if (items != null
+        && items.stream().map(MetaSelectItem::getValue).anyMatch(value -> value.equals(fullName))) {
+      return;
     }
+
+    MetaSelectItem metaSelectItem = new MetaSelectItem();
+    metaSelectItem.setTitle(model.getName());
+    metaSelectItem.setValue(fullName);
+    metaSelectItem.setSelect(metaSelect);
+    metaSelectItemRepository.save(metaSelectItem);
   }
 }
