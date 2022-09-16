@@ -27,6 +27,13 @@
       ref="com.axelor.apps.hr.db.TimesheetLine" mappedBy="updatedExportBatchSet"/>
     <many-to-one name="errorLogFile" title="Error log" ref="com.axelor.meta.db.MetaFile"/>
 
+    <extra-code><![CDATA[
+      // Batch type select
+
+		public static final int BATCH_TYPE_REDMINE_BATCH = 1200;
+
+	 ]]></extra-code>
+
   </entity>
 
 </domain-models>

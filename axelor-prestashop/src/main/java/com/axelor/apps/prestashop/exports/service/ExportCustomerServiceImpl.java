@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
+import com.axelor.apps.account.db.PaymentCondition;
+import com.axelor.apps.account.db.PaymentConditionLine;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
@@ -34,9 +36,12 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -164,9 +169,23 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
           // Only push elements that cannot be edited by user
           remoteCustomer.setSiret(localCustomer.getRegistrationCode());
           remoteCustomer.setWebsite(localCustomer.getWebSite());
-          if (localCustomer.getPaymentCondition() != null) {
-            remoteCustomer.setMaxPaymentDays(localCustomer.getPaymentCondition().getPaymentTime());
+
+          PaymentCondition paymentCondition = localCustomer.getPaymentCondition();
+          if (paymentCondition != null) {
+            List<PaymentConditionLine> paymentConditionLines =
+                paymentCondition.getPaymentConditionLineList();
+
+            if (CollectionUtils.isNotEmpty(paymentConditionLines)) {
+              paymentConditionLines =
+                  paymentConditionLines.stream()
+                      .sorted(Comparator.comparing(PaymentConditionLine::getSequence))
+                      .collect(Collectors.toList());
+
+              PaymentConditionLine paymentConditionLine = paymentConditionLines.get(0);
+              remoteCustomer.setMaxPaymentDays(paymentConditionLine.getPaymentTime());
+            }
           }
+
           if (localCustomer.getAccountingSituationList().isEmpty() == false) {
             // FIXME We should have a per company configuration…
             remoteCustomer.setAllowedOutstandingAmount(

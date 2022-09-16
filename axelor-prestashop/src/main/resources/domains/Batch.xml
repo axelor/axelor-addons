@@ -9,6 +9,14 @@
     <many-to-one name="prestaShopBatch"
       ref="com.axelor.apps.prestashop.db.PrestaShopBatch"/>
     <many-to-one name="prestaShopBatchLog" ref="com.axelor.meta.db.MetaFile"/>
+
+    <extra-code><![CDATA[
+      // Batch type select
+
+		public static final int BATCH_TYPE_PRESTASHOP_BATCH = 1100;
+
+	 ]]></extra-code>
+
   </entity>
 
 </domain-models>
