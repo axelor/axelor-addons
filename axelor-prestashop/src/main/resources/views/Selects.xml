@@ -12,4 +12,8 @@
     <option value="prestashopImport">PrestaShop Import</option>
     <option value="prestashopExport">PrestaShop Export</option>
   </selection>
+
+  <selection name="batch.batch.type.select" id="prestashop.batch.batch.type.select">
+    <option value="1100">PrestaShop batch</option>
+  </selection>
 </object-views>

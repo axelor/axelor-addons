@@ -18,6 +18,7 @@
 package com.axelor.apps.prestashop.service.exports.batch;
 
 import com.axelor.apps.base.db.repo.AppPrestashopRepository;
+import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.exports.PrestaShopServiceExport;
@@ -63,5 +64,10 @@ public class ExportPrestaShop extends AbstractBatch {
   protected void stop() {
     super.stop();
     addComment(I18n.get(IExceptionMessage.BATCH_EXPORT));
+  }
+
+  @Override
+  protected void setBatchTypeSelect() {
+    this.batch.setBatchTypeSelect(BatchRepository.BATCH_TYPE_PRESTASHOP_BATCH);
   }
 }

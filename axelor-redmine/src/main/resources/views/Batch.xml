@@ -3,59 +3,60 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
-  <form name="redmine-base-batch-form" title="Batch" model="com.axelor.apps.base.db.Batch"
-    onNew="action-batch-attrs"
-    onLoad="action-batch-attrs,action-batch-attrs-hide-creted-updated-set" canEdit="false"
-    canDelete="false" canNew="false" canCopy="false" canSave="false" width="large">
+  <form id="batch-form-redmine" name="redmine-base-batch-form" title="Batch"
+    model="com.axelor.apps.base.db.Batch" extension="true">
 
-    <panel name="main">
-      <field name="createdBy" form-view="user-form" grid-view="user-grid"/>
-      <field name="duration"/>
-      <field name="startDate" requirded="true"/>
-      <field name="endDate"/>
-      <field name="done"/>
-      <field name="anomaly"/>
-      <field name="errorLogFile" hidden="true" showIf="errorLogFile != null"
-        widget="binary-link"/>
-      <field name="metaFile" hidden="true" showIf="metaFile != null" widget="binary-link"/>
-      <field name="comments" showTitle="false" colSpan="12"/>
-      <button name="showTraceBack" title="Anomalies" colSpan="2"
-        onClick="save,action-batch-show-trace-back"/>
-    </panel>
+    <extend target="/">
+      <attribute name="onLoad"
+        value="action-batch-attrs,action-batch-attrs-hide-creted-updated-set"/>
+    </extend>
 
-    <panel name="batchActionPanel" title="Results">
-      <field name="createdTasksInOs" colSpan="12" canNew="false" canSelect="false"/>
-      <button name="createdTasksInOsBtn" title="Created tasks in OS" colSpan="4"
-        onClick="action-batch-method-open-created-tasks-in-os"/>
-      <field name="updatedTasksInOs" colSpan="12" canNew="false" canSelect="false"/>
-      <button name="updatedTasksInOsBtn" title="Updated tasks in OS" colSpan="4"
-        onClick="action-batch-method-open-updated-tasks-in-os"/>
+    <extend target="//field[@name='anomaly']">
+      <insert position="after">
+        <field name="errorLogFile" hidden="true" showIf="errorLogFile != null"
+          widget="binary-link"/>
+      </insert>
+    </extend>
 
-      <field name="createdProjectsInOs" colSpan="12" canNew="false" canSelect="false"/>
-      <button name="createdProjectsInOsBtn" title="Created projects in OS" colSpan="4"
-        onClick="action-batch-method-open-created-projects-in-os"/>
-      <field name="updatedProjectsInOs" colSpan="12" canNew="false" canSelect="false"/>
-      <button name="updatedProjectsInOsBtn" title="Updated projects in OS" colSpan="4"
-        onClick="action-batch-method-open-updated-projects-in-os"/>
+    <extend target="//panel[@name='originPanel']">
+      <insert position="after">
+        <panel name="batchActionPanel" title="Results">
+          <field name="createdTasksInOs" colSpan="12" canNew="false" canSelect="false"/>
+          <button name="createdTasksInOsBtn" title="Created tasks in OS" colSpan="4"
+            onClick="action-batch-method-open-created-tasks-in-os"/>
+          <field name="updatedTasksInOs" colSpan="12" canNew="false" canSelect="false"/>
+          <button name="updatedTasksInOsBtn" title="Updated tasks in OS" colSpan="4"
+            onClick="action-batch-method-open-updated-tasks-in-os"/>
 
-      <field name="createdTimesheetLinesInOs" colSpan="12" canNew="false" canSelect="false"
-        grid-view="timesheet-line-grid"/>
-      <button name="createdTimesheetLinesInOsBtn" title="Created timesheetlines in OS"
-        colSpan="4" onClick="action-batch-method-open-created-timesheetlines-in-os"/>
-      <field name="updatedTimesheetLinesInOs" colSpan="12" canNew="false" canSelect="false"
-        grid-view="timesheet-line-grid"/>
-      <button name="updatedTimesheetLinesInOsBtn" title="Updated timesheetlines in OS"
-        colSpan="4" onClick="action-batch-method-open-updated-timesheetlines-in-os"/>
+          <field name="createdProjectsInOs" colSpan="12" canNew="false" canSelect="false"/>
+          <button name="createdProjectsInOsBtn" title="Created projects in OS" colSpan="4"
+            onClick="action-batch-method-open-created-projects-in-os"/>
+          <field name="updatedProjectsInOs" colSpan="12" canNew="false" canSelect="false"/>
+          <button name="updatedProjectsInOsBtn" title="Updated projects in OS" colSpan="4"
+            onClick="action-batch-method-open-updated-projects-in-os"/>
 
-      <field name="createdTimeEntriesInRedmine" colSpan="12" canNew="false" canSelect="false"
-        grid-view="timesheet-line-grid"/>
-      <button name="createdTimeEntriesInRedmineBtn" title="Created timeentries in Redmine"
-        colSpan="4" onClick="action-batch-method-open-created-timeentries-in-redmine"/>
-      <field name="updatedTimeEntriesInRedmine" colSpan="12" canNew="false" canSelect="false"
-        grid-view="timesheet-line-grid"/>
-      <button name="updatedTimeEntriesInRedmineBtn" title="Updated timeentries in Redmine"
-        colSpan="4" onClick="action-batch-method-open-updated-timeentries-in-redmine"/>
-    </panel>
+          <field name="createdTimesheetLinesInOs" colSpan="12" canNew="false"
+            canSelect="false" grid-view="timesheet-line-grid"/>
+          <button name="createdTimesheetLinesInOsBtn" title="Created timesheetlines in OS"
+            colSpan="4" onClick="action-batch-method-open-created-timesheetlines-in-os"/>
+          <field name="updatedTimesheetLinesInOs" colSpan="12" canNew="false"
+            canSelect="false" grid-view="timesheet-line-grid"/>
+          <button name="updatedTimesheetLinesInOsBtn" title="Updated timesheetlines in OS"
+            colSpan="4" onClick="action-batch-method-open-updated-timesheetlines-in-os"/>
+
+          <field name="createdTimeEntriesInRedmine" colSpan="12" canNew="false"
+            canSelect="false" grid-view="timesheet-line-grid"/>
+          <button name="createdTimeEntriesInRedmineBtn"
+            title="Created timeentries in Redmine" colSpan="4"
+            onClick="action-batch-method-open-created-timeentries-in-redmine"/>
+          <field name="updatedTimeEntriesInRedmine" colSpan="12" canNew="false"
+            canSelect="false" grid-view="timesheet-line-grid"/>
+          <button name="updatedTimeEntriesInRedmineBtn"
+            title="Updated timeentries in Redmine" colSpan="4"
+            onClick="action-batch-method-open-updated-timeentries-in-redmine"/>
+        </panel>
+      </insert>
+    </extend>
 
   </form>
 
