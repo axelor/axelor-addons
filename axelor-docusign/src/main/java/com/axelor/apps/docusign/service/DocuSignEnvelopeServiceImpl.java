@@ -36,6 +36,7 @@ import com.axelor.apps.message.service.TemplateContextService;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
+import com.axelor.apps.tool.StringTool;
 import com.axelor.auth.AuthUtils;
 import com.axelor.auth.db.User;
 import com.axelor.common.ObjectUtils;
@@ -156,6 +157,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     MetaModel metaModel = envelopeSetting.getMetaModel();
 
     Context scriptContext = null;
+    TemplateMaker maker = null;
     if (ObjectUtils.notEmpty(metaModel) && ObjectUtils.notEmpty(objectId)) {
       try {
         Class<? extends Model> modelClass =
@@ -168,7 +170,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
           if (activeCompany != null) {
             timezone = activeCompany.getTimezone();
           }
-          TemplateMaker maker =
+          maker =
               new TemplateMaker(timezone, Locale.FRENCH, TEMPLATE_DELIMITER, TEMPLATE_DELIMITER);
           maker.setContext(model);
           if (StringUtils.notEmpty(envelopeSetting.getName())) {
@@ -201,7 +203,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       for (DocuSignDocumentSetting documentSetting :
           envelopeSetting.getDocuSignDocumentSettingList()) {
         envelope.addDocuSignDocumentListItem(
-            createDocuSignDocument(documentSetting, scriptContext, docuSignSignerList));
+            createDocuSignDocument(documentSetting, scriptContext, docuSignSignerList, maker));
       }
     }
 
@@ -246,9 +248,15 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   protected DocuSignDocument createDocuSignDocument(
       DocuSignDocumentSetting documentSetting,
       Context scriptContext,
-      List<DocuSignSigner> docuSignSignerList) {
+      List<DocuSignSigner> docuSignSignerList,
+      TemplateMaker maker) {
     DocuSignDocument docuSignDocument = new DocuSignDocument();
-    docuSignDocument.setName(documentSetting.getName());
+
+    if (ObjectUtils.notEmpty(maker) && StringUtils.notEmpty(documentSetting.getName())) {
+      maker.setTemplate(documentSetting.getName());
+      docuSignDocument.setName(maker.make());
+    }
+
     docuSignDocument.setDocumentId(documentSetting.getDocumentId());
     docuSignDocument.setFileExtension(documentSetting.getFileExtension());
     docuSignDocument.setSequence(documentSetting.getSequence());
@@ -269,9 +277,15 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       documentSetting
           .getDocuSignFieldSettingList()
           .forEach(
-              fieldSetting ->
-                  docuSignDocument.addDocuSignFieldListItem(
-                      createDocuSignField(fieldSetting, docuSignSignerList)));
+              fieldSetting -> {
+                DocuSignField childField = createDocuSignField(fieldSetting, docuSignSignerList);
+                docuSignDocument.addDocuSignFieldListItem(childField);
+                if (CollectionUtils.isNotEmpty(childField.getDocuSignFieldList())) {
+                  childField
+                      .getDocuSignFieldList()
+                      .forEach(docuSignDocument::addDocuSignFieldListItem);
+                }
+              });
     }
     return docuSignDocument;
   }
@@ -423,7 +437,8 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       throws AxelorException {
 
     EnvelopeDefinition envelopeDefinition = new EnvelopeDefinition();
-    envelopeDefinition.setEmailSubject(envelopeSetting.getEmailSubject());
+    envelopeDefinition.setEmailSubject(
+        StringTool.cutTooLongStringWithOffset(docuSignEnvelope.getEmailSubject(), 155));
 
     List<DocuSignDocument> docuSignDocumentList = docuSignEnvelope.getDocuSignDocumentList();
     List<Document> documentList = createDocuments(docuSignDocumentList);
@@ -506,6 +521,11 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       for (DocuSignSigner docuSignSigner : docuSignSignerList) {
         Partner signerPartner = docuSignSigner.getSigner();
         String recipientId = docuSignSigner.getRecipientId();
+        if (signerPartner == null) {
+          throw new AxelorException(
+              TraceBackRepository.CATEGORY_INCONSISTENCY,
+              I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
+        }
 
         if (!docuSignSigner.getIsInPersonSigner()) {
           Signer signer = new Signer();
@@ -546,7 +566,11 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       for (DocuSignSigner docuSignSigner : docuSignSignerList) {
         Partner signerPartner = docuSignSigner.getSigner();
         String recipientId = docuSignSigner.getRecipientId();
-
+        if (signerPartner == null) {
+          throw new AxelorException(
+              TraceBackRepository.CATEGORY_INCONSISTENCY,
+              I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
+        }
         if (docuSignSigner.getIsInPersonSigner()) {
           InPersonSigner inPersonSigner = new InPersonSigner();
           inPersonSigner.setRecipientId(recipientId);

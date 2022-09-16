@@ -505,7 +505,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           if (localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
             localOrder.setDeliveryDate(
                 remoteOrder.getDeliveryDate() == null
-                    ? appBaseService.getTodayDate()
+                    ? appBaseService.getTodayDate(localOrder.getCompany())
                     : remoteOrder.getDeliveryDate().toLocalDate());
             try {
               List<Long> stockMoveIds = deliveryService.createStocksMovesFromSaleOrder(localOrder);

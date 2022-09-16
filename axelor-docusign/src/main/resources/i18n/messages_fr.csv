@@ -101,6 +101,7 @@
 "The envelope setting is empty","Le paramétrage de l'enveloppe est vide",,
 "The in person signer is not found",,,
 "The signer is not found",,,
+"There is no user set in one of the docusign signer","Aucun utilisateur n'est paramétré pour un des signataires docusign",,
 "Type",,,
 "Unsigned file","Fichier non signé",,
 "User id",,,

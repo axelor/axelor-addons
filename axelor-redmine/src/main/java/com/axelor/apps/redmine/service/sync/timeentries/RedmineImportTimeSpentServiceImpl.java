@@ -28,8 +28,10 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.db.repo.UnitRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.hr.db.Employee;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
@@ -41,7 +43,6 @@ import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
-import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
@@ -82,6 +83,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
   @Inject
   public RedmineImportTimeSpentServiceImpl(
       UserRepository userRepo,
+      EmployeeRepository employeeRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       ProjectTaskRepository projectTaskRepo,
@@ -98,6 +100,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
 
     super(
         userRepo,
+        employeeRepo,
         projectRepo,
         productRepo,
         projectTaskRepo,
@@ -116,7 +119,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
   Logger LOG = LoggerFactory.getLogger(getClass());
   protected Project project;
   protected ProjectTask projectTask;
-  protected User user;
+  protected Employee employee;
   protected String unitHoursName = null;
   protected Long defaultCompanyId;
   protected String redmineTimeSpentProductDefault;
@@ -246,11 +249,11 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
 
     setRedmineCustomFieldsMap(redmineTimeEntry.getCustomFields());
 
-    // ERROR AND DON'T IMPORT IF USER NOT FOUND
+    // ERROR AND DON'T IMPORT IF EMPLOYEE NOT FOUND
 
-    user = getOsUser(redmineTimeEntry.getUserId());
+    employee = getOsEmployee(redmineTimeEntry.getUserId());
 
-    if (user == null) {
+    if (employee == null) {
       errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_USER_NOT_FOUND)};
 
       failedRedmineTimeEntriesIds =
@@ -337,7 +340,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
   @Transactional
   public void setTimesheetLineFields(TimesheetLine timesheetLine, TimeEntry redmineTimeEntry) {
 
-    timesheetLine.setUser(user);
+    timesheetLine.setEmployee(employee);
     timesheetLine.setRedmineId(redmineTimeEntry.getId());
     timesheetLine.setProject(project);
     timesheetLine.setProjectTask(projectTask);
@@ -365,8 +368,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
     value =
         StringUtils.isNotEmpty(redmineCustomFieldsMap.get(redmineTimeSpentProduct))
             ? redmineCustomFieldsMap.get(redmineTimeSpentProduct)
-            : (user.getEmployee() != null && user.getEmployee().getProduct() != null
-                ? user.getEmployee().getProduct().getCode()
+            : (employee != null && employee.getProduct() != null
+                ? employee.getProduct().getCode()
                 : redmineTimeSpentProductDefault);
 
     Product product = StringUtils.isNotEmpty(value) ? productRepo.findByCode(value) : null;
@@ -397,24 +400,24 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
         timesheetRepo
             .all()
             .filter(
-                "self.user = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
-                user,
+                "self.employee = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
+                employee,
                 TimesheetRepository.STATUS_CANCELED,
                 redmineSpentOn)
             .order("-fromDate")
             .fetchOne();
 
-    if (timesheet == null) {
-      timesheet = timesheetService.createTimesheet(user, redmineSpentOn, null);
-
-      if (timesheet.getCompany() == null) {
-        timesheet.setCompany(companyRepo.find(defaultCompanyId));
-      }
-    } else if (timesheet.getToDate() != null && timesheet.getToDate().isBefore(redmineSpentOn)) {
-      timesheet.setToDate(redmineSpentOn);
-    }
-
     try {
+      if (timesheet == null) {
+        timesheet = timesheetService.createTimesheet(employee, redmineSpentOn, null);
+
+        if (timesheet.getCompany() == null) {
+          timesheet.setCompany(companyRepo.find(defaultCompanyId));
+        }
+      } else if (timesheet.getToDate() != null && timesheet.getToDate().isBefore(redmineSpentOn)) {
+        timesheet.setToDate(redmineSpentOn);
+      }
+
       timesheetLine.setDuration(
           timesheetLineService.computeHoursDuration(timesheet, duration, false));
     } catch (AxelorException e) {
@@ -423,7 +426,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
     timesheet.setPeriodTotal(timesheet.getPeriodTotal().add(timesheetLine.getHoursDuration()));
     timesheetLine.setTimesheet(timesheet);
 
-    setCreatedByUser(timesheetLine, user, "setCreatedBy");
+    setCreatedByUser(timesheetLine, employee.getUser(), "setCreatedBy");
     setLocalDateTime(timesheetLine, redmineTimeEntry.getCreatedOn(), "setCreatedOn");
   }
 }

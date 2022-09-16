@@ -11,7 +11,7 @@
       ref="com.axelor.apps.docusign.db.DocuSignEnvelopeSetting"/>
     <string name="name" title="Name"/>
     <string name="envelopeId" title="Envelope id"/>
-    <string name="emailSubject" title="Email subject"/>
+    <string name="emailSubject" title="Email subject" large="true"/>
     <one-to-many name="docuSignDocumentList" title="Documents"
       ref="com.axelor.apps.docusign.db.DocuSignDocument" mappedBy="docuSignEnvelope"/>
     <one-to-many name="docuSignSignerList" title="Signers"

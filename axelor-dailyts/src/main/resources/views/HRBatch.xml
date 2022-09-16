@@ -11,8 +11,8 @@
         <panel name="dailyTimesheetCreatePanel" title="Create daily timesheets"
           showIf="actionSelect == 8">
           <field name="dailyTsDate"/>
-          <field name="dailyTsUserSet" colSpan="12" widget="TagSelect" canNew="false"
-            form-view="user-form" grid-view="user-grid"/>
+          <field name="dailyTsEmployeeSet" colSpan="12" widget="TagSelect" canNew="false"
+            form-view="employee-form" grid-view="employee-grid"/>
           <button name="createDailyTimesheetBtn" title="Create daily timesheets"
             onClick="save,action-hrbatch-method-hr-batch"/>
         </panel>

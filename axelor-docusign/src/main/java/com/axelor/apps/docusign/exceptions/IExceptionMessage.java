@@ -31,4 +31,6 @@ public interface IExceptionMessage {
   public static final String DOCUSIGN_SIGNER_NOT_FOUND = /*$$(*/ "The signer is not found" /*)*/;
   public static final String DOCUSIGN_ENVELOPE_SETTING_EMPTY = /*$$(*/
       "The envelope setting is empty" /*)*/;
+  public static final String DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY = /*$$(*/
+      "There is no user set in one of the docusign signer" /*)*/;
 }
