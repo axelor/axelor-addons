@@ -36,9 +36,9 @@
 
   <action-attrs name="action-timesheet-line-attrs-set-default-onnew">
     <attribute name="value" for="date" expr="eval: __parent__?.dailyTimesheetDate"/>
-    <attribute name="value" for="user" expr="eval: __parent__?.dailyTimesheetUser"/>
+    <attribute name="value" for="employee" expr="eval: __parent__?.dailyTimesheetEmployee"/>
     <attribute name="value" for="product"
-      expr="eval: __parent__?.dailyTimesheetUser?.employee?.product"/>
+      expr="eval: __parent__?.dailyTimesheetEmployee?.product"/>
     <attribute name="value" for="timesheet" expr="eval: __parent__?.timesheet"/>
     <attribute name="value" for="durationUnit"
       expr="eval: __parent__?.timesheet?.timeLoggingPreferenceSelect == 'days' ? __repo__(AppBase).all().fetchOne().unitDays : __parent__?.timesheet?.timeLoggingPreferenceSelect == 'minutes' ? __repo__(AppBase).all().fetchOne().unitMinutes : __repo__(AppBase).all().fetchOne().unitHours"/>

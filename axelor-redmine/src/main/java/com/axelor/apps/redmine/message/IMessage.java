@@ -69,6 +69,9 @@ public interface IMessage {
   static final String REDMINE_IMPORT_USER_NOT_FOUND = /*$$(*/
       "Entity not imported, no user found in OS" /*)*/;
 
+  static final String REDMINE_IMPORT_EMP_NOT_FOUND = /*$$(*/
+      "Entity not imported, no employee found in OS" /*)*/;
+
   static final String REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR = /*$$(*/
       "Custom field %s not found for %s, please check the app configurations" /*)*/;
 
@@ -80,11 +83,11 @@ public interface IMessage {
 
   static final String REDMINE_EXPORT_TIMESHEET_LINE_ERROR = /*$$(*/ "TimesheetLine (Export)" /*)*/;
 
-  static final String REDMINE_EXPORT_TIMESHEET_LINE_AOS_USER_EMAIL_NOT_CONFIGURED = /*$$(*/
-      "Entity not exported, user email is not configured in AOS" /*)*/;
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_AOS_EMPLOYEE_EMAIL_NOT_CONFIGURED = /*$$(*/
+      "Entity not exported, employee email is not configured in AOS" /*)*/;
 
-  static final String REDMINE_EXPORT_TIMESHEET_LINE_REDMINE_USER_NOT_FOUND = /*$$(*/
-      "Entity not exported, redmine user not found with similar email address as AOS timesheetline user" /*)*/;
+  static final String REDMINE_EXPORT_TIMESHEET_LINE_REDMINE_EMPLOYEE_NOT_FOUND = /*$$(*/
+      "Entity not exported, redmine user not found with similar email address as AOS timesheetline employee" /*)*/;
 
   static final String REDMINE_EXPORT_TIMESHEET_LINE_PROJECT_NOT_FOUND = /*$$(*/
       "Entity not exported, redmine project not found for AOS timesheetline project" /*)*/;

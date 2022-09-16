@@ -8,7 +8,8 @@
   <entity name="DailyTimesheet" cacheable="true">
 
     <date name="dailyTimesheetDate" title="Date"/>
-    <many-to-one name="dailyTimesheetUser" ref="com.axelor.auth.db.User" title="User"/>
+    <many-to-one name="dailyTimesheetEmployee" ref="com.axelor.apps.hr.db.Employee"
+      title="Employee"/>
     <one-to-many name="dailyTimesheetLineList" ref="com.axelor.apps.hr.db.TimesheetLine"
       title="Timesheet Lines" mappedBy="dailyTimesheet"/>
     <integer name="statusSelect" title="Status" selection="daily.timesheet.status.select"/>

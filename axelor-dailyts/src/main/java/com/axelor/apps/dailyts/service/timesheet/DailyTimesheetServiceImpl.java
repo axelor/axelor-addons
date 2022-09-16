@@ -23,6 +23,7 @@ import com.axelor.apps.base.db.repo.AppBaseRepository;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.DailyTimesheet;
+import com.axelor.apps.hr.db.Employee;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
@@ -35,7 +36,8 @@ import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.tool.date.DurationTool;
-import com.axelor.auth.db.User;
+import com.axelor.exception.AxelorException;
+import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
@@ -131,15 +133,19 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       }
     }
 
-    List<MailMessage> mailMessageList =
-        mailMessageRepository
-            .all()
-            .filter(
-                "self.relatedModel = ?1 and self.author = ?2 and date(self.createdOn) = ?3",
-                ProjectTask.class.getName(),
-                dailyTimesheet.getDailyTimesheetUser(),
-                dailyTimesheet.getDailyTimesheetDate())
-            .fetch();
+    List<MailMessage> mailMessageList = new ArrayList<>();
+
+    if (dailyTimesheet.getDailyTimesheetEmployee() != null) {
+      mailMessageList =
+          mailMessageRepository
+              .all()
+              .filter(
+                  "self.relatedModel = ?1 and self.author = ?2 and date(self.createdOn) = ?3",
+                  ProjectTask.class.getName(),
+                  dailyTimesheet.getDailyTimesheetEmployee().getUser(),
+                  dailyTimesheet.getDailyTimesheetDate())
+              .fetch();
+    }
 
     int count = 0;
 
@@ -194,8 +200,14 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     }
 
     // Update from favourites
-    Set<ProjectTask> favouriteTaskSet =
-        dailyTimesheet.getDailyTimesheetUser().getFavouriteTaskSet();
+    Set<ProjectTask> favouriteTaskSet = null;
+    Set<Project> favouriteProjectSet = null;
+
+    Employee dailyTsEmployee = dailyTimesheet.getDailyTimesheetEmployee();
+    if (dailyTsEmployee != null && dailyTsEmployee.getUser() != null) {
+      favouriteTaskSet = dailyTsEmployee.getUser().getFavouriteTaskSet();
+      favouriteProjectSet = dailyTsEmployee.getUser().getFavouriteProjectSet();
+    }
 
     if (CollectionUtils.isNotEmpty(favouriteTaskSet)) {
 
@@ -208,9 +220,6 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
         }
       }
     }
-
-    Set<Project> favouriteProjectSet =
-        dailyTimesheet.getDailyTimesheetUser().getFavouriteProjectSet();
 
     if (CollectionUtils.isNotEmpty(favouriteProjectSet)) {
 
@@ -230,7 +239,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     appBase = appBaseRepository.all().fetchOne();
 
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
-    User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
+    Employee dailyTimesheetEmployee = dailyTimesheet.getDailyTimesheetEmployee();
     List<TimesheetLine> dailyTimesheetLineList = dailyTimesheet.getDailyTimesheetLineList();
     String idString = "0";
 
@@ -249,16 +258,19 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       }
     }
 
-    List<ICalendarEvent> iCalendarEventList =
-        iCalendarEventRepository
-            .all()
-            .filter(
-                "self.id not in ("
-                    + idString
-                    + ") and (self.user = ?1 or self.organizer.user = ?1 or self.attendees.user in (?1)) and date(self.startDateTime) <= ?2 and date(self.endDateTime) >= ?2",
-                dailyTimesheetUser,
-                dailyTimesheetDate)
-            .fetch();
+    List<ICalendarEvent> iCalendarEventList = new ArrayList<>();
+    if (dailyTimesheetEmployee != null) {
+      iCalendarEventList =
+          iCalendarEventRepository
+              .all()
+              .filter(
+                  "self.id not in ("
+                      + idString
+                      + ") and (self.user = ?1 or self.organizer.user = ?1 or self.attendees.user in (?1)) and date(self.startDateTime) <= ?2 and date(self.endDateTime) >= ?2",
+                  dailyTimesheetEmployee.getUser(),
+                  dailyTimesheetDate)
+              .fetch();
+    }
 
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyy HH:mm");
     int count = 0;
@@ -292,21 +304,19 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       ICalendarEvent iCalendarEvent) {
 
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
-    User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
+    Employee dailyTimesheetEmployee = dailyTimesheet.getDailyTimesheetEmployee();
     Timesheet timesheet = dailyTimesheet.getTimesheet();
     String timePref = timesheet.getTimeLoggingPreferenceSelect();
 
-    if (timePref == null && dailyTimesheetUser.getEmployee() != null) {
-      timePref = dailyTimesheetUser.getEmployee().getTimeLoggingPreferenceSelect();
+    if (timePref == null && dailyTimesheetEmployee != null) {
+      timePref = dailyTimesheetEmployee.getTimeLoggingPreferenceSelect();
     }
 
     TimesheetLine timesheetLine =
         timesheetLineService.createTimesheetLine(
             project,
-            dailyTimesheetUser.getEmployee() != null
-                ? dailyTimesheetUser.getEmployee().getProduct()
-                : null,
-            dailyTimesheetUser,
+            dailyTimesheetEmployee != null ? dailyTimesheetEmployee.getProduct() : null,
+            dailyTimesheetEmployee,
             dailyTimesheetDate,
             timesheet,
             BigDecimal.ZERO,
@@ -329,8 +339,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
             minuteDuration.divide(MINUTES_IN_ONE_HOUR, 2, RoundingMode.HALF_UP));
         timesheetLine.setDuration(
             timePref != null
-                ? computeDurationFromHours(
-                    dailyTimesheetUser, timesheetLine.getHoursDuration(), timePref)
+                ? computeDurationFromHours(timesheetLine.getHoursDuration(), timePref)
                 : timesheetLine.getHoursDuration());
       }
     }
@@ -363,7 +372,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     return timesheetLine;
   }
 
-  public BigDecimal computeDurationFromHours(User user, BigDecimal duration, String timePref) {
+  public BigDecimal computeDurationFromHours(BigDecimal duration, String timePref) {
 
     switch (timePref) {
       case EmployeeRepository.TIME_PREFERENCE_DAYS:
@@ -380,22 +389,26 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   public Timesheet getRelatedTimesheet(DailyTimesheet dailyTimesheet) {
 
     LocalDate dailyTimesheetDate = dailyTimesheet.getDailyTimesheetDate();
-    User dailyTimesheetUser = dailyTimesheet.getDailyTimesheetUser();
+    Employee dailyTimesheetEmployee = dailyTimesheet.getDailyTimesheetEmployee();
 
     Timesheet timesheet =
         timesheetRepository
             .all()
             .filter(
-                "self.user = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
-                dailyTimesheetUser,
+                "self.employee = ?1 AND self.statusSelect != ?2 AND self.fromDate <= ?3",
+                dailyTimesheetEmployee,
                 TimesheetRepository.STATUS_CANCELED,
                 dailyTimesheetDate)
             .order("-fromDate")
             .fetchOne();
-
-    if (timesheet == null) {
-      timesheet = timesheetService.createTimesheet(dailyTimesheetUser, dailyTimesheetDate, null);
-      timesheetRepository.save(timesheet);
+    try {
+      if (timesheet == null) {
+        timesheet =
+            timesheetService.createTimesheet(dailyTimesheetEmployee, dailyTimesheetDate, null);
+        timesheetRepository.save(timesheet);
+      }
+    } catch (AxelorException e) {
+      TraceBackService.trace(e);
     }
 
     return timesheet;

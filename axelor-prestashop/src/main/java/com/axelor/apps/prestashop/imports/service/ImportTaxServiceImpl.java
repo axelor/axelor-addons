@@ -131,7 +131,9 @@ public class ImportTaxServiceImpl implements ImportTaxService {
                       : !CollectionUtils.isEmpty(localTax.getTaxLineList())
                           ? localTax.getTaxLineList().get(0)
                           : new TaxLine();
-          localTaxLine.setStartDate(appBaseService.getTodayDate());
+          localTaxLine.setStartDate(
+              appBaseService.getTodayDate(
+                  AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany()));
           localTaxLine.setValue(
               localTax.getId() == null
                   ? remoteTax.getRate().divide(new BigDecimal(100))

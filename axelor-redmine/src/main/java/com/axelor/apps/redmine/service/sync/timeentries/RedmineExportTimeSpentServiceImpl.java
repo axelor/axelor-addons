@@ -25,6 +25,7 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.hr.db.Employee;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
@@ -79,6 +80,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
   @Inject
   public RedmineExportTimeSpentServiceImpl(
       UserRepository userRepo,
+      EmployeeRepository employeeRepo,
       ProjectRepository projectRepo,
       ProductRepository productRepo,
       ProjectTaskRepository projectTaskRepo,
@@ -92,6 +94,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
     super(
         userRepo,
+        employeeRepo,
         projectRepo,
         productRepo,
         projectTaskRepo,
@@ -109,7 +112,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
   protected HashMap<String, Integer> redmineTimeEntryActivityMap = new HashMap<>();
   protected HashMap<String, Integer> redmineUserEmailMap = new HashMap<>();
-  protected HashMap<Long, String> aosUserEmailMap = new HashMap<>();
+  protected HashMap<Long, String> aosEmployeeEmailMap = new HashMap<>();
   protected HashMap<String, String> redmineUserLoginMap = new HashMap<>();
 
   protected HashMap<Integer, Boolean> redmineProjectIdValidationMap = new HashMap<>();
@@ -279,15 +282,15 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
       Transport redmineTransport)
       throws RedmineException {
 
-    String emailAddress = aosUserEmailMap.get(timesheetLine.getUser().getId());
+    String emailAddress = aosEmployeeEmailMap.get(timesheetLine.getEmployee().getId());
 
     if (StringUtils.isEmpty(emailAddress)) {
-      emailAddress = getEmailAddress(timesheetLine.getUser());
-      aosUserEmailMap.put(timesheetLine.getUser().getId(), emailAddress);
+      emailAddress = getEmailAddress(timesheetLine.getEmployee());
+      aosEmployeeEmailMap.put(timesheetLine.getEmployee().getId(), emailAddress);
 
       if (StringUtils.isEmpty(emailAddress)) {
         setErrorLog(
-            IMessage.REDMINE_EXPORT_TIMESHEET_LINE_AOS_USER_EMAIL_NOT_CONFIGURED,
+            IMessage.REDMINE_EXPORT_TIMESHEET_LINE_AOS_EMPLOYEE_EMAIL_NOT_CONFIGURED,
             redmineBatch,
             timesheetLine.getId().toString());
         fail++;
@@ -297,7 +300,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
     if (!redmineUserEmailMap.containsKey(emailAddress)) {
       setErrorLog(
-          IMessage.REDMINE_EXPORT_TIMESHEET_LINE_REDMINE_USER_NOT_FOUND,
+          IMessage.REDMINE_EXPORT_TIMESHEET_LINE_REDMINE_EMPLOYEE_NOT_FOUND,
           redmineBatch,
           timesheetLine.getId().toString());
       fail++;
@@ -408,25 +411,23 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
     timesheetLineRepo.save(timesheetLine);
   }
 
-  public String getEmailAddress(User user) {
+  public String getEmailAddress(Employee employee) {
 
     EmailAddress emailAddress = null;
-    Employee employee = user.getEmployee();
+    User user = employee.getUser();
 
     if (employee != null
         && employee.getContactPartner() != null
         && employee.getContactPartner().getEmailAddress() != null) {
       emailAddress = employee.getContactPartner().getEmailAddress();
-    } else if (user.getPartner() != null && user.getPartner().getEmailAddress() != null) {
-      emailAddress = user.getPartner().getEmailAddress();
-    } else if (!Strings.isNullOrEmpty(user.getEmail())) {
-      emailAddress = emailAddressRepo.findByAddress(user.getEmail());
 
-      if (emailAddress == null) {
-        emailAddress = new EmailAddress(user.getEmail());
+    } else if (user != null) {
+      if (user.getPartner() != null && user.getPartner().getEmailAddress() != null) {
+        emailAddress = user.getPartner().getEmailAddress();
+      } else if (!Strings.isNullOrEmpty(user.getEmail())) {
+        emailAddress = emailAddressRepo.findByAddress(user.getEmail());
       }
     }
-
     return emailAddress != null ? emailAddress.getAddress() : null;
   }
 
