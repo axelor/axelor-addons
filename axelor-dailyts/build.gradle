@@ -1,9 +1,10 @@
 apply plugin: "com.axelor.app-module"
 
 apply from: "../libs.gradle"
+apply from: "../version.gradle"
 
 apply {
-	version = "6.0.2"
+	version = addonsVersion
 }
 
 axelor {

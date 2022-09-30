@@ -2,12 +2,14 @@ plugins {
   id 'com.github.johnrengelman.shadow' version '5.2.0'
   id 'java'
 }
+
 apply plugin: "com.axelor.app-module"
 
 apply from: "../libs.gradle"
+apply from: "../version.gradle"
 
 apply {
-	version = "6.1-SNAPSHOT"
+	version = addonsVersion
 }
 
 axelor {
