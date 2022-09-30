@@ -1,9 +1,10 @@
 apply plugin: "com.axelor.app-module"
 
-apply {
-	version = "5.0.0-SNAPSHOT"
-}
+apply from: "../version.gradle"
 
+apply {
+	version = addonsVersion
+}
 axelor {
 	title "Axelor :: Teams app"
 	removable true
