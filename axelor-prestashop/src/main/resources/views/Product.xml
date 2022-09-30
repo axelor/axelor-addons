@@ -4,12 +4,14 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
   <form name="product-form" title="Product" model="com.axelor.apps.base.db.Product"
-    id="prestashop-product-form" onNew="action-group-base-product-onnew"
-    onLoad="action-group-product-onload" width="large">
-    <panel-include view="product-form" from="axelor-base"/>
-    <panel name="prestashopPanel" title="Prestashop">
-      <field name="productSynchronizedInPrestashop" widget="boolean-switch" colSpan="12"/>
-    </panel>
+    id="prestashop-product-form" extension="true">
+    <extend target="//panel-tabs[@name='productSpecificAttributes']">
+      <insert position="after">
+        <panel name="prestashopPanel" title="Prestashop">
+          <field name="productSynchronizedInPrestashop" widget="boolean-switch" colSpan="12"/>
+        </panel>
+      </insert>
+    </extend>
   </form>
 
 </object-views>
