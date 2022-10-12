@@ -40,7 +40,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -176,13 +175,11 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
                 paymentCondition.getPaymentConditionLineList();
 
             if (CollectionUtils.isNotEmpty(paymentConditionLines)) {
-              paymentConditionLines =
+              remoteCustomer.setMaxPaymentDays(
                   paymentConditionLines.stream()
-                      .sorted(Comparator.comparing(PaymentConditionLine::getSequence))
-                      .collect(Collectors.toList());
-
-              PaymentConditionLine paymentConditionLine = paymentConditionLines.get(0);
-              remoteCustomer.setMaxPaymentDays(paymentConditionLine.getPaymentTime());
+                      .min(Comparator.comparingInt(PaymentConditionLine::getSequence))
+                      .map(PaymentConditionLine::getPaymentTime)
+                      .orElse(0));
             }
           }
 
