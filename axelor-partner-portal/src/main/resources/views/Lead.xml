@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+  <grid name="partner-portal-lead-grid" title="Leads" model="com.axelor.apps.crm.db.Lead">
+    <menubar>
+      <menu name="leadReportsMenu" title="Reports" icon="fa-files-o">
+        <item name="printItem" title="Print" action="action-crm-lead-method-print"/>
+      </menu>
+      <menu name="leadToolsMenu" title="Tools" icon="fa-wrench">
+        <item name="assignToMeItem" title="Assign to me"
+          action="com.axelor.apps.crm.web.EventController:assignToMeLead"/>
+        <item name="checkDuplicateItem" title="Check duplicate"
+          action="action-general-check-duplicate-records"/>
+        <item name="importLeadsItem" title="Import leads"
+          action="action-crm-method-lead-import-leads"/>
+      </menu>
+    </menubar>
+    <hilite if="$unread" strong="true" color="black"/>
+    <field name="createdOn" hidden="true"/>
+    <field name="updatedOn" hidden="true"/>
+    <field name="name"/>
+    <field name="firstName"/>
+    <field name="enterpriseName"/>
+    <field name="fixedPhone" widget="phone"/>
+    <field name="emailAddress.address"/>
+    <field name="contactDate"/>
+    <field name="user" form-view="user-form" grid-view="user-grid"/>
+    <field name="statusSelect"/>
+    <field name="userUnreadIds" hidden="true"/>
+    <button name="grabLeadBtn" hideIf="user.id == _internalUserId" icon="fa-suitcase"
+      help="Take charge" onClick="com.axelor.apps.crm.web.EventController:assignToMeLead"/>
+    <button name="scheduleEventBtn" title="Schedule Event" icon="fa-group"
+      onClick="action-lead-view-schedule-event"/>
+    <button name="sendByEmailBtn" title="Send Email" icon="fa-envelope"
+      onClick="action-send-by-email-with-template"/>
+    <field name="$unread" type="boolean" hidden="true"/>
+  </grid>
+
+  <form name="partner-portal-lead-form" title="Lead" model="com.axelor.apps.crm.db.Lead"
+    onLoad="action-group-crm-lead-onload" onNew="action-group-crm-lead-onnew"
+    onSave="action-crm-lead-method-check-name">
+    <panel-tabs name="mainPanelTab">
+      <panel name="contactPanel" title="Contact" colSpan="12">
+        <panel name="contactDetailPanel" title="Contact details"
+          readonlyIf="statusSelect == 4 || statusSelect == 5" colSpan="12">
+          <field name="isDoNotCall" colSpan="3" hideIf="$readonly()"/>
+          <field name="isDoNotSendEmail" colSpan="3" hideIf="$readonly()"/>
+          <field name="$viewerCallAndEmail" showIf="$readonly()" colSpan="12"
+            showTitle="false">
+            <viewer>
+							<![CDATA[
+								<h4>
+									<span class="label label-default" style="background-color: #0285D8; margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.isDoNotCall" x-translate>Rejection of calls</span>
+									<span class="label label-default" style="background-color: #0285D8; margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.isDoNotSendEmail" x-translate>Rejection of e-mails</span>
+								</h4>
+							]]>
+            </viewer>
+          </field>
+          <field name="mobilePhone" widget="phone" colSpan="4"/>
+          <field name="emailAddress" colSpan="4" canSelect="false"
+            form-view="email-address-simple-form" x-show-icons="false">
+            <editor x-show-titles="false">
+              <field name="address" colSpan="12" placeholder="whatever@example.com"
+                pattern="^[a-z0-9A-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9A-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ!#$%&amp;'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2,})$"/>
+            </editor>
+          </field>
+          <field name="fixedPhone" widget="phone" colSpan="4"
+            x-placeholder-number-type="FIXED_LINE"/>
+          <field name="webSite" colSpan="6" placeholder="http://www.url.com" widget="url"
+            pattern="^(?:http(?:s)?://)?\S+(?:\.\S+)+$"/>
+        </panel>
+
+        <panel name="addressPanel" title="Primary address" showIf="$readonly()" colSpan="12">
+          <field name="$address" showTitle="false">
+            <viewer
+              depends="primaryAddress,primaryPostalCode,primaryCity,primaryState,primaryCountry">
+							<![CDATA[
+								{{record.primaryAddress}}<br/>
+								{{record.primaryPostalCode}} {{record.primaryCity.name}}<br/>
+								{{record.primaryState.name}}<span ng-if="record.primaryState.name &amp;&amp; record.primaryCountry.name"> - </span>{{record.primaryCountry.name}}
+							]]>
+            </viewer>
+          </field>
+        </panel>
+        <panel name="primaryAddress" title="Primary address"
+          readonlyIf="statusSelect == 4 || statusSelect == 5" colSpan="12" hideIf="$readonly()">
+          <field name="primaryAddress" colSpan="12"/>
+          <field name="primaryPostalCode" colSpan="6"/>
+          <field name="primaryCity" colSpan="6" form-view="city-form" grid-view="city-grid"
+            onChange="action-attrs-lead-set-primary-state-country-postal-code" canNew="true"/>
+          <field name="primaryState" colSpan="6" form-view="region-form"
+            grid-view="region-grid" canNew="true"/>
+          <field name="primaryCountry" colSpan="6" form-view="country-form"
+            grid-view="country-grid"/>
+        </panel>
+
+        <panel name="descriptionPanel" title="Description" colSpan="12">
+          <field name="description" colSpan="12" showTitle="false" widget="html" height="200"/>
+        </panel>
+      </panel>
+      <panel name="discussionPanel" title="Discussion">
+        <panel-dashlet action="action-partner-portal-view-lead-comment" colSpan="12"
+          showTitle="false"/>
+        <field name="partnerComment" hidden="true"/>
+      </panel>
+    </panel-tabs>
+    <panel name="sidePanel" sidebar="true">
+      <field name="contactDate" readonlyIf="statusSelect == 4 || statusSelect == 5"/>
+      <field name="assignedPartner" colSpan="12" readonly="true" hidden="true"
+        form-view="partner-customer-form" grid-view="partner-customer-grid"/>
+      <button name="assignPartnerBtn" colSpan="12" title="Assign to partner"
+        onClick="save,action-partner-portal-view-assign-to-partner" hidden="true"/>
+    </panel>
+
+  </form>
+
+  <form name="partner-portal-assign-partner-form" title="Assign to partner"
+    model="com.axelor.apps.crm.db.Lead">
+    <panel name="mainPanel">
+      <field name="$partner" title="Assigned partner" type="many-to-one"
+        target="com.axelor.apps.base.db.Partner" required="true"/>
+      <button name="assignPartnerBtn" title="Assign to partner"
+        onClick="save,action-partner-portal-method-lead-assign-partner,close"/>
+    </panel>
+  </form>
+
+  <action-method name="action-partner-portal-method-lead-assign-partner">
+    <call class="com.axelor.apps.partner.portal.web.LeadPartnerPortalController"
+      method="assignToPartner"/>
+  </action-method>
+
+  <action-method name="action-partner-portal-method-lead-onload">
+    <call class="com.axelor.apps.partner.portal.web.LeadPartnerPortalController"
+      method="markRead"/>
+  </action-method>
+
+  <action-view name="action-partner-portal-view-assign-to-partner"
+    title="Assign to partner" model="com.axelor.apps.crm.db.Lead">
+    <view type="form" name="partner-portal-assign-partner-form"/>
+    <view-param name="popup" value="reload"/>
+    <view-param name="show-toolbar" value="false"/>
+    <view-param name="show-confirm" value="false"/>
+    <view-param name="popup-save" value="false"/>
+    <view-param name="forceEdit" value="true"/>
+    <context name="_showRecord" expr="eval: id"/>
+  </action-view>
+
+  <action-view name="action-partner-portal-view-lead-comment" title="Comments"
+    model="com.axelor.apps.partner.portal.db.LeadPartnerComment">
+    <view type="grid" name="lead-partner-comment-grid"/>
+    <view type="form" name="lead-partner-comment-form"/>
+    <domain>self.id = :_id</domain>
+    <context name="_id" expr="eval: partnerComment.id"/>
+    <context name="_showSingle" expr="eval:true"/>
+  </action-view>
+
+  <action-group id="partner-portal-action-group-crm-lead-onload"
+    name="action-group-crm-lead-onload">
+    <action name="action-lead-method-set-social-network-url"/>
+    <action name="action-crm-lead-method-check-name"/>
+    <action name="action-partner-portal-lead-attrs"/>
+    <action name="action-partner-portal-method-lead-onload"
+      if="createdBy != __user__ &amp;&amp; id != null"/>
+  </action-group>
+
+  <action-attrs name="action-partner-portal-lead-attrs">
+    <attribute name="hidden" for="assignedPartner"
+      expr="eval:__user__.group?.code != 'admins'"/>
+    <attribute name="hidden" for="assignPartnerBtn"
+      expr="eval:__user__.group?.code != 'admins'"/>
+  </action-attrs>
+
+</object-views>
