@@ -1,0 +1,17 @@
+apply plugin: "com.axelor.app-module"
+
+apply from: "../libs.gradle"
+apply from: "../version.gradle"
+
+apply {
+  version = addonsVersion
+}
+
+axelor {
+  title "Axelor Partner Portal"
+  description "Axelor Partner Portal Module"
+}
+
+dependencies {
+  api project(":modules:axelor-customer-portal")
+}
