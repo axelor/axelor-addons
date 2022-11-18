@@ -32,13 +32,12 @@ public class LeadPartnerRepository extends LeadManagementRepository {
   public Map<String, Object> populate(Map<String, Object> json, Map<String, Object> context) {
 
     Map<String, Object> map = super.populate(json, context);
-
     if (json != null && json.get("id") != null) {
       map.put(
           "$unread",
-          Beans.get(CommonService.class).isUnreadRecord((String) json.get("userUnreadIds")));
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
-
     return map;
   }
 }

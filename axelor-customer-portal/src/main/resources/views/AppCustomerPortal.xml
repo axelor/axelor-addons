@@ -60,6 +60,15 @@
       <field name="quotationConfimationCodeTemplate"/>
       <field name="quotationConfimationTemplate"/>
     </panel>
+    <panel name="operationPanel">
+    	<button title="Open unread records" onClick="action-portal-view-unread-record-portal" name="unreadRecordBtn"/>
+    </panel>
   </form>
+
+  <action-view name="action-portal-view-unread-record-portal" title="Unread record"
+    model="com.axelor.apps.client.portal.db.UnreadRecord">
+    <view type="grid" name="unread-record-grid"/>
+    <view type="form" name="unread-record-form"/>
+  </action-view>
 
 </object-views>

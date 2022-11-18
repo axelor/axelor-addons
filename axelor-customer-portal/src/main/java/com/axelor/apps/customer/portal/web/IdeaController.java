@@ -51,6 +51,7 @@ public class IdeaController {
   public void markRead(ActionRequest request, ActionResponse response) {
 
     Idea idea = request.getContext().asType(Idea.class);
+    idea = Beans.get(IdeaRepository.class).find(idea.getId());
     Beans.get(CommonService.class).manageReadRecordIds(idea);
   }
 }

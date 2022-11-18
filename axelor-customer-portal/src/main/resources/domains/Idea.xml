@@ -9,7 +9,6 @@
 
     <string name="name"/>
     <string name="description" large="true"/>
-    <string name="userUnreadIds" large="true"/>
     <integer name="totalVote"/>
     <boolean name="accepted"/>
     <boolean name="close"/>

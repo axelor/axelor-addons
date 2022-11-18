@@ -12,7 +12,6 @@
     <many-to-many name="partnerCategorySet"
       ref="com.axelor.apps.base.db.PartnerCategory" title="Client categories"/>
     <string name="contents" large="true"/>
-    <string name="userUnreadIds" large="true"/>
 
   </entity>
 

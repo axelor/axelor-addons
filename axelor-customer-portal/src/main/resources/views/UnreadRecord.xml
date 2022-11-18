@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+  <grid name="unread-record-grid" title="Unread records"
+    model="com.axelor.apps.client.portal.db.UnreadRecord" groupBy="relatedToSelect"
+    orderBy="relatedToSelectId">
+    <field name="relatedToSelect"/>
+    <field name="relatedToSelectId"/>
+    <field name="userUnreadIds"/>
+  </grid>
+
+  <form name="unread-record-form" title="Unread record"
+    model="com.axelor.apps.client.portal.db.UnreadRecord">
+    <panel name="mainPanel">
+      <field name="relatedToSelect" required="true" widget="RefSelect"
+        x-related="relatedToSelectId" colSpan="12"/>
+      <field name="relatedToSelectId" hidden="true"/>
+      <field name="userUnreadIds" colSpan="12"/>
+    </panel>
+  </form>
+
+</object-views>

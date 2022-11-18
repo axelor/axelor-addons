@@ -9,11 +9,10 @@
 
     <string name="title" namecolumn="true"/>
     <string name="description" large="true"/>
-    <string name="userUnreadIds" large="true"/>
     <many-to-one name="discussionGroup"
       ref="com.axelor.apps.client.portal.db.DiscussionGroup"/>
 
-    <track on="UPDATE">
+    <track>
       <field name="title"/>
       <field name="description"/>
     </track>

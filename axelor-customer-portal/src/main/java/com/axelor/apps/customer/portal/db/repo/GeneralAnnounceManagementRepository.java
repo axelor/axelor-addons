@@ -28,7 +28,7 @@ public class GeneralAnnounceManagementRepository extends GeneralAnnouncementRepo
   @Override
   public GeneralAnnouncement save(GeneralAnnouncement announce) {
     if (announce.getVersion().equals(0)) {
-      announce.setUserUnreadIds(Beans.get(CommonService.class).getUnreadRecordIds(announce));
+      Beans.get(CommonService.class).manageUnreadRecord(announce);
     }
     return super.save(announce);
   }
@@ -39,7 +39,8 @@ public class GeneralAnnounceManagementRepository extends GeneralAnnouncementRepo
     if (json != null && json.get("id") != null) {
       map.put(
           "$unread",
-          Beans.get(CommonService.class).isUnreadRecord((String) json.get("userUnreadIds")));
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
 
     return map;

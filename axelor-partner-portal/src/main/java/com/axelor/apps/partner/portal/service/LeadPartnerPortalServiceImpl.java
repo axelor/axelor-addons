@@ -18,15 +18,22 @@
 package com.axelor.apps.partner.portal.service;
 
 import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.client.portal.db.UnreadRecord;
+import com.axelor.apps.client.portal.db.repo.UnreadRecordRepository;
 import com.axelor.apps.crm.db.Lead;
 import com.axelor.auth.db.User;
 import com.axelor.common.ObjectUtils;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class LeadPartnerPortalServiceImpl implements LeadPartnerPortalService {
 
+  @Inject UnreadRecordRepository unreadRecordRepo;
+
+  @Transactional
   @Override
   public void manageUnreadLead(Lead lead, Partner partner) {
 
@@ -45,9 +52,25 @@ public class LeadPartnerPortalServiceImpl implements LeadPartnerPortalService {
             .filter(contactPartner -> contactPartner.getLinkedUser() != null)
             .map(Partner::getLinkedUser)
             .collect(Collectors.toList()));
-    lead.setUserUnreadIds(
+
+    UnreadRecord unreadRecord =
+        unreadRecordRepo
+            .all()
+            .filter(
+                "self.relatedToSelect = :relatedToSelect AND self.relatedToSelectId = :relatedToSelectId")
+            .bind("relatedToSelect", Lead.class.getCanonicalName())
+            .bind("relatedToSelectId", lead.getId())
+            .fetchOne();
+    if (unreadRecord == null) {
+      unreadRecord = new UnreadRecord();
+      unreadRecord.setRelatedToSelect(Lead.class.getCanonicalName());
+      unreadRecord.setRelatedToSelectId(lead.getId());
+    }
+
+    unreadRecord.setUserUnreadIds(
         userList.stream()
             .map(user -> user.getId().toString())
-            .collect(Collectors.joining("#$", "#", "$")));
+            .collect(Collectors.joining("$#", "#", "$")));
+    unreadRecordRepo.save(unreadRecord);
   }
 }

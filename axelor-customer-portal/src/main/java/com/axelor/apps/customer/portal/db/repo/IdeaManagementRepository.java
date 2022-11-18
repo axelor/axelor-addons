@@ -28,7 +28,7 @@ public class IdeaManagementRepository extends IdeaRepository {
   @Override
   public Idea save(Idea idea) {
     if (idea.getVersion().equals(0)) {
-      idea.setUserUnreadIds(Beans.get(CommonService.class).getUnreadRecordIds(idea));
+      Beans.get(CommonService.class).manageUnreadRecord(idea);
     }
     return super.save(idea);
   }
@@ -40,7 +40,8 @@ public class IdeaManagementRepository extends IdeaRepository {
     if (json != null && json.get("id") != null) {
       map.put(
           "$unread",
-          Beans.get(CommonService.class).isUnreadRecord((String) json.get("userUnreadIds")));
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
 
     return map;
