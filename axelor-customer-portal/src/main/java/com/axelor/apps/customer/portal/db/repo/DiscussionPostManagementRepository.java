@@ -43,7 +43,8 @@ public class DiscussionPostManagementRepository extends DiscussionPostRepository
     if (json != null && json.get("id") != null) {
       map.put(
           "$unread",
-          Beans.get(CommonService.class).isUnreadRecord((String) json.get("userUnreadIds")));
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
 
     return map;
@@ -52,7 +53,7 @@ public class DiscussionPostManagementRepository extends DiscussionPostRepository
   @Override
   public DiscussionPost save(DiscussionPost post) {
     if (post.getVersion().equals(0)) {
-      post.setUserUnreadIds(Beans.get(CommonService.class).getUnreadRecordIds(post));
+      Beans.get(CommonService.class).manageUnreadRecord(post);
     }
 
     return super.save(post);

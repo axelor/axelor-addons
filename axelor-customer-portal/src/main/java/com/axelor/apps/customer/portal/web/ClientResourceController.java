@@ -18,6 +18,7 @@
 package com.axelor.apps.customer.portal.web;
 
 import com.axelor.apps.client.portal.db.ClientResource;
+import com.axelor.apps.client.portal.db.repo.ClientResourceRepository;
 import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
@@ -29,6 +30,7 @@ public class ClientResourceController {
   public void markRead(ActionRequest request, ActionResponse response) {
 
     ClientResource resource = request.getContext().asType(ClientResource.class);
+    resource = Beans.get(ClientResourceRepository.class).find(resource.getId());
     Beans.get(CommonService.class).manageReadRecordIds(resource);
   }
 }

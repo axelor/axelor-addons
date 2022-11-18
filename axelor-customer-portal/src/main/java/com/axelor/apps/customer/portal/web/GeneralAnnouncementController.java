@@ -18,6 +18,7 @@
 package com.axelor.apps.customer.portal.web;
 
 import com.axelor.apps.client.portal.db.GeneralAnnouncement;
+import com.axelor.apps.client.portal.db.repo.GeneralAnnouncementRepository;
 import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
@@ -29,6 +30,7 @@ public class GeneralAnnouncementController {
   @Transactional
   public void markRead(ActionRequest request, ActionResponse response) {
     GeneralAnnouncement announce = request.getContext().asType(GeneralAnnouncement.class);
+    announce = Beans.get(GeneralAnnouncementRepository.class).find(announce.getId());
     Beans.get(CommonService.class).manageReadRecordIds(announce);
   }
 }

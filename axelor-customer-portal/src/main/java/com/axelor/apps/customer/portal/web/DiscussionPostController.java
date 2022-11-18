@@ -46,6 +46,7 @@ public class DiscussionPostController {
   public void markRead(ActionRequest request, ActionResponse response) {
 
     DiscussionPost post = request.getContext().asType(DiscussionPost.class);
+    post = Beans.get(DiscussionPostRepository.class).find(post.getId());
     Beans.get(CommonService.class).manageReadRecordIds(post);
   }
 }

@@ -31,8 +31,7 @@ public class ClientResourceManagementRepository extends ClientResourceRepository
   public ClientResource save(ClientResource clientResource) {
 
     if (clientResource.getVersion().equals(0)) {
-      clientResource.setUserUnreadIds(
-          Beans.get(CommonService.class).getUnreadRecordIds(clientResource));
+      Beans.get(CommonService.class).manageUnreadRecord(clientResource);
     }
     clientResource = super.save(clientResource);
     MetaFile metaFile = clientResource.getResourceFile();
@@ -52,7 +51,8 @@ public class ClientResourceManagementRepository extends ClientResourceRepository
     if (json != null && json.get("id") != null) {
       map.put(
           "$unread",
-          Beans.get(CommonService.class).isUnreadRecord((String) json.get("userUnreadIds")));
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
 
     return map;

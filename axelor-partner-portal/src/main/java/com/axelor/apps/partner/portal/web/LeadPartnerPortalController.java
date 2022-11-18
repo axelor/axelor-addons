@@ -23,6 +23,7 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.repo.LeadRepository;
+import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.apps.partner.portal.db.LeadPartnerComment;
 import com.axelor.apps.partner.portal.db.repo.LeadPartnerCommentRepository;
 import com.axelor.apps.partner.portal.service.ClientViewPartnerPortalService;
@@ -92,18 +93,11 @@ public class LeadPartnerPortalController {
     response.setReload(true);
   }
 
-  @Transactional
   public void markRead(ActionRequest request, ActionResponse response) {
 
     Lead lead = request.getContext().asType(Lead.class);
-    User currentUser = Beans.get(UserService.class).getUser();
-    String ids = lead.getUserUnreadIds();
-    if (ids == null) {
-      return;
-    }
-
-    lead.setUserUnreadIds(ids.replace(String.format("#%s$", currentUser.toString()), ""));
-    Beans.get(LeadRepository.class).save(lead);
+    lead = Beans.get(LeadRepository.class).find(lead.getId());
+    Beans.get(CommonService.class).manageReadRecordIds(lead);
   }
 
   public void showNewLead(ActionRequest request, ActionResponse response) {

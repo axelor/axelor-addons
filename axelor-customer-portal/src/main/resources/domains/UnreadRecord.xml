@@ -5,14 +5,11 @@
 
   <module name="client-portal" package="com.axelor.apps.client.portal.db"/>
 
-  <entity name="ClientResource" lang="java" cacheable="true">
-
-    <string name="name" title="Title"/>
-    <many-to-many name="partnerCategorySet"
-      ref="com.axelor.apps.base.db.PartnerCategory" title="Client categories"/>
-    <many-to-one name="resourceFile" ref="com.axelor.meta.db.MetaFile" title="File"/>
-    <string name="description" large="true"/>
-
+  <entity name="UnreadRecord" lang="java">
+    <string name="relatedToSelect" title="Related to"
+      selection="unread.record.related.to.select"/>
+    <long name="relatedToSelectId"/>
+    <string name="userUnreadIds" large="true"/>
   </entity>
 
 </domain-models>

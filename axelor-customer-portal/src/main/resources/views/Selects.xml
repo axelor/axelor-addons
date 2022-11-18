@@ -15,4 +15,11 @@
     <option value="2">Quotation refused</option>
   </selection>
 
+  <selection name="unread.record.related.to.select">
+    <option value="com.axelor.apps.client.portal.db.DiscussionPost">Discussion post</option>
+    <option value="com.axelor.apps.client.portal.db.GeneralAnnouncement">General announcement</option>
+    <option value="com.axelor.apps.client.portal.db.ClientResource">Resource</option>
+    <option value="com.axelor.apps.client.portal.db.Idea">Idea</option>
+  </selection>
+
 </object-views>
