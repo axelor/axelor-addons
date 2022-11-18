@@ -26,8 +26,7 @@
   <form name="discussion-post-form" title="Discussion post" canSave="false"
     model="com.axelor.apps.client.portal.db.DiscussionPost" width="large" canNew="$isAdd"
     onLoad="action-client-portal-group-discussion-post-onload"
-    onNew="action-client-portal-attrs-discussion-post-onnew"
-    onSave="save,action-client-portal-method-discussion-post-onsave">
+    onNew="action-client-portal-attrs-discussion-post-onnew">
     <panel name="mainPanel">
       <field name="title" required="true" colSpan="8"/>
       <button onClick="save,action-client-portal-attrs-discussion-post-onload" name="postBtn"
@@ -61,11 +60,6 @@
       expr="eval: __repo__(DiscussionGroup).find(discussionGroupId)" if="discussionGroupId"/>
     <attribute name="value" for="$isAdd" expr="eval:isAdd"/>
   </action-attrs>
-
-  <action-method name="action-client-portal-method-discussion-post-onsave">
-    <call class="com.axelor.apps.customer.portal.web.DiscussionPostController"
-      method="addFollower"/>
-  </action-method>
 
   <action-method name="action-client-portal-method-discussion-post-onload">
     <call class="com.axelor.apps.customer.portal.web.DiscussionPostController"

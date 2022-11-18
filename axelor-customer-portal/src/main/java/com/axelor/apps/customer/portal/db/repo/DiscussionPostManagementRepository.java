@@ -20,6 +20,7 @@ package com.axelor.apps.customer.portal.db.repo;
 import com.axelor.apps.client.portal.db.DiscussionPost;
 import com.axelor.apps.client.portal.db.repo.DiscussionPostRepository;
 import com.axelor.apps.customer.portal.service.CommonService;
+import com.axelor.apps.customer.portal.service.DiscussionPostService;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class DiscussionPostManagementRepository extends DiscussionPostRepository
     if (post.getVersion().equals(0)) {
       Beans.get(CommonService.class).manageUnreadRecord(post);
     }
-
+    Beans.get(DiscussionPostService.class).addFollowers(post);
     return super.save(post);
   }
 }
