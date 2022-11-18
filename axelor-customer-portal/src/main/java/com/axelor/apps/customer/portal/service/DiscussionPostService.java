@@ -15,23 +15,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.customer.portal.web;
+package com.axelor.apps.customer.portal.service;
 
 import com.axelor.apps.client.portal.db.DiscussionPost;
-import com.axelor.apps.client.portal.db.repo.DiscussionPostRepository;
-import com.axelor.apps.customer.portal.service.CommonService;
-import com.axelor.inject.Beans;
-import com.axelor.rpc.ActionRequest;
-import com.axelor.rpc.ActionResponse;
-import com.google.inject.persist.Transactional;
 
-public class DiscussionPostController {
-
-  @Transactional
-  public void markRead(ActionRequest request, ActionResponse response) {
-
-    DiscussionPost post = request.getContext().asType(DiscussionPost.class);
-    post = Beans.get(DiscussionPostRepository.class).find(post.getId());
-    Beans.get(CommonService.class).manageReadRecordIds(post);
-  }
+public interface DiscussionPostService {
+  public void addFollowers(DiscussionPost discussionPost);
 }

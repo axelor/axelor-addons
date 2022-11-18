@@ -61,7 +61,8 @@
       <field name="quotationConfimationTemplate"/>
     </panel>
     <panel name="operationPanel">
-    	<button title="Open unread records" onClick="action-portal-view-unread-record-portal" name="unreadRecordBtn"/>
+      <button title="Open unread records" onClick="action-portal-view-unread-record-portal"
+        name="unreadRecordBtn"/>
     </panel>
   </form>
 
