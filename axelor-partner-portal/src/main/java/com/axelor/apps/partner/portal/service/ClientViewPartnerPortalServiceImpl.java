@@ -26,6 +26,7 @@ import com.axelor.apps.client.portal.db.repo.GeneralAnnouncementRepository;
 import com.axelor.apps.client.portal.db.repo.IdeaRepository;
 import com.axelor.apps.client.portal.db.repo.PortalIdeaTagRepository;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
+import com.axelor.apps.client.portal.db.repo.UnreadRecordRepository;
 import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.customer.portal.service.ClientViewPortalServiceImpl;
@@ -34,15 +35,11 @@ import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.stock.db.repo.StockMoveRepository;
-import com.axelor.auth.db.User;
 import com.axelor.common.ObjectUtils;
-import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.Query;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -121,15 +118,13 @@ public class ClientViewPartnerPortalServiceImpl extends ClientViewPortalServiceI
   @Override
   public List<Long> getUnreadLeads() {
 
-    User currentUser = Beans.get(UserService.class).getUser();
-    String ids = currentUser.getLeadUnreadIds();
-    if (StringUtils.isBlank(ids)) {
-      return new ArrayList<>();
-    }
-
-    return Arrays.asList(ids.split(",")).stream()
-        .filter(idStr -> StringUtils.notBlank(idStr))
-        .map(Long::parseLong)
+    return Beans.get(UnreadRecordRepository.class).all()
+        .filter(
+            "self.relatedToSelect = :relatedToSelect AND self.userUnreadIds LIKE '%#"
+                + Beans.get(UserService.class).getUser().getId()
+                + "$%'")
+        .bind("relatedToSelect", Lead.class.getCanonicalName()).fetch().stream()
+        .map(item -> item.getRelatedToSelectId())
         .collect(Collectors.toList());
   }
 }
