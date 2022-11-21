@@ -23,14 +23,13 @@ import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.repo.LeadRepository;
+import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.apps.partner.portal.db.LeadPartnerComment;
 import com.axelor.apps.partner.portal.db.repo.LeadPartnerCommentRepository;
 import com.axelor.apps.partner.portal.service.ClientViewPartnerPortalService;
 import com.axelor.apps.partner.portal.service.LeadPartnerPortalService;
 import com.axelor.auth.db.User;
-import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.ObjectUtils;
-import com.axelor.common.StringUtils;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
@@ -42,8 +41,6 @@ import com.axelor.rpc.ActionResponse;
 import com.axelor.rpc.Context;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -96,26 +93,11 @@ public class LeadPartnerPortalController {
     response.setReload(true);
   }
 
-  @Transactional
   public void markRead(ActionRequest request, ActionResponse response) {
 
     Lead lead = request.getContext().asType(Lead.class);
-    Long id = lead.getId();
-    if (id == null) {
-      return;
-    }
-
-    User currentUser = Beans.get(UserService.class).getUser();
-    String ids =
-        StringUtils.notBlank(currentUser.getLeadUnreadIds()) ? currentUser.getLeadUnreadIds() : "";
-
-    List<String> idList = new ArrayList<String>(Arrays.asList(ids.split(",")));
-    String idStr = id.toString();
-    if (!ObjectUtils.isEmpty(idList) && idList.contains(idStr)) {
-      idList.remove(idStr);
-      currentUser.setLeadUnreadIds(String.join(",", idList));
-      Beans.get(UserRepository.class).save(currentUser);
-    }
+    lead = Beans.get(LeadRepository.class).find(lead.getId());
+    Beans.get(CommonService.class).manageReadRecordIds(lead);
   }
 
   public void showNewLead(ActionRequest request, ActionResponse response) {

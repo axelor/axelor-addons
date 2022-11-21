@@ -17,46 +17,18 @@
  */
 package com.axelor.apps.customer.portal.web;
 
-import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.ClientResource;
-import com.axelor.auth.db.User;
-import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.ObjectUtils;
-import com.axelor.common.StringUtils;
+import com.axelor.apps.client.portal.db.repo.ClientResourceRepository;
+import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
-import com.google.inject.persist.Transactional;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class ClientResourceController {
-  @Transactional
   public void markRead(ActionRequest request, ActionResponse response) {
 
     ClientResource resource = request.getContext().asType(ClientResource.class);
-    User currentUser = Beans.get(UserService.class).getUser();
-    if (resource.getCreatedBy().equals(currentUser)) {
-      return;
-    }
-
-    Long id = resource.getId();
-    if (id == null) {
-      return;
-    }
-
-    String ids =
-        StringUtils.notBlank(currentUser.getResourceUnreadIds())
-            ? currentUser.getResourceUnreadIds()
-            : "";
-
-    List<String> idList = new ArrayList<String>(Arrays.asList(ids.split(",")));
-    String idStr = id.toString();
-    if (!ObjectUtils.isEmpty(idList) && idList.contains(idStr)) {
-      idList.remove(idStr);
-      currentUser.setResourceUnreadIds(String.join(",", idList));
-      Beans.get(UserRepository.class).save(currentUser);
-    }
+    resource = Beans.get(ClientResourceRepository.class).find(resource.getId());
+    Beans.get(CommonService.class).manageReadRecordIds(resource);
   }
 }

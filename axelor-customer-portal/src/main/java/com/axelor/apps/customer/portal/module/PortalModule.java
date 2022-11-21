@@ -47,6 +47,8 @@ import com.axelor.apps.customer.portal.service.ClientViewPortalService;
 import com.axelor.apps.customer.portal.service.ClientViewPortalServiceImpl;
 import com.axelor.apps.customer.portal.service.DiscussionGroupService;
 import com.axelor.apps.customer.portal.service.DiscussionGroupServiceImpl;
+import com.axelor.apps.customer.portal.service.DiscussionPostService;
+import com.axelor.apps.customer.portal.service.DiscussionPostServiceImpl;
 import com.axelor.apps.customer.portal.service.MetaFilesPortal;
 import com.axelor.apps.customer.portal.service.PartnerPortalService;
 import com.axelor.apps.customer.portal.service.PartnerPortalServiceImpl;
@@ -92,6 +94,7 @@ public class PortalModule extends AxelorModule {
     bind(PayboxService.class).to(PayboxServiceImpl.class);
     bind(PaypalService.class).to(PaypalServiceImpl.class);
     bind(StripePaymentService.class).to(StripePaymentServiceImpl.class);
+    bind(DiscussionPostService.class).to(DiscussionPostServiceImpl.class);
 
     // intercept all response methods
     bindInterceptor(

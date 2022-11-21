@@ -37,31 +37,82 @@
     <field name="$unread" type="boolean" hidden="true"/>
   </grid>
 
-  <form name="lead-form" title="Lead" id="partner-portal-lead-form"
-    model="com.axelor.apps.crm.db.Lead" extension="true">
-    <extend target="//field[@name='contactDate']">
-      <attribute name="hidden" value="true"/>
-    </extend>
-    <extend target="//panel-tabs[@name='mainPanelTab']/*[last()]">
-      <insert position="after">
-        <panel name="discussionPanel" title="Discussion">
-          <panel-dashlet action="action-partner-portal-view-lead-comment" colSpan="12"
-            showTitle="false"/>
-          <field name="partnerComment" hidden="true"/>
+  <form name="partner-portal-lead-form" title="Lead" model="com.axelor.apps.crm.db.Lead"
+    onLoad="action-group-crm-lead-onload" onNew="action-group-crm-lead-onnew"
+    onSave="action-crm-lead-method-check-name">
+    <panel-tabs name="mainPanelTab">
+      <panel name="contactPanel" title="Contact" colSpan="12">
+        <panel name="contactDetailPanel" title="Contact details"
+          readonlyIf="statusSelect == 4 || statusSelect == 5" colSpan="12">
+          <field name="isDoNotCall" colSpan="3" hideIf="$readonly()"/>
+          <field name="isDoNotSendEmail" colSpan="3" hideIf="$readonly()"/>
+          <field name="$viewerCallAndEmail" showIf="$readonly()" colSpan="12"
+            showTitle="false">
+            <viewer>
+							<![CDATA[
+								<h4>
+									<span class="label label-default" style="background-color: #0285D8; margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.isDoNotCall" x-translate>Rejection of calls</span>
+									<span class="label label-default" style="background-color: #0285D8; margin: 5px 0 !important; display: inline-table; line-height: initial;" ng-show="record.isDoNotSendEmail" x-translate>Rejection of e-mails</span>
+								</h4>
+							]]>
+            </viewer>
+          </field>
+          <field name="mobilePhone" widget="phone" colSpan="4"/>
+          <field name="emailAddress" colSpan="4" canSelect="false"
+            form-view="email-address-simple-form" x-show-icons="false">
+            <editor x-show-titles="false">
+              <field name="address" colSpan="12" placeholder="whatever@example.com"
+                pattern="^[a-z0-9A-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ!#$%&amp;'*+/=?^_`{|}~-]+(?:\.[a-z0-9A-ZáàâäãåçéèêëíìîïñóòôöõúùûüýÿæœÁÀÂÄÃÅÇÉÈÊËÍÌÎÏÑÓÒÔÖÕÚÙÛÜÝŸÆŒ!#$%&amp;'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[a-z]{2,})$"/>
+            </editor>
+          </field>
+          <field name="fixedPhone" widget="phone" colSpan="4"
+            x-placeholder-number-type="FIXED_LINE"/>
+          <field name="webSite" colSpan="6" placeholder="http://www.url.com" widget="url"
+            pattern="^(?:http(?:s)?://)?\S+(?:\.\S+)+$"/>
         </panel>
-      </insert>
-    </extend>
-    <extend target="//panel[@name='followUpPanel']">
-      <insert position="after">
-        <panel name="sidePanel" sidebar="true">
-          <field name="contactDate" readonlyIf="statusSelect == 4 || statusSelect == 5"/>
-          <field name="assignedPartner" colSpan="12" readonly="true" hidden="true"
-            form-view="partner-customer-form" grid-view="partner-customer-grid"/>
-          <button name="assignPartnerBtn" colSpan="12" title="Assign to partner"
-            onClick="save,action-partner-portal-view-assign-to-partner" hidden="true"/>
+
+        <panel name="addressPanel" title="Primary address" showIf="$readonly()" colSpan="12">
+          <field name="$address" showTitle="false">
+            <viewer
+              depends="primaryAddress,primaryPostalCode,primaryCity,primaryState,primaryCountry">
+							<![CDATA[
+								{{record.primaryAddress}}<br/>
+								{{record.primaryPostalCode}} {{record.primaryCity.name}}<br/>
+								{{record.primaryState.name}}<span ng-if="record.primaryState.name &amp;&amp; record.primaryCountry.name"> - </span>{{record.primaryCountry.name}}
+							]]>
+            </viewer>
+          </field>
         </panel>
-      </insert>
-    </extend>
+        <panel name="primaryAddress" title="Primary address"
+          readonlyIf="statusSelect == 4 || statusSelect == 5" colSpan="12" hideIf="$readonly()">
+          <field name="primaryAddress" colSpan="12"/>
+          <field name="primaryPostalCode" colSpan="6"/>
+          <field name="primaryCity" colSpan="6" form-view="city-form" grid-view="city-grid"
+            onChange="action-attrs-lead-set-primary-state-country-postal-code" canNew="true"/>
+          <field name="primaryState" colSpan="6" form-view="region-form"
+            grid-view="region-grid" canNew="true"/>
+          <field name="primaryCountry" colSpan="6" form-view="country-form"
+            grid-view="country-grid"/>
+        </panel>
+
+        <panel name="descriptionPanel" title="Description" colSpan="12">
+          <field name="description" colSpan="12" showTitle="false" widget="html" height="200"/>
+        </panel>
+      </panel>
+      <panel name="discussionPanel" title="Discussion">
+        <panel-dashlet action="action-partner-portal-view-lead-comment" colSpan="12"
+          showTitle="false"/>
+        <field name="partnerComment" hidden="true"/>
+      </panel>
+    </panel-tabs>
+    <panel name="sidePanel" sidebar="true">
+      <field name="contactDate" readonlyIf="statusSelect == 4 || statusSelect == 5"/>
+      <field name="assignedPartner" colSpan="12" readonly="true" hidden="true"
+        form-view="partner-customer-form" grid-view="partner-customer-grid"/>
+      <button name="assignPartnerBtn" colSpan="12" title="Assign to partner"
+        onClick="save,action-partner-portal-view-assign-to-partner" hidden="true"/>
+    </panel>
+
   </form>
 
   <form name="partner-portal-assign-partner-form" title="Assign to partner"

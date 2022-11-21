@@ -3,10 +3,13 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
-  <module name="auth" package="com.axelor.auth.db"/>
+  <module name="client-portal" package="com.axelor.apps.client.portal.db"/>
 
-  <entity name="User" sequential="true" lang="java">
-    <string name="leadUnreadIds" large="true"/>
+  <entity name="UnreadRecord" lang="java">
+    <string name="relatedToSelect" title="Related to"
+      selection="unread.record.related.to.select"/>
+    <long name="relatedToSelectId"/>
+    <string name="userUnreadIds" large="true"/>
   </entity>
 
 </domain-models>

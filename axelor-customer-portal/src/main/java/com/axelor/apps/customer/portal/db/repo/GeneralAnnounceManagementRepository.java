@@ -17,18 +17,12 @@
  */
 package com.axelor.apps.customer.portal.db.repo;
 
-import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.GeneralAnnouncement;
 import com.axelor.apps.client.portal.db.repo.GeneralAnnouncementRepository;
-import com.axelor.auth.db.User;
+import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.ObjectUtils;
-import com.axelor.common.StringUtils;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class GeneralAnnounceManagementRepository extends GeneralAnnouncementRepository {
@@ -38,47 +32,20 @@ public class GeneralAnnounceManagementRepository extends GeneralAnnouncementRepo
   @Override
   public GeneralAnnouncement save(GeneralAnnouncement announce) {
 
-    if (announce.getVersion() != 0) {
-      return super.save(announce);
+    if (announce.getVersion().equals(0)) {
+      Beans.get(CommonService.class).manageUnreadRecord(announce);
     }
-
-    if (announce.getVersion() == 0) {
-      announce = super.save(announce);
-      User currentUser = Beans.get(UserService.class).getUser();
-      List<User> users =
-          userRepo.all().filter("self.id != :id").bind("id", currentUser.getId()).fetch();
-      for (User user : users) {
-        String ids = "";
-        if (StringUtils.notBlank(user.getAnnounceUnreadIds())) {
-          ids = String.format("%s,", user.getAnnounceUnreadIds());
-          List<String> idList = new ArrayList<String>(Arrays.asList(ids.split(",")));
-          if (idList.contains(announce.getId().toString())) {
-            continue;
-          }
-        }
-        user.setAnnounceUnreadIds(String.format("%s%s", ids, announce.getId().toString()));
-        userRepo.save(user);
-      }
-    }
-    return announce;
+    return super.save(announce);
   }
 
   @Override
   public Map<String, Object> populate(Map<String, Object> json, Map<String, Object> context) {
     Map<String, Object> map = super.populate(json, context);
-
-    boolean unread = false;
     if (json != null && json.get("id") != null) {
-      final GeneralAnnouncement announce = find((Long) json.get("id"));
-      User currentUser = Beans.get(UserService.class).getUser();
-      String ids = currentUser.getAnnounceUnreadIds();
-      if (StringUtils.notBlank(ids)) {
-        List<String> idList = Arrays.asList(ids.split(","));
-        if (!ObjectUtils.isEmpty(idList) && idList.contains(announce.getId().toString())) {
-          unread = true;
-        }
-      }
-      map.put("$unread", unread);
+      map.put(
+          "$unread",
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
 
     return map;

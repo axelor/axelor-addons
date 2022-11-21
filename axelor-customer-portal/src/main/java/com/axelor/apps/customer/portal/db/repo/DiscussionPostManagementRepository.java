@@ -17,19 +17,14 @@
  */
 package com.axelor.apps.customer.portal.db.repo;
 
-import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.DiscussionPost;
 import com.axelor.apps.client.portal.db.repo.DiscussionPostRepository;
-import com.axelor.auth.db.User;
+import com.axelor.apps.customer.portal.service.CommonService;
+import com.axelor.apps.customer.portal.service.DiscussionPostService;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.common.ObjectUtils;
-import com.axelor.common.StringUtils;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 public class DiscussionPostManagementRepository extends DiscussionPostRepository {
@@ -50,18 +45,11 @@ public class DiscussionPostManagementRepository extends DiscussionPostRepository
             .count();
     map.put("$totalComments", totalComments);
 
-    boolean unread = false;
     if (json != null && json.get("id") != null) {
-      final DiscussionPost post = find((Long) json.get("id"));
-      User currentUser = Beans.get(UserService.class).getUser();
-      String ids = currentUser.getPostUnreadIds();
-      if (StringUtils.notBlank(ids)) {
-        List<String> idList = Arrays.asList(ids.split(","));
-        if (!ObjectUtils.isEmpty(idList) && idList.contains(post.getId().toString())) {
-          unread = true;
-        }
-      }
-      map.put("$unread", unread);
+      map.put(
+          "$unread",
+          Beans.get(CommonService.class)
+              .isUnreadRecord((Long) json.get("id"), (String) context.get("_model")));
     }
 
     return map;
@@ -70,27 +58,10 @@ public class DiscussionPostManagementRepository extends DiscussionPostRepository
   @Override
   public DiscussionPost save(DiscussionPost post) {
 
-    if (post.getVersion() != 0) {
-      return super.save(post);
+    if (post.getVersion().equals(0)) {
+      Beans.get(CommonService.class).manageUnreadRecord(post);
     }
-
-    post = super.save(post);
-    User currentUser = Beans.get(UserService.class).getUser();
-    List<User> users =
-        userRepo.all().filter("self.id != :id").bind("id", currentUser.getId()).fetch();
-    for (User user : users) {
-      String ids = "";
-      if (StringUtils.notBlank(user.getPostUnreadIds())) {
-        ids = String.format("%s,", user.getPostUnreadIds());
-        List<String> idList = new ArrayList<String>(Arrays.asList(ids.split(",")));
-        if (idList.contains(post.getId().toString())) {
-          continue;
-        }
-      }
-      user.setPostUnreadIds(String.format("%s%s", ids, post.getId().toString()));
-      userRepo.save(user);
-    }
-
-    return post;
+    Beans.get(DiscussionPostService.class).addFollowers(post);
+    return super.save(post);
   }
 }
