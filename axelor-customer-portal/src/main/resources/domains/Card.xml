@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://axelor.com/xml/ns/domain-models"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
+
+  <module name="client-portal" package="com.axelor.apps.client.portal.db"/>
+
+  <entity name="Card" lang="java" cacheable="true">
+
+    <string name="name"/>
+    <string name="last4" namecolumn="true" search="cardNumber" title="Card number"
+      readonly="true">
+    	<![CDATA[
+   	    	String last4 = "";
+	  		if(cardNumber != null){
+	  			last4 += "**** **** **** " + cardNumber.toString().substring(12);
+	  		}
+	  		return last4;
+	    ]]>
+    </string>
+    <long name="cardNumber"/>
+    <integer name="expiryMonth"/>
+    <integer name="expiryYear"/>
+    <integer name="cvc" title="CVC"/>
+    <boolean name="isDefault" title="Default"/>
+    <string name="brand"/>
+    <string name="stripeCardId"/>
+    <many-to-one name="partner" ref="com.axelor.apps.base.db.Partner"/>
+
+    <unique-constraint columns="cardNumber"/>
+
+    <finder-method name="findByStripeId" using="stripeCardId"/>
+  </entity>
+
+</domain-models>
