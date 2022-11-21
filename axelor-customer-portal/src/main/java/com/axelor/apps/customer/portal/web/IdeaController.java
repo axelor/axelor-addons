@@ -47,7 +47,6 @@ public class IdeaController {
     response.setReload(true);
   }
 
-  @Transactional
   public void markRead(ActionRequest request, ActionResponse response) {
 
     Idea idea = request.getContext().asType(Idea.class);

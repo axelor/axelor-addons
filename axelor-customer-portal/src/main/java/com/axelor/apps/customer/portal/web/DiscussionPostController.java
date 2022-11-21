@@ -23,11 +23,9 @@ import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
-import com.google.inject.persist.Transactional;
 
 public class DiscussionPostController {
 
-  @Transactional
   public void markRead(ActionRequest request, ActionResponse response) {
 
     DiscussionPost post = request.getContext().asType(DiscussionPost.class);
