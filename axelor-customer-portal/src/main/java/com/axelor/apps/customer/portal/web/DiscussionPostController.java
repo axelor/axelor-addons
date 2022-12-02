@@ -15,29 +15,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.axelor.apps.docusign.web;
+package com.axelor.apps.customer.portal.web;
 
-import com.axelor.apps.docusign.service.DocuSignEnvelopeSettingService;
-import com.axelor.exception.service.TraceBackService;
+import com.axelor.apps.client.portal.db.DiscussionPost;
+import com.axelor.apps.client.portal.db.repo.DiscussionPostRepository;
+import com.axelor.apps.customer.portal.service.CommonService;
 import com.axelor.inject.Beans;
-import com.axelor.meta.db.MetaModel;
-import com.axelor.meta.db.repo.MetaModelRepository;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 
-public class DocuSignEnvelopeSettingController {
+public class DiscussionPostController {
 
-  public void addItemToReferenceSelection(ActionRequest request, ActionResponse response) {
-    try {
-      MetaModel metaModel = (MetaModel) request.getContext().get("metaModel");
-      if (metaModel == null) {
-        return;
-      }
+  public void markRead(ActionRequest request, ActionResponse response) {
 
-      metaModel = Beans.get(MetaModelRepository.class).find(metaModel.getId());
-      Beans.get(DocuSignEnvelopeSettingService.class).addItemToReferenceSelection(metaModel);
-    } catch (Exception e) {
-      TraceBackService.trace(response, e);
-    }
+    DiscussionPost post = request.getContext().asType(DiscussionPost.class);
+    post = Beans.get(DiscussionPostRepository.class).find(post.getId());
+    Beans.get(CommonService.class).manageReadRecordIds(post);
   }
 }

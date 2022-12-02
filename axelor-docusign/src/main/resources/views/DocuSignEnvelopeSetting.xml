@@ -12,8 +12,7 @@
   </grid>
 
   <form name="docusign-envelope-setting-form" title="Envelope setting"
-    model="com.axelor.apps.docusign.db.DocuSignEnvelopeSetting"
-    onSave="action-docusign-envelope-setting-method-add-item-to-ref-select">
+    model="com.axelor.apps.docusign.db.DocuSignEnvelopeSetting">
     <panel name="mainPanel" colSpan="12">
       <field name="name"/>
       <field name="metaModel" grid-view="meta-model-grid" form-view="meta-model-form"/>
@@ -46,10 +45,5 @@
       </panel>
     </panel>
   </form>
-
-  <action-method name="action-docusign-envelope-setting-method-add-item-to-ref-select">
-    <call class="com.axelor.apps.docusign.web.DocuSignEnvelopeSettingController"
-      method="addItemToReferenceSelection"/>
-  </action-method>
 
 </object-views>

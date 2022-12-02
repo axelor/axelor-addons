@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.service.batch;
 
+import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineService;
@@ -38,5 +39,10 @@ public class BatchSyncAllRedmineTimeEntries extends AbstractBatch {
     super.stop();
     String comments = RedmineCommonService.getResult();
     addComment(comments);
+  }
+
+  @Override
+  protected void setBatchTypeSelect() {
+    this.batch.setBatchTypeSelect(BatchRepository.BATCH_TYPE_REDMINE_BATCH);
   }
 }

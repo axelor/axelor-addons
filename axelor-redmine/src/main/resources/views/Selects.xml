@@ -31,4 +31,8 @@
     <option value="A. Technologies">A. Technologies</option>
   </selection>
 
+  <selection name="batch.batch.type.select" id="redmine.batch.batch.type.select">
+    <option value="1200">Redmine batch</option>
+  </selection>
+
 </object-views>

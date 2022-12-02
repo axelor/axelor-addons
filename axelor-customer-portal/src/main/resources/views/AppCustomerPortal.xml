@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+  <form name="app-customer-portal-config-form" title="App Customer Portal"
+    model="com.axelor.apps.base.db.AppCustomerPortal" canDelete="false" canNew="false" width="large">
+    <panel name="portalConfigPanel">
+      <field name="manageEShop" widget="boolean-switch"/>
+      <field name="isPurchasesActivated" widget="boolean-switch" readonlyIf="manageEShop"/>
+      <field name="manageQuotations" widget="boolean-switch"/>
+      <field name="manageAnnouncement" widget="boolean-switch"/>
+      <field name="manageDiscussion" widget="boolean-switch"/>
+      <field name="manageIdea" widget="boolean-switch"/>
+      <field name="manageAnnouncementNotification" widget="boolean-switch"/>
+      <field name="manageDiscussionNotification" widget="boolean-switch"/>
+      <field name="isDMSActivated" widget="boolean-switch"/>
+      <field name="isDMSPanelSideActiveDefault" widget="boolean-switch"
+        showIf="isDMSActivated"/>
+      <field name="isTaskEditorActivated" widget="boolean-switch"/>
+      <field name="isStripeActivated" widget="boolean-switch"/>
+      <field name="isPaypalActivated" widget="boolean-switch"/>
+      <field name="isPayboxActivated" widget="boolean-switch"/>
+    </panel>
+    <panel name="stripePanel" title="Stripe configuration" showIf="isStripeActivated"
+      colSpan="12">
+      <field name="stripeSecretKey" colSpan="12" widget="password"
+        requiredIf="isStripeActivated"/>
+    </panel>
+    <panel name="paypalPanel" title="Paypal configuration" showIf="isPaypalActivated"
+      colSpan="12">
+      <field name="paypalMerchantId" colSpan="12" requiredIf="isPaypalActivated"/>
+      <field name="paypalAppClientId" colSpan="12" requiredIf="isPaypalActivated"/>
+      <field name="paypalAppClientSecret" colSpan="12" requiredIf="isPaypalActivated"/>
+    </panel>
+    <panel name="quotationOrdersPanel" title="Quotation orders" showIf="manageQuotations"
+      colSpan="12">
+      <field name="isNotifySeller" widget="boolean-switch" colSpan="6"/>
+      <field name="sellerNotificationTemplate" colSpan="6" showIf="isNotifySeller"
+        requiredIf="isNotifySeller" domain="self.metaModel.name = 'SaleOrder'"/>
+      <field name="isNotifyCustomer" widget="boolean-switch" colSpan="6"/>
+      <field name="customerNotificationTemplate" colSpan="6" showIf="isNotifyCustomer"
+        requiredIf="isNotifyCustomer" domain="self.metaModel.name = 'SaleOrder'"/>
+    </panel>
+    <panel name="payboxPanel" title="Paybox configuration" showIf="isPayboxActivated"
+      colSpan="12">
+      <field name="payboxUrl" colSpan="12" requiredIf="isPayboxActivated"/>
+      <field name="payboxSite" requiredIf="isPayboxActivated"/>
+      <field name="payboxRank" requiredIf="isPayboxActivated"/>
+      <field name="payboxUserName" requiredIf="isPayboxActivated"/>
+      <field name="payboxCurrency" requiredIf="isPayboxActivated"/>
+      <field name="payboxKey" colSpan="12" requiredIf="isPayboxActivated"/>
+      <field name="payboxPaybox" colSpan="12" requiredIf="isPayboxActivated"/>
+      <field name="payboxBackup1" colSpan="12" requiredIf="isPayboxActivated"/>
+      <field name="payboxBackup2" colSpan="12" requiredIf="isPayboxActivated"/>
+      <field name="payboxPublicKey" colSpan="12" requiredIf="isPayboxActivated"/>
+    </panel>
+    <panel name="templatePanel" colSpan="12">
+      <field name="quotationGenerationTemplate"/>
+      <field name="quotationConfimationCodeTemplate"/>
+      <field name="quotationConfimationTemplate"/>
+    </panel>
+    <panel name="operationPanel">
+      <button title="Open unread records" onClick="action-portal-view-unread-record-portal"
+        name="unreadRecordBtn"/>
+    </panel>
+  </form>
+
+  <action-view name="action-portal-view-unread-record-portal" title="Unread record"
+    model="com.axelor.apps.client.portal.db.UnreadRecord">
+    <view type="grid" name="unread-record-grid"/>
+    <view type="form" name="unread-record-form"/>
+  </action-view>
+
+</object-views>
