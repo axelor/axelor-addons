@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://axelor.com/xml/ns/object-views"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
+
+  <form id="client-portal-project-task-form" name="project-task-form" title="Task"
+    model="com.axelor.apps.project.db.ProjectTask" onNew="action-project-task-group-onnew"
+    onLoad="action-project-task-group-timer-process" extension="true" width="large">
+    <extend target="/">
+      <attribute name="onNew" value="portal-action-project-task-group-onnew"/>
+    </extend>
+    <extend target="//field[@name='assignedTo']">
+      <replace>
+        <field name="assignedTo" readonlyIf="project == null" colSpan="6" canNew="false"
+          canView="false" canEdit="false" showIf="$group == 'admins'"
+          onSelect="action-project-task-attrs-project-assigned-to-configurations"
+          form-view="user-form" grid-view="user-grid"/>
+      </replace>
+    </extend>
+    <extend target="//field[@name='project']">
+      <insert position="after">
+        <field name="assignment" hidden="true"/>
+      </insert>
+    </extend>
+    <extend target="//panel[@name='actionPanel']/*[last()]">
+      <insert position="after">
+        <button onClick="action-project-task-record-cancel-task,save" name="cancelBtn"
+          title="Cancel" showIf="id &amp;&amp; !status.isCompleted" colSpan="12"/>
+        <field name="status.isCompleted" hidden="true"/>
+      </insert>
+    </extend>
+    <extend target="//field[@name='name']">
+      <attribute name="widget" value="string"/>
+    </extend>
+    <extend target="//panel[@name='characteristicsPanel']/*[last()]">
+      <insert position="after">
+        <panel name="assignmentPanel" colSpan="12"/>
+      </insert>
+    </extend>
+    <extend target="//panel[@name='assignmentPanel']">
+      <move position="inside"
+        source="//panel[@name='characteristicsPanel']/field[@name='assignment']"/>
+    </extend>
+    <extend target="//button[@name='cancelBtn']">
+      <attribute name="prompt" value="Are you sure wants to cancel ?"/>
+    </extend>
+    <extend target="//button[@name='assigningProviderBtn']">
+      <attribute name="title" value="Assign to the provider"/>
+    </extend>
+    <extend target="//button[@name='assigningCustomerBtn']">
+      <attribute name="title" value="Assign to the customer"/>
+    </extend>
+  </form>
+
+  <action-group name="portal-action-project-task-group-onnew">
+    <action name="action-project-task-group-onnew"/>
+    <action name="action-project-task-attrs-assginment-customer"
+      if="__user__.group?.code != 'admins'"/>
+  </action-group>
+
+  <action-record name="action-project-task-record-cancel-task"
+    model="com.axelor.apps.project.db.ProjectTask">
+    <field name="status"
+      expr="eval:__repo__(ProjectStatus).all().filter('self.relatedToSelect = 2 AND self.isCompleted = true AND self.isDefaultCompleted = false').fetchOne()"/>
+  </action-record>
+
+</object-views>
