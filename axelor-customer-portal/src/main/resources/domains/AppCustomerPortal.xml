@@ -27,6 +27,8 @@
       help="If this option is not activated, you will have to activate the 'Document management' option directly on the user file of the partner(s) concerned."/>
     <boolean name="isTaskEditorActivated" title="Activate task editor" default="false"/>
     <boolean name="isStripeActivated" title="Activate Stripe" default="false"/>
+    <boolean name="isSubscriptionActivated" title="Activate Subscription" default="false"/>
+    <boolean name="isTenantPortalActivated" title="Activate Tenant Portal" default="false"/>
     <boolean name="isPaypalActivated" title="Activate Paypal" default="false"/>
     <boolean name="isPayboxActivated" title="Active Paybox" default="false"/>
     <boolean name="canConfirmOnline" title="Can confirm online" default="true"/>
