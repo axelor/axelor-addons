@@ -26,6 +26,9 @@
       <field name="xPosition" hideIf="anchor"/>
       <field name="yPosition" hideIf="anchor"/>
       <field name="isRequired"/>
+      <spacer name="tabSpacer"/>
+      <field name="conditionalParentLabel"/>
+      <field name="conditionalParentValue" requiredIf="conditionalParentLabel"/>
       <field name="font"/>
       <field name="fontSize"/>
       <field name="fontColor"/>

@@ -300,6 +300,8 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     docuSignField.setTypeSelect(docuSignFieldSetting.getTypeSelect());
     docuSignField.setValue(docuSignFieldSetting.getValue());
     docuSignField.setTabLabel(docuSignFieldSetting.getTabLabel());
+    docuSignField.setConditionalParentLabel(docuSignFieldSetting.getConditionalParentLabel());
+    docuSignField.setConditionalParentValue(docuSignFieldSetting.getConditionalParentValue());
     docuSignField.setPageNumber(docuSignFieldSetting.getPageNumber());
     docuSignField.setAnchor(docuSignFieldSetting.getAnchor());
     docuSignField.setAnchorUnits(docuSignFieldSetting.getAnchorUnits());
@@ -465,7 +467,6 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     }
 
     envelopeDefinition.setStatus(DocuSignEnvelopeRepository.STATUS_SENT);
-
     return envelopeDefinition;
   }
 
