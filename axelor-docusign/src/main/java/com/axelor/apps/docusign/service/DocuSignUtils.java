@@ -45,6 +45,8 @@ public class DocuSignUtils {
     signHere.setPageNumber(docuSignField.getPageNumber());
     signHere.setRecipientId(recipientId);
     signHere.setTabLabel(docuSignField.getTabLabel());
+    signHere.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    signHere.setConditionalParentValue(docuSignField.getConditionalParentValue());
     if (StringUtils.notEmpty(docuSignField.getAnchor())) {
       signHere.setAnchorString(docuSignField.getAnchor());
       signHere.setAnchorUnits(docuSignField.getAnchorUnits());
@@ -70,6 +72,9 @@ public class DocuSignUtils {
     fullName.setRecipientId(recipientId);
     fullName.setPageNumber(docuSignField.getPageNumber());
     fullName.setFont(docuSignField.getFont());
+    fullName.setTabLabel(docuSignField.getTabLabel());
+    fullName.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    fullName.setConditionalParentValue(docuSignField.getConditionalParentValue());
     if (docuSignField.getIsBold()) {
       fullName.setBold("true");
     }
@@ -103,6 +108,9 @@ public class DocuSignUtils {
     email.setValue(emailValue);
     email.setDocumentId(documentId);
     email.setRecipientId(recipientId);
+    email.setTabLabel(docuSignField.getTabLabel());
+    email.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    email.setConditionalParentValue(docuSignField.getConditionalParentValue());
     email.setPageNumber(docuSignField.getPageNumber());
     email.setFont(docuSignField.getFont());
     if (docuSignField.getIsBold()) {
@@ -143,6 +151,9 @@ public class DocuSignUtils {
     company.setValue(companyName);
     company.setDocumentId(documentId);
     company.setRecipientId(recipientId);
+    company.setTabLabel(docuSignField.getTabLabel());
+    company.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    company.setConditionalParentValue(docuSignField.getConditionalParentValue());
     company.setPageNumber(docuSignField.getPageNumber());
     company.setFont(docuSignField.getFont());
     if (docuSignField.getIsBold()) {
@@ -177,6 +188,9 @@ public class DocuSignUtils {
     List list = new List();
     list.setDocumentId(documentId);
     list.setRecipientId(recipientId);
+    list.setTabLabel(docuSignField.getTabLabel());
+    list.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    list.setConditionalParentValue(docuSignField.getConditionalParentValue());
     list.setPageNumber(docuSignField.getPageNumber());
     list.setTabLabel(docuSignField.getTabLabel());
     list.setFont(docuSignField.getFont());
@@ -221,25 +235,7 @@ public class DocuSignUtils {
 
   public static void addCheckbox(
       Tabs tabs, DocuSignField docuSignField, String documentId, String recipientId) {
-    Checkbox checkbox = new Checkbox();
-    checkbox.setName(docuSignField.getName());
-    checkbox.setDocumentId(documentId);
-    checkbox.setRecipientId(recipientId);
-    checkbox.setPageNumber(docuSignField.getPageNumber());
-    if (StringUtils.notEmpty(docuSignField.getAnchor())) {
-      checkbox.setAnchorString(docuSignField.getAnchor());
-      checkbox.setAnchorUnits(docuSignField.getAnchorUnits());
-      checkbox.setAnchorYOffset(docuSignField.getAnchorYOffset());
-      checkbox.setAnchorXOffset(docuSignField.getAnchorXOffset());
-    } else {
-      checkbox.setXPosition(docuSignField.getxPosition());
-      checkbox.setYPosition(docuSignField.getyPosition());
-    }
-    if (docuSignField.getIsRequired()) {
-      checkbox.setRequired("true");
-    } else {
-      checkbox.setRequired("false");
-    }
+    Checkbox checkbox = getCheckBox(docuSignField, documentId, recipientId);
 
     if (CollectionUtils.isEmpty(tabs.getCheckboxTabs())) {
       tabs.setCheckboxTabs(new ArrayList<>());
@@ -254,6 +250,8 @@ public class DocuSignUtils {
     radioGroup.setDocumentId(documentId);
     radioGroup.setRecipientId(recipientId);
     radioGroup.setGroupName(docuSignField.getName());
+    radioGroup.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    radioGroup.setConditionalParentValue(docuSignField.getConditionalParentValue());
 
     if (CollectionUtils.isNotEmpty(docuSignField.getDocuSignFieldList())) {
       java.util.List<Radio> radioList = new ArrayList<>();
@@ -293,6 +291,9 @@ public class DocuSignUtils {
     Approve approve = new Approve();
     approve.setButtonText(docuSignField.getName());
     approve.setDocumentId(documentId);
+    approve.setTabLabel(docuSignField.getTabLabel());
+    approve.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    approve.setConditionalParentValue(docuSignField.getConditionalParentValue());
     approve.setRecipientId(recipientId);
     approve.setPageNumber(docuSignField.getPageNumber());
     approve.setFont(docuSignField.getFont());
@@ -324,6 +325,9 @@ public class DocuSignUtils {
     decline.setButtonText(docuSignField.getName());
     decline.setDocumentId(documentId);
     decline.setRecipientId(recipientId);
+    decline.setTabLabel(docuSignField.getTabLabel());
+    decline.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    decline.setConditionalParentValue(docuSignField.getConditionalParentValue());
     decline.setPageNumber(docuSignField.getPageNumber());
     decline.setFont(docuSignField.getFont());
     if (docuSignField.getIsBold()) {
@@ -507,5 +511,39 @@ public class DocuSignUtils {
         field.setStatus(decline.getStatus());
       }
     }
+  }
+
+  protected static Checkbox getCheckBox(
+      DocuSignField docuSignField, String documentId, String recipientId) {
+    Checkbox checkbox = new Checkbox();
+    checkbox.setName(docuSignField.getName());
+    checkbox.setDocumentId(documentId);
+    checkbox.setRecipientId(recipientId);
+    checkbox.setPageNumber(docuSignField.getPageNumber());
+    checkbox.setTabLabel(docuSignField.getTabLabel());
+    checkbox.setConditionalParentLabel(docuSignField.getConditionalParentLabel());
+    checkbox.setConditionalParentValue(docuSignField.getConditionalParentValue());
+
+    DocuSignField parent = docuSignField.getParent();
+    if (StringUtils.isBlank(checkbox.getConditionalParentLabel()) && parent != null) {
+      checkbox.setConditionalParentLabel(parent.getConditionalParentLabel());
+      checkbox.setConditionalParentValue(parent.getConditionalParentValue());
+    }
+
+    if (StringUtils.notEmpty(docuSignField.getAnchor())) {
+      checkbox.setAnchorString(docuSignField.getAnchor());
+      checkbox.setAnchorUnits(docuSignField.getAnchorUnits());
+      checkbox.setAnchorYOffset(docuSignField.getAnchorYOffset());
+      checkbox.setAnchorXOffset(docuSignField.getAnchorXOffset());
+    } else {
+      checkbox.setXPosition(docuSignField.getxPosition());
+      checkbox.setYPosition(docuSignField.getyPosition());
+    }
+    if (docuSignField.getIsRequired()) {
+      checkbox.setRequired("true");
+    } else {
+      checkbox.setRequired("false");
+    }
+    return checkbox;
   }
 }

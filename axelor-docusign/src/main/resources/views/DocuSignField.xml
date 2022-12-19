@@ -20,6 +20,8 @@
       <field name="value"/>
       <field name="status"/>
       <field name="tabLabel"/>
+      <field name="conditionalParentLabel"/>
+      <field name="conditionalParentValue" requiredIf="conditionalParentLabel"/>
       <field name="pageNumber"/>
       <field name="anchor"/>
       <field name="anchorUnits" showIf="anchor" help="For example, use 'pixels'"/>
