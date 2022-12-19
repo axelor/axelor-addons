@@ -16,6 +16,8 @@
     <string name="value" title="Value"/>
     <string name="status" title="Status"/>
     <string name="tabLabel" title="Tab label"/>
+    <string name="conditionalParentLabel" title="Conditional parent label"/>
+    <string name="conditionalParentValue" title="Conditional parent value"/>
     <string name="pageNumber" title="Page number"/>
     <string name="anchor" title="Anchor"/>
     <string name="anchorUnits" title="Anchor units"/>
