@@ -56,6 +56,7 @@ import com.taskadapter.redmineapi.bean.Version;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -192,7 +193,9 @@ public class RedmineImportProjectServiceImpl extends RedmineImportCommonService
                         "("
                             + entry.getKey()
                             + ",TO_TIMESTAMP('"
-                            + entry.getValue()
+                            + entry
+                                .getValue()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                             + "', 'YYYY-MM-DD HH24:MI:SS'))")
                 .collect(Collectors.joining(","));
 

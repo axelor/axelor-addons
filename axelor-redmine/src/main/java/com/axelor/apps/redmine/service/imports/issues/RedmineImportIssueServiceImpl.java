@@ -70,13 +70,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -247,7 +247,9 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
                         "("
                             + entry.getKey()
                             + ",TO_TIMESTAMP('"
-                            + entry.getValue()
+                            + entry
+                                .getValue()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                             + "', 'YYYY-MM-DD HH24:MI:SS'))")
                 .collect(Collectors.joining(","));
 
@@ -426,26 +428,17 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
   @Transactional
   public void setParentTasks() {
 
-    TeamTask task;
-    TeamTask parentTask;
-    HashMap<Integer, TeamTask> parentTaskMap = new HashMap<>();
+    String values =
+        parentMap.entrySet().stream()
+            .map(entry -> "(" + entry.getKey() + "," + entry.getValue() + ")")
+            .collect(Collectors.joining(","));
 
-    for (Map.Entry<Long, Integer> entry : parentMap.entrySet()) {
+    String query =
+        String.format(
+            "UPDATE team_task as projectTask SET parent_task = (SELECT id from team_task where team_task.redmine_id = v.redmine_id) from (values %s) as v(id,redmine_id) where projectTask.id = v.id",
+            values);
 
-      if (parentTaskMap.containsKey(entry.getValue())) {
-        parentTask = parentTaskMap.get(entry.getValue());
-      } else {
-        parentTask = teamTaskRepo.findByRedmineId(entry.getValue());
-        parentTaskMap.put(entry.getValue(), parentTask);
-      }
-
-      if (parentTask != null) {
-        task = teamTaskRepo.find(entry.getKey());
-        task.setParentTask(parentTask);
-
-        teamTaskRepo.save(task);
-      }
-    }
+    JPA.em().createNativeQuery(query).executeUpdate();
   }
 
   @Transactional
@@ -454,9 +447,16 @@ public class RedmineImportIssueServiceImpl extends RedmineImportCommonService
     String taskClosedStatusSelect =
         Beans.get(AppBusinessSupportRepository.class).all().fetchOne().getTaskClosedStatusSelect();
 
-    for (Long id : projectVersionIdList) {
-      teamTaskRedmineService.updateProjectVersionProgress(
-          projectVersionRepository.find(id), taskClosedStatusSelect);
+    List<ProjectVersion> projectVersions =
+        projectVersionRepository
+            .all()
+            .filter("self.id IN (:versionIds)")
+            .bind("versionIds", projectVersionIdList)
+            .fetch();
+
+    for (ProjectVersion projectVersion : projectVersions) {
+      LOG.debug("Updating project version: {}", projectVersion.getId());
+      teamTaskRedmineService.updateProjectVersionProgress(projectVersion, taskClosedStatusSelect);
     }
   }
 
