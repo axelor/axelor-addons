@@ -1,4 +1,4 @@
-apply plugin: "com.axelor.app-module"
+apply plugin: "com.axelor.app"
 
 apply from: "../libs.gradle"
 apply from: "../version.gradle"
@@ -10,8 +10,6 @@ apply {
 axelor {
 	title "Axelor :: Redmine"
 	description "Axelor Redmine Module"
-
-	removable true
 }
 
 dependencies {
@@ -22,6 +20,6 @@ dependencies {
 	implementation libs.json
 	implementation libs.java_textile
 	
-	compile fileTree(dir: 'libs', include: ['*.jar'])
-	compile 'com.squareup.okhttp3:okhttp:3.14.1'
+	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation 'com.squareup.okhttp3:okhttp:3.14.1'
 }

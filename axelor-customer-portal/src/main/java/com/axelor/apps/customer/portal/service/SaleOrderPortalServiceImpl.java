@@ -56,8 +56,9 @@ import com.axelor.apps.sale.service.saleorder.SaleOrderComputeService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderCreateService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
+import com.axelor.apps.stock.db.StockConfig;
 import com.axelor.apps.stock.db.StockLocation;
-import com.axelor.apps.stock.service.StockLocationService;
+import com.axelor.apps.stock.service.config.StockConfigService;
 import com.axelor.apps.supplychain.service.SaleOrderInvoiceService;
 import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
@@ -289,8 +290,12 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
 
   private Boolean checkProductAvailability(Company company, List<Map<String, Object>> values)
       throws AxelorException {
+    StockConfig stockConfig =
+        company == null ? null : Beans.get(StockConfigService.class).getStockConfig(company);
     StockLocation stockLocation =
-        Beans.get(StockLocationService.class).getPickupDefaultStockLocation(company);
+        stockConfig == null
+            ? null
+            : Beans.get(StockConfigService.class).getPickupDefaultStockLocation(stockConfig);
     Boolean isItemsChanged = false;
     for (Map<String, Object> cartItem : values) {
       Product product = getProduct(cartItem);

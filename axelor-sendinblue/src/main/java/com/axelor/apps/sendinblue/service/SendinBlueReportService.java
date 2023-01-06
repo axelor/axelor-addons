@@ -311,7 +311,7 @@ public class SendinBlueReportService {
     if (emailAddress != null) {
       sendinBlueEvent.setEmailAddress(emailAddress);
       sendinBlueEvent.setPartner(emailAddress.getPartner());
-      sendinBlueEvent.setLead(emailAddress.getLead());
+      sendinBlueEvent.setLead(emailAddress.getEmailAddressLead());
     }
     sendinBlueEventList.add(sendinBlueEvent);
     sendinBlueEventRepo.save(sendinBlueEvent);

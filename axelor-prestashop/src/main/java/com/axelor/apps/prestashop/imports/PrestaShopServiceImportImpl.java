@@ -38,8 +38,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.StringBuilderWriter;
-import org.apache.tika.io.IOUtils;
 
 @Singleton
 public class PrestaShopServiceImportImpl implements PrestaShopServiceImport {

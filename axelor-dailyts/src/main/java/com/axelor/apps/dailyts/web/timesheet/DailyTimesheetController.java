@@ -105,7 +105,7 @@ public class DailyTimesheetController {
         Message message = timesheetService.validateAndSendValidationEmail(timesheet);
 
         if (message != null && message.getStatusSelect() == MessageRepository.STATUS_SENT) {
-          response.setFlash(
+          response.setInfo(
               String.format(
                   I18n.get("Email sent to %s"),
                   Beans.get(MessageServiceBaseImpl.class).getToRecipients(message)));

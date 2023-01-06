@@ -480,7 +480,7 @@ public class SendinBlueContactService {
       emailAddress.setAddress(emailAddressStr);
     } else {
       partner = emailAddress.getPartner();
-      lead = emailAddress.getLead();
+      lead = emailAddress.getEmailAddressLead();
     }
     // ---
     if (conObj.containsKey("attributes")) {
@@ -558,7 +558,7 @@ public class SendinBlueContactService {
       lead.setEmailAddress(emailAddress);
       lead.setName(name);
       lead.setStatusSelect(LeadRepository.LEAD_STATUS_NEW);
-      emailAddress.setLead(lead);
+      emailAddress.setEmailAddressLead(lead);
       totalLeadRecords++;
     }
   }

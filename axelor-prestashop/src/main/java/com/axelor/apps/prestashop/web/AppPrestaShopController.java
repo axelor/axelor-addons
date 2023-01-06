@@ -68,10 +68,10 @@ public class AppPrestaShopController {
       response.setAlert(StringUtils.join(warnings, "<br/>"));
     } else if (!info.isEmpty()) {
       response.setValue("isValid", true);
-      response.setFlash(StringUtils.join(info, "<br/>"));
+      response.setInfo(StringUtils.join(info, "<br/>"));
     } else {
       response.setValue("isValid", true);
-      response.setFlash(I18n.get("Connection successful"));
+      response.setInfo(I18n.get("Connection successful"));
     }
   }
 
