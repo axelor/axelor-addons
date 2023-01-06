@@ -52,6 +52,7 @@ import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.service.saleorder.SaleOrderComputeService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderCreateService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
+import com.axelor.apps.sale.service.saleorder.SaleOrderMarginService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
 import com.axelor.apps.stock.db.StockMove;
 import com.axelor.apps.stock.db.repo.StockMoveRepository;
@@ -100,6 +101,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
   private SaleOrderStockService deliveryService;
   private SaleOrderWorkflowService saleOrderWorkflowService;
   private StockMoveService stockMoveService;
+  private SaleOrderMarginService saleOrderMarginService;
 
   @Inject
   public ImportOrderServiceImpl(
@@ -121,7 +123,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       SaleOrderLineService saleOrderLineService,
       SaleOrderStockService deliveryService,
       SaleOrderWorkflowService saleOrderWorkflowService,
-      StockMoveService stockMoveService) {
+      StockMoveService stockMoveService,
+      SaleOrderMarginService saleOrderMarginService) {
     this.appBaseService = appBaseService;
     this.addressRepo = addressRepo;
     this.currencyRepo = currencyRepo;
@@ -141,6 +144,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
     this.deliveryService = deliveryService;
     this.saleOrderWorkflowService = saleOrderWorkflowService;
     this.stockMoveService = stockMoveService;
+    this.saleOrderMarginService = saleOrderMarginService;
   }
 
   @Override
@@ -628,7 +632,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
         // discounted price is computed
         // TODO Have a tax mapping?
         saleOrderLineService.computeValues(localOrder, localLine);
-        saleOrderLineService.computeSubMargin(localOrder, localLine);
+        saleOrderMarginService.computeSubMargin(localOrder, localLine);
 
         localOrder.addSaleOrderLineListItem(localLine);
       } catch (AxelorException ae) {
@@ -713,7 +717,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       // We just prey for rounding & tax rates to be consistent between PS & ABS since
       // discounted price is computed
       saleOrderLineService.computeValues(localOrder, localLine);
-      saleOrderLineService.computeSubMargin(localOrder, localLine);
+      saleOrderMarginService.computeSubMargin(localOrder, localLine);
 
       localOrder.addSaleOrderLineListItem(localLine);
     } catch (AxelorException ae) {
