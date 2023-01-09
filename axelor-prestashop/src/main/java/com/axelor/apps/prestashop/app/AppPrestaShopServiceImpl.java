@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.prestashop.app;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.entities.xlink.ApiContainer;
 import com.axelor.apps.prestashop.entities.xlink.XlinkEntry;
@@ -25,6 +24,7 @@ import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestashopHttpException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.common.collect.Sets;
 import java.util.HashSet;
 import java.util.List;

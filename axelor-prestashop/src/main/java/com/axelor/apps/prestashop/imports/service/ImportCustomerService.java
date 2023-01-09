@@ -17,8 +17,9 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.AxelorException;
+import com.axelor.studio.db.AppPrestashop;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;
@@ -31,7 +32,8 @@ public interface ImportCustomerService {
    * @param bwImport object of import logfile
    * @throws IOException
    * @throws PrestaShopWebserviceException
+   * @throws AxelorException
    */
   public void importCustomer(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer)
-      throws IOException, PrestaShopWebserviceException;
+      throws IOException, PrestaShopWebserviceException, AxelorException;
 }

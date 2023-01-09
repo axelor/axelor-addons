@@ -17,19 +17,15 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.repo.LeadRepository;
-import com.axelor.apps.message.db.EmailAddress;
-import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueContactStatRepository;
 import com.axelor.apps.sendinblue.translation.ITranslation;
-import com.axelor.apps.tool.service.TranslationService;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.common.StringUtils;
 import com.axelor.db.JPA;
@@ -41,9 +37,13 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAddress;
+import com.axelor.message.db.repo.EmailAddressRepository;
 import com.axelor.meta.db.MetaField;
 import com.axelor.meta.db.MetaModel;
 import com.axelor.meta.db.repo.MetaModelRepository;
+import com.axelor.studio.db.AppSendinblue;
+import com.axelor.utils.service.TranslationService;
 import com.google.gson.internal.LinkedTreeMap;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -480,7 +480,7 @@ public class SendinBlueContactService {
       emailAddress.setAddress(emailAddressStr);
     } else {
       partner = emailAddress.getPartner();
-      lead = emailAddress.getLead();
+      lead = emailAddress.getEmailAddressLead();
     }
     // ---
     if (conObj.containsKey("attributes")) {
@@ -558,7 +558,7 @@ public class SendinBlueContactService {
       lead.setEmailAddress(emailAddress);
       lead.setName(name);
       lead.setStatusSelect(LeadRepository.LEAD_STATUS_NEW);
-      emailAddress.setLead(lead);
+      emailAddress.setEmailAddressLead(lead);
       totalLeadRecords++;
     }
   }

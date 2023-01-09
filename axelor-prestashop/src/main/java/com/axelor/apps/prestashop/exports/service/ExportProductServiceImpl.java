@@ -19,7 +19,6 @@ package com.axelor.apps.prestashop.exports.service;
 
 import com.axelor.apps.account.db.AccountManagement;
 import com.axelor.apps.account.db.Tax;
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.ProductRepository;
@@ -43,6 +42,7 @@ import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.MetaFiles;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.common.base.Objects;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.sendinblue.web;
 
-import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.sendinblue.service.AppSendinBlueService;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.exception.AxelorException;
@@ -25,6 +24,7 @@ import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.studio.db.AppSendinblue;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +38,9 @@ public class AppSendinBlueController {
   public void authenticateSendinBlue(ActionRequest request, ActionResponse response) {
     try {
       appSendinBlueService.getApiKeyAuth();
-      response.setFlash(I18n.get(ITranslation.AUTHENTICATE_MESSAGE));
+      response.setInfo(I18n.get(ITranslation.AUTHENTICATE_MESSAGE));
     } catch (AxelorException e) {
-      response.setFlash(e.getLocalizedMessage());
+      response.setInfo(e.getLocalizedMessage());
     }
   }
 
@@ -58,9 +58,9 @@ public class AppSendinBlueController {
   public void deleteSendinBlueAggregatedStatistics(ActionRequest request, ActionResponse response) {
     Long total = appSendinBlueService.deleteSendinBlueAggregatedStatistics();
     if (total > 0) {
-      response.setFlash(I18n.get(ITranslation.AGGREGATE_STATISTICS_MESSAGE));
+      response.setInfo(I18n.get(ITranslation.AGGREGATE_STATISTICS_MESSAGE));
     } else {
-      response.setFlash(I18n.get(ITranslation.AGGREGATE_STATISTICS_ERROR));
+      response.setInfo(I18n.get(ITranslation.AGGREGATE_STATISTICS_ERROR));
     }
   }
 }

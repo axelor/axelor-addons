@@ -19,8 +19,6 @@ package com.axelor.apps.customer.portal.web;
 
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
-import com.axelor.apps.base.db.AppCustomerPortal;
-import com.axelor.apps.base.db.repo.AppCustomerPortalRepository;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.Card;
 import com.axelor.apps.client.portal.db.repo.CardRepository;
@@ -35,6 +33,8 @@ import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.axelor.rpc.Context;
+import com.axelor.studio.db.AppCustomerPortal;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.inject.Inject;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;

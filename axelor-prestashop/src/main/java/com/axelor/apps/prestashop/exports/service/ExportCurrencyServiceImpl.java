@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.prestashop.exports.service;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.service.CurrencyService;
@@ -29,6 +28,7 @@ import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;

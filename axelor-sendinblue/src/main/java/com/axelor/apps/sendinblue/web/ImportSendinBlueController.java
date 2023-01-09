@@ -17,10 +17,6 @@
  */
 package com.axelor.apps.sendinblue.web;
 
-import com.axelor.apps.base.db.AppMarketing;
-import com.axelor.apps.base.db.AppSendinblue;
-import com.axelor.apps.base.db.repo.AppMarketingRepository;
-import com.axelor.apps.base.db.repo.AppSendinblueRepository;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.service.AppSendinBlueService;
 import com.axelor.apps.sendinblue.service.ImportSendinBlueService;
@@ -30,6 +26,10 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.studio.db.AppMarketing;
+import com.axelor.studio.db.AppSendinblue;
+import com.axelor.studio.db.repo.AppMarketingRepository;
+import com.axelor.studio.db.repo.AppSendinblueRepository;
 import com.google.inject.Inject;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
