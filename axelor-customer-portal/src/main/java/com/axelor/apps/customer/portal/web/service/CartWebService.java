@@ -18,7 +18,6 @@
 package com.axelor.apps.customer.portal.web.service;
 
 import com.axelor.app.AppSettings;
-import com.axelor.apps.base.db.AppCustomerPortal;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.CurrencyRepository;
@@ -31,7 +30,6 @@ import com.axelor.apps.customer.portal.service.paybox.PayboxService;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
 import com.axelor.apps.customer.portal.service.response.ResponseGeneratorFactory;
 import com.axelor.apps.customer.portal.tools.ObjectTool;
-import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
@@ -40,6 +38,8 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAddress;
+import com.axelor.studio.db.AppCustomerPortal;
 import com.google.common.collect.ImmutableMap;
 import com.stripe.exception.StripeException;
 import java.io.IOException;

@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppMarketing;
-import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.exception.AxelorException;
+import com.axelor.studio.db.AppMarketing;
+import com.axelor.studio.db.AppSendinblue;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

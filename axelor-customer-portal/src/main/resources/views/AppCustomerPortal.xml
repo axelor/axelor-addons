@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
   <form name="app-customer-portal-config-form" title="App Customer Portal"
-    model="com.axelor.apps.base.db.AppCustomerPortal" canDelete="false" canNew="false" width="large">
+    model="com.axelor.studio.db.AppCustomerPortal" canDelete="false" canNew="false" width="large">
     <panel name="portalConfigPanel">
       <field name="manageEShop" widget="boolean-switch"/>
       <field name="isPurchasesActivated" widget="boolean-switch" readonlyIf="manageEShop"/>

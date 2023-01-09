@@ -59,7 +59,7 @@ public class PrestaShopController {
         prestaShopBatchService.importPrestaShop(prestaShopBatchRepo.find(prestaShopBatch.getId()));
     response.setValue("prestaShopBatchLog", batch.getPrestaShopBatchLog());
 
-    if (batch != null) response.setFlash(batch.getComments());
+    if (batch != null) response.setInfo(batch.getComments());
     response.setReload(true);
   }
 
@@ -88,7 +88,7 @@ public class PrestaShopController {
         prestaShopBatchService.exportPrestaShop(prestaShopBatchRepo.find(prestaShopBatch.getId()));
     response.setValue("prestaShopBatchLog", batch.getPrestaShopBatchLog());
 
-    if (batch != null) response.setFlash(batch.getComments());
+    if (batch != null) response.setInfo(batch.getComments());
     response.setReload(true);
   }
 }

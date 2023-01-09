@@ -17,9 +17,9 @@
  */
 package com.axelor.apps.redmine.service.common;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.exception.AxelorException;
+import com.axelor.studio.db.AppRedmine;
 import com.taskadapter.redmineapi.RedmineManager;
 import java.util.function.Consumer;
 

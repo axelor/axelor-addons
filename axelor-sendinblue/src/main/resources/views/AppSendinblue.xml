@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
   <form name="app-sendinblue-config-form" title="App sendinblue" canDelete="false"
-    canNew="false" width="large" model="com.axelor.apps.base.db.AppSendinblue">
+    canNew="false" width="large" model="com.axelor.studio.db.AppSendinblue">
     <panel name="mainPanel">
       <field name="uri" colSpan="5" help="Path to load the server"/>
       <field name="apiKey" help="Specify Version3 API key" colSpan="5" required="true"/>

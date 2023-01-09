@@ -17,9 +17,7 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
-import com.axelor.apps.base.db.AppCustomerPortal;
 import com.axelor.apps.base.db.Partner;
-import com.axelor.apps.base.db.repo.AppCustomerPortalRepository;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
@@ -31,6 +29,8 @@ import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.studio.db.AppCustomerPortal;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import java.util.List;

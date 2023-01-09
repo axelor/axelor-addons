@@ -19,10 +19,10 @@ package com.axelor.apps.customer.portal.db.repo;
 
 import com.axelor.apps.account.service.AccountingSituationInitService;
 import com.axelor.apps.base.db.Partner;
-import com.axelor.apps.base.service.app.AppService;
 import com.axelor.apps.customer.portal.service.stripe.StripePaymentService;
 import com.axelor.apps.hr.db.repo.PartnerHRRepository;
 import com.axelor.inject.Beans;
+import com.axelor.studio.app.service.AppService;
 import com.google.inject.Inject;
 
 public class PartnerPortalRepository extends PartnerHRRepository {

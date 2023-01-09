@@ -21,7 +21,6 @@ import com.axelor.apps.account.db.repo.InvoiceRepository;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerCategory;
 import com.axelor.apps.base.service.app.AppBaseService;
-import com.axelor.apps.base.service.app.AppService;
 import com.axelor.apps.client.portal.db.repo.ClientResourceRepository;
 import com.axelor.apps.client.portal.db.repo.DiscussionGroupRepository;
 import com.axelor.apps.client.portal.db.repo.GeneralAnnouncementRepository;
@@ -37,6 +36,7 @@ import com.axelor.apps.stock.db.repo.StockMoveRepository;
 import com.axelor.auth.db.User;
 import com.axelor.db.JpaSecurity;
 import com.axelor.inject.Beans;
+import com.axelor.studio.app.service.AppService;
 import com.google.inject.Inject;
 
 public class ClientViewPortalServiceImpl extends ClientViewServiceImpl

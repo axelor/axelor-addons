@@ -18,7 +18,6 @@
 package com.axelor.apps.prestashop.imports.service;
 
 import com.axelor.apps.account.db.AccountingSituation;
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.SequenceRepository;
@@ -26,12 +25,14 @@ import com.axelor.apps.base.service.PartnerService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.administration.SequenceService;
 import com.axelor.apps.base.service.app.AppBaseService;
-import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.prestashop.entities.PrestashopCustomer;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.exception.AxelorException;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAddress;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
@@ -67,7 +68,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
   @Override
   @Transactional
   public void importCustomer(AppPrestashop appConfig, ZonedDateTime endDate, Writer logBuffer)
-      throws IOException, PrestaShopWebserviceException {
+      throws IOException, PrestaShopWebserviceException, AxelorException {
     int done = 0;
     int errors = 0;
 
@@ -111,7 +112,8 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
               AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany());
           if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
             localCustomer.setPartnerSeq(
-                Beans.get(SequenceService.class).getSequenceNumber(SequenceRepository.PARTNER));
+                Beans.get(SequenceService.class)
+                    .getSequenceNumber(SequenceRepository.PARTNER, Partner.class, "partnerSeq"));
             if (localCustomer.getPartnerSeq() == null) {
               ++errors;
               logBuffer.write(
@@ -159,7 +161,9 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
               mainContact.setMainPartner(localCustomer);
               if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
                 mainContact.setPartnerSeq(
-                    Beans.get(SequenceService.class).getSequenceNumber(SequenceRepository.PARTNER));
+                    Beans.get(SequenceService.class)
+                        .getSequenceNumber(
+                            SequenceRepository.PARTNER, Partner.class, "partnerSeq"));
                 if (mainContact.getPartnerSeq() == null) {
                   ++errors;
                   logBuffer.write(

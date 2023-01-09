@@ -17,9 +17,7 @@
  */
 package com.axelor.apps.dailyts.service.timesheet;
 
-import com.axelor.apps.base.db.AppBase;
 import com.axelor.apps.base.db.ICalendarEvent;
-import com.axelor.apps.base.db.repo.AppBaseRepository;
 import com.axelor.apps.base.db.repo.ICalendarEventRepository;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.hr.db.DailyTimesheet;
@@ -35,12 +33,14 @@ import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
-import com.axelor.apps.tool.date.DurationTool;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
+import com.axelor.studio.db.AppBase;
+import com.axelor.studio.db.repo.AppBaseRepository;
+import com.axelor.utils.date.DurationTool;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;

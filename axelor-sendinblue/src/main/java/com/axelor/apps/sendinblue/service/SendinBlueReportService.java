@@ -17,13 +17,10 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppMarketing;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.marketing.db.SendinBlueCampaign;
 import com.axelor.apps.marketing.db.repo.SendinBlueCampaignRepository;
-import com.axelor.apps.message.db.EmailAddress;
-import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.SendinBlueCampaignStat;
 import com.axelor.apps.sendinblue.db.SendinBlueContactStat;
@@ -41,6 +38,9 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAddress;
+import com.axelor.message.db.repo.EmailAddressRepository;
+import com.axelor.studio.db.AppMarketing;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.time.LocalDate;
@@ -311,7 +311,7 @@ public class SendinBlueReportService {
     if (emailAddress != null) {
       sendinBlueEvent.setEmailAddress(emailAddress);
       sendinBlueEvent.setPartner(emailAddress.getPartner());
-      sendinBlueEvent.setLead(emailAddress.getLead());
+      sendinBlueEvent.setLead(emailAddress.getEmailAddressLead());
     }
     sendinBlueEventList.add(sendinBlueEvent);
     sendinBlueEventRepo.save(sendinBlueEvent);
