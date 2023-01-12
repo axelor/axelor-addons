@@ -27,7 +27,7 @@ import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.customer.portal.service.ProductPortalService;
 import com.axelor.apps.customer.portal.service.response.ResponseGeneratorFactory;
 import com.axelor.apps.stock.db.StockLocation;
-import com.axelor.apps.stock.service.StockLocationService;
+import com.axelor.apps.stock.service.config.StockConfigService;
 import com.axelor.common.ObjectUtils;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
@@ -157,10 +157,14 @@ public class ProductResponseGenerator extends ResponseGenerator {
     try {
       Product product = (Product) object;
       Company company = Beans.get(UserService.class).getUserActiveCompany();
+
+      StockConfigService stockConfigService = Beans.get(StockConfigService.class);
+
       StockLocation stockLocation =
           company == null
               ? null
-              : Beans.get(StockLocationService.class).getPickupDefaultStockLocation(company);
+              : stockConfigService.getPickupDefaultStockLocation(
+                  stockConfigService.getStockConfig(company));
       return Beans.get(ProductPortalService.class)
           .getAvailableQty(product, company, stockLocation)
           .setScale(2, RoundingMode.HALF_EVEN);
