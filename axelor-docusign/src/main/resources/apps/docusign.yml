@@ -1,0 +1,13 @@
+---
+name: DocuSign
+code: docu-sign
+typeSelect: addons
+installOrder: 40
+description: |
+   DocuSign configuration
+image: app-docusign.png
+modules: 
+   axelor-docusign
+dependsOn: 
+   - base
+sequence: 111

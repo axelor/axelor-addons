@@ -1,0 +1,13 @@
+---
+name: PrestaShop
+code: prestashop
+typeSelect: addons
+installOrder: 50
+description: |
+   PrestaShop configuration
+image: prestashop.png
+modules: 
+   axelor-prestashop
+dependsOn: 
+   - sale
+sequence: 100

@@ -1,0 +1,15 @@
+---
+name: Customer Portal
+code: customer-portal
+typeSelect: addons
+installOrder: 101
+description: |
+   Customer portal configuration
+image: app-customer-portal.png
+modules: 
+   axelor-customer-portal
+dependsOn: 
+   - business-production
+   - business-support
+   - client-portal
+sequence: 101

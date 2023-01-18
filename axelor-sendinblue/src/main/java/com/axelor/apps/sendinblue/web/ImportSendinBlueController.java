@@ -26,9 +26,7 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
-import com.axelor.studio.db.AppMarketing;
 import com.axelor.studio.db.AppSendinblue;
-import com.axelor.studio.db.repo.AppMarketingRepository;
 import com.axelor.studio.db.repo.AppSendinblueRepository;
 import com.google.inject.Inject;
 import java.time.LocalDate;
@@ -53,13 +51,11 @@ public class ImportSendinBlueController {
     appSendinBlueService.getApiKeyAuth();
     ImportSendinBlue importSendinBlue = request.getContext().asType(ImportSendinBlue.class);
     AppSendinblue appSendinblue = Beans.get(AppSendinblueRepository.class).all().fetchOne();
-    AppMarketing appMarketing = Beans.get(AppMarketingRepository.class).all().fetchOne();
     if (appSendinblue.getIsContactImport()
         || appSendinblue.getIsTemplateImport()
         || appSendinblue.getIsCampaignImport()
-        || appMarketing.getManageSendinBlueApiEmailingReporting()) {
-      String log =
-          importSendinBlueService.importSendinBlue(appSendinblue, importSendinBlue, appMarketing);
+        || appSendinblue.getManageSendinBlueApiEmailingReporting()) {
+      String log = importSendinBlueService.importSendinBlue(appSendinblue, importSendinBlue);
       response.setValue("importLog", log.trim());
       LOG.debug("Import Completed");
     } else {
