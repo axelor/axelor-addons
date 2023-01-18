@@ -40,7 +40,7 @@ import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.message.db.EmailAddress;
 import com.axelor.message.db.repo.EmailAddressRepository;
-import com.axelor.studio.db.AppMarketing;
+import com.axelor.studio.db.AppSendinblue;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.time.LocalDate;
@@ -91,7 +91,7 @@ public class SendinBlueReportService {
       totalContactStatImported;
 
   public void importReport(
-      AppMarketing appMarketing,
+      AppSendinblue appSendinblue,
       ImportSendinBlue importSendinBlue,
       LocalDateTime lastImportDateTime,
       StringBuilder logWriter)
@@ -99,7 +99,7 @@ public class SendinBlueReportService {
     exceptions = new ArrayList<>();
     totalEventImported =
         totalCampaignReportImported = totalCampaignStatImported = totalContactStatImported = 0;
-    if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
+    if (appSendinblue.getManageSendinBlueApiEmailingReporting()) {
       importEvents();
       logWriter.append(
           String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_EVENT), totalEventImported));

@@ -8,7 +8,7 @@
 
   <menuitem name="sendinblue-dashboard" parent="sendinblue-root" title="Dashboard"
     action="sendinblue.dashboard"
-    if="__config__.app.getApp('marketing').getManageSendinBlueApiEmailingReporting()"/>
+    if="__config__.app.getApp('sendinblue').getManageSendinBlueApiEmailingReporting()"/>
 
   <action-view name="sendinblue.dashboard"
     model="com.axelor.apps.sendinblue.db.SendinBlueReport" title="Dashboard">

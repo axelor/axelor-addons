@@ -1,0 +1,14 @@
+---
+name: Redmine
+code: redmine
+typeSelect: addons
+installOrder: 30
+description: |
+   Redmine configuration
+image: app-redmine.png
+modules: 
+   axelor-redmine
+dependsOn: 
+   - project
+   - helpdesk
+sequence: 53

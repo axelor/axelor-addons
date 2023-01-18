@@ -10,6 +10,7 @@
       <field name="apiKey" help="Specify Version3 API key" colSpan="5" required="true"/>
       <button name="authBtn" title="Authenticate"
         onClick="save,action-sendinblue-method-authenticate" colSpan="2"/>
+      <field name="manageSendinBlueApiEmailingReporting" widget="boolean-switch"/>
     </panel>
     <panel-tabs>
       <panel name="fieldPanel" title="Export field">
