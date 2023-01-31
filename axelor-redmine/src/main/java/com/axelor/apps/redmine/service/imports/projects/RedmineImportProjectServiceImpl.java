@@ -141,6 +141,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     if (redmineProjectList != null && !redmineProjectList.isEmpty()) {
       this.fieldMap = new HashMap<>();
       this.selectionMap = new HashMap<>();
+      this.methodParameters = methodParameters;
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       isAppBusinessSupport = appBaseService.isApp("business-support");
@@ -461,7 +462,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
     try {
       List<Membership> redmineProjectMembers =
-          methodParameters.getProjectManager().getProjectMembers(redmineProject.getId());
+          methodParameters.getRedmineManager().getProjectManager().getProjectMembers(redmineProject.getId());
 
       if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
 
@@ -500,7 +501,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
     try {
       List<Version> redmineVersionList =
-          methodParameters.getProjectManager().getVersions(redmineProjectId);
+          methodParameters.getRedmineManager().getProjectManager().getVersions(redmineProjectId);
 
       if (CollectionUtils.isNotEmpty(redmineVersionList)) {
 

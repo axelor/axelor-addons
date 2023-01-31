@@ -207,7 +207,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
     redmineTimeEntryManager = redmineManager.getTimeEntryManager();
     redmineIssueManager = redmineManager.getIssueManager();
-    methodParameters.setProjectManager(redmineManager.getProjectManager());
+    methodParameters.setRedmineManager(redmineManager);
 
     redmineProjectIdValidationMap.put(0, Boolean.FALSE);
     redmineIssueIdValidationMap.put(0, Boolean.FALSE);
@@ -313,7 +313,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
       try {
         redmineProjectIdValidationMap.put(
-            methodParameters.getProjectManager().getProjectById(redmineProjectId).getId(), Boolean.TRUE);
+            methodParameters.getRedmineManager().getProjectManager().getProjectById(redmineProjectId).getId(), Boolean.TRUE);
       } catch (RedmineException e) {
         redmineProjectIdValidationMap.put(redmineProjectId, Boolean.FALSE);
       }

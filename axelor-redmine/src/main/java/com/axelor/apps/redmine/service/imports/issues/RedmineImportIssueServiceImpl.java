@@ -43,6 +43,7 @@ import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
@@ -166,10 +167,11 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
 
   @Override
   @SuppressWarnings("unchecked")
-  public void importIssue(List<Issue> redmineIssueList, HashMap<String, Object> paramsMap) {
+  public void importIssue(List<Issue> redmineIssueList, MethodParameters methodParameters) {
 
     if (redmineIssueList != null && !redmineIssueList.isEmpty()) {
       this.fieldMap = new HashMap<>();
+      this.methodParameters = methodParameters;
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       isAppBusinessSupport = appBaseService.isApp("business-support");
@@ -221,7 +223,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       redmineBatch.setFailedRedmineIssuesIds(null);
 
       if (redmineBatch.getIsImportIssuesWithActivities()) {
-        configureRedmineManagersAndMaps((RedmineManager) paramsMap.get("redmineManager"));
+        configureRedmineManagersAndMaps(methodParameters.getRedmineManager());
       }
 
       LOG.debug("Total issues to import: {}", redmineIssueList.size());
@@ -636,14 +638,14 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
     projectTaskMap = new HashMap<>();
 
     redmineIssueManager = redmineManager.getIssueManager();
-    methodParameters.setProjectManager(redmineManager.getProjectManager());
+    methodParameters.setRedmineManager(redmineManager);
 
     try {
-      redmineIssueManager.getStatuses().stream()
+      redmineIssueManager.getStatuses()
           .forEach(s -> redmineStatusMap.put(s.getId().toString(), s.getName()));
-      redmineIssueManager.getIssuePriorities().stream()
+      redmineIssueManager.getIssuePriorities()
           .forEach(p -> redminePriorityMap.put(p.getId().toString(), p.getName()));
-      redmineIssueManager.getTrackers().stream()
+      redmineIssueManager.getTrackers()
           .forEach(t -> redmineTrackerMap.put(t.getId().toString(), t.getName()));
 
       CustomFieldManager redmineCustomFieldManager = redmineManager.getCustomFieldManager();
@@ -975,7 +977,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
 
       try {
         Version redmineProjectVersion =
-            methodParameters.getProjectManager().getVersionById(Integer.parseInt(value));
+            methodParameters.getRedmineManager().getProjectManager().getVersionById(Integer.parseInt(value));
         redmineProjectVersionName = redmineProjectVersion.getName();
       } catch (Exception e) {
         TraceBackService.trace(e, "", methodParameters.getBatch().getId());

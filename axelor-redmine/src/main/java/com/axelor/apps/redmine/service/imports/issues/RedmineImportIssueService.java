@@ -17,11 +17,12 @@
  */
 package com.axelor.apps.redmine.service.imports.issues;
 
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.taskadapter.redmineapi.bean.Issue;
 import java.util.HashMap;
 import java.util.List;
 
 public interface RedmineImportIssueService {
 
-  void importIssue(List<Issue> importIssueList, HashMap<String, Object> paramsMap);
+  void importIssue(List<Issue> importIssueList, MethodParameters methodParameters);
 }
