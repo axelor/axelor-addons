@@ -22,10 +22,9 @@ import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.User;
@@ -60,7 +59,6 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
   Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
-  @Transactional
   public void redmineImportProject(
       Batch batch,
       RedmineManager redmineManager,
@@ -104,25 +102,25 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       TraceBackService.trace(e, "", batch.getId());
     }
 
-    // CREATE MAP FOR PASS TO THE METHODS
+    // CREATE POJO FOR PASS TO THE METHODS
 
-    HashMap<String, Object> paramsMap = new HashMap<String, Object>();
-
-    paramsMap.put("onError", onError);
-    paramsMap.put("onSuccess", onSuccess);
-    paramsMap.put("batch", batch);
-    paramsMap.put("errorObjList", errorObjList);
-    paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
-    paramsMap.put("redmineUserMap", redmineUserMap);
-    paramsMap.put("redmineProjectManager", redmineManager.getProjectManager());
+    MethodParameters methodParameters =
+        new MethodParameters(
+            onError,
+            onSuccess,
+            batch,
+            errorObjList,
+            lastBatchUpdatedOn,
+            redmineUserMap,
+            redmineManager.getProjectManager());
 
     // IMPORT PROCESS
 
-    redmineImportProjectService.importProject(importProjectList, paramsMap);
+    redmineImportProjectService.importProject(importProjectList, methodParameters);
 
     // ATTACH ERROR LOG WITH BATCH
 
-    if (errorObjList != null && errorObjList.size() > 0) {
+    /*if (errorObjList != null && errorObjList.size() > 0) {
       MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
 
       if (errorMetaFile != null) {
@@ -130,6 +128,6 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
         batch.setErrorLogFile(errorMetaFile);
         batchRepo.save(batch);
       }
-    }
+    }*/
   }
 }
