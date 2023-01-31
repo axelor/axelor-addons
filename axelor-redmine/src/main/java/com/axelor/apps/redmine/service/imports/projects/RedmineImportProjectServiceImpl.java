@@ -139,13 +139,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       MethodParameters methodParameters) {
 
     if (redmineProjectList != null && !redmineProjectList.isEmpty()) {
-      this.onError = methodParameters.getOnError();
-      this.onSuccess = methodParameters.getOnSuccess();
-      this.batch = methodParameters.getBatch();
-      this.errorObjList = methodParameters.getErrorObjList();
-      this.lastBatchUpdatedOn = methodParameters.getLastBatchUpdatedOn();
-      this.redmineUserMap = methodParameters.getRedmineUserMap();
-      this.redmineProjectManager = methodParameters.getProjectManager();
       this.fieldMap = new HashMap<>();
       this.selectionMap = new HashMap<>();
 
@@ -294,9 +287,9 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
                   finalProject.addProjectTaskPrioritySetItem((ProjectPriority) item);
                 }
               });
-    } else if (lastBatchUpdatedOn != null
-        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-            || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+    } else if (methodParameters.getLastBatchUpdatedOn() != null
+        && (redmineUpdatedOn.isBefore(methodParameters.getLastBatchUpdatedOn())
+            || (project.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
                 && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
       LOG.debug(
           "Updating project members, trackers and versions: " + redmineProject.getIdentifier());
@@ -318,9 +311,9 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     try {
 
       if (project.getId() == null) {
-        project.addCreatedBatchSetItem(batch);
+        project.addCreatedBatchSetItem(methodParameters.getBatch());
       } else {
-        project.addUpdatedBatchSetItem(batch);
+        project.addUpdatedBatchSetItem(methodParameters.getBatch());
       }
 
       projectRepo.save(project);
@@ -336,12 +329,12 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         parentMap.put(project.getId(), redmineProject.getParentId());
       }
 
-      onSuccess.accept(project);
+      methodParameters.getOnSuccess().accept(project);
       success++;
     } catch (Exception e) {
-      onError.accept(e);
+      methodParameters.getOnError().accept(e);
       fail++;
-      TraceBackService.trace(e, "", batch.getId());
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
     }
   }
 
@@ -468,7 +461,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
     try {
       List<Membership> redmineProjectMembers =
-          redmineProjectManager.getProjectMembers(redmineProject.getId());
+          methodParameters.getProjectManager().getProjectMembers(redmineProject.getId());
 
       if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
 
@@ -483,7 +476,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         project.clearMembersUserSet();
       }
     } catch (RedmineException e) {
-      TraceBackService.trace(e, "", batch.getId());
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
     }
 
     Collection<Tracker> redmineTrackers = redmineProject.getTrackers();
@@ -506,7 +499,8 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   public void importProjectVersions(Integer redmineProjectId, Project project) {
 
     try {
-      List<Version> redmineVersionList = redmineProjectManager.getVersions(redmineProjectId);
+      List<Version> redmineVersionList =
+          methodParameters.getProjectManager().getVersions(redmineProjectId);
 
       if (CollectionUtils.isNotEmpty(redmineVersionList)) {
 
@@ -547,8 +541,8 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         }
       }
     } catch (RedmineException e) {
-      onError.accept(e);
-      TraceBackService.trace(e, "", batch.getId());
+      methodParameters.getOnError().accept(e);
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
     }
   }
 }
