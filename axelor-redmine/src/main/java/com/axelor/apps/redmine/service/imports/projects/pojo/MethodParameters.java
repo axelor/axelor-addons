@@ -2,6 +2,8 @@ package com.axelor.apps.redmine.service.imports.projects.pojo;
 
 import com.axelor.apps.base.db.Batch;
 import com.taskadapter.redmineapi.ProjectManager;
+import com.taskadapter.redmineapi.RedmineManager;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +17,7 @@ public class MethodParameters {
   private List<Object[]> errorObjList;
   private LocalDateTime lastBatchUpdatedOn;
   private HashMap<Integer, String> redmineUserMap;
-  private ProjectManager projectManager;
+  private RedmineManager redmineManager;
 
   public MethodParameters(
       Consumer<Throwable> onError,
@@ -24,14 +26,14 @@ public class MethodParameters {
       List<Object[]> errorObjList,
       LocalDateTime lastBatchUpdatedOn,
       HashMap<Integer, String> redmineUserMap,
-      ProjectManager projectManager) {
+      RedmineManager redmineManager) {
     this.onError = onError;
     this.onSuccess = onSuccess;
     this.batch = batch;
     this.errorObjList = errorObjList;
     this.lastBatchUpdatedOn = lastBatchUpdatedOn;
     this.redmineUserMap = redmineUserMap;
-    this.projectManager = projectManager;
+    this.redmineManager = redmineManager;
   }
 
   public Consumer<Throwable> getOnError() {
@@ -82,11 +84,11 @@ public class MethodParameters {
     this.redmineUserMap = redmineUserMap;
   }
 
-  public ProjectManager getProjectManager() {
-    return projectManager;
+  public RedmineManager getRedmineManager() {
+    return redmineManager;
   }
 
-  public void setProjectManager(ProjectManager projectManager) {
-    this.projectManager = projectManager;
+  public void setRedmineManager(RedmineManager redmineManager) {
+    this.redmineManager = redmineManager;
   }
 }

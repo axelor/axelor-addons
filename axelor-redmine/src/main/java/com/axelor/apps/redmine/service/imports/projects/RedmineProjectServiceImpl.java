@@ -32,6 +32,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +94,15 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     try {
       importProjectList = redmineFetchDataService.fetchProjectImportData(redmineManager);
 
-      List<User> redmineUserList = redmineManager.getUserManager().getUsers();
+      Map<String, String> params = new HashMap<String, String>();
+      //Get all developers
+      params.put("group_id", "developers");
+      //Get only active users
+      params.put("status", "1");
+      List<User> redmineUserList = redmineManager.getUserManager().getUsers(params).getResults();
+      //Get all the managers
+      params.put("group_id", "managers");
+      redmineUserList.addAll(redmineManager.getUserManager().getUsers(params).getResults());
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
@@ -112,7 +121,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
             errorObjList,
             lastBatchUpdatedOn,
             redmineUserMap,
-            redmineManager.getProjectManager());
+            redmineManager);
 
     // IMPORT PROCESS
 

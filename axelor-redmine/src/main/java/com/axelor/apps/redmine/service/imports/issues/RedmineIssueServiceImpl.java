@@ -24,6 +24,7 @@ import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -111,20 +112,16 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
       HashMap<String, Object> paramsMap = new HashMap<String, Object>();
 
-      paramsMap.put("onError", onError);
-      paramsMap.put("onSuccess", onSuccess);
-      paramsMap.put("batch", batch);
-      paramsMap.put("errorObjList", errorObjList);
-      paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
-      paramsMap.put("redmineUserMap", redmineUserMap);
-      paramsMap.put("redmineManager", redmineManager);
+      MethodParameters methodParameters = new MethodParameters(
+              onError, onSuccess, batch, errorObjList, lastBatchUpdatedOn, redmineUserMap, redmineManager
+      );
 
       // IMPORT PROCESS
 
       redmineImportIssueService.importIssue(
           redmineFetchDataService.fetchIssueImportData(
-              redmineManager, lastBatchEndDate, failedRedmineIssuesIds),
-          paramsMap);
+              redmineManager, lastBatchEndDate, failedRedmineIssuesIds), methodParameters
+          );
       failedRedmineIssuesIds = batch.getRedmineBatch().getFailedRedmineIssuesIds();
 
       // ATTACH ERROR LOG WITH BATCH
