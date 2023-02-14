@@ -25,6 +25,7 @@ import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.User;
@@ -60,6 +61,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
   Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
+  @Transactional
   public void redmineImportProject(
       Batch batch,
       RedmineManager redmineManager,
@@ -127,16 +129,5 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
 
     redmineImportProjectService.importProject(importProjectList, methodParameters);
 
-    // ATTACH ERROR LOG WITH BATCH
-
-    /*if (errorObjList != null && errorObjList.size() > 0) {
-      MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
-
-      if (errorMetaFile != null) {
-        batch = batchRepo.find(batch.getId());
-        batch.setErrorLogFile(errorMetaFile);
-        batchRepo.save(batch);
-      }
-    }*/
   }
 }
