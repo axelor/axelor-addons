@@ -112,16 +112,22 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
       HashMap<String, Object> paramsMap = new HashMap<String, Object>();
 
-      MethodParameters methodParameters = new MethodParameters(
-              onError, onSuccess, batch, errorObjList, lastBatchUpdatedOn, redmineUserMap, redmineManager
-      );
+      MethodParameters methodParameters =
+          new MethodParameters(
+              onError,
+              onSuccess,
+              batch,
+              errorObjList,
+              lastBatchUpdatedOn,
+              redmineUserMap,
+              redmineManager);
 
       // IMPORT PROCESS
 
       redmineImportIssueService.importIssue(
           redmineFetchDataService.fetchIssueImportData(
-              redmineManager, lastBatchEndDate, failedRedmineIssuesIds), methodParameters
-          );
+              redmineManager, lastBatchEndDate, failedRedmineIssuesIds),
+          methodParameters);
       failedRedmineIssuesIds = batch.getRedmineBatch().getFailedRedmineIssuesIds();
 
       // ATTACH ERROR LOG WITH BATCH

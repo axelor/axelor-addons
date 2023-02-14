@@ -18,7 +18,6 @@
 package com.axelor.apps.redmine.service.sync.timeentries;
 
 import com.axelor.apps.base.db.AppRedmine;
-import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -64,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -174,7 +172,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
           (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
       Collections.sort(redmineTimeEntryList, compareByDate);
 
-      boolean isOverrideRecords = methodParameters.getBatch().getRedmineBatch().getIsOverrideRecords();
+      boolean isOverrideRecords =
+          methodParameters.getBatch().getRedmineBatch().getIsOverrideRecords();
 
       int i = 0;
 

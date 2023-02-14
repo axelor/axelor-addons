@@ -198,7 +198,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
     redmineUserEmailMap =
         (HashMap<String, Integer>)
             MapUtils.invertMap((HashMap<Integer, String>) paramsMap.get("redmineUserMap"));
-    methodParameters.setOnError ((Consumer<Throwable>) paramsMap.get("onError"));
+    methodParameters.setOnError((Consumer<Throwable>) paramsMap.get("onError"));
     methodParameters.setOnSuccess((Consumer<Object>) paramsMap.get("onSuccess"));
     methodParameters.setBatch((Batch) paramsMap.get("batch"));
     methodParameters.setErrorObjList((List<Object[]>) paramsMap.get("errorObjList"));
@@ -313,7 +313,12 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
       try {
         redmineProjectIdValidationMap.put(
-            methodParameters.getRedmineManager().getProjectManager().getProjectById(redmineProjectId).getId(), Boolean.TRUE);
+            methodParameters
+                .getRedmineManager()
+                .getProjectManager()
+                .getProjectById(redmineProjectId)
+                .getId(),
+            Boolean.TRUE);
       } catch (RedmineException e) {
         redmineProjectIdValidationMap.put(redmineProjectId, Boolean.FALSE);
       }
