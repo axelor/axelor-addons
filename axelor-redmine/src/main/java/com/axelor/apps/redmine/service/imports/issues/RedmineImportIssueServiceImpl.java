@@ -641,11 +641,14 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
     methodParameters.setRedmineManager(redmineManager);
 
     try {
-      redmineIssueManager.getStatuses()
+      redmineIssueManager
+          .getStatuses()
           .forEach(s -> redmineStatusMap.put(s.getId().toString(), s.getName()));
-      redmineIssueManager.getIssuePriorities()
+      redmineIssueManager
+          .getIssuePriorities()
           .forEach(p -> redminePriorityMap.put(p.getId().toString(), p.getName()));
-      redmineIssueManager.getTrackers()
+      redmineIssueManager
+          .getTrackers()
           .forEach(t -> redmineTrackerMap.put(t.getId().toString(), t.getName()));
 
       CustomFieldManager redmineCustomFieldManager = redmineManager.getCustomFieldManager();
@@ -977,7 +980,10 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
 
       try {
         Version redmineProjectVersion =
-            methodParameters.getRedmineManager().getProjectManager().getVersionById(Integer.parseInt(value));
+            methodParameters
+                .getRedmineManager()
+                .getProjectManager()
+                .getVersionById(Integer.parseInt(value));
         redmineProjectVersionName = redmineProjectVersion.getName();
       } catch (Exception e) {
         TraceBackService.trace(e, "", methodParameters.getBatch().getId());

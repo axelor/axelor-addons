@@ -462,7 +462,10 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
     try {
       List<Membership> redmineProjectMembers =
-          methodParameters.getRedmineManager().getProjectManager().getProjectMembers(redmineProject.getId());
+          methodParameters
+              .getRedmineManager()
+              .getProjectManager()
+              .getProjectMembers(redmineProject.getId());
 
       if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
 

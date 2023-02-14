@@ -1,9 +1,7 @@
 package com.axelor.apps.redmine.service.imports.projects.pojo;
 
 import com.axelor.apps.base.db.Batch;
-import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.RedmineManager;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;

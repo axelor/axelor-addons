@@ -95,12 +95,12 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       importProjectList = redmineFetchDataService.fetchProjectImportData(redmineManager);
 
       Map<String, String> params = new HashMap<String, String>();
-      //Get all developers
+      // Get all developers
       params.put("group_id", "developers");
-      //Get only active users
+      // Get only active users
       params.put("status", "1");
       List<User> redmineUserList = redmineManager.getUserManager().getUsers(params).getResults();
-      //Get all the managers
+      // Get all the managers
       params.put("group_id", "managers");
       redmineUserList.addAll(redmineManager.getUserManager().getUsers(params).getResults());
 
