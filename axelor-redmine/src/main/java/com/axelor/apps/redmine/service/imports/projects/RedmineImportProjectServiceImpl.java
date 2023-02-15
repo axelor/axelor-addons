@@ -134,6 +134,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
   @Override
   @SuppressWarnings("unchecked")
+  @Transactional
   public void importProject(
       List<com.taskadapter.redmineapi.bean.Project> redmineProjectList,
       MethodParameters methodParameters) {
@@ -256,7 +257,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     }
   }
 
-  @Transactional
   public void createOpenSuiteProject(com.taskadapter.redmineapi.bean.Project redmineProject) {
 
     this.setRedmineCustomFieldsMap(redmineProject.getCustomFields());
@@ -292,15 +292,8 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         && (redmineUpdatedOn.isBefore(methodParameters.getLastBatchUpdatedOn())
             || (project.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
                 && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
-      LOG.debug(
-          "Updating project members, trackers and versions: " + redmineProject.getIdentifier());
 
-      importProjectMembersAndTrackers(redmineProject, project);
-      projectRepo.save(project);
-
-      if (isAppBusinessSupport) {
-        importProjectVersions(redmineProject.getId(), project);
-      }
+      updateExistingProject(redmineProject, project);
 
       return;
     }
@@ -308,7 +301,14 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     LOG.debug("Importing project: " + redmineProject.getIdentifier());
 
     this.setProjectFields(redmineProject, project);
+    saveNewProject(redmineProject, project, redmineUpdatedOn);
+  }
 
+  @Transactional
+  private void saveNewProject(
+      com.taskadapter.redmineapi.bean.Project redmineProject,
+      Project project,
+      LocalDateTime redmineUpdatedOn) {
     try {
 
       if (project.getId() == null) {
@@ -336,6 +336,19 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       methodParameters.getOnError().accept(e);
       fail++;
       TraceBackService.trace(e, "", methodParameters.getBatch().getId());
+    }
+  }
+
+  @Transactional
+  private void updateExistingProject(
+      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+    LOG.debug("Updating project members, trackers and versions: " + redmineProject.getIdentifier());
+
+    importProjectMembersAndTrackers(redmineProject, project);
+    projectRepo.save(project);
+
+    if (isAppBusinessSupport) {
+      importProjectVersions(redmineProject.getId(), project);
     }
   }
 
@@ -390,13 +403,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
             : redmineProjectClientPartnerDefault;
 
     if (projectClient != null) {
-      Partner partner = partnerRepo.findByReference(projectClient);
-
-      if (partner != null) {
-        project.setClientPartner(partner);
-      } else {
-        errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND)};
-      }
+      changeClientPartner(project, projectClient);
     } else {
       project.setClientPartner(null);
     }
@@ -450,6 +457,16 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
   }
 
+  private void changeClientPartner(Project project, String projectClient) {
+    Partner partner = partnerRepo.findByReference(projectClient);
+
+    if (partner != null) {
+      project.setClientPartner(partner);
+    } else {
+      errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_CLIENT_PARTNER_NOT_FOUND)};
+    }
+  }
+
   public void importProjectMembersAndTrackers(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
 
@@ -500,6 +517,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     }
   }
 
+  @Transactional
   public void importProjectVersions(Integer redmineProjectId, Project project) {
 
     try {
