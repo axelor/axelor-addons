@@ -25,6 +25,7 @@ import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.businessproduction.service.SaleOrderWorkflowServiceBusinessProductionImpl;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
+import com.axelor.apps.crm.service.app.AppCrmService;
 import com.axelor.apps.production.service.app.AppProductionService;
 import com.axelor.apps.production.service.productionorder.ProductionOrderSaleOrderService;
 import com.axelor.apps.sale.db.SaleOrder;
@@ -68,18 +69,19 @@ public class SaleOrderWorkflowServicePortalImpl
       PartnerRepository partnerRepo,
       SaleOrderRepository saleOrderRepo,
       AppSaleService appSaleService,
+      AppCrmService appCrmService,
       UserService userService,
       SaleOrderLineService saleOrderLineService,
       SaleOrderStockService saleOrderStockService,
       SaleOrderPurchaseService saleOrderPurchaseService,
       AppSupplychainService appSupplychainService,
       AccountingSituationSupplychainService accountingSituationSupplychainService,
-      ProductionOrderSaleOrderService productionOrderSaleOrderService,
-      AppProductionService appProductionService,
-      AnalyticMoveLineRepository analyticMoveLineRepository,
       PartnerSupplychainService partnerSupplychainService,
       SaleConfigService saleConfigService,
       SaleOrderCheckAnalyticService saleOrderCheckAnalyticService,
+      ProductionOrderSaleOrderService productionOrderSaleOrderService,
+      AppProductionService appProductionService,
+      AnalyticMoveLineRepository analyticMoveLineRepository,
       AppCustomerPortalRepository appRepo,
       TemplateMessageService templateService,
       MessageService messageService) {
@@ -88,18 +90,19 @@ public class SaleOrderWorkflowServicePortalImpl
         partnerRepo,
         saleOrderRepo,
         appSaleService,
+        appCrmService,
         userService,
         saleOrderLineService,
         saleOrderStockService,
         saleOrderPurchaseService,
         appSupplychainService,
         accountingSituationSupplychainService,
-        productionOrderSaleOrderService,
-        appProductionService,
-        analyticMoveLineRepository,
         partnerSupplychainService,
         saleConfigService,
-        saleOrderCheckAnalyticService);
+        saleOrderCheckAnalyticService,
+        productionOrderSaleOrderService,
+        appProductionService,
+        analyticMoveLineRepository);
     this.appRepo = appRepo;
     this.templateService = templateService;
     this.messageService = messageService;

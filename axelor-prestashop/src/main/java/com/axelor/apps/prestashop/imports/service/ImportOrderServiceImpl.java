@@ -507,7 +507,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
         if (localStatus.getShipped()) {
           if (localOrder.getDeliveryState() == SaleOrderRepository.DELIVERY_STATE_NOT_DELIVERED) {
-            localOrder.setDeliveryDate(
+            localOrder.setEstimatedDeliveryDate(
                 remoteOrder.getDeliveryDate() == null
                     ? appBaseService.getTodayDate(localOrder.getCompany())
                     : remoteOrder.getDeliveryDate().toLocalDate());
