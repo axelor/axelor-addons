@@ -26,7 +26,6 @@ import com.axelor.apps.redmine.service.imports.projects.RedmineProjectService;
 import com.axelor.apps.redmine.service.sync.timeentries.RedmineTimeEntriesService;
 import com.axelor.common.StringUtils;
 import com.axelor.exception.service.TraceBackService;
-import com.axelor.i18n.I18n;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.CustomFieldManager;
 import com.taskadapter.redmineapi.NotFoundException;
@@ -211,11 +210,11 @@ public class RedmineServiceImpl implements RedmineService {
       if (!entry.getValue()) {
         String key = entry.getKey();
 
-        throw new PersistenceException(
-            String.format(
-                I18n.get(IMessage.REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR),
-                key.substring(key.indexOf(" ") + 1),
-                key.substring(0, key.indexOf(" "))));
+        /*throw new PersistenceException(
+        String.format(
+            I18n.get(IMessage.REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR),
+            key.substring(key.indexOf(" ") + 1),
+            key.substring(0, key.indexOf(" "))));*/
       }
     }
   }

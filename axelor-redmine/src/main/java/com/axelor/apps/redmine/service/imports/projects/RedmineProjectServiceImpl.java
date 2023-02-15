@@ -25,7 +25,6 @@ import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.User;
@@ -61,7 +60,6 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
   Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
-  @Transactional
   public void redmineImportProject(
       Batch batch,
       RedmineManager redmineManager,
@@ -96,15 +94,17 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     try {
       importProjectList = redmineFetchDataService.fetchProjectImportData(redmineManager);
 
+      List<User> redmineUserList = new ArrayList<>();
+
       Map<String, String> params = new HashMap<String, String>();
-      // Get all developers
-      params.put("group_id", "developers");
-      // Get only active users
+      //fetches only the active users
       params.put("status", "1");
-      List<User> redmineUserList = redmineManager.getUserManager().getUsers(params).getResults();
-      // Get all the managers
-      params.put("group_id", "managers");
-      redmineUserList.addAll(redmineManager.getUserManager().getUsers(params).getResults());
+      //fetches only users from axelor
+      params.put("name", "%@axelor.com");
+
+      Map<Integer, Boolean> includedIdsMap = new HashMap<>();
+      LOG.debug("Fetching Axelor users from Redmine...");
+      fillUsersList(redmineManager, includedIdsMap, redmineUserList, params);
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
@@ -128,6 +128,34 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     // IMPORT PROCESS
 
     redmineImportProjectService.importProject(importProjectList, methodParameters);
+  }
 
+  private void fillUsersList(
+      RedmineManager redmineManager,
+      Map<Integer, Boolean> includedIdsMap,
+      List<User> redmineUserList,
+      Map<String, String> params)
+      throws RedmineException {
+    int offset = 0;
+    int limit = 25;
+    while (true) {
+      params.put("offset", String.valueOf(offset));
+      params.put("limit", String.valueOf(limit));
+
+      List<User> users = redmineManager.getUserManager().getUsers(params).getResults();
+
+      for (User user : users) {
+        if (!includedIdsMap.containsKey(user.getId())) {
+          redmineUserList.add(user);
+          includedIdsMap.put(user.getId(), true);
+        }
+      }
+
+      if (users.size() < limit) {
+        break;
+      }
+
+      offset += limit;
+    }
   }
 }
