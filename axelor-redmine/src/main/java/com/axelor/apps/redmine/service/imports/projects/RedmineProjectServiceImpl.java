@@ -97,9 +97,9 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       List<User> redmineUserList = new ArrayList<>();
 
       Map<String, String> params = new HashMap<String, String>();
-      //fetches only the active users
+      // fetches only the active users
       params.put("status", "1");
-      //fetches only users from axelor
+      // fetches only users from axelor
       params.put("name", "%@axelor.com");
 
       Map<Integer, Boolean> includedIdsMap = new HashMap<>();
