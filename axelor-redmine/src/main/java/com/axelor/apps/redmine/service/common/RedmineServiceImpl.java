@@ -210,11 +210,11 @@ public class RedmineServiceImpl implements RedmineService {
       if (!entry.getValue()) {
         String key = entry.getKey();
 
-        /*throw new PersistenceException(
+        throw new PersistenceException(
         String.format(
             I18n.get(IMessage.REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR),
             key.substring(key.indexOf(" ") + 1),
-            key.substring(0, key.indexOf(" "))));*/
+            key.substring(0, key.indexOf(" "))));
       }
     }
   }
