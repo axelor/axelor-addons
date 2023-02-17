@@ -124,7 +124,7 @@ public class ExportProductServiceImpl implements ExportProductService {
     int errors = 0;
     final StringBuilder filter =
         new StringBuilder(
-            "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
+            "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version) AND self.dtype = 'Product'");
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
       filter.append(" AND (self.sellable = true and self.productSynchronizedInPrestashop = true)");
     }
@@ -149,9 +149,11 @@ public class ExportProductServiceImpl implements ExportProductService {
     for (Product localProduct : productRepo.all().filter(filter.toString()).fetch()) {
       try {
         final String cleanedReference =
-            localProduct
-                .getCode()
-                .replaceAll("[<>;={}]", ""); // took from Prestashop's ValidateCore::isReference
+            localProduct.getCode() == null
+                ? ""
+                : localProduct
+                    .getCode()
+                    .replaceAll("[<>;={}]", ""); // took from Prestashop's ValidateCore::isReference
         logBuffer.write(
             String.format(
                 "Exporting product %s (%s/%s) – ",
@@ -409,7 +411,10 @@ public class ExportProductServiceImpl implements ExportProductService {
     logBuffer.write(String.format("%n===== STOCKS =====%n"));
 
     List<Product> localProductList =
-        productRepo.all().filter("self.prestaShopId IS NOT NULL").fetch();
+        productRepo
+            .all()
+            .filter("self.prestaShopId IS NOT NULL AND self.dtype = 'Product'")
+            .fetch();
 
     StockLocationService stockLocationService = Beans.get(StockLocationService.class);
 
@@ -479,7 +484,7 @@ public class ExportProductServiceImpl implements ExportProductService {
         productRepo
             .all()
             .filter(
-                "self.prestaShopId is not null and self.picture is not null and "
+                "self.prestaShopId is not null and self.picture is not null AND self.dtype = 'Product' AND "
                     + "(self.prestaShopImageVersion is null "
                     + "OR self.prestaShopImageId is null "
                     + "OR self.picture.version != self.prestaShopImageVersion "
