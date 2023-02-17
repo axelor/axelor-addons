@@ -18,6 +18,7 @@
 package com.axelor.apps.prestashop.entities;
 
 import java.math.BigDecimal;
+import java.util.LinkedList;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
@@ -32,7 +33,22 @@ public class PrestashopCurrency extends PrestashopIdentifiableEntity {
   private BigDecimal conversionRate = BigDecimal.ONE;
   private boolean deleted = false;
   private boolean active = true;
-  private List<Element> additionalProperties;
+  private int precision = 2;
+  private PrestashopTranslatableString translatableNames;
+  private PrestashopTranslatableString symbol;
+  private PrestashopTranslatableString pattern;
+  private String numericIsoCode;
+  private boolean unofficial = false;
+  private boolean modified = false;
+  private List<Element> additionalProperties = new LinkedList<>();
+
+  public boolean isUnofficial() {
+    return unofficial;
+  }
+
+  public void setUnofficial(boolean unofficial) {
+    this.unofficial = unofficial;
+  }
 
   public String getName() {
     return name;
@@ -40,6 +56,39 @@ public class PrestashopCurrency extends PrestashopIdentifiableEntity {
 
   public void setName(String name) {
     this.name = name;
+  }
+
+  @XmlElement(name = "numeric_iso_code")
+  public String getNumericIsoCode() {
+    return numericIsoCode;
+  }
+
+  public void setNumericIsoCode(String numericIsoCode) {
+    this.numericIsoCode = numericIsoCode;
+  }
+
+  public boolean isModified() {
+    return modified;
+  }
+
+  public void setModified(boolean modified) {
+    this.modified = modified;
+  }
+
+  public PrestashopTranslatableString getSymbol() {
+    return symbol;
+  }
+
+  public void setSymbol(PrestashopTranslatableString symbol) {
+    this.symbol = symbol;
+  }
+
+  public PrestashopTranslatableString getPattern() {
+    return pattern;
+  }
+
+  public void setPattern(PrestashopTranslatableString pattern) {
+    this.pattern = pattern;
   }
 
   @XmlElement(name = "iso_code")
@@ -76,6 +125,15 @@ public class PrestashopCurrency extends PrestashopIdentifiableEntity {
     this.active = active;
   }
 
+  @XmlElement(name = "names")
+  public PrestashopTranslatableString getTranslatableNames() {
+    return translatableNames;
+  }
+
+  public void setTranslatableNames(PrestashopTranslatableString translatableNames) {
+    this.translatableNames = translatableNames;
+  }
+
   @XmlAnyElement
   public List<Element> getAdditionalProperties() {
     return additionalProperties;
@@ -83,6 +141,14 @@ public class PrestashopCurrency extends PrestashopIdentifiableEntity {
 
   public void setAdditionalProperties(List<Element> additionalProperties) {
     this.additionalProperties = additionalProperties;
+  }
+
+  public int getPrecision() {
+    return precision;
+  }
+
+  public void setPrecision(int precision) {
+    this.precision = precision;
   }
 
   @Override

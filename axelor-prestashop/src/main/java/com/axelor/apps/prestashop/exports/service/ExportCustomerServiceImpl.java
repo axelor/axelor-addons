@@ -142,9 +142,32 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
               remoteCustomer.setEmail(localCustomer.getEmailAddress().getAddress());
             }
 
+            // Setting name of remote customer
+            String lastName =
+                localCustomer
+                    .getName()
+                    .trim(); // lastName (name field in AOS) cannot be null as it is required in AOS
+
+            String firstName = localCustomer.getFirstName();
+            if (firstName == null || firstName.isEmpty()) {
+              firstName = lastName;
+            } else {
+              firstName = firstName.trim();
+            }
+
+            // PrestaShop doesn't support digits in names
+            if (firstName.matches(".*\\d+.*") || lastName.matches(".*\\d+.*")) {
+              logBuffer.write(
+                  String.format(
+                      " - [ERROR] local customer #%d (%s) contains digits in name, skipping %n",
+                      localCustomer.getId(), localCustomer.getSimpleFullName()));
+              continue;
+            }
+
+            remoteCustomer.setFirstname(firstName);
+            remoteCustomer.setLastname(lastName);
+
             if (localCustomer.getPartnerTypeSelect() == PartnerRepository.PARTNER_TYPE_INDIVIDUAL) {
-              remoteCustomer.setFirstname(localCustomer.getFirstName());
-              remoteCustomer.setLastname(localCustomer.getName());
               if (localCustomer.getTitleSelect() != null) {
                 remoteCustomer.setGenderId(
                     localCustomer.getTitleSelect() == PartnerRepository.PARTNER_TITLE_M
@@ -152,12 +175,7 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
                         : PrestashopCustomer.GENDER_FEMALE);
               }
             } else {
-              remoteCustomer.setCompany(localCustomer.getName());
-              remoteCustomer.setFirstname(" ");
-              remoteCustomer.setLastname(
-                  localCustomer.getName().matches(".*\\d+.*")
-                      ? localCustomer.getName().replaceAll("[*0-9]", "")
-                      : localCustomer.getName()); // remove digits from name
+              remoteCustomer.setCompany(lastName);
               remoteCustomer.setGenderId(PrestashopCustomer.GENDER_NEUTRAL);
             }
           }
