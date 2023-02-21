@@ -1,0 +1,13 @@
+---
+name: Partner Portal
+code: partner-portal
+typeSelect: addons
+installOrder: 28
+description: |
+   Partner Portal configuration
+image: app-partner-portal.png
+modules: 
+   axelor-partner-portal
+dependsOn: 
+   - portal
+sequence: 32

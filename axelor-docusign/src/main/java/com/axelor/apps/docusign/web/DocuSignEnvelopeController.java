@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.docusign.web;
 
-import com.axelor.apps.base.db.Wizard;
 import com.axelor.apps.docusign.db.DocuSignEnvelope;
 import com.axelor.apps.docusign.db.DocuSignEnvelopeSetting;
 import com.axelor.apps.docusign.db.repo.DocuSignEnvelopeRepository;
@@ -29,6 +28,7 @@ import com.axelor.exception.ResponseMessageType;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.Wizard;
 import com.axelor.meta.schema.actions.ActionView;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;

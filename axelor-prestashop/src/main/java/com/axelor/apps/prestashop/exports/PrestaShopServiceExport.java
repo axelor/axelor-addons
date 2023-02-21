@@ -17,9 +17,9 @@
  */
 package com.axelor.apps.prestashop.exports;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.studio.db.AppPrestashop;
 import java.io.IOException;
 
 public interface PrestaShopServiceExport {

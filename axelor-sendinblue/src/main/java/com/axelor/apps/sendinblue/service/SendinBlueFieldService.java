@@ -17,15 +17,15 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.sendinblue.translation.ITranslation;
-import com.axelor.apps.tool.service.TranslationService;
 import com.axelor.db.Model;
 import com.axelor.db.annotations.NameColumn;
 import com.axelor.exception.AxelorException;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaField;
+import com.axelor.studio.db.AppSendinblue;
+import com.axelor.utils.service.TranslationService;
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.ArrayList;

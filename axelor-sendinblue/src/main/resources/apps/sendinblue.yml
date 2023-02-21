@@ -1,0 +1,13 @@
+---
+name: Sendinblue
+code: sendinblue
+typeSelect: addons
+installOrder: 52
+description: |
+   SendinBlue
+image: app-sendinblue.png
+modules: 
+   axelor-sendinblue
+dependsOn: 
+   - marketing
+sequence: 102

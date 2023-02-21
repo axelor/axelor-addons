@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.customer.portal.service.response.generator;
 
-import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.message.db.EmailAddress;
 import java.util.Arrays;
 
 public class EmailAddressResponseGenerator extends ResponseGenerator {

@@ -17,13 +17,12 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppMarketing;
-import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.ImportSendinBlueRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
+import com.axelor.studio.db.AppSendinblue;
 import com.google.inject.Inject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,8 +46,7 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
   @Inject SendinBlueCampaignService sendinBlueCampaignService;
 
   @Override
-  public String importSendinBlue(
-      AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue, AppMarketing appMarketing)
+  public String importSendinBlue(AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue)
       throws AxelorException {
     LocalDateTime lastImportDateTime = null;
     Optional<ImportSendinBlue> lastImport =
@@ -69,9 +67,9 @@ public class ImportSendinBlueServiceImpl implements ImportSendinBlueService {
     if (appSendinblue.getIsCampaignImport()) {
       sendinBlueCampaignService.importCampaign(importSendinBlue, lastImportDateTime, logWriter);
     }
-    if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
+    if (appSendinblue.getManageSendinBlueApiEmailingReporting()) {
       sendinBlueReportService.importReport(
-          appMarketing, importSendinBlue, lastImportDateTime, logWriter);
+          appSendinblue, importSendinBlue, lastImportDateTime, logWriter);
     }
     return logWriter.toString();
   }

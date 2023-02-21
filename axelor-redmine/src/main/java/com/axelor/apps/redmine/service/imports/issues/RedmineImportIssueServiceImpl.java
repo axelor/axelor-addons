@@ -17,10 +17,8 @@
  */
 package com.axelor.apps.redmine.service.imports.issues;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
@@ -53,6 +51,8 @@ import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
+import com.axelor.studio.db.AppRedmine;
+import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;

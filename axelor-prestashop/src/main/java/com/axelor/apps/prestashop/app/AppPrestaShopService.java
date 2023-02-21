@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.prestashop.app;
 
-import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.studio.db.AppPrestashop;
 import java.util.List;
 
 public interface AppPrestaShopService {

@@ -7,7 +7,7 @@
 
   <entity name="SendinBlueContactStat" lang="java">
 
-    <many-to-one name="emailAddress" ref="com.axelor.apps.message.db.EmailAddress"
+    <many-to-one name="emailAddress" ref="com.axelor.message.db.EmailAddress"
       title="Email"/>
     <many-to-one name="sendinBlueCampaign"
       ref="com.axelor.apps.marketing.db.SendinBlueCampaign" title="Campaign"/>

@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
-  <form name="client-dashboard-form" title="Dashboard" model="com.axelor.apps.base.db.Wizard"
+  <form name="client-dashboard-form" title="Dashboard" model="com.axelor.message.db.Wizard"
     editable="false" width="large" onNew="action-client-portal-record-dashboard-total"
     canNew="false" canEdit="false" canSave="false" canDelete="false" canArchive="false"
     canCopy="false" canAttach="false">
@@ -69,7 +69,7 @@
     </panel>
   </form>
 
-  <action-view name="wizard-client-dashboard" model="com.axelor.apps.base.db.Wizard"
+  <action-view name="wizard-client-dashboard" model="com.axelor.message.db.Wizard"
     title="Dashboard" home="true">
     <view name="client-dashboard-form" type="form"/>
   </action-view>
@@ -80,7 +80,7 @@
   </action-method>
 
   <action-record name="action-client-portal-record-dashboard-total"
-    model="com.axelor.apps.base.db.Wizard">
+    model="com.axelor.message.db.Wizard">
     <field name="$openQuotationBtn"
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getOpenQuotation()"/>
     <field name="$saleOrderBtn"

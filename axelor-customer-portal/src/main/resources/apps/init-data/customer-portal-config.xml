@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<csv-inputs xmlns="http://axelor.com/xml/ns/data-import"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://axelor.com/xml/ns/data-import http://axelor.com/xml/ns/data-import/data-import_5.4.xsd">
+
+  <input file="studio_appCustomerPortal.csv" separator=";"
+    type="com.axelor.studio.db.AppCustomerPortal" search="self.app.code = :code">
+    <bind to="app" column="code" search="self.code = :code"/>
+    <bind to="quotationGenerationTemplate" column="quotationGenerationTemplate"
+      search="self.name = :quotationGenerationTemplate"/>
+    <bind to="quotationConfimationCodeTemplate" column="quotationConfimationCodeTemplate"
+      search="self.name = :quotationConfimationCodeTemplate"/>
+    <bind to="quotationConfimationTemplate" column="quotationConfimationTemplate"
+      search="self.name = :quotationConfimationTemplate"/>
+  </input>
+
+</csv-inputs>

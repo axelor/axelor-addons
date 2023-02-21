@@ -17,12 +17,12 @@
  */
 package com.axelor.apps.prestashop.service.exports.batch;
 
-import com.axelor.apps.base.db.repo.AppPrestashopRepository;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.exports.PrestaShopServiceExport;
 import com.axelor.i18n.I18n;
+import com.axelor.studio.db.repo.AppPrestashopRepository;
 import java.lang.invoke.MethodHandles;
 import javax.inject.Inject;
 import org.slf4j.Logger;

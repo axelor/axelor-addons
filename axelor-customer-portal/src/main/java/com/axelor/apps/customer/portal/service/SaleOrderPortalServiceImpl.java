@@ -26,12 +26,10 @@ import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentCre
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentToolService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentValidateService;
 import com.axelor.apps.base.db.Address;
-import com.axelor.apps.base.db.AppCustomerPortal;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.repo.AddressRepository;
-import com.axelor.apps.base.db.repo.AppCustomerPortalRepository;
 import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.db.repo.PriceListRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
@@ -45,10 +43,6 @@ import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
 import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.paypal.PaypalService;
 import com.axelor.apps.customer.portal.service.stripe.StripePaymentService;
-import com.axelor.apps.message.db.Message;
-import com.axelor.apps.message.db.Template;
-import com.axelor.apps.message.service.MessageService;
-import com.axelor.apps.message.service.TemplateMessageService;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.SaleOrderLine;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
@@ -66,6 +60,12 @@ import com.axelor.exception.AxelorException;
 import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.Message;
+import com.axelor.message.db.Template;
+import com.axelor.message.service.MessageService;
+import com.axelor.message.service.TemplateMessageService;
+import com.axelor.studio.db.AppCustomerPortal;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.paypal.orders.AmountWithBreakdown;
@@ -236,12 +236,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
             message, SaleOrder.class.getCanonicalName(), order.getId());
         message = messageService.sendMessage(message);
       }
-    } catch (ClassNotFoundException
-        | InstantiationException
-        | IllegalAccessException
-        | IOException
-        | JSONException
-        | MessagingException e) {
+    } catch (ClassNotFoundException | IOException | JSONException | MessagingException e) {
       throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 

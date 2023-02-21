@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppSendinblue;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.ExportSendinBlueRepository;
 import com.axelor.exception.AxelorException;
+import com.axelor.studio.db.AppSendinblue;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.time.LocalDateTime;

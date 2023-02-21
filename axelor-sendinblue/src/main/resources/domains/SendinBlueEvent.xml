@@ -7,10 +7,11 @@
 
   <entity name="SendinBlueEvent" lang="java">
 
-    <many-to-one name="emailAddress" ref="com.axelor.apps.message.db.EmailAddress"
+    <many-to-one name="emailAddress" ref="com.axelor.message.db.EmailAddress"
       title="Email Address"/>
     <many-to-one name="partner" ref="com.axelor.apps.base.db.Partner" title="Partner"/>
-    <many-to-one name="lead" ref="com.axelor.apps.crm.db.Lead" title="Lead"/>
+    <many-to-one name="lead" ref="com.axelor.apps.crm.db.Lead" title="Lead"
+      column="lead_id"/>
     <string name="email" title="Email Address"/>
     <string name="event" title="Event" selection="sendinblue.event.type"/>
     <string name="reason" title="Reason" large="true"/>
