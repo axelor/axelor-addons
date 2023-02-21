@@ -21,7 +21,6 @@ import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Lead;
-import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.crm.db.repo.LeadStatusRepository;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
