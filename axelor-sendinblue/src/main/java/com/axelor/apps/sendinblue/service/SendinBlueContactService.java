@@ -22,7 +22,7 @@ import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Lead;
-import com.axelor.apps.crm.db.repo.LeadRepository;
+import com.axelor.apps.crm.db.repo.LeadStatusRepository;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
@@ -89,6 +89,8 @@ public class SendinBlueContactService {
   @Inject UserService userService;
   @Inject SendinBlueFieldService sendinBlueFieldService;
   @Inject SendinBlueContactStatRepository sendinBlueContactStatRepository;
+
+  @Inject LeadStatusRepository leadStatusRepo;
 
   protected static final Integer DATA_FETCH_LIMIT = 100;
   protected static final List<String> metaModels =
@@ -557,7 +559,7 @@ public class SendinBlueContactService {
       lead.setSendinBlueId(id);
       lead.setEmailAddress(emailAddress);
       lead.setName(name);
-      lead.setStatusSelect(LeadRepository.LEAD_STATUS_NEW);
+      lead.setLeadStatus(leadStatusRepo.getDefaultStatus());
       emailAddress.setLead(lead);
       totalLeadRecords++;
     }
