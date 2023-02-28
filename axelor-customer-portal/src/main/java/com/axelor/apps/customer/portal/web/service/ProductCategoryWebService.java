@@ -53,6 +53,9 @@ public class ProductCategoryWebService extends AbstractWebService {
     Partner partner = Beans.get(UserService.class).getUserPartner();
     if (partner != null) {
       PartnerCategory partnerCategory = partner.getPartnerCategory();
+      if (partnerCategory == null && partner.getIsContact() && partner.getMainPartner() != null) {
+        partnerCategory = partner.getMainPartner().getPartnerCategory();
+      }
       filter.append(
           "self.id IN (SELECT productCategory FROM Product product WHERE :partnerCategory MEMBER OF product.partnerCategorySet) OR :partnerCategory MEMBER OF self.partnerCategorySet");
       params.put("partnerCategory", partnerCategory);

@@ -45,6 +45,11 @@ public class CountryWebService extends AbstractWebService {
       @QueryParam("sort") String sort,
       @QueryParam("page") int page,
       @QueryParam("limit") int limit) {
+
+    if (sort == null) {
+      sort = "name";
+    }
+
     List<Country> countries = fetch(Country.class, null, null, sort, limit, page);
 
     Beans.get(JpaSecurity.class)
