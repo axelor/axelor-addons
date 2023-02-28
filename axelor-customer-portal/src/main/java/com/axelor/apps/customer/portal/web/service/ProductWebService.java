@@ -60,6 +60,9 @@ public class ProductWebService extends AbstractWebService {
     Partner partner = Beans.get(UserService.class).getUserPartner();
     if (partner != null) {
       PartnerCategory partnerCategory = partner.getPartnerCategory();
+      if (partnerCategory == null && partner.getIsContact() && partner.getMainPartner() != null) {
+        partnerCategory = partner.getMainPartner().getPartnerCategory();
+      }
       filter.append(
           " AND ((:partnerCategory MEMBER OF self.partnerCategorySet) "
               + "OR (:partnerCategory MEMBER OF self.productCategory.partnerCategorySet))");
@@ -102,6 +105,9 @@ public class ProductWebService extends AbstractWebService {
     Partner partner = Beans.get(UserService.class).getUserPartner();
     if (partner != null) {
       PartnerCategory partnerCategory = partner.getPartnerCategory();
+      if (partnerCategory == null && partner.getIsContact() && partner.getMainPartner() != null) {
+        partnerCategory = partner.getMainPartner().getPartnerCategory();
+      }
       filter.append(
           " AND ((:partnerCategory MEMBER OF self.partnerCategorySet) OR "
               + "(:partnerCategory MEMBER OF self.productCategory.partnerCategorySet))");
