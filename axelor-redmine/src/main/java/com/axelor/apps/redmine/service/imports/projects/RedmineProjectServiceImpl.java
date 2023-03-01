@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.redmine.service.imports.projects;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
@@ -43,18 +45,21 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
   protected RedmineFetchDataService redmineFetchDataService;
   protected RedmineErrorLogService redmineErrorLogService;
   protected BatchRepository batchRepo;
+  protected AppRedmineRepository appRedmineRepository;
 
   @Inject
   public RedmineProjectServiceImpl(
       RedmineImportProjectService redmineImportProjectService,
       RedmineFetchDataService redmineFetchDataService,
       RedmineErrorLogService redmineErrorLogService,
-      BatchRepository batchRepo) {
+      BatchRepository batchRepo,
+      AppRedmineRepository appRedmineRepository) {
 
     this.redmineImportProjectService = redmineImportProjectService;
     this.redmineFetchDataService = redmineFetchDataService;
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
+    this.appRedmineRepository = appRedmineRepository;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -67,6 +72,8 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       Consumer<Throwable> onError) {
 
     RedmineCommonService.setResult("");
+
+    AppRedmine appRedmine = appRedmineRepository.all().fetchOne();
 
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 
@@ -98,9 +105,12 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
 
       Map<String, String> params = new HashMap<String, String>();
       // fetches only the active users
-      params.put("status", "1");
+      params.put("status", appRedmine.getRedmineUsersStatus());
       // fetches only users from axelor
-      params.put("name", "%@axelor.com");
+      // params.put("name", "%@axelor.com");
+      if (!appRedmine.getOnUsersFilter().isEmpty()) {
+        params.put("name", appRedmine.getOnUsersFilter());
+      }
 
       Map<Integer, Boolean> includedIdsMap = new HashMap<>();
       LOG.debug("Fetching Axelor users from Redmine...");
@@ -130,7 +140,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     redmineImportProjectService.importProject(importProjectList, methodParameters);
   }
 
-  private void fillUsersList(
+  protected void fillUsersList(
       RedmineManager redmineManager,
       Map<Integer, Boolean> includedIdsMap,
       List<User> redmineUserList,
