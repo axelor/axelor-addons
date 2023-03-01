@@ -18,6 +18,7 @@
 package com.axelor.apps.redmine.service.imports.projects;
 
 import com.axelor.apps.base.db.AppRedmine;
+import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
@@ -70,6 +71,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.persistence.Query;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -186,7 +188,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     fail = 0;
   }
 
-  private void fillFieldMapWithImportMappingList() {
+  protected void fillFieldMapWithImportMappingList() {
     List<RedmineImportMapping> redmineImportMappingList =
         redmineImportMappingRepository
             .all()
@@ -201,7 +203,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     }
   }
 
-  private void fillSelectionMapWithSelectionList() {
+  protected void fillSelectionMapWithSelectionList() {
     ArrayList<Option> selectionList =
         new ArrayList<>(MetaStore.getSelectionList("support.project.version.status.select"));
     ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
@@ -225,12 +227,18 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
                         + "', 'YYYY-MM-DD HH24:MI:SS'))")
             .collect(Collectors.joining(","));
 
-    String query =
+    /*String query =
         String.format(
             "UPDATE project_project as project SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where project.id = v.id",
-            values);
+            values);*/
 
-    JPA.em().createNativeQuery(query).executeUpdate();
+    //JPA.em().createNativeQuery(query).executeUpdate();
+
+    String jpql = "UPDATE Project p SET p.updatedOn = :updated_on WHERE p.id IN :ids";
+    Query query = JPA.em().createQuery(jpql);
+    query.setParameter("updated_on", updatedOn);
+    query.setParameter("ids", ids);
+    query.executeUpdate();
   }
 
   public void importProjectsFromList(
@@ -263,6 +271,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
     Project project = projectRepo.findByRedmineId(redmineProject.getId());
     LocalDateTime redmineUpdatedOn = getRedmineDate(redmineProject.getUpdatedOn());
+    LocalDateTime lastBatchUpdatedOn = methodParameters.getLastBatchUpdatedOn();
 
     if (project == null) {
       project = new Project();
@@ -288,9 +297,9 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
                   finalProject.addProjectTaskPrioritySetItem((ProjectPriority) item);
                 }
               });
-    } else if (methodParameters.getLastBatchUpdatedOn() != null
-        && (redmineUpdatedOn.isBefore(methodParameters.getLastBatchUpdatedOn())
-            || (project.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
+    } else if (lastBatchUpdatedOn != null
+        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
+            || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
                 && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
 
       updateExistingProject(redmineProject, project);
@@ -305,16 +314,18 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   }
 
   @Transactional
-  private void saveNewProject(
+  protected void saveNewProject(
       com.taskadapter.redmineapi.bean.Project redmineProject,
       Project project,
       LocalDateTime redmineUpdatedOn) {
     try {
 
+      Batch batch = methodParameters.getBatch();
+
       if (project.getId() == null) {
-        project.addCreatedBatchSetItem(methodParameters.getBatch());
+        project.addCreatedBatchSetItem(batch);
       } else {
-        project.addUpdatedBatchSetItem(methodParameters.getBatch());
+        project.addUpdatedBatchSetItem(batch);
       }
 
       projectRepo.save(project);
@@ -340,7 +351,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   }
 
   @Transactional
-  private void updateExistingProject(
+  protected void updateExistingProject(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
     LOG.debug("Updating project members, trackers and versions: " + redmineProject.getIdentifier());
 
@@ -457,7 +468,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     setLocalDateTime(project, redmineProject.getCreatedOn(), "setCreatedOn");
   }
 
-  private void changeClientPartner(Project project, String projectClient) {
+  protected void changeClientPartner(Project project, String projectClient) {
     Partner partner = partnerRepo.findByReference(projectClient);
 
     if (partner != null) {
@@ -475,7 +486,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     getMembersAndTrackers(redmineProject, project);
   }
 
-  private void getMembersAndTrackers(
+  protected void getMembersAndTrackers(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
     try {
       List<Membership> redmineProjectMembers =
