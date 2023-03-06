@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.redmine.service.imports.issues;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.BatchRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
@@ -25,10 +27,12 @@ import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
+import com.axelor.apps.redmine.service.imports.utils.FetchRedmineInfo;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.User;
 import java.time.LocalDateTime;
@@ -36,6 +40,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +52,7 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
   protected RedmineErrorLogService redmineErrorLogService;
   protected BatchRepository batchRepo;
   protected RedmineBatchRepository redmineBatchRepo;
+  protected AppRedmineRepository appRedmineRepository;
 
   @Inject
   public RedmineIssueServiceImpl(
@@ -54,13 +60,15 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
       RedmineFetchDataService redmineFetchDataService,
       RedmineErrorLogService redmineErrorLogService,
       BatchRepository batchRepo,
-      RedmineBatchRepository redmineBatchRepo) {
+      RedmineBatchRepository redmineBatchRepo,
+      AppRedmineRepository appRedmineRepository) {
 
     this.redmineImportIssueService = redmineImportIssueService;
     this.redmineFetchDataService = redmineFetchDataService;
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
     this.redmineBatchRepo = redmineBatchRepo;
+    this.appRedmineRepository = appRedmineRepository;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -74,6 +82,7 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
       Consumer<Throwable> onError) {
 
     RedmineCommonService.setResult("");
+    AppRedmine appRedmine = appRedmineRepository.all().fetchOne();
 
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 
@@ -89,7 +98,7 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
             .filter(
                 "self.id != ?1 and self.redmineBatch.id = ?2 and self.endDate != null",
                 batch.getId(),
-                redmineBatch.getId())
+                batch.getRedmineBatch().getId())
             .order("-updatedOn")
             .fetchOne();
 
@@ -102,7 +111,18 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
     LOG.debug("Fetching issues from redmine..");
 
     try {
-      List<User> redmineUserList = redmineManager.getUserManager().getUsers();
+      List<User> redmineUserList = new ArrayList<>();
+      Map<Integer, Boolean> includedIdsMap = new HashMap<>();
+      Map<String, String> params = new HashMap<String, String>();
+      // fetches only the active users
+      params.put("status", appRedmine.getRedmineUsersStatus());
+      // fetches only users from axelor
+      // params.put("name", "%@axelor.com");
+      if (!appRedmine.getOnUsersFilter().isEmpty()) {
+        params.put("name", appRedmine.getOnUsersFilter());
+      }
+      LOG.debug("Fetching Axelor users from Redmine...");
+      FetchRedmineInfo.fillUsersList(redmineManager, includedIdsMap, redmineUserList, params);
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());

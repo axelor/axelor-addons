@@ -25,6 +25,7 @@ import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
+import com.axelor.apps.redmine.service.imports.utils.FetchRedmineInfo;
 import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineException;
@@ -114,7 +115,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
 
       Map<Integer, Boolean> includedIdsMap = new HashMap<>();
       LOG.debug("Fetching Axelor users from Redmine...");
-      fillUsersList(redmineManager, includedIdsMap, redmineUserList, params);
+      FetchRedmineInfo.fillUsersList(redmineManager, includedIdsMap, redmineUserList, params);
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
@@ -138,30 +139,5 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     // IMPORT PROCESS
 
     redmineImportProjectService.importProject(importProjectList, methodParameters);
-  }
-
-  protected void fillUsersList(
-      RedmineManager redmineManager,
-      Map<Integer, Boolean> includedIdsMap,
-      List<User> redmineUserList,
-      Map<String, String> params)
-      throws RedmineException {
-    int offset = 0;
-    int limit = 25;
-    List<User> users = new ArrayList<>();
-    while (users.size() < limit) {
-      params.put("offset", String.valueOf(offset));
-      params.put("limit", String.valueOf(limit));
-
-      users = redmineManager.getUserManager().getUsers(params).getResults();
-
-      for (User user : users) {
-        if (!includedIdsMap.containsKey(user.getId())) {
-          redmineUserList.add(user);
-          includedIdsMap.put(user.getId(), true);
-        }
-      }
-      offset += limit;
-    }
   }
 }
