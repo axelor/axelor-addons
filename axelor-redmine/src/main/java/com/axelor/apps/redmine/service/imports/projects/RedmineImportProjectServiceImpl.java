@@ -216,27 +216,23 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   }
 
   public void executeProjectUpdatingQuery() {
-    String values =
-        updatedOnMap.entrySet().stream()
-            .map(
-                entry ->
-                    "("
-                        + entry.getKey()
-                        + ",TO_TIMESTAMP('"
-                        + entry.getValue()
-                        + "', 'YYYY-MM-DD HH24:MI:SS'))")
-            .collect(Collectors.joining(","));
+    List<Long> ids = new ArrayList<>(updatedOnMap.keySet());
 
-    /*String query =
-        String.format(
-            "UPDATE project_project as project SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where project.id = v.id",
-            values);*/
-
-    //JPA.em().createNativeQuery(query).executeUpdate();
-
-    String jpql = "UPDATE Project p SET p.updatedOn = :updated_on WHERE p.id IN :ids";
+    String jpql =
+        "UPDATE MyEntity e SET e.updatedOn = "
+            + "CASE e.id "
+            + updatedOnMap.entrySet().stream()
+                .map(
+                    entry ->
+                        "WHEN "
+                            + entry.getKey()
+                            + " THEN TO_TIMESTAMP('"
+                            + entry.getValue()
+                            + "', 'YYYY-MM-DD HH24:MI:SS') ")
+                .collect(Collectors.joining())
+            + "END "
+            + "WHERE e.id IN :ids";
     Query query = JPA.em().createQuery(jpql);
-    query.setParameter("updated_on", updatedOn);
     query.setParameter("ids", ids);
     query.executeUpdate();
   }

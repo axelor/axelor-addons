@@ -148,11 +148,12 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       throws RedmineException {
     int offset = 0;
     int limit = 25;
-    while (true) {
+    List<User> users = new ArrayList<>();
+    while (users.size() < limit) {
       params.put("offset", String.valueOf(offset));
       params.put("limit", String.valueOf(limit));
 
-      List<User> users = redmineManager.getUserManager().getUsers(params).getResults();
+      users = redmineManager.getUserManager().getUsers(params).getResults();
 
       for (User user : users) {
         if (!includedIdsMap.containsKey(user.getId())) {
@@ -160,11 +161,6 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
           includedIdsMap.put(user.getId(), true);
         }
       }
-
-      if (users.size() < limit) {
-        break;
-      }
-
       offset += limit;
     }
   }
