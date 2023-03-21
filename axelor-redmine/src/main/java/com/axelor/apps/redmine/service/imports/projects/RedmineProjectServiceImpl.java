@@ -26,6 +26,7 @@ import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.apps.redmine.service.imports.utils.FetchRedmineInfo;
+import com.axelor.common.ObjectUtils;
 import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineException;
@@ -109,8 +110,9 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       params.put("status", appRedmine.getRedmineUsersStatus());
       // fetches only users from axelor
       // params.put("name", "%@axelor.com");
-      if (!appRedmine.getOnUsersFilter().isEmpty()) {
-        params.put("name", appRedmine.getOnUsersFilter());
+      String onUsersFilter = appRedmine.getOnUsersFilter();
+      if (ObjectUtils.notEmpty(onUsersFilter)) {
+        params.put("name", onUsersFilter);
       }
 
       Map<Integer, Boolean> includedIdsMap = new HashMap<>();
