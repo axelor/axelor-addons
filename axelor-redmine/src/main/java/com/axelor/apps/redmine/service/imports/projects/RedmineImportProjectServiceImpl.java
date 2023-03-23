@@ -46,7 +46,6 @@ import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
@@ -69,9 +68,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.persistence.Query;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -174,10 +171,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       if (!parentMap.isEmpty()) {
         this.setParentProjects();
       }
-
-      if (!updatedOnMap.isEmpty()) {
-        executeProjectUpdatingQuery();
-      }
     }
 
     String resultStr =
@@ -213,28 +206,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       selectionMap.put(fr.getString(option.getTitle()), Integer.parseInt(option.getValue()));
       selectionMap.put(en.getString(option.getTitle()), Integer.parseInt(option.getValue()));
     }
-  }
-
-  public void executeProjectUpdatingQuery() {
-    List<Long> ids = new ArrayList<>(updatedOnMap.keySet());
-
-    String jpql =
-        "UPDATE MyEntity e SET e.updatedOn = "
-            + "CASE e.id "
-            + updatedOnMap.entrySet().stream()
-                .map(
-                    entry ->
-                        "WHEN "
-                            + entry.getKey()
-                            + " THEN TO_TIMESTAMP('"
-                            + entry.getValue()
-                            + "', 'YYYY-MM-DD HH24:MI:SS') ")
-                .collect(Collectors.joining())
-            + "END "
-            + "WHERE e.id IN :ids";
-    Query query = JPA.em().createQuery(jpql);
-    query.setParameter("ids", ids);
-    query.executeUpdate();
   }
 
   public void importProjectsFromList(
@@ -273,6 +244,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       project = new Project();
       project.setRedmineId(redmineProject.getId());
       project.setCode(redmineProject.getIdentifier().toUpperCase());
+      project.setRedmineUpdatedOn(redmineUpdatedOn);
 
       List<ProjectStatus> projectStatuses =
           projectStatusRepo
@@ -297,23 +269,19 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
             || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
                 && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
-
+      project.setRedmineUpdatedOn(redmineUpdatedOn);
       updateExistingProject(redmineProject, project);
-
       return;
     }
 
     LOG.debug("Importing project: " + redmineProject.getIdentifier());
-
     this.setProjectFields(redmineProject, project);
-    saveNewProject(redmineProject, project, redmineUpdatedOn);
+    saveNewProject(redmineProject, project);
   }
 
   @Transactional
   protected void saveNewProject(
-      com.taskadapter.redmineapi.bean.Project redmineProject,
-      Project project,
-      LocalDateTime redmineUpdatedOn) {
+      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
     try {
 
       Batch batch = methodParameters.getBatch();
@@ -325,7 +293,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       }
 
       projectRepo.save(project);
-      updatedOnMap.put(project.getId(), redmineUpdatedOn);
 
       if (isAppBusinessSupport) {
         importProjectVersions(redmineProject.getId(), project);
