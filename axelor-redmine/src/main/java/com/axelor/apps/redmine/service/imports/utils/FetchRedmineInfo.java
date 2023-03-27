@@ -11,11 +11,14 @@ public class FetchRedmineInfo {
 
   /**
    * This method extracts users from redmine depending on given parameters params
-   * @param redmineManager is the selected redmine manager (preferrably one which oversees all projects
+   *
+   * @param redmineManager is the selected redmine manager (preferrably one which oversees all
+   *     projects
    * @param includedIdsMap is the list of redmine users' ids
    * @param redmineUserList is the list of redmine Users
    * @param params determines users' params to filter
-   * @throws RedmineException specific redmine java API exception thrown when fetching can't complete
+   * @throws RedmineException specific redmine java API exception thrown when fetching can't
+   *     complete
    */
   public static void fillUsersList(
       RedmineManager redmineManager,
