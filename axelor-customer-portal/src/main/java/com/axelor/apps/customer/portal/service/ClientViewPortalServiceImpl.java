@@ -121,11 +121,14 @@ public class ClientViewPortalServiceImpl extends ClientViewServiceImpl
 
   @Override
   public Long getAllQuotation() {
+    Partner partner = getClientUser().getPartner();
     return portalQuotationRepo
         .all()
         .filter(
             "(self.saleOrder.clientPartner = :clientPartner OR self.saleOrder.contactPartner = :clientPartner)")
-        .bind("clientPartner", getClientUser().getPartner())
+        .bind(
+            "clientPartner",
+            Boolean.TRUE.equals(partner.getIsCustomer()) ? partner : partner.getMainPartner())
         .count();
   }
 
