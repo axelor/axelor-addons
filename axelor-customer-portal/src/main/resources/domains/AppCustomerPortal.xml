@@ -59,6 +59,8 @@
       ref="com.axelor.apps.message.db.Template" title="Seller notification template"/>
     <many-to-one name="customerNotificationTemplate"
       ref="com.axelor.apps.message.db.Template" title="Customer notification template"/>
+    <many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount"
+      title="Default email account"/>
 
   </entity>
 

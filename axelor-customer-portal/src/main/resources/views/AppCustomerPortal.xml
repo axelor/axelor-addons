@@ -56,6 +56,7 @@
       <field name="payboxPublicKey" colSpan="12" requiredIf="isPayboxActivated"/>
     </panel>
     <panel name="templatePanel" colSpan="12">
+      <field name="emailAccount" domain="self.serverTypeSelect = 1"/>
       <field name="quotationGenerationTemplate"/>
       <field name="quotationConfimationCodeTemplate"/>
       <field name="quotationConfimationTemplate"/>
