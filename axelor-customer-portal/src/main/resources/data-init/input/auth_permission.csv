@@ -18,7 +18,7 @@
 "perm.discussionPost.rwc";"com.axelor.apps.client.portal.db.DiscussionPost";"x";"x";"x";;;"self.createdBy = ?";"__user__";"role.client"
 "perm.discussionPost.rc";"com.axelor.apps.client.portal.db.DiscussionPost";"x";;;;;"self.createdBy != ?";"__user__";"role.client"
 "perm.generalAnnouncement.r";"com.axelor.apps.client.portal.db.GeneralAnnouncement";"x";;;;;"? MEMBER OF self.partnerCategorySet";"__user__.partner?.isContact == true ? __user__.partner?.mainPartner?.partnerCategory : __user__.partner?.partnerCategory";"role.client"
-"perm.portal.portalQuotation.rw";"com.axelor.apps.client.portal.db.PortalQuotation";"x";"x";;;;"self.saleOrder.clientPartner = ? OR self.saleOrder.contactPartner = ? ";"__user__.partner,__user__.partner";"role.client"
+"perm.portal.portalQuotation.rw";"com.axelor.apps.client.portal.db.PortalQuotation";"x";"x";;;;"self.saleOrder.clientPartner = ? OR self.saleOrder.contactPartner = ? ";"__user__.partner?.isCustomer? __user__.partner : __user__.partner?.mainPartner,__user__.partner";"role.client"
 "perm.client.MetaView.r";"com.axelor.meta.db.MetaView";"x";;;;;;;"role.client"
 "perm.base.PartnerCategory.rw";"com.axelor.apps.base.db.PartnerCategory";"x";"x";;;;;;"role.client"
 "perm.client.DMSFile.r";"com.axelor.dms.db.DMSFile";"x";;;;;"self.createdBy != ?  AND (self.metaFile.isShared = true OR self.metaFile.sharedWith = ? OR self.metaFile.sharedWith = ? OR self IN (SELECT d.parent FROM DMSFile d WHERE d.metaFile.isShared = true OR d.metaFile.sharedWith = ?  OR d.metaFile.sharedWith = ?))";"__user__,__user__.partner,__user__.partner?.mainPartner,__user__.partner,__user__.partner?.mainPartner";"role.client"
