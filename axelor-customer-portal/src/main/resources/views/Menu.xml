@@ -77,9 +77,11 @@
     <view type="grid" name="client-portal-invoice-grid"/>
     <view type="form" name="client-portal-invoice-form"/>
     <view-param name="forceTitle" value="true"/>
-    <domain>self.operationTypeSelect = :operationTypeSelect AND self.amountRemaining > 0</domain>
+    <domain>self.operationTypeSelect = :operationTypeSelect AND self.amountRemaining > 0 AND
+      (self.partner = :partner OR self.contactPartner = :partner)</domain>
     <context name="operationTypeSelect"
       expr="eval: InvoiceRepository.OPERATION_TYPE_CLIENT_SALE"/>
+    <context name="partner" expr="eval: __user__.partner"/>
   </action-view>
 
   <menuitem title="Old invoices" name="client-portal-old-invoices" icon="fa-file-archive-o"
@@ -106,6 +108,16 @@
     <domain>self.operationTypeSelect = :operationTypeSelect</domain>
     <context name="operationTypeSelect"
       expr="eval: InvoiceRepository.OPERATION_TYPE_CLIENT_REFUND"/>
+  </action-view>
+
+  <menuitem title="All invoices" name="client-portal-all-invoices" icon="fa-file-archive-o"
+    action="client.portal.all.invoices" parent="client-portal-invoice-root" top="true"/>
+
+  <action-view name="client.portal.all.invoices" title="All invoices"
+    model="com.axelor.apps.account.db.Invoice">
+    <view type="grid" name="client-portal-invoice-grid"/>
+    <view type="form" name="client-portal-invoice-form"/>
+    <view-param name="forceTitle" value="true"/>
   </action-view>
 
   <menuitem title="Discussions" name="client-portal-discussions-root"
