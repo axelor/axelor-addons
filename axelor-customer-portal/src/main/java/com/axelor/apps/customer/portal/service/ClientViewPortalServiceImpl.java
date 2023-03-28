@@ -295,4 +295,18 @@ public class ClientViewPortalServiceImpl extends ClientViewServiceImpl
 
     return partnerCategory;
   }
+
+  @Override
+  public Long getAllInvoice() {
+    Partner partner = getClientUser().getPartner();
+    return invoiceRepo
+        .all()
+        .filter(
+            "self.statusSelect = :statusSelect AND (self.partner = :clientPartner OR self.contactPartner = :clientPartner)")
+        .bind("statusSelect", invoiceRepo.STATUS_VENTILATED)
+        .bind(
+            "clientPartner",
+            Boolean.TRUE.equals(partner.getIsCustomer()) ? partner : partner.getMainPartner())
+        .count();
+  }
 }
