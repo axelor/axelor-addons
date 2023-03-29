@@ -86,8 +86,9 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
       categoriesById.put(country.getId(), country);
     }
 
-    final PrestashopProductCategory defaultCategory =
-        ws.fetchDefault(PrestashopResourceType.PRODUCT_CATEGORIES);
+    // Below api call has an issue in v8.1-beta from PrestaShop side, using its alternative for now
+    //    final PrestashopProductCategory defaultCategory =
+    //        ws.fetchDefault(PrestashopResourceType.PRODUCT_CATEGORIES);
     final PrestashopProductCategory remoteRootCategory =
         ws.fetchOne(
             PrestashopResourceType.PRODUCT_CATEGORIES,
@@ -126,11 +127,11 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
         } else {
           remoteCategory = new PrestashopProductCategory();
 
-          PrestashopTranslatableString str = defaultCategory.getName().clone();
+          PrestashopTranslatableString str = remoteRootCategory.getName().clone();
           str.clearTranslations(localCategory.getName());
           remoteCategory.setName(str);
 
-          str = defaultCategory.getLinkRewrite().clone();
+          str = remoteRootCategory.getLinkRewrite().clone();
           str.clearTranslations(localCategory.getCode());
           remoteCategory.setLinkRewrite(str);
         }

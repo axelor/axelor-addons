@@ -103,6 +103,7 @@ public class ExportProductServiceImpl implements ExportProductService {
     final List<PrestashopProduct> remoteProducts = ws.fetchAll(PrestashopResourceType.PRODUCTS);
     final Map<Integer, PrestashopProduct> productsById = new HashMap<>();
     for (PrestashopProduct p : remoteProducts) {
+      p.setPositionInCategory(null); // Issue in v8.1-beta from PrestaShop's side.
       productsById.put(p.getId(), p);
     }
 
@@ -223,7 +224,7 @@ public class ExportProductServiceImpl implements ExportProductService {
                     .replaceAll(" ", "-"));
             // TODO Should we update when product name changes?
             remoteProduct.setLinkRewrite(str);
-            remoteProduct.setPositionInCategory(0);
+            // remoteProduct.setPositionInCategory(0);
           } else {
             logBuffer.write(
                 String.format("found remotely using its reference %s", cleanedReference));
@@ -364,11 +365,14 @@ public class ExportProductServiceImpl implements ExportProductService {
           // TODO Should we handle supplier?
 
           remoteProduct.setUpdateDate(LocalDateTime.now());
-          if (ws.compareVersion(FIX_POSITION_IN_CATEGORY_VERSION) < 0) {
-            // Workaround Prestashop bug BOOM-5826 (position in category handling in prestashop's
-            // webservices is a joke). Trade-off is that we shuffle categories on each update…
-            remoteProduct.setPositionInCategory(0);
-          }
+          // Issue in v8.1-beta from PrestaShop's side.
+          //          if (ws.compareVersion(FIX_POSITION_IN_CATEGORY_VERSION) < 0) {
+          //            // Workaround Prestashop bug BOOM-5826 (position in category handling in
+          // prestashop's
+          //            // webservices is a joke). Trade-off is that we shuffle categories on each
+          // update…
+          //            remoteProduct.setPositionInCategory(0);
+          //          }
           remoteProduct.setLowStockAlert(true);
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           productsById.put(remoteProduct.getId(), remoteProduct);
