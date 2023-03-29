@@ -31,7 +31,7 @@
 "perm.client.Idea.rwc";"com.axelor.apps.client.portal.db.Idea";"x";"x";"x";;;;;"role.client"
 "perm.client.ClientResource.r";"com.axelor.apps.client.portal.db.ClientResource";"x";;;;;"? MEMBER OF self.partnerCategorySet OR size(self.partnerCategorySet) = 0";"__user__.partner?.isContact == true ? __user__.partner?.mainPartner?.partnerCategory : __user__.partner?.partnerCategory";"role.client"
 "perm.base.PartnerAddress.all";"com.axelor.apps.base.db.PartnerAddress";"x";"x";"x";"x";;"self.partner = ?";"__user__.partner";"role.client"
-"perm.base.Address.all";"com.axelor.apps.base.db.Address";"x";"x";"x";"x";;"self IN (SELECT pa.address FROM PartnerAddress pa WHERE pa.partner = ?)";"__user__.partner";"role.client"
+"perm.base.Address.all";"com.axelor.apps.base.db.Address";"x";"x";"x";"x";;"self IN (SELECT pa.address FROM PartnerAddress pa WHERE pa.partner = ?)";"__user__.partner?.isContact ? __user__.partner?.mainPartner : __user__.partner";"role.client"
 "perm.base.City.r";"com.axelor.apps.base.db.City";"x";;;;;;;"role.client"
 "perm.base.Country.r";"com.axelor.apps.base.db.Country";"x";;;;;;;"role.client"
 "perm.base.MailMessage.rwc";"com.axelor.mail.db.MailMessage";"x";"x";"x";;;;;"role.client"
