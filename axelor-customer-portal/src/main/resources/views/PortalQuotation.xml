@@ -50,6 +50,8 @@
       <field name="signature" widget="image" readonly="true"/>
       <field name="report" widget="binary-link" showIf="report"/>
       <field name="isRequested" hidden="true"/>
+      <panel-dashlet name="linePanelDashlet"
+        action="portal-action-sale-order-line-custom-view" colSpan="12" height="300"/>
       <panel-dashlet name="historyPanel" colSpan="12" title="Quotation history"
         action="action-client-portal-view-portal-quotation-history"/>
     </panel>
@@ -75,6 +77,28 @@
       <field name="$sentCode" type="integer" hidden="true"/>
     </panel>
   </form>
+
+  <custom name="portal-sale-order-line-custom" title="Details" css="report-box">
+    <dataset type="jpql">
+	  <![CDATA[
+	  	SELECT
+	  		self.product.code AS code,
+	  		self.productName AS productName, CAST(COALESCE(self.qty, '0') AS integer) AS qty, self.unit.name AS unit,
+	  		ROUND(self.priceDiscounted,2) AS unitPrice,
+	  		ROUND(self.exTaxTotal,2) AS total, self.inTaxPrice
+	  	FROM SaleOrderLine self WHERE self.saleOrder = :saleOrder
+	  ]]>
+    </dataset>
+    <template>
+  	  	<![CDATA[
+  	  		<report-table data='data' columns='code,productName,qty,unit,unitPrice,total'></report-table>
+  	  	]]>
+    </template>
+  </custom>
+
+  <action-view name="portal-action-sale-order-line-custom-view" title="Details">
+    <view type="custom" name="portal-sale-order-line-custom"/>
+  </action-view>
 
   <action-attrs name="action-client-portal-attrs-portal-quotation-confirmation-onnew">
     <attribute name="value" for="$sentCode" expr="eval: sentCode" if="sentCode"/>

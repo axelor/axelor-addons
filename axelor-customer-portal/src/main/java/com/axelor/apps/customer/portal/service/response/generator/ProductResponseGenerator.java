@@ -48,7 +48,9 @@ public class ProductResponseGenerator extends ResponseGenerator {
 
   @Override
   public void init() {
-    modelFields.addAll(Arrays.asList("id", "name", "description", "productTypeSelect"));
+    modelFields.addAll(
+        Arrays.asList(
+            "id", "name", "description", "productTypeSelect", "complementaryProductList"));
     extraFieldMap.put("_categories", this::getCategories);
     extraFieldMap.put("_pictures", this::getPictures);
     extraFieldMap.put("_previousPrice", this::getPrevPrice);
