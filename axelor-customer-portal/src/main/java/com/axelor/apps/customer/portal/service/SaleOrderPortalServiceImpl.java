@@ -45,6 +45,7 @@ import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
 import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.paypal.PaypalService;
 import com.axelor.apps.customer.portal.service.stripe.StripePaymentService;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.Message;
 import com.axelor.apps.message.db.Template;
 import com.axelor.apps.message.service.MessageService;
@@ -112,6 +113,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
   @Inject CurrencyRepository curencyRepo;
   @Inject TemplateMessageService templateMessageService;
   @Inject MessageService messageService;
+  @Inject PortalQuotationService portalQuotationService;
 
   @SuppressWarnings("unchecked")
   @Override
@@ -222,8 +224,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
   public SaleOrder quotation(Map<String, Object> values) throws AxelorException {
     SaleOrder order = saleOrderRepo.save(createQuotation(values));
     try {
-      PortalQuotation portalQuotation =
-          Beans.get(PortalQuotationService.class).createPortalQuotation(order);
+      PortalQuotation portalQuotation = portalQuotationService.createPortalQuotation(order);
       portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_REQUESTED_QUOTATION);
       portalQuotation.setIsRequested(true);
       Beans.get(PortalQuotationRepository.class).save(portalQuotation);
@@ -231,6 +232,10 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
       if (app.getManageQuotations() && app.getIsNotifySeller()) {
         Template template = app.getSellerNotificationTemplate();
         Message message = templateMessageService.generateMessage(order, template);
+        EmailAccount emailAccount = portalQuotationService.getEmailAccount(app);
+        if (emailAccount != null) {
+          message.setMailAccount(emailAccount);
+        }
         messageService.addMessageRelatedTo(
             message, SaleOrder.class.getCanonicalName(), order.getId());
         message = messageService.sendMessage(message);
