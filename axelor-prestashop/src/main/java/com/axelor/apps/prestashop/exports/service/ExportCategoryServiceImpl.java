@@ -86,8 +86,9 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
       categoriesById.put(country.getId(), country);
     }
 
-    final PrestashopProductCategory defaultCategory =
-        ws.fetchDefault(PrestashopResourceType.PRODUCT_CATEGORIES);
+    //    final PrestashopProductCategory defaultCategory =
+    //        ws.fetchDefault(PrestashopResourceType.PRODUCT_CATEGORIES); //Causing issue in
+    // PS-8.1-beta
     final PrestashopProductCategory remoteRootCategory =
         ws.fetchOne(
             PrestashopResourceType.PRODUCT_CATEGORIES,
@@ -126,11 +127,17 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
         } else {
           remoteCategory = new PrestashopProductCategory();
 
-          PrestashopTranslatableString str = defaultCategory.getName().clone();
+          PrestashopTranslatableString str =
+              remoteRootCategory
+                  .getName()
+                  .clone(); // Using remoteRootCategory instead of defaultCategory for PS-8.1-beta
           str.clearTranslations(localCategory.getName());
           remoteCategory.setName(str);
 
-          str = defaultCategory.getLinkRewrite().clone();
+          str =
+              remoteRootCategory
+                  .getLinkRewrite()
+                  .clone(); // Using remoteRootCategory instead of defaultCategory for PS-8.1-beta
           str.clearTranslations(localCategory.getCode());
           remoteCategory.setLinkRewrite(str);
         }
