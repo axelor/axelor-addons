@@ -88,6 +88,7 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   @Override
+  @Transactional(rollbackOn = {Exception.class})
   public void exportProduct(AppPrestashop appConfig, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
 
@@ -111,7 +112,7 @@ public class ExportProductServiceImpl implements ExportProductService {
     exportPictures(ws, productsById, logBuffer);
   }
 
-  @Transactional
+  @Transactional(rollbackOn = {Exception.class})
   private void exportProducts(
       final AppPrestashop appConfig,
       final PSWebServiceClient ws,
@@ -400,7 +401,7 @@ public class ExportProductServiceImpl implements ExportProductService {
         String.format("%n=== END OF PRODUCTS EXPORT, done: %d, errors: %d ===%n", done, errors));
   }
 
-  @Transactional
+  @Transactional(rollbackOn = {Exception.class})
   private void exportStocks(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
@@ -470,7 +471,7 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   /** Export all pictures that have been modified */
-  @Transactional
+  @Transactional(rollbackOn = {Exception.class})
   private void exportPictures(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
