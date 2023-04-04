@@ -402,7 +402,8 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
     }
   }
 
-  protected EmailAccount getEmailAccount(AppCustomerPortal app) {
+  @Override
+  public EmailAccount getEmailAccount(AppCustomerPortal app) {
     if (app.getEmailAccount() != null) {
       return app.getEmailAccount();
     }
