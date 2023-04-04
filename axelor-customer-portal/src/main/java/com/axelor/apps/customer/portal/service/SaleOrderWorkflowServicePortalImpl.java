@@ -27,6 +27,7 @@ import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.businessproduction.service.SaleOrderWorkflowServiceBusinessProductionImpl;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.Message;
 import com.axelor.apps.message.db.Template;
 import com.axelor.apps.message.service.MessageService;
@@ -61,6 +62,7 @@ public class SaleOrderWorkflowServicePortalImpl
   protected AppCustomerPortalRepository appRepo;
   protected TemplateMessageService templateService;
   protected MessageService messageService;
+  protected PortalQuotationService portalQuotationService;
 
   @Inject
   public SaleOrderWorkflowServicePortalImpl(
@@ -82,7 +84,8 @@ public class SaleOrderWorkflowServicePortalImpl
       SaleOrderCheckAnalyticService saleOrderCheckAnalyticService,
       AppCustomerPortalRepository appRepo,
       TemplateMessageService templateService,
-      MessageService messageService) {
+      MessageService messageService,
+      PortalQuotationService portalQuotationService) {
     super(
         sequenceService,
         partnerRepo,
@@ -103,6 +106,7 @@ public class SaleOrderWorkflowServicePortalImpl
     this.appRepo = appRepo;
     this.templateService = templateService;
     this.messageService = messageService;
+    this.portalQuotationService = portalQuotationService;
   }
 
   @Override
@@ -116,6 +120,10 @@ public class SaleOrderWorkflowServicePortalImpl
       if (app.getManageQuotations() && app.getIsNotifyCustomer()) {
         Template template = app.getCustomerNotificationTemplate();
         Message message = templateService.generateMessage(saleOrder, template);
+        EmailAccount emailAccount = portalQuotationService.getEmailAccount(app);
+        if (emailAccount != null) {
+          message.setMailAccount(emailAccount);
+        }
         messageService.addMessageRelatedTo(
             message, SaleOrder.class.getCanonicalName(), saleOrder.getId());
         message = messageService.sendMessage(message);
@@ -142,8 +150,7 @@ public class SaleOrderWorkflowServicePortalImpl
                 .count()
             == 0) {
       try {
-        PortalQuotation portalQuotation =
-            Beans.get(PortalQuotationService.class).createPortalQuotation(saleOrder);
+        PortalQuotation portalQuotation = portalQuotationService.createPortalQuotation(saleOrder);
         portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_ORDER_CONFIRMED);
         portalQuotation.setTypeSelect(null);
         Beans.get(PortalQuotationRepository.class).save(portalQuotation);
