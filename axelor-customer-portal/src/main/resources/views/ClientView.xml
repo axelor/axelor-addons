@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
-  <form name="client-dashboard-form" title="Dashboard" model="com.axelor.message.db.Wizard"
+  <form name="client-dashboard-form" title="Dashboard" model="com.axelor.utils.db.Wizard"
     editable="false" width="large" onNew="action-client-portal-record-dashboard-total"
     canNew="false" canEdit="false" canSave="false" canDelete="false" canArchive="false"
     canCopy="false" canAttach="false">
@@ -29,6 +29,8 @@
           icon="fa-file-excel-o" onClick="client.portal.refunds" widget="info-button"/>
         <button name="$oldInvoiceBtn" title="Old invoices" css="group-bg-blue"
           icon="fa-file-text" onClick="client.portal.old.invoices" widget="info-button"/>
+        <button name="$allInvoiceBtn" title="All invoices" css="group-bg-blue" icon="fa-file"
+          onClick="client.portal.all.invoices" widget="info-button"/>
       </panel>
       <panel if-module="axelor-project" name="ticketPanel" title="Tickets"
         if="__config__.app.isApp('portal') &amp;&amp; __config__.app.getApp('portal').getManageTickets()"
@@ -69,7 +71,7 @@
     </panel>
   </form>
 
-  <action-view name="wizard-client-dashboard" model="com.axelor.message.db.Wizard"
+  <action-view name="wizard-client-dashboard" model="com.axelor.utils.db.Wizard"
     title="Dashboard" home="true">
     <view name="client-dashboard-form" type="form"/>
   </action-view>
@@ -80,7 +82,7 @@
   </action-method>
 
   <action-record name="action-client-portal-record-dashboard-total"
-    model="com.axelor.message.db.Wizard">
+    model="com.axelor.utils.db.Wizard">
     <field name="$openQuotationBtn"
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getOpenQuotation()"/>
     <field name="$saleOrderBtn"
@@ -95,6 +97,8 @@
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getOldInvoice()"/>
     <field name="$refundInvoiceBtn"
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getRefundInvoice()"/>
+    <field name="$allInvoiceBtn"
+      expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getAllInvoice()"/>
     <field name="$myTicketBtn"
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getMyTicket()"/>
     <field name="$providerTicketBtn"

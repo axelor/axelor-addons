@@ -21,6 +21,13 @@
       <field name="isStripeActivated" widget="boolean-switch"/>
       <field name="isPaypalActivated" widget="boolean-switch"/>
       <field name="isPayboxActivated" widget="boolean-switch"/>
+      <field name="isTermRequired"/>
+      <field name="termMetaFile" widget="binary-link" requiredIf="isTermRequired"/>
+      <field name="isReturnPolicyRequired"/>
+      <field name="returnPolicyMetaFile" widget="binary-link"
+        requiredIf="isReturnPolicyRequired"/>
+      <field name="isDataPolicyRequired"/>
+      <field name="dataPolicyMetaFile" widget="binary-link" requiredIf="isDataPolicyRequired"/>
     </panel>
     <panel name="stripePanel" title="Stripe configuration" showIf="isStripeActivated"
       colSpan="12">
@@ -56,6 +63,7 @@
       <field name="payboxPublicKey" colSpan="12" requiredIf="isPayboxActivated"/>
     </panel>
     <panel name="templatePanel" colSpan="12">
+      <field name="emailAccount" domain="self.serverTypeSelect = 1"/>
       <field name="quotationGenerationTemplate"/>
       <field name="quotationConfimationCodeTemplate"/>
       <field name="quotationConfimationTemplate"/>

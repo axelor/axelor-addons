@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.AxelorException;
 import com.axelor.studio.db.AppPrestashop;
 import java.io.IOException;
 import java.io.Writer;

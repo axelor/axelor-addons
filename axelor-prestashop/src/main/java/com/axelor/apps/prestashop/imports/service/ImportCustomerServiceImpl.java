@@ -18,6 +18,7 @@
 package com.axelor.apps.prestashop.imports.service;
 
 import com.axelor.apps.account.db.AccountingSituation;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.SequenceRepository;
@@ -29,7 +30,6 @@ import com.axelor.apps.prestashop.entities.PrestashopCustomer;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.AxelorException;
 import com.axelor.inject.Beans;
 import com.axelor.message.db.EmailAddress;
 import com.axelor.studio.db.AppPrestashop;
@@ -113,7 +113,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
           if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
             localCustomer.setPartnerSeq(
                 Beans.get(SequenceService.class)
-                    .getSequenceNumber(SequenceRepository.PARTNER, Partner.class, "partnerSeq"));
+                    .getSequenceNumber(SequenceRepository.PARTNER, null, null));
             if (localCustomer.getPartnerSeq() == null) {
               ++errors;
               logBuffer.write(
@@ -162,8 +162,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
               if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
                 mainContact.setPartnerSeq(
                     Beans.get(SequenceService.class)
-                        .getSequenceNumber(
-                            SequenceRepository.PARTNER, Partner.class, "partnerSeq"));
+                        .getSequenceNumber(SequenceRepository.PARTNER, null, null));
                 if (mainContact.getPartnerSeq() == null) {
                   ++errors;
                   logBuffer.write(

@@ -18,9 +18,9 @@
 package com.axelor.apps.docusign.web;
 
 import com.axelor.app.AppSettings;
+import com.axelor.apps.base.ResponseMessageType;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.docusign.db.DocuSignAccount;
-import com.axelor.exception.ResponseMessageType;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.docusign.esign.client.auth.OAuth;

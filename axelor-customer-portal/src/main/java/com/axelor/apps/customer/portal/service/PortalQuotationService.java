@@ -17,9 +17,11 @@
  */
 package com.axelor.apps.customer.portal.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.sale.db.SaleOrder;
-import com.axelor.exception.AxelorException;
+import com.axelor.message.db.EmailAccount;
+import com.axelor.studio.db.AppCustomerPortal;
 import javax.mail.MessagingException;
 
 public interface PortalQuotationService {
@@ -34,4 +36,6 @@ public interface PortalQuotationService {
 
   public void confirmPortalQuotation(PortalQuotation portalQuotation, String name)
       throws MessagingException, AxelorException;
+
+  public EmailAccount getEmailAccount(AppCustomerPortal app);
 }

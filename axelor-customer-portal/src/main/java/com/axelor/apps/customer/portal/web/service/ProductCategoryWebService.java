@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerCategory;
 import com.axelor.apps.base.db.Product;
@@ -29,7 +30,6 @@ import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.JpaSecurity.AccessType;
 import com.axelor.db.Query;
-import com.axelor.exception.AxelorException;
 import com.axelor.inject.Beans;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +53,9 @@ public class ProductCategoryWebService extends AbstractWebService {
     Partner partner = Beans.get(UserService.class).getUserPartner();
     if (partner != null) {
       PartnerCategory partnerCategory = partner.getPartnerCategory();
+      if (partnerCategory == null && partner.getIsContact() && partner.getMainPartner() != null) {
+        partnerCategory = partner.getMainPartner().getPartnerCategory();
+      }
       filter.append(
           "self.id IN (SELECT productCategory FROM Product product WHERE :partnerCategory MEMBER OF product.partnerCategorySet) OR :partnerCategory MEMBER OF self.partnerCategorySet");
       params.put("partnerCategory", partnerCategory);
@@ -90,6 +93,9 @@ public class ProductCategoryWebService extends AbstractWebService {
     Partner partner = Beans.get(UserService.class).getUserPartner();
     if (partner != null) {
       PartnerCategory partnerCategory = partner.getPartnerCategory();
+      if (partnerCategory == null && partner.getIsContact() && partner.getMainPartner() != null) {
+        partnerCategory = partner.getMainPartner().getPartnerCategory();
+      }
       filter.append(
           " AND ((:partnerCategory MEMBER OF self.partnerCategorySet) "
               + "OR (:partnerCategory MEMBER OF self.productCategory.partnerCategorySet))");

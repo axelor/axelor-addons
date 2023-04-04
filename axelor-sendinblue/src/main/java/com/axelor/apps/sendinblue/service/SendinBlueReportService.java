@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.sendinblue.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.marketing.db.SendinBlueCampaign;
 import com.axelor.apps.marketing.db.repo.SendinBlueCampaignRepository;
@@ -34,8 +36,6 @@ import com.axelor.apps.sendinblue.db.repo.SendinBlueReportRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueTagRepository;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.message.db.EmailAddress;

@@ -36,8 +36,14 @@ public class AppCustomerPortalResponseGenerator extends ResponseGenerator {
             "manageQuotations",
             "isPurchasesActivated",
             "isDMSActivated",
-            "isTaskEditorActivated"));
+            "isTaskEditorActivated",
+            "isTermRequired",
+            "isReturnPolicyRequired",
+            "isDataPolicyRequired"));
     extraFieldMap.put("isAti", this::getIsAti);
+    extraFieldMap.put("termMetaFile", this::getTermMetaFile);
+    extraFieldMap.put("returnPolicyMetaFile", this::getReturnPolicy);
+    extraFieldMap.put("dataPolicyMetaFile", this::getDataPolicy);
     extraFieldMap.put("isQuotationRequestActive", this::getIsQuotationRequestActive);
     if (appService.isApp("subscription")) {
       modelFields.add("isSubscriptionActivated");
@@ -62,5 +68,35 @@ public class AppCustomerPortalResponseGenerator extends ResponseGenerator {
 
     AppCustomerPortal app = (AppCustomerPortal) object;
     return app.getManageQuotations();
+  }
+
+  private Long getTermMetaFile(Object object) {
+    AppCustomerPortal appCustomerPortal = (AppCustomerPortal) object;
+
+    if (appCustomerPortal.getTermMetaFile() != null) {
+      return appCustomerPortal.getTermMetaFile().getId();
+    }
+
+    return null;
+  }
+
+  private Long getReturnPolicy(Object object) {
+    AppCustomerPortal appCustomerPortal = (AppCustomerPortal) object;
+
+    if (appCustomerPortal.getReturnPolicyMetaFile() != null) {
+      return appCustomerPortal.getReturnPolicyMetaFile().getId();
+    }
+
+    return null;
+  }
+
+  private Long getDataPolicy(Object object) {
+    AppCustomerPortal appCustomerPortal = (AppCustomerPortal) object;
+
+    if (appCustomerPortal.getDataPolicyMetaFile() != null) {
+      return appCustomerPortal.getDataPolicyMetaFile().getId();
+    }
+
+    return null;
   }
 }

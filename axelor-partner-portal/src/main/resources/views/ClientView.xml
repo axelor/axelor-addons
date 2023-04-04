@@ -3,7 +3,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.4.xsd">
 
-  <form model="com.axelor.message.db.Wizard" title="Dashboard" name="client-dashboard-form"
+  <form model="com.axelor.utils.db.Wizard" title="Dashboard" name="client-dashboard-form"
     id="partner-portal-client-dashboard-form" extension="true">
     <extend target="/">
       <attribute name="onNew" value="action-partner-portal-group-dashboard-total"/>
@@ -29,7 +29,7 @@
   </action-group>
 
   <action-record name="action-partner-portal-record-dashboard-total"
-    model="com.axelor.message.db.Wizard">
+    model="com.axelor.utils.db.Wizard">
     <field name="$newLeadBtn"
       expr="call:com.axelor.apps.partner.portal.service.ClientViewPartnerPortalService:getNewLead()"/>
     <field name="$leadBtn"

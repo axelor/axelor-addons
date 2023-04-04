@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.customer.portal.web;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.client.portal.db.Card;
 import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.CardService;
-import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;

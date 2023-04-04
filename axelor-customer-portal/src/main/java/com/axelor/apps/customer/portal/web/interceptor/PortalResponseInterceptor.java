@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.customer.portal.web.interceptor;
 
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
 import com.axelor.auth.AuthSecurityException;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.google.common.base.Throwables;
 import com.stripe.exception.StripeException;
 import java.lang.invoke.MethodHandles;

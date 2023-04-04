@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.customer.portal.service.SaleOrderPortalService;
 import com.axelor.apps.customer.portal.service.paybox.PayboxErrorConstants;
 import com.axelor.apps.customer.portal.service.paybox.PayboxService;
@@ -24,8 +26,6 @@ import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
 import com.axelor.apps.customer.portal.tools.ObjectTool;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.common.ObjectUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.google.common.collect.ImmutableMap;

@@ -31,20 +31,20 @@
       </panel>
     </panel-tabs>
     <panel sidebar="true">
-      <button name="import" title="Import" onClick="save,action-import-prestaShop-method"
+      <button name="import" title="Import" onClick="save,action-import-prestashop-method"
         colSpan="12" hidden="true"/>
-      <button name="export" title="Export" onClick="save,action-export-prestaShop-method"
+      <button name="export" title="Export" onClick="save,action-export-prestashop-method"
         colSpan="12" hidden="true"/>
     </panel>
   </form>
 
-  <action-method name="action-import-prestaShop-method"
-    model="com.axelor.apps.base.db.PrestaShopBatch">
+  <action-method name="action-import-prestashop-method"
+    model="com.axelor.apps.prestashop.db.PrestaShopBatch">
     <call class="com.axelor.apps.prestashop.web.PrestaShopController" method="importPrestShop"/>
   </action-method>
 
-  <action-method name="action-export-prestaShop-method"
-    model="com.axelor.apps.base.db.PrestaShopBatch">
+  <action-method name="action-export-prestashop-method"
+    model="com.axelor.apps.prestashop.db.PrestaShopBatch">
     <call class="com.axelor.apps.prestashop.web.PrestaShopController" method="exportPrestShop"/>
   </action-method>
 

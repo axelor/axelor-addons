@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.FrequencyService;
@@ -29,7 +30,6 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
-import com.axelor.exception.AxelorException;
 import com.axelor.studio.db.AppBusinessProject;
 import com.axelor.studio.db.repo.AppBusinessSupportRepository;
 import com.google.inject.Inject;

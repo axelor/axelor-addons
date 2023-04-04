@@ -17,11 +17,11 @@
  */
 package com.axelor.apps.prestashop.web;
 
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.prestashop.app.AppPrestaShopService;
 import com.axelor.apps.prestashop.imports.service.ImportMetaDataService;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;

@@ -19,12 +19,12 @@ package com.axelor.apps.redmine.service.sync.timeentries;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.BatchRepository;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;

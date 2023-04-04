@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.redmine.service.imports.fetch;
 
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.service.TraceBackService;
 import com.taskadapter.redmineapi.IssueManager;
 import com.taskadapter.redmineapi.Params;
 import com.taskadapter.redmineapi.RedmineException;

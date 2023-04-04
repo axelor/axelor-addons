@@ -18,12 +18,12 @@
 package com.axelor.apps.customer.portal.db.repo;
 
 import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.client.portal.db.Card;
 import com.axelor.apps.client.portal.db.repo.CardRepository;
 import com.axelor.apps.customer.portal.service.CardService;
 import com.axelor.apps.customer.portal.service.stripe.StripePaymentService;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import com.stripe.model.Customer;

@@ -17,13 +17,13 @@
  */
 package com.axelor.apps.sendinblue.service;
 
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueCampaignStatRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueEventRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueReportRepository;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.studio.db.AppSendinblue;

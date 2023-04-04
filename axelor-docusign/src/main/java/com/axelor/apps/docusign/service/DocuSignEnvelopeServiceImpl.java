@@ -18,8 +18,10 @@
 package com.axelor.apps.docusign.service;
 
 import com.axelor.app.AppSettings;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.docusign.db.DocuSignAccount;
 import com.axelor.apps.docusign.db.DocuSignDocument;
 import com.axelor.apps.docusign.db.DocuSignDocumentSetting;
@@ -42,8 +44,6 @@ import com.axelor.common.StringUtils;
 import com.axelor.db.JPA;
 import com.axelor.db.Model;
 import com.axelor.db.mapper.Mapper;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.message.service.TemplateContextService;
 import com.axelor.meta.MetaFiles;

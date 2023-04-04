@@ -17,9 +17,9 @@
  */
 package com.axelor.apps.customer.portal.service.paypal;
 
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.studio.db.AppCustomerPortal;
 import com.axelor.studio.db.repo.AppCustomerPortalRepository;

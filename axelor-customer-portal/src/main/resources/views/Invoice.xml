@@ -48,6 +48,8 @@
       <field name="invoiceDate"/>
       <field name="dueDate"/>
       <field name="operationTypeSelect" hidden="true"/>
+      <panel-dashlet name="linePanelDashlet"
+        action="portal-action-invoice-line-custom-view" colSpan="12" height="300"/>
     </panel>
     <panel name="actionPanel" sidebar="true">
       <button name="payBtn" title="Pay invoice"
@@ -154,6 +156,29 @@
         target="com.axelor.apps.base.db.Partner" title="Partner" hidden="true"/>
     </panel>
   </form>
+
+  <custom name="portal-invoice-line-custom" title="Details" css="report-box">
+    <dataset type="jpql">
+	  <![CDATA[
+	  	SELECT
+	  		self.product.code AS code,
+	  		self.productName AS productName, CAST(COALESCE(self.qty, '0') AS integer) AS qty, self.unit.name AS unit,
+	  		ROUND(self.priceDiscounted,2) AS unitPrice,
+	  		ROUND(self.exTaxTotal,2) AS total, self.inTaxPrice
+	  	FROM InvoiceLine self WHERE self.invoice.id = :id
+	  ]]>
+    </dataset>
+    <template>
+  	  	<![CDATA[
+  	  		<report-table data='data' columns='code,productName,qty,unit,unitPrice,total'></report-table>
+  	  	]]>
+    </template>
+  </custom>
+
+  <action-view name="portal-action-invoice-line-custom-view" title="Details">
+    <view type="custom" name="portal-invoice-line-custom"/>
+    <context name="saleOrder" expr=""/>
+  </action-view>
 
   <action-view name="action-client-portal-view-invoice-payment" title="Payment"
     model="com.axelor.apps.account.db.Invoice">

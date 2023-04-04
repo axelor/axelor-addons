@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Partner;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.client.portal.db.Card;
 import com.axelor.apps.client.portal.db.repo.CardRepository;
 import com.axelor.apps.customer.portal.exception.IExceptionMessage;
@@ -28,8 +30,6 @@ import com.axelor.apps.customer.portal.service.response.generator.ResponseGenera
 import com.axelor.common.ObjectUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.JpaSecurity.AccessType;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.google.inject.persist.Transactional;

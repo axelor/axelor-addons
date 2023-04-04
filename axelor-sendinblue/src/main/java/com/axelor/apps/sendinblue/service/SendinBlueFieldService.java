@@ -17,12 +17,12 @@
  */
 package com.axelor.apps.sendinblue.service;
 
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.db.Model;
 import com.axelor.db.annotations.NameColumn;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaField;
 import com.axelor.studio.db.AppSendinblue;
 import com.axelor.utils.service.TranslationService;

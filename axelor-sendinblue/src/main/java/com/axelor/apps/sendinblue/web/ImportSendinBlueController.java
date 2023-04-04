@@ -17,11 +17,11 @@
  */
 package com.axelor.apps.sendinblue.web;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.service.AppSendinBlueService;
 import com.axelor.apps.sendinblue.service.ImportSendinBlueService;
 import com.axelor.apps.sendinblue.translation.ITranslation;
-import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;

@@ -18,9 +18,12 @@
 package com.axelor.apps.customer.portal.service;
 
 import com.axelor.apps.account.db.repo.AnalyticMoveLineRepository;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.CancelReason;
 import com.axelor.apps.base.db.repo.PartnerRepository;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.base.service.administration.SequenceService;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.businessproduction.service.SaleOrderWorkflowServiceBusinessProductionImpl;
 import com.axelor.apps.client.portal.db.PortalQuotation;
@@ -40,10 +43,8 @@ import com.axelor.apps.supplychain.service.SaleOrderCheckAnalyticService;
 import com.axelor.apps.supplychain.service.SaleOrderPurchaseService;
 import com.axelor.apps.supplychain.service.SaleOrderStockService;
 import com.axelor.apps.supplychain.service.app.AppSupplychainService;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAccount;
 import com.axelor.message.db.Message;
 import com.axelor.message.db.Template;
 import com.axelor.message.service.MessageService;
@@ -62,6 +63,7 @@ public class SaleOrderWorkflowServicePortalImpl
   protected AppCustomerPortalRepository appRepo;
   protected TemplateMessageService templateService;
   protected MessageService messageService;
+  protected PortalQuotationService portalQuotationService;
 
   @Inject
   public SaleOrderWorkflowServicePortalImpl(
@@ -84,7 +86,8 @@ public class SaleOrderWorkflowServicePortalImpl
       AnalyticMoveLineRepository analyticMoveLineRepository,
       AppCustomerPortalRepository appRepo,
       TemplateMessageService templateService,
-      MessageService messageService) {
+      MessageService messageService,
+      PortalQuotationService portalQuotationService) {
     super(
         sequenceService,
         partnerRepo,
@@ -106,6 +109,7 @@ public class SaleOrderWorkflowServicePortalImpl
     this.appRepo = appRepo;
     this.templateService = templateService;
     this.messageService = messageService;
+    this.portalQuotationService = portalQuotationService;
   }
 
   @Override
@@ -119,6 +123,10 @@ public class SaleOrderWorkflowServicePortalImpl
       if (app.getManageQuotations() && app.getIsNotifyCustomer()) {
         Template template = app.getCustomerNotificationTemplate();
         Message message = templateService.generateMessage(saleOrder, template);
+        EmailAccount emailAccount = portalQuotationService.getEmailAccount(app);
+        if (emailAccount != null) {
+          message.setMailAccount(emailAccount);
+        }
         messageService.addMessageRelatedTo(
             message, SaleOrder.class.getCanonicalName(), saleOrder.getId());
         message = messageService.sendMessage(message);
@@ -141,8 +149,7 @@ public class SaleOrderWorkflowServicePortalImpl
                 .count()
             == 0) {
       try {
-        PortalQuotation portalQuotation =
-            Beans.get(PortalQuotationService.class).createPortalQuotation(saleOrder);
+        PortalQuotation portalQuotation = portalQuotationService.createPortalQuotation(saleOrder);
         portalQuotation.setStatusSelect(PortalQuotationRepository.STATUS_ORDER_CONFIRMED);
         portalQuotation.setTypeSelect(null);
         Beans.get(PortalQuotationRepository.class).save(portalQuotation);

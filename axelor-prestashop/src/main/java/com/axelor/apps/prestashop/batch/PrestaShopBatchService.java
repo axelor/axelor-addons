@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.prestashop.batch;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.base.service.administration.AbstractBatchService;
 import com.axelor.apps.db.IPrestaShopBatch;
 import com.axelor.apps.prestashop.db.PrestaShopBatch;
@@ -25,8 +27,6 @@ import com.axelor.apps.prestashop.exception.IExceptionMessage;
 import com.axelor.apps.prestashop.service.exports.batch.ExportPrestaShop;
 import com.axelor.apps.prestashop.service.imports.batch.ImportPrestaShop;
 import com.axelor.db.Model;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.studio.db.repo.AppPrestashopRepository;

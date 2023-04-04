@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.prestashop.imports;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.prestashop.imports.service.ImportAddressService;
 import com.axelor.apps.prestashop.imports.service.ImportCategoryService;
 import com.axelor.apps.prestashop.imports.service.ImportCountryService;
@@ -27,8 +29,6 @@ import com.axelor.apps.prestashop.imports.service.ImportOrderService;
 import com.axelor.apps.prestashop.imports.service.ImportProductService;
 import com.axelor.apps.prestashop.imports.service.ImportTaxService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
 import com.axelor.studio.db.AppPrestashop;

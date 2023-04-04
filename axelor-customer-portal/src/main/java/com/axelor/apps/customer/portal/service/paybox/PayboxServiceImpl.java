@@ -18,10 +18,10 @@
 package com.axelor.apps.customer.portal.service.paybox;
 
 import com.axelor.app.AppSettings;
+import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.common.ObjectUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.studio.db.AppCustomerPortal;
 import com.axelor.studio.db.repo.AppCustomerPortalRepository;

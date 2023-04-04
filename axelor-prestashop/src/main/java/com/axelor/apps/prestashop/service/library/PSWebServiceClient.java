@@ -139,7 +139,7 @@ public class PSWebServiceClient {
     throw new PrestashopHttpException(
         statusCode,
         String.format(
-            "An underlying call to the Prestashop API failed with status code %d: %s (%s)\n=== Response body ===\n%s\n=== End of response body ===",
+            "An underlying call to the Prestashop API failed with status code %d: %s\n=== Response body ===\n%s\n=== End of response body ===",
             statusCode,
             response.getStatusLine().getReasonPhrase(),
             // HttpStatus.getStatusText(statusCode),

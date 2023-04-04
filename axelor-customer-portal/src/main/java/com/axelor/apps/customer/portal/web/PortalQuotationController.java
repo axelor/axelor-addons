@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.customer.portal.web;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
@@ -27,7 +28,6 @@ import com.axelor.apps.sale.db.repo.SaleOrderRepository;
 import com.axelor.apps.sale.service.saleorder.SaleOrderWorkflowService;
 import com.axelor.auth.db.User;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.meta.schema.actions.ActionView;

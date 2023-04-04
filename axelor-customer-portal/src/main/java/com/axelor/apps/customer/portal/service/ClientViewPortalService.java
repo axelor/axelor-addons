@@ -44,6 +44,9 @@ public interface ClientViewPortalService {
   @CallMethod
   public Long getRefundInvoice();
 
+  @CallMethod
+  public Long getAllInvoice();
+
   /* Ticket */
   @CallMethod
   public Long getMyTicket();

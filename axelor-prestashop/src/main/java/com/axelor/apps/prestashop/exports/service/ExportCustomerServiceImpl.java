@@ -22,11 +22,11 @@ import com.axelor.apps.account.db.PaymentConditionLine;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.prestashop.entities.PrestashopCustomer;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
@@ -142,9 +142,32 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
               remoteCustomer.setEmail(localCustomer.getEmailAddress().getAddress());
             }
 
+            // Setting name of remote customer
+            String lastName =
+                localCustomer
+                    .getName()
+                    .trim(); // lastName (name field in AOS) cannot be null as it is required in AOS
+
+            String firstName = localCustomer.getFirstName();
+            if (firstName == null || firstName.isEmpty()) {
+              firstName = lastName;
+            } else {
+              firstName = firstName.trim();
+            }
+
+            // PrestaShop doesn't support digits in names
+            if (firstName.matches(".*\\d+.*") || lastName.matches(".*\\d+.*")) {
+              logBuffer.write(
+                  String.format(
+                      " - [ERROR] local customer #%d (%s) contains digits in name, skipping %n",
+                      localCustomer.getId(), localCustomer.getSimpleFullName()));
+              continue;
+            }
+
+            remoteCustomer.setFirstname(firstName);
+            remoteCustomer.setLastname(lastName);
+
             if (localCustomer.getPartnerTypeSelect() == PartnerRepository.PARTNER_TYPE_INDIVIDUAL) {
-              remoteCustomer.setFirstname(localCustomer.getFirstName());
-              remoteCustomer.setLastname(localCustomer.getName());
               if (localCustomer.getTitleSelect() != null) {
                 remoteCustomer.setGenderId(
                     localCustomer.getTitleSelect() == PartnerRepository.PARTNER_TITLE_M
@@ -152,12 +175,7 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
                         : PrestashopCustomer.GENDER_FEMALE);
               }
             } else {
-              remoteCustomer.setCompany(localCustomer.getName());
-              remoteCustomer.setFirstname(" ");
-              remoteCustomer.setLastname(
-                  localCustomer.getName().matches(".*\\d+.*")
-                      ? localCustomer.getName().replaceAll("[*0-9]", "")
-                      : localCustomer.getName()); // remove digits from name
+              remoteCustomer.setCompany(lastName);
               remoteCustomer.setGenderId(PrestashopCustomer.GENDER_NEUTRAL);
             }
           }

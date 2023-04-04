@@ -29,6 +29,7 @@ import com.axelor.apps.client.portal.db.repo.GeneralAnnouncementRepository;
 import com.axelor.apps.client.portal.db.repo.IdeaRepository;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
 import com.axelor.apps.customer.portal.db.repo.AddressPortalRepository;
+import com.axelor.apps.customer.portal.db.repo.AppCustomerPortalPortalRepository;
 import com.axelor.apps.customer.portal.db.repo.CardManagementRepository;
 import com.axelor.apps.customer.portal.db.repo.ClientResourceManagementRepository;
 import com.axelor.apps.customer.portal.db.repo.DiscussionGroupManagementRepository;
@@ -73,6 +74,7 @@ import com.axelor.apps.portal.service.ClientViewServiceImpl;
 import com.axelor.apps.production.db.repo.ProductProductionRepository;
 import com.axelor.mail.web.MailController;
 import com.axelor.meta.MetaFiles;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.inject.matcher.Matchers;
 
 public class PortalModule extends AxelorModule {
@@ -113,6 +115,7 @@ public class PortalModule extends AxelorModule {
     bind(SaleOrderProjectRepository.class).to(SaleOrderPortalRepository.class);
     bind(AddressBaseRepository.class).to(AddressPortalRepository.class);
     bind(PartnerHRRepository.class).to(PartnerPortalRepository.class);
+    bind(AppCustomerPortalRepository.class).to(AppCustomerPortalPortalRepository.class);
 
     bind(MailController.class).to(MailPortalController.class);
   }
