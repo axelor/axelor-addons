@@ -25,12 +25,14 @@ import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
 import com.axelor.apps.customer.portal.translation.ITranslation;
+import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.message.db.EmailAddress;
 import com.axelor.apps.message.db.Message;
 import com.axelor.apps.message.db.Template;
 import com.axelor.apps.message.db.TemplateContext;
 import com.axelor.apps.message.db.repo.EmailAccountRepository;
 import com.axelor.apps.message.db.repo.MessageRepository;
+import com.axelor.apps.message.service.MailAccountService;
 import com.axelor.apps.message.service.MessageService;
 import com.axelor.apps.message.service.TemplateMessageService;
 import com.axelor.apps.report.engine.ReportSettings;
@@ -150,10 +152,14 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
 
       AppCustomerPortal app = Beans.get(AppCustomerPortalRepository.class).all().fetchOne();
       Template template = app.getQuotationGenerationTemplate();
+      EmailAccount emailAccount = getEmailAccount(app);
       if (template != null) {
         setContextValue(template, "QGquotationLink", link);
         message =
             Beans.get(TemplateMessageService.class).generateMessage(portalQuotation, template);
+        if (emailAccount != null) {
+          message.setMailAccount(emailAccount);
+        }
         setContextValue(template, "QGquotationLink", null);
 
       } else {
@@ -180,7 +186,7 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
                 null,
                 null,
                 MessageRepository.MEDIA_TYPE_EMAIL,
-                emailAccountRepo.all().filter("self.isDefault = true").fetchOne(),
+                emailAccount,
                 null);
       }
 
@@ -213,10 +219,14 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
       Message message;
       AppCustomerPortal app = Beans.get(AppCustomerPortalRepository.class).all().fetchOne();
       Template template = app.getQuotationConfimationCodeTemplate();
+      EmailAccount emailAccount = getEmailAccount(app);
       if (template != null) {
         setContextValue(template, "confirmationCode", String.format("\"%s\"", randomCode));
         message =
             Beans.get(TemplateMessageService.class).generateMessage(portalQuotation, template);
+        if (emailAccount != null) {
+          message.setMailAccount(emailAccount);
+        }
         message.addToEmailAddressSetItem(toEmailAddress);
         setContextValue(template, "confirmationCode", null);
 
@@ -238,7 +248,7 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
                 null,
                 null,
                 MessageRepository.MEDIA_TYPE_EMAIL,
-                emailAccountRepo.all().filter("self.isDefault = true").fetchOne(),
+                emailAccount,
                 null);
       }
 
@@ -281,6 +291,7 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
       Message message;
       AppCustomerPortal app = Beans.get(AppCustomerPortalRepository.class).all().fetchOne();
       Template template = app.getQuotationConfimationTemplate();
+      EmailAccount emailAccount = getEmailAccount(app);
       if (template != null) {
         String link =
             String.format(
@@ -297,6 +308,9 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
         setContextValue(template, "signatureName", String.format("\"%s\"", name));
         message =
             Beans.get(TemplateMessageService.class).generateMessage(portalQuotation, template);
+        if (emailAccount != null) {
+          message.setMailAccount(emailAccount);
+        }
         setContextValue(template, "QCquotationLink", null);
         setContextValue(template, "signatureName", null);
         if (isFinalised && ObjectUtils.notEmpty(reports)) {
@@ -336,7 +350,7 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
                 null,
                 null,
                 MessageRepository.MEDIA_TYPE_EMAIL,
-                emailAccountRepo.all().filter("self.isDefault = true").fetchOne(),
+                emailAccount,
                 null);
       }
 
@@ -386,5 +400,19 @@ public class PortalQuotationServiceImpl implements PortalQuotationService {
       messageService.addMessageRelatedTo(
           message, SaleOrder.class.getCanonicalName(), portalQuotation.getSaleOrder().getId());
     }
+  }
+
+  @Override
+  public EmailAccount getEmailAccount(AppCustomerPortal app) {
+    if (app.getEmailAccount() != null) {
+      return app.getEmailAccount();
+    }
+
+    EmailAccount emailAccount = Beans.get(MailAccountService.class).getDefaultSender();
+    if (emailAccount != null) {
+      return emailAccount;
+    }
+
+    return emailAccountRepo.all().filter("self.isDefault = true").fetchOne();
   }
 }

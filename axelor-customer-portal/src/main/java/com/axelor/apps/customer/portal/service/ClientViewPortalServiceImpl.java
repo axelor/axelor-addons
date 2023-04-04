@@ -121,11 +121,14 @@ public class ClientViewPortalServiceImpl extends ClientViewServiceImpl
 
   @Override
   public Long getAllQuotation() {
+    Partner partner = getClientUser().getPartner();
     return portalQuotationRepo
         .all()
         .filter(
             "(self.saleOrder.clientPartner = :clientPartner OR self.saleOrder.contactPartner = :clientPartner)")
-        .bind("clientPartner", getClientUser().getPartner())
+        .bind(
+            "clientPartner",
+            Boolean.TRUE.equals(partner.getIsCustomer()) ? partner : partner.getMainPartner())
         .count();
   }
 
@@ -294,5 +297,19 @@ public class ClientViewPortalServiceImpl extends ClientViewServiceImpl
     }
 
     return partnerCategory;
+  }
+
+  @Override
+  public Long getAllInvoice() {
+    Partner partner = getClientUser().getPartner();
+    return invoiceRepo
+        .all()
+        .filter(
+            "self.statusSelect = :statusSelect AND (self.partner = :clientPartner OR self.contactPartner = :clientPartner)")
+        .bind("statusSelect", invoiceRepo.STATUS_VENTILATED)
+        .bind(
+            "clientPartner",
+            Boolean.TRUE.equals(partner.getIsCustomer()) ? partner : partner.getMainPartner())
+        .count();
   }
 }

@@ -58,7 +58,11 @@ public class AddressWebService extends AbstractWebService {
       @QueryParam("limit") int limit) {
 
     final String filter = "self.partner = :partner";
-    Map<String, Object> params = ImmutableMap.of("partner", getPartner());
+    Partner partner = getPartner();
+    Map<String, Object> params =
+        ImmutableMap.of(
+            "partner",
+            Boolean.TRUE.equals(partner.getIsContact()) ? partner.getMainPartner() : partner);
     List<Address> addresses =
         fetch(PartnerAddress.class, filter, params, sort, limit, page).stream()
             .map(PartnerAddress::getAddress)
@@ -82,7 +86,12 @@ public class AddressWebService extends AbstractWebService {
 
     final String filter = "self.partner = :partner and self.address.id = :id";
     Partner partner = getPartner();
-    Map<String, Object> params = ImmutableMap.of("partner", partner, "id", id);
+    Map<String, Object> params =
+        ImmutableMap.of(
+            "partner",
+            Boolean.TRUE.equals(partner.getIsContact()) ? partner.getMainPartner() : partner,
+            "id",
+            id);
     List<PartnerAddress> partnerAddress = fetch(PartnerAddress.class, filter, params, null, 0, 1);
     if (ObjectUtils.isEmpty(partnerAddress)) {
       throw new AxelorException(
@@ -106,7 +115,10 @@ public class AddressWebService extends AbstractWebService {
     Partner partner = getPartner();
 
     Address address = Beans.get(AddressPortalService.class).create(values);
-    Beans.get(PartnerPortalService.class).addPartnerAddress(partner, address);
+    Beans.get(PartnerPortalService.class)
+        .addPartnerAddress(
+            Boolean.TRUE.equals(partner.getIsContact()) ? partner.getMainPartner() : partner,
+            address);
     Map<String, Object> data =
         ResponseGeneratorFactory.of(Address.class.getName()).generate(address);
     return new PortalRestResponse().setData(data).success();
@@ -130,7 +142,11 @@ public class AddressWebService extends AbstractWebService {
   @Path("/{id}")
   public void remove(@PathParam("id") Long id) throws AxelorException {
     Beans.get(JpaSecurity.class).check(AccessType.REMOVE, Address.class, id);
-    Beans.get(PartnerPortalService.class).removePartnerAddress(getPartner(), find(id));
+    Partner partner = getPartner();
+    Beans.get(PartnerPortalService.class)
+        .removePartnerAddress(
+            Boolean.TRUE.equals(partner.getIsContact()) ? partner.getMainPartner() : partner,
+            find(id));
   }
 
   private Address find(Long id) throws AxelorException {

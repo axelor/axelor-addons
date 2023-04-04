@@ -36,6 +36,7 @@ import com.axelor.apps.customer.portal.service.response.generator.AddressRespons
 import com.axelor.apps.customer.portal.service.response.generator.AppCustomerPortalResponseGenerator;
 import com.axelor.apps.customer.portal.service.response.generator.CardResponseGenerator;
 import com.axelor.apps.customer.portal.service.response.generator.CityResponseGenerator;
+import com.axelor.apps.customer.portal.service.response.generator.ComplementaryProductResponseGenerator;
 import com.axelor.apps.customer.portal.service.response.generator.CountryResponseGenerator;
 import com.axelor.apps.customer.portal.service.response.generator.CurrencyResponseGenerator;
 import com.axelor.apps.customer.portal.service.response.generator.EmailAddressResponseGenerator;
@@ -53,6 +54,7 @@ import com.axelor.apps.customer.portal.service.response.generator.SaleOrderLineT
 import com.axelor.apps.customer.portal.service.response.generator.SaleOrderResponseGenerator;
 import com.axelor.apps.customer.portal.service.response.generator.TaxLineResponseGenerator;
 import com.axelor.apps.message.db.EmailAddress;
+import com.axelor.apps.sale.db.ComplementaryProduct;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.SaleOrderLine;
 import com.axelor.apps.sale.db.SaleOrderLineTax;
@@ -88,6 +90,7 @@ public class ResponseGeneratorFactory {
             .put(AppCustomerPortal.class.getName(), AppCustomerPortalResponseGenerator.class)
             .put(Product.class.getName(), ProductResponseGenerator.class)
             .put(ProductCategory.class.getName(), ProductCategoryResponseGenerator.class)
+            .put(ComplementaryProduct.class.getName(), ComplementaryProductResponseGenerator.class)
             .put(Card.class.getName(), CardResponseGenerator.class)
             .build();
     CUSTOMISED_MODELS.putAll(map);

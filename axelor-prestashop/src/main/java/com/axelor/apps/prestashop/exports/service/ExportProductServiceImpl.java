@@ -88,6 +88,7 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   @Override
+  @Transactional(rollbackOn = {Exception.class})
   public void exportProduct(AppPrestashop appConfig, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
 
@@ -111,7 +112,7 @@ public class ExportProductServiceImpl implements ExportProductService {
     exportPictures(ws, productsById, logBuffer);
   }
 
-  @Transactional
+  @Transactional(rollbackOn = {Exception.class})
   private void exportProducts(
       final AppPrestashop appConfig,
       final PSWebServiceClient ws,
@@ -124,7 +125,7 @@ public class ExportProductServiceImpl implements ExportProductService {
     int errors = 0;
     final StringBuilder filter =
         new StringBuilder(
-            "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
+            "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version) AND self.dtype = 'Product'");
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
       filter.append(" AND (self.sellable = true and self.productSynchronizedInPrestashop = true)");
     }
@@ -149,9 +150,11 @@ public class ExportProductServiceImpl implements ExportProductService {
     for (Product localProduct : productRepo.all().filter(filter.toString()).fetch()) {
       try {
         final String cleanedReference =
-            localProduct
-                .getCode()
-                .replaceAll("[<>;={}]", ""); // took from Prestashop's ValidateCore::isReference
+            localProduct.getCode() == null
+                ? ""
+                : localProduct
+                    .getCode()
+                    .replaceAll("[<>;={}]", ""); // took from Prestashop's ValidateCore::isReference
         logBuffer.write(
             String.format(
                 "Exporting product %s (%s/%s) – ",
@@ -398,7 +401,7 @@ public class ExportProductServiceImpl implements ExportProductService {
         String.format("%n=== END OF PRODUCTS EXPORT, done: %d, errors: %d ===%n", done, errors));
   }
 
-  @Transactional
+  @Transactional(rollbackOn = {Exception.class})
   private void exportStocks(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
@@ -409,7 +412,10 @@ public class ExportProductServiceImpl implements ExportProductService {
     logBuffer.write(String.format("%n===== STOCKS =====%n"));
 
     List<Product> localProductList =
-        productRepo.all().filter("self.prestaShopId IS NOT NULL").fetch();
+        productRepo
+            .all()
+            .filter("self.prestaShopId IS NOT NULL AND self.dtype = 'Product'")
+            .fetch();
 
     StockLocationService stockLocationService = Beans.get(StockLocationService.class);
 
@@ -465,7 +471,7 @@ public class ExportProductServiceImpl implements ExportProductService {
   }
 
   /** Export all pictures that have been modified */
-  @Transactional
+  @Transactional(rollbackOn = {Exception.class})
   private void exportPictures(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
@@ -479,7 +485,7 @@ public class ExportProductServiceImpl implements ExportProductService {
         productRepo
             .all()
             .filter(
-                "self.prestaShopId is not null and self.picture is not null and "
+                "self.prestaShopId is not null and self.picture is not null AND self.dtype = 'Product' AND "
                     + "(self.prestaShopImageVersion is null "
                     + "OR self.prestaShopImageId is null "
                     + "OR self.picture.version != self.prestaShopImageVersion "

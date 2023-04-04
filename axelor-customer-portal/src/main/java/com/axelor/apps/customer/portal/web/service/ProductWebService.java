@@ -24,6 +24,7 @@ import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
 import com.axelor.apps.customer.portal.service.response.ResponseGeneratorFactory;
 import com.axelor.apps.customer.portal.service.response.generator.ResponseGenerator;
+import com.axelor.apps.sale.db.ComplementaryProduct;
 import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
@@ -125,6 +126,39 @@ public class ProductWebService extends AbstractWebService {
     Map<String, Object> data =
         ResponseGeneratorFactory.of(Product.class.getName()).generate(product);
     PortalRestResponse response = new PortalRestResponse();
+    return response.setData(data).success();
+  }
+
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/{productId}/complementary")
+  public PortalRestResponse fetchComplementaryProduct(
+      @PathParam("productId") Long productId,
+      @QueryParam("sort") String sort,
+      @QueryParam("page") int page,
+      @QueryParam("limit") int limit)
+      throws AxelorException {
+    final Map<String, Object> params = new HashMap<String, Object>();
+    StringBuilder filter = new StringBuilder();
+    filter.append("self.originalProduct.id = :id");
+    params.put("id", productId);
+    List<ComplementaryProduct> products =
+        fetch(ComplementaryProduct.class, filter.toString(), params, sort, limit, page);
+
+    Beans.get(JpaSecurity.class)
+        .check(
+            AccessType.READ,
+            ComplementaryProduct.class,
+            products.stream().map(ComplementaryProduct::getId).toArray(Long[]::new));
+
+    ResponseGenerator generator = ResponseGeneratorFactory.of(ComplementaryProduct.class.getName());
+    List<Map<String, Object>> data =
+        products.stream().map(generator::generate).collect(Collectors.toList());
+
+    PortalRestResponse response = new PortalRestResponse();
+    response.setTotal(totalQuery(ComplementaryProduct.class, filter.toString(), params));
+    response.setOffset((page - 1) * limit);
+
     return response.setData(data).success();
   }
 }

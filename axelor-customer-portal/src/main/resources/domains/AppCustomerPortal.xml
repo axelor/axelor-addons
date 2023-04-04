@@ -31,6 +31,9 @@
     <boolean name="isPayboxActivated" title="Active Paybox" default="false"/>
     <boolean name="canConfirmOnline" title="Can confirm online" default="true"/>
     <boolean name="showCatalog" title="Display product catalog" default="true"/>
+    <boolean name="isTermRequired"/>
+    <boolean name="isReturnPolicyRequired"/>
+    <boolean name="isDataPolicyRequired"/>
 
     <string name="stripeSecretKey" title="Stripe secret key"/>
     <string name="paypalMerchantId" title="Paypal merchant ID"/>
@@ -49,6 +52,11 @@
     <string name="payboxPublicKey" large="true" title="Public key"
       help="Used to verify the request coming from paybox"/>
 
+    <many-to-one name="termMetaFile" ref="com.axelor.meta.db.MetaFile" title="Terms"/>
+    <many-to-one name="returnPolicyMetaFile" ref="com.axelor.meta.db.MetaFile"
+      title="Return policy"/>
+    <many-to-one name="dataPolicyMetaFile" ref="com.axelor.meta.db.MetaFile"
+      title="Data policy"/>
     <many-to-one name="quotationGenerationTemplate"
       ref="com.axelor.apps.message.db.Template" title="Quotation generation template"/>
     <many-to-one name="quotationConfimationCodeTemplate"
@@ -59,6 +67,8 @@
       ref="com.axelor.apps.message.db.Template" title="Seller notification template"/>
     <many-to-one name="customerNotificationTemplate"
       ref="com.axelor.apps.message.db.Template" title="Customer notification template"/>
+    <many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount"
+      title="Default email account"/>
 
   </entity>
 

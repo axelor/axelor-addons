@@ -29,6 +29,8 @@
           icon="fa-file-excel-o" onClick="client.portal.refunds" widget="info-button"/>
         <button name="$oldInvoiceBtn" title="Old invoices" css="group-bg-blue"
           icon="fa-file-text" onClick="client.portal.old.invoices" widget="info-button"/>
+        <button name="$allInvoiceBtn" title="All invoices" css="group-bg-blue" icon="fa-file"
+          onClick="client.portal.all.invoices" widget="info-button"/>
       </panel>
       <panel if-module="axelor-project" name="ticketPanel" title="Tickets"
         if="__config__.app.isApp('portal') &amp;&amp; __config__.app.getApp('portal').getManageTickets()"
@@ -95,6 +97,8 @@
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getOldInvoice()"/>
     <field name="$refundInvoiceBtn"
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getRefundInvoice()"/>
+    <field name="$allInvoiceBtn"
+      expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getAllInvoice()"/>
     <field name="$myTicketBtn"
       expr="call:com.axelor.apps.customer.portal.service.ClientViewPortalService:getMyTicket()"/>
     <field name="$providerTicketBtn"
