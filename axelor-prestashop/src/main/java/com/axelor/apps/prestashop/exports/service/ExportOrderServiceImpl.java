@@ -97,7 +97,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 
   @Override
   @Transactional
-  public void exportOrder(AppPrestashop appConfig, Writer logBuffer)
+  public void exportOrder(AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     int done = 0;
     int errors = 0;
@@ -114,7 +114,11 @@ public class ExportOrderServiceImpl implements ExportOrderService {
 
     if (appConfig.getExportNonPrestashopOrders() == Boolean.FALSE) {
       // Only push back orders that come from prestashop
-      filter.append("AND (self.prestaShopId IS NOT NULL)");
+      filter.append(" AND (self.prestaShopId IS NOT NULL)");
+    }
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
     }
 
     orderLoop: // Not very pretty

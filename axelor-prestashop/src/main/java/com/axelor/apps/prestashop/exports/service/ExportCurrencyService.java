@@ -32,6 +32,7 @@ public interface ExportCurrencyService {
    * @throws IOException
    * @throws PrestaShopWebserviceException
    */
-  public void exportCurrency(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCurrency(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException;
 }

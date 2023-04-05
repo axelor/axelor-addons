@@ -31,6 +31,7 @@ public interface ExportCategoryService {
    * @throws IOException
    * @throws PrestaShopWebserviceException
    */
-  public void exportCategory(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCategory(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException;
 }

@@ -59,7 +59,8 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 
   @Override
   @Transactional
-  public void exportCustomer(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCustomer(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     int done = 0;
     int errors = 0;
@@ -74,6 +75,10 @@ public class ExportCustomerServiceImpl implements ExportCustomerService {
 
     if (appConfig.getExportNonPrestashopCustomers() == Boolean.FALSE) {
       filter.append(" AND (self.prestaShopId IS NOT NULL)");
+    }
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
     }
 
     final PSWebServiceClient ws =

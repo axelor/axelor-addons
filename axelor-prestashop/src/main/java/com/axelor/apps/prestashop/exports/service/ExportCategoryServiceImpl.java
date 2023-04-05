@@ -56,7 +56,8 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
 
   @Override
   @Transactional
-  public void exportCategory(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCategory(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     int done = 0;
     int errors = 0;
@@ -65,14 +66,22 @@ public class ExportCategoryServiceImpl implements ExportCategoryService {
     logBuffer.write(String.format("%n====== PRODUCT CATEGORIES ======%n"));
 
     final Query<ProductCategory> q = categoryRepo.all();
+
     final StringBuilder filter =
         new StringBuilder(
             "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
+
     final List<Object> params = new ArrayList<>(2);
+
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
       filter.append(
           " AND EXISTS(Select 1 From Product where productCategory = self and sellable = true and productSynchronizedInPrestashop = true)");
     }
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
+    }
+
     q.filter(filter.toString(), params.toArray());
     q.order("-parentProductCategory.id");
 
