@@ -61,7 +61,8 @@ public class ExportAddressServiceImpl implements ExportAddressService {
 
   @Override
   @Transactional
-  public void exportAddress(AppPrestashop appConfig, Writer logBuffer)
+  public void exportAddress(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     int done = 0;
     int errors = 0;
@@ -71,9 +72,14 @@ public class ExportAddressServiceImpl implements ExportAddressService {
     final PSWebServiceClient ws =
         new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
+    final StringBuilder filter = new StringBuilder("self.prestaShopId IS NOT NULL");
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
+    }
+
     // Customers already imported
-    final List<Partner> customers =
-        partnerRepo.all().filter("self.prestaShopId IS NOT NULL").fetch();
+    final List<Partner> customers = partnerRepo.all().filter(filter.toString()).fetch();
 
     // Addresses already in PS
     final List<PrestashopAddress> remoteAddresses = ws.fetchAll(PrestashopResourceType.ADDRESSES);

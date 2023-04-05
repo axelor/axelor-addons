@@ -53,18 +53,23 @@ public class ExportCountryServiceImpl implements ExportCountryService {
 
   @Override
   @Transactional
-  public void exportCountry(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCountry(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     int done = 0;
     int errors = 0;
 
     logBuffer.write(String.format("%n====== COUNTRIES ======%n"));
 
-    final List<Country> countries =
-        countryRepo
-            .all()
-            .filter("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)")
-            .fetch();
+    final StringBuilder filter =
+        new StringBuilder(
+            "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
+    }
+
+    final List<Country> countries = countryRepo.all().filter(filter.toString()).fetch();
     final PSWebServiceClient ws =
         new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 

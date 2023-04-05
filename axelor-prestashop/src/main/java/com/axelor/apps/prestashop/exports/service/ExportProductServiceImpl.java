@@ -89,7 +89,8 @@ public class ExportProductServiceImpl implements ExportProductService {
 
   @Override
   @Transactional(rollbackOn = {Exception.class})
-  public void exportProduct(AppPrestashop appConfig, Writer logBuffer)
+  public void exportProduct(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
 
     if (appConfig.getPrestaShopLengthUnit() == null
@@ -107,9 +108,9 @@ public class ExportProductServiceImpl implements ExportProductService {
       productsById.put(p.getId(), p);
     }
 
-    exportProducts(appConfig, ws, productsById, logBuffer);
-    exportStocks(ws, productsById, logBuffer);
-    exportPictures(ws, productsById, logBuffer);
+    exportProducts(appConfig, ws, productsById, includeArchiveRecords, logBuffer);
+    exportStocks(ws, productsById, includeArchiveRecords, logBuffer);
+    exportPictures(ws, productsById, includeArchiveRecords, logBuffer);
   }
 
   @Transactional(rollbackOn = {Exception.class})
@@ -117,6 +118,7 @@ public class ExportProductServiceImpl implements ExportProductService {
       final AppPrestashop appConfig,
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
+      boolean includeArchiveRecords,
       final Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     logBuffer.write(String.format("%n====== PRODUCTS ======%n"));
@@ -128,6 +130,10 @@ public class ExportProductServiceImpl implements ExportProductService {
             "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version) AND self.dtype = 'Product'");
     if (appConfig.getExportNonSoldProducts() == Boolean.FALSE) {
       filter.append(" AND (self.sellable = true and self.productSynchronizedInPrestashop = true)");
+    }
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
     }
 
     final PrestashopProduct defaultProduct = ws.fetchDefault(PrestashopResourceType.PRODUCTS);
@@ -405,17 +411,21 @@ public class ExportProductServiceImpl implements ExportProductService {
   private void exportStocks(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
+      boolean includeArchiveRecords,
       final Writer logBuffer)
       throws IOException {
     int errors = 0;
     int done = 0;
     logBuffer.write(String.format("%n===== STOCKS =====%n"));
 
-    List<Product> localProductList =
-        productRepo
-            .all()
-            .filter("self.prestaShopId IS NOT NULL AND self.dtype = 'Product'")
-            .fetch();
+    final StringBuilder filter =
+        new StringBuilder("self.prestaShopId IS NOT NULL AND self.dtype = 'Product'");
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
+    }
+
+    List<Product> localProductList = productRepo.all().filter(filter.toString()).fetch();
 
     StockLocationService stockLocationService = Beans.get(StockLocationService.class);
 
@@ -475,23 +485,27 @@ public class ExportProductServiceImpl implements ExportProductService {
   private void exportPictures(
       final PSWebServiceClient ws,
       final Map<Integer, PrestashopProduct> productsById,
+      boolean includeArchiveRecords,
       final Writer logBuffer)
       throws IOException {
     int errors = 0;
     int done = 0;
     logBuffer.write(String.format("%n===== PICTURES EXPORT =====%n"));
 
+    final StringBuilder filter =
+        new StringBuilder(
+            "self.prestaShopId is not null and self.picture is not null AND self.dtype = 'Product' AND "
+                + "(self.prestaShopImageVersion is null "
+                + "OR self.prestaShopImageId is null "
+                + "OR self.picture.version != self.prestaShopImageVersion "
+                + "OR self.picture.id != self.prestaShopImageId)");
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
+    }
+
     final List<Product> products =
-        productRepo
-            .all()
-            .filter(
-                "self.prestaShopId is not null and self.picture is not null AND self.dtype = 'Product' AND "
-                    + "(self.prestaShopImageVersion is null "
-                    + "OR self.prestaShopImageId is null "
-                    + "OR self.picture.version != self.prestaShopImageVersion "
-                    + "OR self.picture.id != self.prestaShopImageId)")
-            .order("code")
-            .fetch();
+        productRepo.all().filter(filter.toString()).order("code").fetch();
 
     for (Product localProduct : products) {
       try {
