@@ -6,7 +6,7 @@
   <module name="base" package="com.axelor.apps.base.db"/>
 
   <entity name="Partner" lang="java">
-    <boolean name="isCompanyPartner" title="Partner"/>
+    <boolean name="isCompanyPartner" title="portal.isCompanyPartner"/>
   </entity>
 
 </domain-models>
