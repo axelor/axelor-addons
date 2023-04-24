@@ -362,6 +362,10 @@ public class ImportOrderServiceImpl implements ImportOrderService {
             // Consider this as finalized, draft would be a cart without order, unhandled right now
             localOrder.setManualUnblock(Boolean.TRUE);
             try {
+              if (localOrder.getId() == null) {
+                // Saving localOrder to fix BIRT required parameter error (SaleOrderId)
+                saleOrderRepo.save(localOrder);
+              }
               saleOrderWorkflowService.finalizeQuotation(localOrder);
             } catch (AxelorException ae) {
               TraceBackService.trace(
