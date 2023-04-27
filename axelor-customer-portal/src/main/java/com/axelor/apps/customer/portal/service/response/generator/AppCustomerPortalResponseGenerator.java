@@ -39,7 +39,8 @@ public class AppCustomerPortalResponseGenerator extends ResponseGenerator {
             "isTaskEditorActivated",
             "isTermRequired",
             "isReturnPolicyRequired",
-            "isDataPolicyRequired"));
+            "isDataPolicyRequired",
+            "isZipOnLeftOnEshop"));
     extraFieldMap.put("isAti", this::getIsAti);
     extraFieldMap.put("termMetaFile", this::getTermMetaFile);
     extraFieldMap.put("returnPolicyMetaFile", this::getReturnPolicy);

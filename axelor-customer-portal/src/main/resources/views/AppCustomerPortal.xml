@@ -21,6 +21,8 @@
       <field name="isStripeActivated" widget="boolean-switch"/>
       <field name="isPaypalActivated" widget="boolean-switch"/>
       <field name="isPayboxActivated" widget="boolean-switch"/>
+      <field name="isZipOnLeftOnEshop" widget="boolean-switch"/>
+      <spacer/>
       <field name="isTermRequired"/>
       <field name="termMetaFile" widget="binary-link" requiredIf="isTermRequired"/>
       <field name="isReturnPolicyRequired"/>
