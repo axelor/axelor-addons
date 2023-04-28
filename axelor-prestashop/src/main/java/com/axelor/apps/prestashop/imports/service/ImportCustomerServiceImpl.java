@@ -19,6 +19,7 @@ package com.axelor.apps.prestashop.imports.service;
 
 import com.axelor.apps.account.db.AccountingSituation;
 import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.base.db.Language;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.SequenceRepository;
@@ -110,6 +111,11 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
           // Assign a company to generate an accounting situation
           localCustomer.addCompanySetItem(
               AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany());
+
+          // Assign default partner language to partner
+          Language defaultPartnerLanguage = appBaseService.getAppBase().getDefaultPartnerLanguage();
+          localCustomer.setLanguage(defaultPartnerLanguage);
+
           if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
             localCustomer.setPartnerSeq(
                 Beans.get(SequenceService.class)
