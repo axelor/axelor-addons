@@ -34,6 +34,8 @@
     <boolean name="isTermRequired"/>
     <boolean name="isReturnPolicyRequired"/>
     <boolean name="isDataPolicyRequired"/>
+    <boolean name="isZipOnLeftOnEshop" title="Display zip on left side on EShop"/>
+    <boolean name="isAllowOutOfStock" title="Allow out of stock products"/>
 
     <string name="stripeSecretKey" title="Stripe secret key"/>
     <string name="paypalMerchantId" title="Paypal merchant ID"/>
