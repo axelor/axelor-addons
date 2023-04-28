@@ -123,7 +123,13 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
   public Pair<SaleOrder, Boolean> checkCart(Map<String, Object> values) throws AxelorException {
     List<Map<String, Object>> cartData = (List<Map<String, Object>>) values.get("cart");
     Company company = userService.getUserActiveCompany();
-    Boolean isItemsChanged = checkProductAvailability(company, cartData);
+
+    Boolean isItemsChanged = false;
+    AppCustomerPortal appCustomerPortal =
+        Beans.get(AppCustomerPortalRepository.class).all().fetchOne();
+    if (!appCustomerPortal.getIsAllowOutOfStock()) {
+      isItemsChanged = checkProductAvailability(company, cartData);
+    }
     SaleOrder order = createOrder(company, cartData);
     return ImmutablePair.of(order, isItemsChanged);
   }
