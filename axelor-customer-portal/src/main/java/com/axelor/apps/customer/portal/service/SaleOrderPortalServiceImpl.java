@@ -22,10 +22,12 @@ import com.axelor.apps.account.db.InvoicePayment;
 import com.axelor.apps.account.db.repo.InvoicePaymentRepository;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
 import com.axelor.apps.account.service.invoice.InvoiceService;
+import com.axelor.apps.account.service.invoice.InvoiceTermService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentCreateService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentToolService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentValidateService;
 import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.account.service.payment.invoice.payment.InvoiceTermPaymentService;
 import com.axelor.apps.base.db.Address;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Partner;
@@ -77,7 +79,6 @@ import com.stripe.model.Customer;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.mail.MessagingException;
@@ -114,13 +115,21 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
   @Inject TemplateMessageService templateMessageService;
   @Inject MessageService messageService;
   @Inject PortalQuotationService portalQuotationService;
+  @Inject InvoiceTermService invoiceTermService;
+  @Inject InvoiceTermPaymentService invoiceTermPaymentService;
 
   @SuppressWarnings("unchecked")
   @Override
   public Pair<SaleOrder, Boolean> checkCart(Map<String, Object> values) throws AxelorException {
     List<Map<String, Object>> cartData = (List<Map<String, Object>>) values.get("cart");
     Company company = userService.getUserActiveCompany();
-    Boolean isItemsChanged = checkProductAvailability(company, cartData);
+
+    Boolean isItemsChanged = false;
+    AppCustomerPortal appCustomerPortal =
+        Beans.get(AppCustomerPortalRepository.class).all().fetchOne();
+    if (!appCustomerPortal.getIsAllowOutOfStock()) {
+      isItemsChanged = checkProductAvailability(company, cartData);
+    }
     SaleOrder order = createOrder(company, cartData);
     return ImmutablePair.of(order, isItemsChanged);
   }
@@ -271,18 +280,23 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
       throws AxelorException, JAXBException, IOException, DatatypeConfigurationException {
     confirmOrder(saleOrder);
     Invoice invoice = saleOrderInvoiceService.createInvoice(saleOrder);
-    invoice.setInvoiceTermList(new ArrayList<>());
+    invoice.setSaleOrder(saleOrder);
+    invoice.setPartnerTaxNbr(saleOrder.getClientPartner().getTaxNbr());
+    invoice.setIncoterm(saleOrder.getIncoterm());
+    invoiceTermService.computeInvoiceTerms(invoice);
     invoiceService.validateAndVentilate(invoice);
     InvoicePayment invoicePayment =
         invoicePaymentCreateService.createInvoicePayment(
             invoice,
-            invoice.getInTaxTotal(),
+            invoice.getInTaxTotal().subtract(invoice.getAmountPaid()),
             LocalDate.now(),
             invoice.getCurrency(),
             invoice.getPaymentMode(),
             InvoicePaymentRepository.TYPE_INVOICE);
     invoicePayment.setStripeChargeId(StripePaymentId);
     invoice.addInvoicePaymentListItem(invoicePayment);
+    invoiceTermPaymentService.createInvoicePaymentTerms(
+        invoicePayment, invoice.getInvoiceTermList());
     Beans.get(InvoicePaymentValidateService.class).validate(invoicePayment);
     invoicePaymentRepo.save(invoicePayment);
   }
@@ -351,7 +365,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
         contactPartner,
         company != null ? company.getCurrency() : null,
         null,
-        null,
+null,
         null,
         Beans.get(PartnerPriceListService.class)
             .getDefaultPriceList(clientPartner, PriceListRepository.TYPE_SALE),
