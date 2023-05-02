@@ -26,8 +26,8 @@ import com.axelor.apps.account.service.invoice.InvoiceTermService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentCreateService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentToolService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentValidateService;
-import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoiceTermPaymentService;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Address;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Partner;
@@ -365,7 +365,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
         contactPartner,
         company != null ? company.getCurrency() : null,
         null,
-null,
+        null,
         null,
         Beans.get(PartnerPriceListService.class)
             .getDefaultPriceList(clientPartner, PriceListRepository.TYPE_SALE),
