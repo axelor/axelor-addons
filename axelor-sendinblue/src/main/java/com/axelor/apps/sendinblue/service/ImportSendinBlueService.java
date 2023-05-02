@@ -17,18 +17,16 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppMarketing;
-import com.axelor.apps.base.db.AppSendinblue;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
-import com.axelor.exception.AxelorException;
+import com.axelor.studio.db.AppSendinblue;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 public interface ImportSendinBlueService {
 
-  String importSendinBlue(
-      AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue, AppMarketing appMarketing)
+  String importSendinBlue(AppSendinblue appSendinblue, ImportSendinBlue importSendinBlue)
       throws AxelorException;
 
   List<Map<String, Object>> getReport(LocalDate fromDate, LocalDate toDate);

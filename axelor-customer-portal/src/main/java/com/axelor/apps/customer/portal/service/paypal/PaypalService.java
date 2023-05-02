@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.customer.portal.service.paypal;
 
-import com.axelor.exception.AxelorException;
+import com.axelor.apps.base.AxelorException;
 import com.paypal.orders.Order;
 import java.io.IOException;
 

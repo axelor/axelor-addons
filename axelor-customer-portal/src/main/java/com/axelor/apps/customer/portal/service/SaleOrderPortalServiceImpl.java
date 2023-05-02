@@ -22,19 +22,21 @@ import com.axelor.apps.account.db.InvoicePayment;
 import com.axelor.apps.account.db.repo.InvoicePaymentRepository;
 import com.axelor.apps.account.db.repo.InvoiceRepository;
 import com.axelor.apps.account.service.invoice.InvoiceService;
+import com.axelor.apps.account.service.invoice.InvoiceTermService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentCreateService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentToolService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentValidateService;
+import com.axelor.apps.account.service.payment.invoice.payment.InvoiceTermPaymentService;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Address;
-import com.axelor.apps.base.db.AppCustomerPortal;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.repo.AddressRepository;
-import com.axelor.apps.base.db.repo.AppCustomerPortalRepository;
 import com.axelor.apps.base.db.repo.CurrencyRepository;
 import com.axelor.apps.base.db.repo.PriceListRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.PartnerPriceListService;
@@ -45,11 +47,6 @@ import com.axelor.apps.client.portal.db.repo.PortalQuotationRepository;
 import com.axelor.apps.customer.portal.exception.IExceptionMessage;
 import com.axelor.apps.customer.portal.service.paypal.PaypalService;
 import com.axelor.apps.customer.portal.service.stripe.StripePaymentService;
-import com.axelor.apps.message.db.EmailAccount;
-import com.axelor.apps.message.db.Message;
-import com.axelor.apps.message.db.Template;
-import com.axelor.apps.message.service.MessageService;
-import com.axelor.apps.message.service.TemplateMessageService;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.axelor.apps.sale.db.SaleOrderLine;
 import com.axelor.apps.sale.db.repo.SaleOrderRepository;
@@ -62,10 +59,15 @@ import com.axelor.apps.stock.service.config.StockConfigService;
 import com.axelor.apps.supplychain.service.SaleOrderInvoiceService;
 import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAccount;
+import com.axelor.message.db.Message;
+import com.axelor.message.db.Template;
+import com.axelor.message.service.MessageService;
+import com.axelor.message.service.TemplateMessageService;
+import com.axelor.studio.db.AppCustomerPortal;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import com.paypal.orders.AmountWithBreakdown;
@@ -77,7 +79,6 @@ import com.stripe.model.Customer;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.mail.MessagingException;
@@ -114,13 +115,21 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
   @Inject TemplateMessageService templateMessageService;
   @Inject MessageService messageService;
   @Inject PortalQuotationService portalQuotationService;
+  @Inject InvoiceTermService invoiceTermService;
+  @Inject InvoiceTermPaymentService invoiceTermPaymentService;
 
   @SuppressWarnings("unchecked")
   @Override
   public Pair<SaleOrder, Boolean> checkCart(Map<String, Object> values) throws AxelorException {
     List<Map<String, Object>> cartData = (List<Map<String, Object>>) values.get("cart");
     Company company = userService.getUserActiveCompany();
-    Boolean isItemsChanged = checkProductAvailability(company, cartData);
+
+    Boolean isItemsChanged = false;
+    AppCustomerPortal appCustomerPortal =
+        Beans.get(AppCustomerPortalRepository.class).all().fetchOne();
+    if (!appCustomerPortal.getIsAllowOutOfStock()) {
+      isItemsChanged = checkProductAvailability(company, cartData);
+    }
     SaleOrder order = createOrder(company, cartData);
     return ImmutablePair.of(order, isItemsChanged);
   }
@@ -240,12 +249,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
             message, SaleOrder.class.getCanonicalName(), order.getId());
         message = messageService.sendMessage(message);
       }
-    } catch (ClassNotFoundException
-        | InstantiationException
-        | IllegalAccessException
-        | IOException
-        | JSONException
-        | MessagingException e) {
+    } catch (ClassNotFoundException | IOException | JSONException | MessagingException e) {
       throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 
@@ -276,18 +280,23 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
       throws AxelorException, JAXBException, IOException, DatatypeConfigurationException {
     confirmOrder(saleOrder);
     Invoice invoice = saleOrderInvoiceService.createInvoice(saleOrder);
-    invoice.setInvoiceTermList(new ArrayList<>());
+    invoice.setSaleOrder(saleOrder);
+    invoice.setPartnerTaxNbr(saleOrder.getClientPartner().getTaxNbr());
+    invoice.setIncoterm(saleOrder.getIncoterm());
+    invoiceTermService.computeInvoiceTerms(invoice);
     invoiceService.validateAndVentilate(invoice);
     InvoicePayment invoicePayment =
         invoicePaymentCreateService.createInvoicePayment(
             invoice,
-            invoice.getInTaxTotal(),
+            invoice.getInTaxTotal().subtract(invoice.getAmountPaid()),
             LocalDate.now(),
             invoice.getCurrency(),
             invoice.getPaymentMode(),
             InvoicePaymentRepository.TYPE_INVOICE);
     invoicePayment.setStripeChargeId(StripePaymentId);
     invoice.addInvoicePaymentListItem(invoicePayment);
+    invoiceTermPaymentService.createInvoicePaymentTerms(
+        invoicePayment, invoice.getInvoiceTermList());
     Beans.get(InvoicePaymentValidateService.class).validate(invoicePayment);
     invoicePaymentRepo.save(invoicePayment);
   }

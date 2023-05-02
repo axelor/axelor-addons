@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.studio.db.AppPrestashop;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.ZonedDateTime;

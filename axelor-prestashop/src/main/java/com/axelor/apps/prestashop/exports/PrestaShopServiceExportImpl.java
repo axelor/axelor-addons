@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.prestashop.exports;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Batch;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.prestashop.exports.service.ExportAddressService;
 import com.axelor.apps.prestashop.exports.service.ExportCategoryService;
 import com.axelor.apps.prestashop.exports.service.ExportCountryService;
@@ -28,16 +28,16 @@ import com.axelor.apps.prestashop.exports.service.ExportOrderService;
 import com.axelor.apps.prestashop.exports.service.ExportProductService;
 import com.axelor.apps.prestashop.exports.service.ExportTaxService;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaFile;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.StringBuilderWriter;
-import org.apache.tika.io.IOUtils;
 
 @Singleton
 public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {

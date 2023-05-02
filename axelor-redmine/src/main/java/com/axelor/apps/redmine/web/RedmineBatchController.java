@@ -49,7 +49,7 @@ public class RedmineBatchController {
     Batch batch = Beans.get(RedmineBatchService.class).redmineImportProjects(redmineBatch);
 
     if (batch != null) {
-      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
+      response.setInfo(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
     }
 
     response.setReload(true);
@@ -63,7 +63,7 @@ public class RedmineBatchController {
     Batch batch = Beans.get(RedmineBatchService.class).redmineImportIssues(redmineBatch);
 
     if (batch != null) {
-      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
+      response.setInfo(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
     }
 
     response.setReload(true);
@@ -77,7 +77,7 @@ public class RedmineBatchController {
     Batch batch = Beans.get(RedmineBatchService.class).redmineSyncTimeEntries(redmineBatch);
 
     if (batch != null) {
-      response.setFlash(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
+      response.setInfo(IMessage.BATCH_REDMINE_IMPORT_SUCCESS);
     }
 
     response.setReload(true);

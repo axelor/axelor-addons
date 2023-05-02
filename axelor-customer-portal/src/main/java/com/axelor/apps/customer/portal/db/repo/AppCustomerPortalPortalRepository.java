@@ -17,9 +17,9 @@
  */
 package com.axelor.apps.customer.portal.db.repo;
 
-import com.axelor.apps.base.db.AppCustomerPortal;
-import com.axelor.apps.base.db.repo.AppCustomerPortalRepository;
 import com.axelor.meta.db.repo.MetaFileRepository;
+import com.axelor.studio.db.AppCustomerPortal;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.inject.Inject;
 
 public class AppCustomerPortalPortalRepository extends AppCustomerPortalRepository {

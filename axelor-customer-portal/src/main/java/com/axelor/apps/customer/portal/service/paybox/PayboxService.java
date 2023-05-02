@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.customer.portal.service.paybox;
 
-import com.axelor.exception.AxelorException;
+import com.axelor.apps.base.AxelorException;
 import javax.ws.rs.core.MultivaluedMap;
 
 public interface PayboxService {

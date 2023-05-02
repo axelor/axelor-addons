@@ -17,9 +17,9 @@
  */
 package com.axelor.apps.docusign.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.docusign.db.DocuSignEnvelope;
 import com.axelor.apps.docusign.db.DocuSignEnvelopeSetting;
-import com.axelor.exception.AxelorException;
 import java.util.Map;
 
 public interface DocuSignEnvelopeService {

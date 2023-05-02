@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.customer.portal.service.response.generator;
 
-import com.axelor.apps.base.db.AppCustomerPortal;
 import com.axelor.apps.base.service.app.AppBaseService;
-import com.axelor.apps.base.service.app.AppService;
 import com.axelor.inject.Beans;
+import com.axelor.studio.app.service.AppService;
+import com.axelor.studio.db.AppCustomerPortal;
 import com.google.inject.Inject;
 import java.util.Arrays;
 
@@ -39,7 +39,9 @@ public class AppCustomerPortalResponseGenerator extends ResponseGenerator {
             "isTaskEditorActivated",
             "isTermRequired",
             "isReturnPolicyRequired",
-            "isDataPolicyRequired"));
+            "isDataPolicyRequired",
+            "isAllowOutOfStock",
+            "isZipOnLeftOnEshop"));
     extraFieldMap.put("isAti", this::getIsAti);
     extraFieldMap.put("termMetaFile", this::getTermMetaFile);
     extraFieldMap.put("returnPolicyMetaFile", this::getReturnPolicy);

@@ -17,11 +17,11 @@
  */
 package com.axelor.apps.docusign.service;
 
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.docusign.db.DocuSignEnvelope;
 import com.axelor.apps.docusign.db.repo.DocuSignEnvelopeRepository;
 import com.axelor.common.ObjectUtils;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import java.io.StringReader;
 import java.lang.invoke.MethodHandles;

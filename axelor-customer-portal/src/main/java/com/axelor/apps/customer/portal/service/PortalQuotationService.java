@@ -17,11 +17,11 @@
  */
 package com.axelor.apps.customer.portal.service;
 
-import com.axelor.apps.base.db.AppCustomerPortal;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.client.portal.db.PortalQuotation;
-import com.axelor.apps.message.db.EmailAccount;
 import com.axelor.apps.sale.db.SaleOrder;
-import com.axelor.exception.AxelorException;
+import com.axelor.message.db.EmailAccount;
+import com.axelor.studio.db.AppCustomerPortal;
 import javax.mail.MessagingException;
 
 public interface PortalQuotationService {

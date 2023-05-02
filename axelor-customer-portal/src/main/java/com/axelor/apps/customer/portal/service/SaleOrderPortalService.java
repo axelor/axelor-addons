@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.customer.portal.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.sale.db.SaleOrder;
-import com.axelor.exception.AxelorException;
 import com.stripe.exception.StripeException;
 import java.io.IOException;
 import java.util.Map;

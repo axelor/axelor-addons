@@ -17,16 +17,16 @@
  */
 package com.axelor.apps.redmine.service.common;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.imports.issues.RedmineIssueService;
 import com.axelor.apps.redmine.service.imports.projects.RedmineProjectService;
 import com.axelor.apps.redmine.service.sync.timeentries.RedmineTimeEntriesService;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.studio.db.AppRedmine;
+import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.CustomFieldManager;
 import com.taskadapter.redmineapi.NotFoundException;

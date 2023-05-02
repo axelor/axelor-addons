@@ -17,15 +17,15 @@
  */
 package com.axelor.apps.prestashop.web;
 
-import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.prestashop.app.AppPrestaShopService;
 import com.axelor.apps.prestashop.imports.service.ImportMetaDataService;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.LinkedList;
@@ -68,10 +68,10 @@ public class AppPrestaShopController {
       response.setAlert(StringUtils.join(warnings, "<br/>"));
     } else if (!info.isEmpty()) {
       response.setValue("isValid", true);
-      response.setFlash(StringUtils.join(info, "<br/>"));
+      response.setInfo(StringUtils.join(info, "<br/>"));
     } else {
       response.setValue("isValid", true);
-      response.setFlash(I18n.get("Connection successful"));
+      response.setInfo(I18n.get("Connection successful"));
     }
   }
 

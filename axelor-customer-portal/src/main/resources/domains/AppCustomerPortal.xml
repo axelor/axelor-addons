@@ -3,11 +3,11 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.4.xsd">
 
-  <module name="base" package="com.axelor.apps.base.db"/>
+  <module name="studio" package="com.axelor.studio.db"/>
 
   <entity name="AppCustomerPortal" lang="java">
 
-    <one-to-one ref="com.axelor.apps.base.db.App" name="app"/>
+    <one-to-one ref="com.axelor.studio.db.App" name="app"/>
 
     <boolean name="manageEShop" title="Manage eShop" default="true"/>
     <boolean name="manageQuotations" title="Manage quotation" default="true"/>
@@ -34,6 +34,8 @@
     <boolean name="isTermRequired"/>
     <boolean name="isReturnPolicyRequired"/>
     <boolean name="isDataPolicyRequired"/>
+    <boolean name="isZipOnLeftOnEshop" title="Display zip on left side on EShop"/>
+    <boolean name="isAllowOutOfStock" title="Allow out of stock products"/>
 
     <string name="stripeSecretKey" title="Stripe secret key"/>
     <string name="paypalMerchantId" title="Paypal merchant ID"/>
@@ -57,17 +59,17 @@
       title="Return policy"/>
     <many-to-one name="dataPolicyMetaFile" ref="com.axelor.meta.db.MetaFile"
       title="Data policy"/>
-    <many-to-one name="quotationGenerationTemplate"
-      ref="com.axelor.apps.message.db.Template" title="Quotation generation template"/>
+    <many-to-one name="quotationGenerationTemplate" ref="com.axelor.message.db.Template"
+      title="Quotation generation template"/>
     <many-to-one name="quotationConfimationCodeTemplate"
-      ref="com.axelor.apps.message.db.Template" title="Quotation confirmation code template"/>
+      ref="com.axelor.message.db.Template" title="Quotation confirmation code template"/>
     <many-to-one name="quotationConfimationTemplate"
-      ref="com.axelor.apps.message.db.Template" title="Quotation confirmation template"/>
-    <many-to-one name="sellerNotificationTemplate"
-      ref="com.axelor.apps.message.db.Template" title="Seller notification template"/>
+      ref="com.axelor.message.db.Template" title="Quotation confirmation template"/>
+    <many-to-one name="sellerNotificationTemplate" ref="com.axelor.message.db.Template"
+      title="Seller notification template"/>
     <many-to-one name="customerNotificationTemplate"
-      ref="com.axelor.apps.message.db.Template" title="Customer notification template"/>
-    <many-to-one name="emailAccount" ref="com.axelor.apps.message.db.EmailAccount"
+      ref="com.axelor.message.db.Template" title="Customer notification template"/>
+    <many-to-one name="emailAccount" ref="com.axelor.message.db.EmailAccount"
       title="Default email account"/>
 
   </entity>

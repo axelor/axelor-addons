@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerCategory;
 import com.axelor.apps.base.db.Product;
@@ -29,7 +30,6 @@ import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.JpaSecurity.AccessType;
 import com.axelor.db.Query;
-import com.axelor.exception.AxelorException;
 import com.axelor.inject.Beans;
 import java.util.HashMap;
 import java.util.List;

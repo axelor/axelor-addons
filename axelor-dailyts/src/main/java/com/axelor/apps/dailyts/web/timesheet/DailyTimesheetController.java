@@ -17,7 +17,9 @@
  */
 package com.axelor.apps.dailyts.web.timesheet;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.PeriodService;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.message.MessageServiceBaseImpl;
 import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.hr.db.DailyTimesheet;
@@ -25,12 +27,10 @@ import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetService;
-import com.axelor.apps.message.db.Message;
-import com.axelor.apps.message.db.repo.MessageRepository;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.Message;
+import com.axelor.message.db.repo.MessageRepository;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Singleton;
@@ -105,7 +105,7 @@ public class DailyTimesheetController {
         Message message = timesheetService.validateAndSendValidationEmail(timesheet);
 
         if (message != null && message.getStatusSelect() == MessageRepository.STATUS_SENT) {
-          response.setFlash(
+          response.setInfo(
               String.format(
                   I18n.get("Email sent to %s"),
                   Beans.get(MessageServiceBaseImpl.class).getToRecipients(message)));

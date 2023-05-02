@@ -1,0 +1,13 @@
+---
+name: Teams app
+code: teamsapp
+typeSelect: addons
+installOrder: 40
+description: |
+   Teams app
+image: app-teams.png
+modules: 
+   axelor-teamsapp
+dependsOn: 
+   - project
+sequence: 40

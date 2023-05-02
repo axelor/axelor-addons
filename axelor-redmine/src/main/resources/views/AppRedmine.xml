@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://axelor.com/xml/ns/object-views http://axelor.com/xml/ns/object-views/object-views_5.3.xsd">
 
   <form name="app-redmine-config-form" title="App Redmine"
-    model="com.axelor.apps.base.db.AppRedmine" canDelete="false" canNew="false" width="large">
+    model="com.axelor.studio.db.AppRedmine" canDelete="false" canNew="false" width="large">
     <panel name="mainPanel">
       <field name="uri"/>
       <field name="apiAccessKey"/>

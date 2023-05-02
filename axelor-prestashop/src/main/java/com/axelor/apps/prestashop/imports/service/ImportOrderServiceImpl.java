@@ -23,8 +23,8 @@ import com.axelor.apps.account.db.repo.PaymentConditionRepository;
 import com.axelor.apps.account.service.AccountingSituationService;
 import com.axelor.apps.account.service.invoice.InvoiceService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentCreateService;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Address;
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerAddress;
@@ -37,6 +37,7 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.AddressService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.db.IPrestaShopBatch;
 import com.axelor.apps.prestashop.db.PrestashopOrderStatusCacheEntry;
 import com.axelor.apps.prestashop.db.repo.PrestashopOrderStatusCacheEntryRepository;
@@ -59,10 +60,9 @@ import com.axelor.apps.stock.db.repo.StockMoveRepository;
 import com.axelor.apps.stock.service.StockMoveService;
 import com.axelor.apps.supplychain.service.SaleOrderInvoiceService;
 import com.axelor.apps.supplychain.service.SaleOrderStockService;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
@@ -366,6 +366,10 @@ public class ImportOrderServiceImpl implements ImportOrderService {
             // Consider this as finalized, draft would be a cart without order, unhandled right now
             localOrder.setManualUnblock(Boolean.TRUE);
             try {
+              if (localOrder.getId() == null) {
+                // Saving localOrder to fix BIRT required parameter error (SaleOrderId)
+                saleOrderRepo.save(localOrder);
+              }
               saleOrderWorkflowService.finalizeQuotation(localOrder);
             } catch (AxelorException ae) {
               TraceBackService.trace(

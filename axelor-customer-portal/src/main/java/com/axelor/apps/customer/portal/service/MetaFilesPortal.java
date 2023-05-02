@@ -19,7 +19,6 @@ package com.axelor.apps.customer.portal.service;
 
 import com.axelor.apps.account.db.Invoice;
 import com.axelor.apps.base.db.Partner;
-import com.axelor.apps.base.service.app.AppService;
 import com.axelor.apps.client.portal.db.PortalQuotation;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.sale.db.SaleOrder;
@@ -30,6 +29,7 @@ import com.axelor.meta.MetaFiles;
 import com.axelor.meta.db.MetaAttachment;
 import com.axelor.meta.db.MetaFile;
 import com.axelor.meta.db.repo.MetaFileRepository;
+import com.axelor.studio.app.service.AppService;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;

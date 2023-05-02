@@ -19,7 +19,6 @@ package com.axelor.apps.customer.portal.module;
 
 import com.axelor.app.AxelorModule;
 import com.axelor.apps.base.db.repo.AddressBaseRepository;
-import com.axelor.apps.base.db.repo.AppCustomerPortalRepository;
 import com.axelor.apps.businessproduction.service.SaleOrderWorkflowServiceBusinessProductionImpl;
 import com.axelor.apps.businessproject.db.repo.SaleOrderProjectRepository;
 import com.axelor.apps.client.portal.db.repo.CardRepository;
@@ -75,6 +74,7 @@ import com.axelor.apps.portal.service.ClientViewServiceImpl;
 import com.axelor.apps.production.db.repo.ProductProductionRepository;
 import com.axelor.mail.web.MailController;
 import com.axelor.meta.MetaFiles;
+import com.axelor.studio.db.repo.AppCustomerPortalRepository;
 import com.google.inject.matcher.Matchers;
 
 public class PortalModule extends AxelorModule {

@@ -51,7 +51,7 @@
   </form>
 
   <form name="docusign-select-envelope-setting-wizard-form" title="Select envelope setting"
-    model="com.axelor.apps.base.db.Wizard">
+    model="com.axelor.utils.db.Wizard">
     <panel>
       <field name="$envelopeSetting" title="Envelope setting" widget="ManyToOne"
         target="com.axelor.apps.docusign.db.DocuSignEnvelopeSetting"
@@ -65,7 +65,7 @@
 
   <action-attrs
     name="action-docusign-envelope-wizard-attrs-set-envelope-setting-domain"
-    model="com.axelor.apps.base.db.Wizard">
+    model="com.axelor.utils.db.Wizard">
     <attribute for="$envelopeSetting" name="domain"
       expr="eval: &quot;self.metaModel.fullName = :_templateContextModel&quot;"/>
   </action-attrs>

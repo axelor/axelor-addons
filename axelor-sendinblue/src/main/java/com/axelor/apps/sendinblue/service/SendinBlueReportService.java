@@ -17,13 +17,12 @@
  */
 package com.axelor.apps.sendinblue.service;
 
-import com.axelor.apps.base.db.AppMarketing;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.marketing.db.SendinBlueCampaign;
 import com.axelor.apps.marketing.db.repo.SendinBlueCampaignRepository;
-import com.axelor.apps.message.db.EmailAddress;
-import com.axelor.apps.message.db.repo.EmailAddressRepository;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.SendinBlueCampaignStat;
 import com.axelor.apps.sendinblue.db.SendinBlueContactStat;
@@ -37,10 +36,11 @@ import com.axelor.apps.sendinblue.db.repo.SendinBlueReportRepository;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueTagRepository;
 import com.axelor.apps.sendinblue.translation.ITranslation;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
+import com.axelor.message.db.EmailAddress;
+import com.axelor.message.db.repo.EmailAddressRepository;
+import com.axelor.studio.db.AppSendinblue;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.time.LocalDate;
@@ -91,7 +91,7 @@ public class SendinBlueReportService {
       totalContactStatImported;
 
   public void importReport(
-      AppMarketing appMarketing,
+      AppSendinblue appSendinblue,
       ImportSendinBlue importSendinBlue,
       LocalDateTime lastImportDateTime,
       StringBuilder logWriter)
@@ -99,7 +99,7 @@ public class SendinBlueReportService {
     exceptions = new ArrayList<>();
     totalEventImported =
         totalCampaignReportImported = totalCampaignStatImported = totalContactStatImported = 0;
-    if (appMarketing.getManageSendinBlueApiEmailingReporting()) {
+    if (appSendinblue.getManageSendinBlueApiEmailingReporting()) {
       importEvents();
       logWriter.append(
           String.format("%n%s : %s", I18n.get(ITranslation.IMPORT_EVENT), totalEventImported));
@@ -311,7 +311,7 @@ public class SendinBlueReportService {
     if (emailAddress != null) {
       sendinBlueEvent.setEmailAddress(emailAddress);
       sendinBlueEvent.setPartner(emailAddress.getPartner());
-      sendinBlueEvent.setLead(emailAddress.getLead());
+      sendinBlueEvent.setLead(emailAddress.getEmailAddressLead());
     }
     sendinBlueEventList.add(sendinBlueEvent);
     sendinBlueEventRepo.save(sendinBlueEvent);

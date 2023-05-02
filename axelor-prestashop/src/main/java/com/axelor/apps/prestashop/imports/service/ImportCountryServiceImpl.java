@@ -17,13 +17,13 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
-import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Country;
 import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.prestashop.entities.PrestashopCountry;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;

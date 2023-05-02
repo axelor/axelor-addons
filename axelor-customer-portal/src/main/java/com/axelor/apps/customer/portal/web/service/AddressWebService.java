@@ -17,10 +17,12 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Address;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.PartnerAddress;
 import com.axelor.apps.base.db.repo.AddressRepository;
+import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.customer.portal.service.AddressPortalService;
 import com.axelor.apps.customer.portal.service.PartnerPortalService;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
@@ -29,8 +31,6 @@ import com.axelor.apps.customer.portal.service.response.generator.ResponseGenera
 import com.axelor.common.ObjectUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.JpaSecurity.AccessType;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.db.repo.TraceBackRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.google.common.collect.ImmutableMap;

@@ -17,20 +17,21 @@
  */
 package com.axelor.apps.customer.portal.service.response.generator;
 
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Company;
 import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.ProductCategory;
 import com.axelor.apps.base.db.ProductPicture;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.customer.portal.service.ProductPortalService;
 import com.axelor.apps.customer.portal.service.response.ResponseGeneratorFactory;
+import com.axelor.apps.stock.db.StockConfig;
 import com.axelor.apps.stock.db.StockLocation;
 import com.axelor.apps.stock.service.config.StockConfigService;
 import com.axelor.common.ObjectUtils;
-import com.axelor.exception.AxelorException;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.inject.Beans;
 import com.axelor.meta.db.MetaFile;
 import java.math.BigDecimal;
@@ -160,13 +161,16 @@ public class ProductResponseGenerator extends ResponseGenerator {
       Product product = (Product) object;
       Company company = Beans.get(UserService.class).getUserActiveCompany();
 
+      StockConfig stockConfig =
+          company == null ? null : Beans.get(StockConfigService.class).getStockConfig(company);
+
       StockConfigService stockConfigService = Beans.get(StockConfigService.class);
 
       StockLocation stockLocation =
-          company == null
+          stockConfig == null
               ? null
-              : stockConfigService.getPickupDefaultStockLocation(
-                  stockConfigService.getStockConfig(company));
+              : Beans.get(StockConfigService.class).getPickupDefaultStockLocation(stockConfig);
+
       return Beans.get(ProductPortalService.class)
           .getAvailableQty(product, company, stockLocation)
           .setScale(2, RoundingMode.HALF_EVEN);

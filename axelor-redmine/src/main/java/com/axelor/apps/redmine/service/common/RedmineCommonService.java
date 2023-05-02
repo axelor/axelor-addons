@@ -18,10 +18,10 @@
 package com.axelor.apps.redmine.service.common;
 
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.hr.db.Employee;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
@@ -31,7 +31,7 @@ import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
-import com.axelor.exception.service.TraceBackService;
+import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.IssueManager;

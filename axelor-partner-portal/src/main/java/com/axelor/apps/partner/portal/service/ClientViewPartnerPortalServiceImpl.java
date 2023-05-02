@@ -18,7 +18,6 @@
 package com.axelor.apps.partner.portal.service;
 
 import com.axelor.apps.account.db.repo.InvoiceRepository;
-import com.axelor.apps.base.service.app.AppService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.client.portal.db.repo.ClientResourceRepository;
 import com.axelor.apps.client.portal.db.repo.DiscussionGroupRepository;
@@ -39,6 +38,7 @@ import com.axelor.common.ObjectUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.Query;
 import com.axelor.inject.Beans;
+import com.axelor.studio.app.service.AppService;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;

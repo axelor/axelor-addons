@@ -17,19 +17,17 @@
  */
 package com.axelor.apps.sendinblue.web;
 
-import com.axelor.apps.base.db.AppMarketing;
-import com.axelor.apps.base.db.AppSendinblue;
-import com.axelor.apps.base.db.repo.AppMarketingRepository;
-import com.axelor.apps.base.db.repo.AppSendinblueRepository;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.service.AppSendinBlueService;
 import com.axelor.apps.sendinblue.service.ImportSendinBlueService;
 import com.axelor.apps.sendinblue.translation.ITranslation;
-import com.axelor.exception.AxelorException;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.studio.db.AppSendinblue;
+import com.axelor.studio.db.repo.AppSendinblueRepository;
 import com.google.inject.Inject;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -53,13 +51,11 @@ public class ImportSendinBlueController {
     appSendinBlueService.getApiKeyAuth();
     ImportSendinBlue importSendinBlue = request.getContext().asType(ImportSendinBlue.class);
     AppSendinblue appSendinblue = Beans.get(AppSendinblueRepository.class).all().fetchOne();
-    AppMarketing appMarketing = Beans.get(AppMarketingRepository.class).all().fetchOne();
     if (appSendinblue.getIsContactImport()
         || appSendinblue.getIsTemplateImport()
         || appSendinblue.getIsCampaignImport()
-        || appMarketing.getManageSendinBlueApiEmailingReporting()) {
-      String log =
-          importSendinBlueService.importSendinBlue(appSendinblue, importSendinBlue, appMarketing);
+        || appSendinblue.getManageSendinBlueApiEmailingReporting()) {
+      String log = importSendinBlueService.importSendinBlue(appSendinblue, importSendinBlue);
       response.setValue("importLog", log.trim());
       LOG.debug("Import Completed");
     } else {
