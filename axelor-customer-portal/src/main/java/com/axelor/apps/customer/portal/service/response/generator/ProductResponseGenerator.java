@@ -38,7 +38,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -74,7 +74,7 @@ public class ProductResponseGenerator extends ResponseGenerator {
 
   private Set<Long> getPictures(Object object) {
     Product product = (Product) object;
-    Set<Long> pictures = new HashSet<>();
+    Set<Long> pictures = new LinkedHashSet<>();
 
     if (product.getPicture() != null) {
       pictures.add(product.getPicture().getId());
