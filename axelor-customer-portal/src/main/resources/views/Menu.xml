@@ -301,7 +301,7 @@
     action="client.portal.dashboard" top="true" left="false" if="__config__.app.isApp('portal')"/>
 
   <action-view name="client.portal.dashboard" title="Dashboard" home="true"
-    model="com.axelor.apps.base.db.Wizard">
+    model="com.axelor.utils.db.Wizard">
     <view type="form" name="client-dashboard-form"/>
   </action-view>
 
