@@ -22,6 +22,7 @@ import com.axelor.apps.base.db.Country;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
 import com.axelor.apps.customer.portal.service.response.ResponseGeneratorFactory;
 import com.axelor.apps.customer.portal.service.response.generator.ResponseGenerator;
+import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.JpaSecurity.AccessType;
 import com.axelor.inject.Beans;
@@ -75,11 +76,17 @@ public class CountryWebService extends AbstractWebService {
       @PathParam("countryId") Long countryId,
       @QueryParam("sort") String sort,
       @QueryParam("page") int page,
-      @QueryParam("limit") int limit) {
+      @QueryParam("limit") int limit,
+      @QueryParam("searchInput") String searchInput) {
     final Map<String, Object> params = new HashMap<>();
     StringBuilder filter = new StringBuilder();
     filter.append("self.country.id = :countryId");
     params.put("countryId", countryId);
+
+    if (StringUtils.notBlank(searchInput)) {
+      filter.append(" AND (lower(self.name) like :pattern)");
+      params.put("pattern", String.format("%%%s%%", searchInput.toLowerCase()));
+    }
 
     List<City> cities = fetch(City.class, filter.toString(), params, sort, limit, page);
     Beans.get(JpaSecurity.class)
