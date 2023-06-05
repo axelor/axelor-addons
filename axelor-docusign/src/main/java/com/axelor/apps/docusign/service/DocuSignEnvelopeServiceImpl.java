@@ -543,7 +543,8 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
                   .getIsOrderedSigners()) {
             signer.setRoutingOrder(String.valueOf(docuSignSigner.getSequence() + 1));
           }
-          if (ObjectUtils.notEmpty(signerPartner.getEmailAddress())) {
+          if (ObjectUtils.notEmpty(signerPartner.getEmailAddress())
+              && ObjectUtils.notEmpty(signerPartner.getEmailAddress().getAddress())) {
             signer.setEmail(signerPartner.getEmailAddress().getAddress());
           } else {
             throw new AxelorException(
@@ -587,7 +588,8 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
                   .getIsOrderedSigners()) {
             inPersonSigner.setRoutingOrder(String.valueOf(docuSignSigner.getSequence() + 1));
           }
-          if (ObjectUtils.notEmpty(signerPartner.getEmailAddress())) {
+          if (ObjectUtils.notEmpty(signerPartner.getEmailAddress())
+              && ObjectUtils.notEmpty(signerPartner.getEmailAddress().getAddress())) {
             inPersonSigner.setHostEmail(signerPartner.getEmailAddress().getAddress());
           } else {
             throw new AxelorException(
