@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.customer.portal.web.service;
 
-import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.City;
 import com.axelor.apps.customer.portal.service.response.PortalRestResponse;
 import com.axelor.apps.customer.portal.service.response.ResponseGeneratorFactory;
@@ -25,6 +24,7 @@ import com.axelor.apps.customer.portal.service.response.generator.ResponseGenera
 import com.axelor.common.StringUtils;
 import com.axelor.db.JpaSecurity;
 import com.axelor.db.JpaSecurity.AccessType;
+import com.axelor.exception.AxelorException;
 import com.axelor.inject.Beans;
 import java.util.HashMap;
 import java.util.List;
