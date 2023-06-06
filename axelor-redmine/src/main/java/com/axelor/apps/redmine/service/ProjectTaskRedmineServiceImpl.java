@@ -18,7 +18,6 @@
 package com.axelor.apps.redmine.service;
 
 import com.axelor.apps.base.db.AppBusinessProject;
-import com.axelor.apps.base.db.repo.AppBusinessSupportRepository;
 import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.FrequencyService;
@@ -30,6 +29,7 @@ import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.exception.AxelorException;
 import com.google.inject.Inject;
@@ -40,7 +40,6 @@ import java.util.DoubleSummaryStatistics;
 public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
     implements ProjectTaskRedmineService {
 
-  @Inject public AppBusinessSupportRepository appBusinessSupportRepository;
   @Inject public ProjectVersionRepository projectVersionRepository;
 
   @Inject
@@ -49,19 +48,23 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
       FrequencyRepository frequencyRepo,
       FrequencyService frequencyService,
       AppBaseService appBaseService,
+      ProjectRepository projectRepository,
       PriceListLineRepository priceListLineRepo,
       PriceListService priceListService,
       PartnerPriceListService partnerPriceListService,
-      ProductCompanyService productCompanyService) {
+      ProductCompanyService productCompanyService,
+      ProjectVersionRepository projectVersionRepository) {
     super(
         projectTaskRepo,
         frequencyRepo,
         frequencyService,
         appBaseService,
+        projectRepository,
         priceListLineRepo,
         priceListService,
         partnerPriceListService,
         productCompanyService);
+    this.projectVersionRepository = projectVersionRepository;
   }
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
