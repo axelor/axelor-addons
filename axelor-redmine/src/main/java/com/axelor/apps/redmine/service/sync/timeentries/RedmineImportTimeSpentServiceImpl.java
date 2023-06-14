@@ -18,7 +18,6 @@
 package com.axelor.apps.redmine.service.sync.timeentries;
 
 import com.axelor.apps.base.db.AppRedmine;
-import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
@@ -64,7 +63,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -138,12 +136,6 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
     if (redmineTimeEntryList != null && !redmineTimeEntryList.isEmpty()) {
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
-      this.onError = (Consumer<Throwable>) paramsMap.get("onError");
-      this.onSuccess = (Consumer<Object>) paramsMap.get("onSuccess");
-      this.batch = (Batch) paramsMap.get("batch");
-      this.errorObjList = (List<Object[]>) paramsMap.get("errorObjList");
-      this.lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
-      this.redmineUserMap = (HashMap<Integer, String>) paramsMap.get("redmineUserMap");
       this.defaultCompanyId = appRedmine.getCompany().getId();
       this.selectionMap = new HashMap<>();
 
@@ -180,7 +172,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
           (TimeEntry o1, TimeEntry o2) -> o1.getSpentOn().compareTo(o2.getSpentOn());
       Collections.sort(redmineTimeEntryList, compareByDate);
 
-      boolean isOverrideRecords = batch.getRedmineBatch().getIsOverrideRecords();
+      boolean isOverrideRecords =
+          methodParameters.getBatch().getRedmineBatch().getIsOverrideRecords();
 
       int i = 0;
 
@@ -238,9 +231,9 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
     if (timesheetLine == null) {
       timesheetLine = new TimesheetLine();
     } else if (!isOverrideRecords
-        || (lastBatchUpdatedOn != null
+        || (methodParameters.getLastBatchUpdatedOn() != null
             && (timesheetLine.getUpdatedOn() != null
-                && timesheetLine.getUpdatedOn().isAfter(lastBatchUpdatedOn)
+                && timesheetLine.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
                 && timesheetLine.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
       return;
     }
@@ -320,20 +313,20 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
     try {
 
       if (timesheetLine.getId() == null) {
-        timesheetLine.addCreatedBatchSetItem(batch);
+        timesheetLine.addCreatedBatchSetItem(methodParameters.getBatch());
       } else {
-        timesheetLine.addUpdatedBatchSetItem(batch);
+        timesheetLine.addUpdatedBatchSetItem(methodParameters.getBatch());
       }
 
       timesheetLineRepo.save(timesheetLine);
       updatedOnMap.put(timesheetLine.getId(), redmineUpdatedOn);
 
-      onSuccess.accept(timesheetLine);
+      methodParameters.getOnSuccess().accept(timesheetLine);
       success++;
     } catch (Exception e) {
-      onError.accept(e);
+      methodParameters.getOnError().accept(e);
       fail++;
-      TraceBackService.trace(e, "", batch.getId());
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
     }
   }
 
@@ -421,7 +414,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
       timesheetLine.setDuration(
           timesheetLineService.computeHoursDuration(timesheet, duration, false));
     } catch (AxelorException e) {
-      TraceBackService.trace(e, "", batch.getId());
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
     }
     timesheet.setPeriodTotal(timesheet.getPeriodTotal().add(timesheetLine.getHoursDuration()));
     timesheetLine.setTimesheet(timesheet);

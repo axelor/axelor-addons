@@ -17,11 +17,11 @@
  */
 package com.axelor.apps.redmine.service.imports.projects;
 
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.taskadapter.redmineapi.bean.Project;
-import java.util.HashMap;
 import java.util.List;
 
 public interface RedmineImportProjectService {
 
-  void importProject(List<Project> importProjectList, HashMap<String, Object> paramsMap);
+  void importProject(List<Project> importProjectList, MethodParameters methodParameters);
 }
