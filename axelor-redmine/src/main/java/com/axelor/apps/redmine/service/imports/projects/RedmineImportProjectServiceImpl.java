@@ -359,7 +359,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
     String projectInvoiceable = redmineCustomFieldsMap.get(redmineProjectInvoiceable);
 
-    boolean invoiceable = projectInvoiceable != null && (projectInvoiceable.equals("1"));
+    boolean invoiceable = "1".equals(projectInvoiceable);
     project.setToInvoice(invoiceable);
     project.setIsBusinessProject(invoiceable);
 
