@@ -1,9 +1,12 @@
 package com.axelor.apps.redmine.service.imports.utils;
 
+import com.axelor.apps.base.db.AppRedmine;
+import com.axelor.common.ObjectUtils;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.User;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -43,5 +46,16 @@ public class FetchRedmineInfo {
       }
       offset += limit;
     } while (users.size() == limit);
+  }
+
+  public static Map<String, String> getFillUsersListParams(AppRedmine appRedmine) {
+    Map<String, String> params = new HashMap<>();
+    params.put("status", appRedmine.getRedmineUsersStatus());
+    String onUsersFilter = appRedmine.getOnUsersFilter();
+    if (ObjectUtils.notEmpty(onUsersFilter)) {
+      params.put("name", onUsersFilter);
+    }
+
+    return params;
   }
 }

@@ -112,16 +112,14 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
     try {
       List<User> redmineUserList = new ArrayList<>();
       Map<Integer, Boolean> includedIdsMap = new HashMap<>();
-      Map<String, String> params = new HashMap<String, String>();
-      // fetches only the active users
-      params.put("status", appRedmine.getRedmineUsersStatus());
-      // fetches only users from axelor
-      // params.put("name", "%@axelor.com");
-      if (!appRedmine.getOnUsersFilter().isEmpty()) {
-        params.put("name", appRedmine.getOnUsersFilter());
-      }
+
       LOG.debug("Fetching Axelor users from Redmine...");
-      FetchRedmineInfo.fillUsersList(redmineManager, includedIdsMap, redmineUserList, params);
+
+      FetchRedmineInfo.fillUsersList(
+          redmineManager,
+          includedIdsMap,
+          redmineUserList,
+          FetchRedmineInfo.getFillUsersListParams(appRedmine));
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());

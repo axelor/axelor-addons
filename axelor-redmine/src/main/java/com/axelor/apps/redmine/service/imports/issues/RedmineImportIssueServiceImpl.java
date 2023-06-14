@@ -593,9 +593,11 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
         projectTask.setCurrency(null);
       }
 
-      projectTask.setAccountedForMaintenance("1".equals(redmineCustomFieldsMap.get(redmineIssueAccountedForMaintenance)));
+      projectTask.setAccountedForMaintenance(
+          "1".equals(redmineCustomFieldsMap.get(redmineIssueAccountedForMaintenance)));
       projectTask.setIsOffered("1".equals(redmineCustomFieldsMap.get(redmineIssueIsOffered)));
-      projectTask.setIsTaskAccepted("1".equals(redmineCustomFieldsMap.get(redmineIssueIsTaskAccepted)));
+      projectTask.setIsTaskAccepted(
+          "1".equals(redmineCustomFieldsMap.get(redmineIssueIsTaskAccepted)));
 
       projectTask.setStatus(
           projectStatusRepo

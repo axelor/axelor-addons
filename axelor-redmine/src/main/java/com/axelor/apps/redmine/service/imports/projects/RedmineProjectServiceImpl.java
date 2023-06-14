@@ -26,7 +26,6 @@ import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.apps.redmine.service.imports.utils.FetchRedmineInfo;
-import com.axelor.common.ObjectUtils;
 import com.axelor.exception.service.TraceBackService;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.RedmineException;
@@ -104,24 +103,20 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
       importProjectList = redmineFetchDataService.fetchProjectImportData(redmineManager);
 
       List<User> redmineUserList = new ArrayList<>();
-
-      Map<String, String> params = new HashMap<String, String>();
-      // fetches only the active users
-      params.put("status", appRedmine.getRedmineUsersStatus());
-      // fetches only users from axelor
-      // params.put("name", "%@axelor.com");
-      String onUsersFilter = appRedmine.getOnUsersFilter();
-      if (ObjectUtils.notEmpty(onUsersFilter)) {
-        params.put("name", onUsersFilter);
-      }
-
       Map<Integer, Boolean> includedIdsMap = new HashMap<>();
+
       LOG.debug("Fetching Axelor users from Redmine...");
-      FetchRedmineInfo.fillUsersList(redmineManager, includedIdsMap, redmineUserList, params);
+
+      FetchRedmineInfo.fillUsersList(
+          redmineManager,
+          includedIdsMap,
+          redmineUserList,
+          FetchRedmineInfo.getFillUsersListParams(appRedmine));
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
       }
+
     } catch (RedmineException e) {
       TraceBackService.trace(e, "", batch.getId());
     }
