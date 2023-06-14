@@ -27,6 +27,7 @@ import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.AuditableModel;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
@@ -35,7 +36,6 @@ import com.axelor.exception.service.TraceBackService;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.IssueManager;
-import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.bean.CustomField;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -47,10 +47,8 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.function.Consumer;
 import net.java.textilej.parser.MarkupParser;
 import net.java.textilej.parser.builder.HtmlDocumentBuilder;
 import net.java.textilej.parser.markup.textile.TextileDialect;
@@ -95,19 +93,13 @@ public class RedmineCommonService {
   protected static String result = "";
   protected int success = 0;
   protected int fail = 0;
-  protected Consumer<Object> onSuccess;
-  protected Consumer<Throwable> onError;
 
-  protected Batch batch;
-  protected ProjectManager redmineProjectManager;
+  protected MethodParameters methodParameters;
   protected IssueManager redmineIssueManager;
-  protected List<Object[]> errorObjList;
   protected Map<String, String> redmineCustomFieldsMap;
-  protected LocalDateTime lastBatchUpdatedOn;
   protected HashMap<String, Object> selectionMap;
   protected HashMap<String, String> fieldMap;
 
-  protected HashMap<Integer, String> redmineUserMap;
   protected HashMap<Long, Integer> parentMap = new HashMap<>();
   protected HashMap<Long, LocalDateTime> updatedOnMap = new HashMap<>();
   protected Object[] errors;
@@ -173,7 +165,7 @@ public class RedmineCommonService {
             "self.contactPartner.emailAddress.address = ?1 "
                 + "OR self.user.email = ?1 "
                 + "OR self.user.partner.emailAddress.address = ?1",
-            redmineUserMap.get(redmineId))
+            methodParameters.getRedmineUserMap().get(redmineId))
         .fetchOne();
   }
 
@@ -183,13 +175,15 @@ public class RedmineCommonService {
         .all()
         .filter(
             "self.email = ?1 OR self.partner.emailAddress.address = ?1",
-            redmineUserMap.get(redmineId))
+            methodParameters.getRedmineUserMap().get(redmineId))
         .fetchOne();
   }
 
   public void setErrorLog(String object, String redmineRef) {
 
-    errorObjList.add(ObjectArrays.concat(new Object[] {object, redmineRef}, errors, Object.class));
+    methodParameters
+        .getErrorObjList()
+        .add(ObjectArrays.concat(new Object[] {object, redmineRef}, errors, Object.class));
   }
 
   protected String getHtmlFromTextile(String textile) {
@@ -211,6 +205,7 @@ public class RedmineCommonService {
 
   protected void updateTransaction() {
 
+    Batch batch = methodParameters.getBatch();
     JPA.em().getTransaction().commit();
 
     if (!JPA.em().getTransaction().isActive()) {
@@ -220,7 +215,7 @@ public class RedmineCommonService {
     JPA.clear();
 
     if (!JPA.em().contains(batch)) {
-      batch = JPA.find(Batch.class, batch.getId());
+      methodParameters.setBatch(JPA.find(Batch.class, batch.getId()));
     }
   }
 
@@ -241,7 +236,7 @@ public class RedmineCommonService {
       dateFormat.setTimeZone(TimeZone.getTimeZone(serverTimeZone));
       date = dateFormat.parse(dateGmtStr);
     } catch (ParseException e) {
-      TraceBackService.trace(e, "", batch.getId());
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
     }
 
     return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
