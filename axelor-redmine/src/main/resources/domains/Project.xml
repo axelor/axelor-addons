@@ -10,6 +10,7 @@
     <integer name="redmineId" title="Redmine Id"/>
     <many-to-many name="createdBatchSet" ref="com.axelor.apps.base.db.Batch"/>
     <many-to-many name="updatedBatchSet" ref="com.axelor.apps.base.db.Batch"/>
+    <datetime name="redmineUpdatedOn" title="Redmine updated on" readonly="true"/>
 
     <finder-method name="findByRedmineId" using="redmineId"/>
 

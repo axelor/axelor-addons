@@ -12,6 +12,8 @@
     </panel>
     <panel name="fieldsPanel">
       <field name="company" required="true"/>
+      <field name="redmineUsersStatus" required="true"/>
+      <field name="onUsersFilter"/>
     </panel>
     <panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
       <field name="redmineProjectInvoiceable" required="true"/>
