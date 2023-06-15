@@ -187,7 +187,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
       this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
 
-      //      serverTimeZone = appRedmine.getServerTimezone();
+      serverTimeZone = appRedmine.getServerTimezone();
 
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository
