@@ -352,7 +352,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
       timesheetLine.setDurationForCustomer(
           !StringUtils.isBlank(value) ? new BigDecimal(value) : duration);
     } catch (Exception e) {
-      TraceBackService.trace(e, redmineTimeEntry.getId().toString(), batch.getId());
+      TraceBackService.trace(
+          e, redmineTimeEntry.getId().toString(), methodParameters.getBatch().getId());
     }
 
     Unit unit = null;
