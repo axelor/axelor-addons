@@ -17,6 +17,8 @@
  */
 package com.axelor.apps.redmine.service;
 
+import static com.axelor.apps.base.service.administration.AbstractBatch.FETCH_LIMIT;
+
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
@@ -30,12 +32,16 @@ import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.db.JPA;
+import com.axelor.db.Query;
 import com.axelor.studio.db.AppBusinessProject;
 import com.axelor.studio.db.repo.AppBusinessSupportRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
 import java.util.DoubleSummaryStatistics;
+import java.util.List;
+import org.apache.commons.collections.CollectionUtils;
 
 public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
     implements ProjectTaskRedmineService {
@@ -157,5 +163,21 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
     projectVersion.setTotalProgress(BigDecimal.valueOf(sum).setScale(0, BigDecimal.ROUND_HALF_UP));
     projectVersionRepository.save(projectVersion);
+  }
+
+  @Override
+  @Transactional
+  public void updateProjectVersion() {
+    List<ProjectVersion> projectVersionList;
+    Query<ProjectVersion> query = projectVersionRepository.all();
+    int offset = 0;
+
+    while (!(projectVersionList = query.fetch(FETCH_LIMIT, offset)).isEmpty()) {
+      offset += projectVersionList.size();
+      if (CollectionUtils.isNotEmpty(projectVersionList)) {
+        projectVersionList.stream().forEach(version -> this.updateProjectVersionProgress(version));
+      }
+      JPA.clear();
+    }
   }
 }
