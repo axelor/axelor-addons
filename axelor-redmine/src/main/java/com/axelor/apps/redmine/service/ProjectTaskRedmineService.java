@@ -28,4 +28,6 @@ public interface ProjectTaskRedmineService {
       ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd);
 
   public void updateProjectVersionProgress(ProjectVersion projectVersion);
+
+  public void updateProjectVersion();
 }
