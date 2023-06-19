@@ -41,7 +41,6 @@ import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
-import org.apache.commons.collections.CollectionUtils;
 
 public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
     implements ProjectTaskRedmineService {
@@ -174,9 +173,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
     while (!(projectVersionList = query.fetch(FETCH_LIMIT, offset)).isEmpty()) {
       offset += projectVersionList.size();
-      if (CollectionUtils.isNotEmpty(projectVersionList)) {
-        projectVersionList.stream().forEach(version -> this.updateProjectVersionProgress(version));
-      }
+      projectVersionList.forEach(version -> this.updateProjectVersionProgress(version));
       JPA.clear();
     }
   }
