@@ -17,8 +17,6 @@
  */
 package com.axelor.apps.redmine.web;
 
-import com.axelor.apps.businesssupport.db.ProjectVersion;
-import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.ProjectStatus;
 import com.axelor.apps.project.db.repo.ProjectStatusRepository;
 import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
@@ -26,8 +24,6 @@ import com.axelor.inject.Beans;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.google.inject.Inject;
-import java.util.List;
-import org.apache.commons.collections.CollectionUtils;
 
 public class RedmineProjectStatusController {
 
@@ -42,13 +38,7 @@ public class RedmineProjectStatusController {
 
     if (projectStatusDb != null
         && !projectStatus.getIsCompleted().equals(projectStatusDb.getIsCompleted())) {
-      List<ProjectVersion> projectVersionList =
-          Beans.get(ProjectVersionRepository.class).all().fetch();
-
-      if (CollectionUtils.isNotEmpty(projectVersionList)) {
-        projectVersionList.stream()
-            .forEach(version -> projectTaskRedmineService.updateProjectVersionProgress(version));
-      }
+      projectTaskRedmineService.updateProjectVersion();
     }
   }
 }
