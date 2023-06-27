@@ -283,21 +283,24 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         }
       }
 
-    } else if (lastBatchUpdatedOn != null
-        && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-            || (project.getUpdatedOn().isAfter(lastBatchUpdatedOn)
-                && project.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
-      LOG.debug(
-          "Updating project members, trackers and versions: " + redmineProject.getIdentifier());
+    } else {
+      LocalDateTime updatedOn = project.getUpdatedOn();
+      if (lastBatchUpdatedOn != null
+            && updatedOn != null
+            && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
+            || (updatedOn.isAfter(lastBatchUpdatedOn) && updatedOn.isAfter(redmineUpdatedOn)))) {
+        LOG.debug(
+                "Updating project members, trackers and versions: " + redmineProject.getIdentifier());
 
-      importProjectMembersAndTrackers(redmineProject, project);
-      projectRepo.save(project);
+        importProjectMembersAndTrackers(redmineProject, project);
+        projectRepo.save(project);
 
-      if (isAppBusinessSupport) {
-        importProjectVersions(redmineProject.getId(), project);
+        if (isAppBusinessSupport) {
+          importProjectVersions(redmineProject.getId(), project);
+        }
+
+        return;
       }
-
-      return;
     }
 
     LOG.debug("Importing project: " + redmineProject.getIdentifier());
