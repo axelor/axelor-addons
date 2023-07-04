@@ -33,9 +33,9 @@ import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.ProjectTaskCategory;
 import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
-import com.axelor.apps.project.db.repo.ProjectStatusRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.project.db.repo.TaskStatusRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
@@ -93,7 +93,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
   protected AppBaseService appBaseService;
   protected ProjectTaskRedmineService projectTaskRedmineService;
   protected MailMessageRepository mailMessageRepository;
-  protected ProjectStatusRepository projectStatusRepo;
+  protected TaskStatusRepository taskStatusRepo;
   protected ProjectPriorityRepository projectPriorityRepo;
 
   @Inject
@@ -112,7 +112,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       AppBaseService appBaseService,
       ProjectTaskRedmineService projectTaskRedmineService,
       MailMessageRepository mailMessageRepository,
-      ProjectStatusRepository projectStatusRepo,
+      TaskStatusRepository taskStatusRepo,
       ProjectPriorityRepository projectPriorityRepo) {
 
     super(
@@ -130,7 +130,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
     this.appBaseService = appBaseService;
     this.projectTaskRedmineService = projectTaskRedmineService;
     this.mailMessageRepository = mailMessageRepository;
-    this.projectStatusRepo = projectStatusRepo;
+    this.taskStatusRepo = taskStatusRepo;
     this.projectPriorityRepo = projectPriorityRepo;
   }
 
@@ -368,12 +368,9 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
         continue;
       }
 
-      if (projectStatusRepo
+      if (taskStatusRepo
               .all()
-              .filter(
-                  "self.name = ?1 and self.relatedToSelect = ?2",
-                  fieldMap.get(redmineIssue.getStatusName()),
-                  ProjectStatusRepository.PROJECT_STATUS_TASK)
+              .filter("self.name = ?1", fieldMap.get(redmineIssue.getStatusName()))
               .count()
           == 0) {
         errors = new Object[] {I18n.get(IMessage.REDMINE_IMPORT_PROJECT_TASK_STATUS_NOT_FOUND)};
@@ -591,7 +588,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
             value != null && !value.equals("")
                 ? new BigDecimal(value)
                 : redmineIssueUnitPriceDefault);
-        projectTask.setUnit(null);
+        projectTask.setInvoicingUnit(null);
         projectTask.setQuantity(BigDecimal.ZERO);
         projectTask.setExTaxTotal(BigDecimal.ZERO);
         projectTask.setInvoicingType(0);
@@ -611,12 +608,9 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       projectTask.setIsTaskAccepted(value != null ? (value.equals("1") ? true : false) : false);
 
       projectTask.setStatus(
-          projectStatusRepo
+          taskStatusRepo
               .all()
-              .filter(
-                  "self.name = ?1 and self.relatedToSelect = ?2",
-                  fieldMap.get(redmineIssue.getStatusName()),
-                  ProjectStatusRepository.PROJECT_STATUS_TASK)
+              .filter("self.name = ?1", fieldMap.get(redmineIssue.getStatusName()))
               .fetchOne());
 
       projectTask.setPriority(

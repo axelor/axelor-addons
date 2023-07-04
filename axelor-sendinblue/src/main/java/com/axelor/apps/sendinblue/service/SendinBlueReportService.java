@@ -21,6 +21,7 @@ import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
+import com.axelor.apps.crm.db.repo.LeadRepository;
 import com.axelor.apps.marketing.db.SendinBlueCampaign;
 import com.axelor.apps.marketing.db.repo.SendinBlueCampaignRepository;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
@@ -77,6 +78,7 @@ public class SendinBlueReportService {
   @Inject SendinBlueCampaignRepository sendinBlueCampaignRepo;
   @Inject SendinBlueCampaignStatRepository sendinBlueCampaignStatRepo;
   @Inject SendinBlueContactStatRepository sendinBlueContactStatRepo;
+  @Inject LeadRepository leadRepository;
 
   protected static final Long DATA_FETCH_LIMIT = 100L;
 
@@ -311,7 +313,8 @@ public class SendinBlueReportService {
     if (emailAddress != null) {
       sendinBlueEvent.setEmailAddress(emailAddress);
       sendinBlueEvent.setPartner(emailAddress.getPartner());
-      sendinBlueEvent.setLead(emailAddress.getEmailAddressLead());
+      sendinBlueEvent.setLead(
+          leadRepository.all().filter("self.emailAddress = ?1", emailAddress).fetchOne());
     }
     sendinBlueEventList.add(sendinBlueEvent);
     sendinBlueEventRepo.save(sendinBlueEvent);

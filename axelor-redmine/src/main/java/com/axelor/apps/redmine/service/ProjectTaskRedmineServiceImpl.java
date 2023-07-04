@@ -25,9 +25,11 @@ import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PriceListService;
 import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.businessproject.service.app.AppBusinessProjectService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
+import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
@@ -54,7 +56,9 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
       PriceListLineRepository priceListLineRepo,
       PriceListService priceListService,
       PartnerPriceListService partnerPriceListService,
-      ProductCompanyService productCompanyService) {
+      ProductCompanyService productCompanyService,
+      TimesheetLineRepository timesheetLineRepository,
+      AppBusinessProjectService appBusinessProjectService) {
     super(
         projectTaskRepo,
         frequencyRepo,
@@ -64,7 +68,9 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         priceListLineRepo,
         priceListService,
         partnerPriceListService,
-        productCompanyService);
+        productCompanyService,
+        timesheetLineRepository,
+        appBusinessProjectService);
   }
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
