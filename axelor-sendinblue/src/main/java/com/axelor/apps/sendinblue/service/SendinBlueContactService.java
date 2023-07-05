@@ -24,7 +24,7 @@ import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.crm.db.Lead;
 import com.axelor.apps.crm.db.repo.LeadRepository;
-import com.axelor.apps.crm.db.repo.LeadStatusRepository;
+import com.axelor.apps.crm.service.LeadService;
 import com.axelor.apps.sendinblue.db.ExportSendinBlue;
 import com.axelor.apps.sendinblue.db.ImportSendinBlue;
 import com.axelor.apps.sendinblue.db.repo.SendinBlueContactStatRepository;
@@ -67,6 +67,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.persistence.PersistenceException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.threeten.bp.OffsetDateTime;
 import sendinblue.ApiException;
@@ -91,8 +92,7 @@ public class SendinBlueContactService {
   @Inject SendinBlueFieldService sendinBlueFieldService;
   @Inject SendinBlueContactStatRepository sendinBlueContactStatRepository;
 
-  @Inject LeadStatusRepository leadStatusRepo;
-
+  @Inject LeadService leadService;
   @Inject LeadRepository leadRepository;
 
   protected static final Integer DATA_FETCH_LIMIT = 100;
@@ -563,7 +563,12 @@ public class SendinBlueContactService {
       lead.setSendinBlueId(id);
       lead.setEmailAddress(emailAddress);
       lead.setName(name);
-      lead.setLeadStatus(leadStatusRepo.getDefaultStatus());
+      try {
+        lead.setLeadStatus(leadService.getDefaultLeadStatus());
+      } catch (Exception e) {
+        TraceBackService.traceExceptionFromSaveMethod(e);
+        throw new PersistenceException(e.getMessage(), e);
+      }
       totalLeadRecords++;
     }
   }

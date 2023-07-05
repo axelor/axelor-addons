@@ -32,11 +32,13 @@ import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectPriority;
 import com.axelor.apps.project.db.ProjectStatus;
 import com.axelor.apps.project.db.ProjectTaskCategory;
+import com.axelor.apps.project.db.TaskStatus;
 import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectStatusRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.project.db.repo.TaskStatusRepository;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
@@ -81,6 +83,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   protected RedmineImportMappingRepository redmineImportMappingRepository;
   protected ProjectVersionRepository projectVersionRepo;
   protected AppBaseService appBaseService;
+  protected TaskStatusRepository taskStatusRepo;
   protected ProjectStatusRepository projectStatusRepo;
   protected ProjectPriorityRepository projectPriorityRepo;
 
@@ -99,6 +102,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       ProjectVersionRepository projectVersionRepo,
       AppBaseService appBaseService,
       ProjectPriorityRepository projectPriorityRepo,
+      TaskStatusRepository taskStatusRepo,
       ProjectStatusRepository projectStatusRepo) {
 
     super(
@@ -114,6 +118,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.projectVersionRepo = projectVersionRepo;
     this.appBaseService = appBaseService;
+    this.taskStatusRepo = taskStatusRepo;
     this.projectStatusRepo = projectStatusRepo;
     this.projectPriorityRepo = projectPriorityRepo;
   }
@@ -264,14 +269,10 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       project.setRedmineId(redmineProject.getId());
       project.setCode(redmineProject.getIdentifier().toUpperCase());
 
-      List<ProjectStatus> projectStatuses =
-          projectStatusRepo
-              .all()
-              .filter("self.relatedToSelect = ?1", ProjectStatusRepository.PROJECT_STATUS_TASK)
-              .fetch();
-      if (projectStatuses != null && !projectStatuses.isEmpty()) {
-        for (ProjectStatus projectStatus : projectStatuses) {
-          project.addProjectTaskStatusSetItem(projectStatus);
+      List<TaskStatus> taskStatuses = taskStatusRepo.all().fetch();
+      if (taskStatuses != null && !taskStatuses.isEmpty()) {
+        for (TaskStatus taskStatus : taskStatuses) {
+          project.addProjectTaskStatusSetItem(taskStatus);
         }
       }
 
@@ -430,16 +431,20 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     }
     importProjectMembersAndTrackers(redmineProject, project);
 
-    project.setProjectStatus(
-        projectStatusRepo
-            .all()
-            .filter(
-                redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)
-                    ? "self.relatedToSelect = ?1 and self.isDefaultCompleted = true"
-                    : "self.relatedToSelect = ?1",
-                ProjectStatusRepository.PROJECT_STATUS_PROJECT)
-            .order("sequence")
-            .fetchOne());
+    ProjectStatus projectStatus;
+
+    if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
+      projectStatus =
+          projectStatusRepo
+              .all()
+              .filter("self.isDefaultCompleted = true")
+              .order("sequence")
+              .fetchOne();
+    } else {
+      projectStatus = projectStatusRepo.all().order("sequence").fetchOne();
+    }
+
+    project.setProjectStatus(projectStatus);
 
     // ERROR AND IMPORT IF INVOICING TYPE NOT FOUND
 
