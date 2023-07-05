@@ -31,6 +31,7 @@ import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.db.JPA;
 import com.axelor.db.Query;
@@ -54,6 +55,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
       FrequencyRepository frequencyRepo,
       FrequencyService frequencyService,
       AppBaseService appBaseService,
+      ProjectRepository projectRepository,
       PriceListLineRepository priceListLineRepo,
       PriceListService priceListService,
       PartnerPriceListService partnerPriceListService,
@@ -63,6 +65,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         frequencyRepo,
         frequencyService,
         appBaseService,
+        projectRepository,
         priceListLineRepo,
         priceListService,
         partnerPriceListService,
