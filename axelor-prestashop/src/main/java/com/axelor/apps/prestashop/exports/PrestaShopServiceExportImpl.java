@@ -19,6 +19,7 @@ package com.axelor.apps.prestashop.exports;
 
 import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.service.exception.TraceBackService;
+import com.axelor.apps.prestashop.db.PrestaShopBatch;
 import com.axelor.apps.prestashop.exports.service.ExportAddressService;
 import com.axelor.apps.prestashop.exports.service.ExportCategoryService;
 import com.axelor.apps.prestashop.exports.service.ExportCountryService;
@@ -69,15 +70,16 @@ public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
    *     logic point of view
    * @throws IOException If any underlying I/O fails.
    */
-  public void exportAxelorBase(AppPrestashop appConfig, final Writer logWriter)
+  public void exportAxelorBase(
+      AppPrestashop appConfig, boolean includeArchiveRecords, final Writer logWriter)
       throws PrestaShopWebserviceException, IOException {
-    currencyService.exportCurrency(appConfig, logWriter);
-    countryService.exportCountry(appConfig, logWriter);
-    customerService.exportCustomer(appConfig, logWriter);
-    addressService.exportAddress(appConfig, logWriter);
-    taxService.exportTax(appConfig, logWriter);
-    categoryService.exportCategory(appConfig, logWriter);
-    productService.exportProduct(appConfig, logWriter);
+    currencyService.exportCurrency(appConfig, includeArchiveRecords, logWriter);
+    countryService.exportCountry(appConfig, includeArchiveRecords, logWriter);
+    customerService.exportCustomer(appConfig, includeArchiveRecords, logWriter);
+    addressService.exportAddress(appConfig, includeArchiveRecords, logWriter);
+    taxService.exportTax(appConfig, includeArchiveRecords, logWriter);
+    categoryService.exportCategory(appConfig, includeArchiveRecords, logWriter);
+    productService.exportProduct(appConfig, includeArchiveRecords, logWriter);
   }
 
   /** Export Axelor modules (Base, SaleOrder) */
@@ -85,9 +87,15 @@ public class PrestaShopServiceExportImpl implements PrestaShopServiceExport {
   public void export(AppPrestashop appConfig, Batch batch) throws IOException {
     StringBuilderWriter logWriter = new StringBuilderWriter(1024);
     try {
-      exportAxelorBase(appConfig, logWriter);
+      boolean includeArchiveRecords = false;
+      PrestaShopBatch prestaShopBatch = batch.getPrestaShopBatch();
+      if (prestaShopBatch != null) {
+        includeArchiveRecords = prestaShopBatch.getIncludeArchiveRecords();
+      }
+      exportAxelorBase(appConfig, includeArchiveRecords, logWriter);
 
-      orderService.exportOrder(appConfig, logWriter);
+      orderService.exportOrder(appConfig, includeArchiveRecords, logWriter);
+      logWriter.write(String.format("%n==== END OF LOG ====%n"));
       logWriter.write(String.format("%n==== END OF LOG ====%n"));
     } catch (PrestaShopWebserviceException e) {
       TraceBackService.trace(e);

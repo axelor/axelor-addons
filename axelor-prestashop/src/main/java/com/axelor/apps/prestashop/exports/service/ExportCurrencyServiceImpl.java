@@ -58,18 +58,23 @@ public class ExportCurrencyServiceImpl implements ExportCurrencyService {
 
   @Override
   @Transactional
-  public void exportCurrency(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCurrency(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException {
     int done = 0;
     int errors = 0;
 
     logBuffer.write(String.format("%n====== CURRENCIES ======%n"));
 
-    final List<Currency> currencies =
-        currencyRepo
-            .all()
-            .filter("(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)")
-            .fetch();
+    final StringBuilder filter =
+        new StringBuilder(
+            "(self.prestaShopVersion is null OR self.prestaShopVersion < self.version)");
+
+    if (!includeArchiveRecords) {
+      filter.append(" AND (self.archived = false OR self.archived IS NULL)");
+    }
+
+    final List<Currency> currencies = currencyRepo.all().filter(filter.toString()).fetch();
 
     final PSWebServiceClient ws =
         new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());

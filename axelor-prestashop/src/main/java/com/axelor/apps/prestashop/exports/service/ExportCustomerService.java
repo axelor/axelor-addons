@@ -32,6 +32,7 @@ public interface ExportCustomerService {
    * @throws IOException
    * @throws PrestaShopWebserviceException
    */
-  public void exportCustomer(AppPrestashop appConfig, Writer logBuffer)
+  public void exportCustomer(
+      AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException;
 }

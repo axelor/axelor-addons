@@ -32,6 +32,6 @@ public interface ExportTaxService {
    * @throws IOException
    * @throws PrestaShopWebserviceException
    */
-  public void exportTax(AppPrestashop appConfig, Writer logBuffer)
+  public void exportTax(AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException;
 }

@@ -30,6 +30,6 @@ public interface ExportOrderService {
    * @throws IOException
    * @throws PrestaShopWebserviceException
    */
-  public void exportOrder(AppPrestashop appConfig, Writer logBuffer)
+  public void exportOrder(AppPrestashop appConfig, boolean includeArchiveRecords, Writer logBuffer)
       throws IOException, PrestaShopWebserviceException;
 }
