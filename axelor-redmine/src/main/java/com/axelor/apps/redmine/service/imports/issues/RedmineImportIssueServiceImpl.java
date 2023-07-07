@@ -162,7 +162,6 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
   protected HashMap<String, String> projectTaskMap;
 
   @Override
-  @SuppressWarnings("unchecked")
   public void importIssue(List<Issue> redmineIssueList, MethodParameters methodParameters) {
 
     if (redmineIssueList != null && !redmineIssueList.isEmpty()) {

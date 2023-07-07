@@ -42,6 +42,7 @@ import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.db.JPA;
 import com.axelor.exception.AxelorException;
@@ -56,6 +57,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -129,11 +131,13 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
   protected String failedRedmineTimeEntriesIds;
 
   @Override
-  @SuppressWarnings("unchecked")
   public String importTimeSpent(
-      List<TimeEntry> redmineTimeEntryList, HashMap<String, Object> paramsMap) {
+      List<TimeEntry> redmineTimeEntryList, MethodParameters methodParameters) {
 
     if (redmineTimeEntryList != null && !redmineTimeEntryList.isEmpty()) {
+
+      this.methodParameters = methodParameters;
+
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
       this.defaultCompanyId = appRedmine.getCompany().getId();
@@ -199,8 +203,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
                         "("
                             + entry.getKey()
                             + ",TO_TIMESTAMP('"
-                            + entry.getValue()
-                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
+                            + entry
+                                .getValue()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+                            + "', 'YYYY-MM-DDTHH24:MI:SS'))")
                 .collect(Collectors.joining(","));
 
         String query =
