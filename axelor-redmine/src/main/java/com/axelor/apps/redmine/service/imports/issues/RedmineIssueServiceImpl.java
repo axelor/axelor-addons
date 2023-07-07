@@ -125,10 +125,6 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
         redmineUserMap.put(user.getId(), user.getMail());
       }
 
-      // CREATE MAP FOR PASS TO THE METHODS
-
-      HashMap<String, Object> paramsMap = new HashMap<String, Object>();
-
       MethodParameters methodParameters =
           new MethodParameters(
               onError,

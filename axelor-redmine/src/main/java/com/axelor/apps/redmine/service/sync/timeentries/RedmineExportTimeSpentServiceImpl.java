@@ -17,7 +17,6 @@
  */
 package com.axelor.apps.redmine.service.sync.timeentries;
 
-import com.axelor.apps.base.db.Batch;
 import com.axelor.apps.base.db.repo.AppRedmineRepository;
 import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
@@ -38,6 +37,7 @@ import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.StringUtils;
@@ -60,9 +60,7 @@ import java.time.ZoneId;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.collections.CollectionUtils;
@@ -123,11 +121,14 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
   protected String failedAosTimesheetLineIds;
 
   @Override
-  public String exportTimesheetLines(Map<String, Object> paramsMap) {
+  public String exportTimesheetLines(
+      MethodParameters methodParameters, HashMap<String, String> redmineUserLoginMap) {
 
-    RedmineManager redmineManager = (RedmineManager) paramsMap.get("redmineManager");
+    this.methodParameters = methodParameters;
+    this.redmineUserLoginMap = redmineUserLoginMap;
 
-    setDefaultValuesAndMaps(redmineManager, paramsMap);
+    RedmineManager redmineManager = methodParameters.getRedmineManager();
+    setDefaultValuesAndMaps(redmineManager);
 
     RedmineBatch redmineBatch = methodParameters.getBatch().getRedmineBatch();
 
@@ -140,9 +141,9 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
             .map(Long::parseLong)
             .collect(Collectors.toList());
     String baseFilter =
-        Boolean.FALSE.equals(redmineBatch.getIsOverrideRecords())
-            ? "self.project != null AND (self.redmineId = null OR self.redmineId = 0)"
-            : "self.project != null";
+        !redmineBatch.getIsOverrideRecords()
+            ? "self.project IS NOT NULL AND (self.redmineId = null OR self.redmineId = 0)"
+            : "self.project IS NOT NULL";
 
     Query<TimesheetLine> query =
         methodParameters.getLastBatchUpdatedOn() != null
@@ -190,18 +191,10 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
   }
 
   @SuppressWarnings("unchecked")
-  public void setDefaultValuesAndMaps(
-      RedmineManager redmineManager, Map<String, Object> paramsMap) {
+  public void setDefaultValuesAndMaps(RedmineManager redmineManager) {
 
-    methodParameters.setLastBatchUpdatedOn((LocalDateTime) paramsMap.get("lastBatchUpdatedOn"));
-    redmineUserLoginMap = (HashMap<String, String>) paramsMap.get("redmineUserLoginMap");
     redmineUserEmailMap =
-        (HashMap<String, Integer>)
-            MapUtils.invertMap((HashMap<Integer, String>) paramsMap.get("redmineUserMap"));
-    methodParameters.setOnError((Consumer<Throwable>) paramsMap.get("onError"));
-    methodParameters.setOnSuccess((Consumer<Object>) paramsMap.get("onSuccess"));
-    methodParameters.setBatch((Batch) paramsMap.get("batch"));
-    methodParameters.setErrorObjList((List<Object[]>) paramsMap.get("errorObjList"));
+        (HashMap<String, Integer>) MapUtils.invertMap(methodParameters.getRedmineUserMap());
 
     serverTimeZone = appRedmineRepo.all().fetchOne().getServerTimezone();
 
@@ -282,20 +275,25 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
       Transport redmineTransport)
       throws RedmineException {
 
-    String emailAddress = aosEmployeeEmailMap.get(timesheetLine.getEmployee().getId());
+    String emailAddress = null;
+    Employee employee = timesheetLine.getEmployee();
 
-    if (StringUtils.isEmpty(emailAddress)) {
-      emailAddress = getEmailAddress(timesheetLine.getEmployee());
-      aosEmployeeEmailMap.put(timesheetLine.getEmployee().getId(), emailAddress);
+    if (employee != null) {
+      emailAddress = aosEmployeeEmailMap.get(employee.getId());
 
       if (StringUtils.isEmpty(emailAddress)) {
-        setErrorLog(
-            IMessage.REDMINE_EXPORT_TIMESHEET_LINE_AOS_EMPLOYEE_EMAIL_NOT_CONFIGURED,
-            redmineBatch,
-            timesheetLine.getId().toString());
-        fail++;
-        return;
+        emailAddress = getEmailAddress(employee);
+        aosEmployeeEmailMap.put(employee.getId(), emailAddress);
       }
+    }
+
+    if (StringUtils.isEmpty(emailAddress)) {
+      setErrorLog(
+          IMessage.REDMINE_EXPORT_TIMESHEET_LINE_AOS_EMPLOYEE_EMAIL_NOT_CONFIGURED,
+          redmineBatch,
+          timesheetLine.getId().toString());
+      fail++;
+      return;
     }
 
     if (!redmineUserEmailMap.containsKey(emailAddress)) {
@@ -388,8 +386,8 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
     Set<CustomField> cfSet = redmineTimeEntry.getCustomFields();
     String cfName = "Temps passé ajusté client";
     CustomField customField =
-        cfSet.stream().filter(cf -> cf.getName().equals(cfName)).findAny().get();
-    if (!customField.getValue().equals(value)) {
+        cfSet.stream().filter(cf -> cf.getName().equals(cfName)).findAny().orElse(null);
+    if (customField != null && !customField.getValue().equals(value)) {
       customField.setValue(value);
       redmineTimeEntry.addCustomFields(cfSet);
     }

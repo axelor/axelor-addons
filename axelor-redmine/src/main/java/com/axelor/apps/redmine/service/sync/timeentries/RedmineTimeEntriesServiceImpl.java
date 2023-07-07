@@ -24,6 +24,7 @@ import com.axelor.apps.redmine.db.repo.RedmineBatchRepository;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
@@ -114,18 +115,15 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
         redmineUserLoginMap.put(user.getMail(), user.getLogin());
       }
 
-      // CREATE MAP FOR PASS TO THE METHODS
-
-      HashMap<String, Object> paramsMap = new HashMap<String, Object>();
-
-      paramsMap.put("onError", onError);
-      paramsMap.put("onSuccess", onSuccess);
-      paramsMap.put("batch", batch);
-      paramsMap.put("errorObjList", errorObjList);
-      paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
-      paramsMap.put("redmineUserMap", redmineUserMap);
-      paramsMap.put("redmineUserLoginMap", redmineUserLoginMap);
-      paramsMap.put("redmineManager", redmineManager);
+      MethodParameters methodParameters =
+          new MethodParameters(
+              onError,
+              onSuccess,
+              batch,
+              errorObjList,
+              lastBatchUpdatedOn,
+              redmineUserMap,
+              redmineManager);
 
       // FETCH RECORDS TO IMPORT
 
@@ -140,15 +138,15 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
       LOG.debug("Start timesheetlines export process from AOS to Redmine..");
 
       String failedAosTimesheetLineIds =
-          redmineExportTimeSpentService.exportTimesheetLines(paramsMap);
-      paramsMap.put("batch", batchRepo.find(batch.getId()));
+          redmineExportTimeSpentService.exportTimesheetLines(methodParameters, redmineUserLoginMap);
+      methodParameters.setBatch(batchRepo.find(batch.getId()));
 
       // IMPORT PROCESS
 
       LOG.debug("Start timesheetlines import process from Redmine to AOS..");
 
       failedRedmineTimeEntriesIds =
-          redmineImportTimeSpentService.importTimeSpent(redmineTimeEntryList, paramsMap);
+          redmineImportTimeSpentService.importTimeSpent(redmineTimeEntryList, methodParameters);
 
       // ATTACH ERROR LOG WITH BATCH
 
