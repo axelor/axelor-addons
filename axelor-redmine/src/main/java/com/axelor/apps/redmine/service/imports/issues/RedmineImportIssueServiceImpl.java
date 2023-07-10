@@ -68,6 +68,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -234,8 +235,10 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
                         "("
                             + entry.getKey()
                             + ",TO_TIMESTAMP('"
-                            + entry.getValue()
-                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
+                            + entry
+                                .getValue()
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+                            + "', 'YYYY-MM-DDTHH24:MI:SS'))")
                 .collect(Collectors.joining(","));
 
         String query =
@@ -413,8 +416,10 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       projectTask = new ProjectTask();
       projectTask.setTypeSelect(ProjectTaskRepository.TYPE_TASK);
     } else if (methodParameters.getLastBatchUpdatedOn() != null
+        && redmineUpdatedOn != null
         && (redmineUpdatedOn.isBefore(methodParameters.getLastBatchUpdatedOn())
-            || (projectTask.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
+            || (projectTask.getUpdatedOn() != null
+                && projectTask.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
                 && projectTask.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
       return;
     }
