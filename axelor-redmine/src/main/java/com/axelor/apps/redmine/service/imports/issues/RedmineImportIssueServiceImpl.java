@@ -236,8 +236,8 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
                             + ",TO_TIMESTAMP('"
                             + entry
                                 .getValue()
-                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
-                            + "', 'YYYY-MM-DDTHH24:MI:SS'))")
+                                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
                 .collect(Collectors.joining(","));
 
         String query =
