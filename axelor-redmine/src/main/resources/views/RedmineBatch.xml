@@ -25,6 +25,7 @@
         showIf="redmineActionSelect == 1"/>
       <field name="isOverrideRecords" widget="boolean-switch"
         showIf="redmineActionSelect == 2"/>
+      <field name="redmineSynchronizationDirectionSelect" showIf="redmineActionSelect == 2" hidden="true"/>
     </panel>
     <panel-tabs>
       <panel name="actionPanel" title="Actions">

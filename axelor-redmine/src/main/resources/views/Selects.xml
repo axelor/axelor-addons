@@ -37,4 +37,10 @@
     <option value="-1">All users</option>
   </selection>
 
+  <selection name="redmine.batch.action.type.select">
+    <option value="0">Import from Redmine</option>
+    <option value="1">Export to Redmine</option>
+    <option value="2">Export and Import</option>
+  </selection>
+
 </object-views>
