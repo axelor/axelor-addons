@@ -140,3 +140,5 @@
 "Updated timesheetlines in OS",,,
 "User",,,
 "Version Status",,,
+"Direction of the synchronization","",,
+"Determines the direction of the synchronization:<ul><li>Import from Redmine: data of AOS is updated with data from Redmine</li><li>Export to Redmine: data of Redmine is updated with data from AOS</li><li>Export and import: export and then import are performed</li>","Détermine le sens de la synchronisation :<ul><li>Import depuis Redmine : les données d'AOS sont mises à jour avec les données de Redmine</li><li>Export vers Redmine : les données de Redmine sont mises à jour avec les données d'AOS</li><li>Export et import : l'export puis l'import sont effectués</li>",,
