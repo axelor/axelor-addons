@@ -35,6 +35,7 @@ import com.taskadapter.redmineapi.bean.User;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
@@ -101,6 +102,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     ZonedDateTime lastBatchEndDate = lastBatch != null ? lastBatch.getEndDate() : null;
     LocalDateTime lastBatchUpdatedOn = lastBatch != null ? lastBatch.getUpdatedOn() : null;
     String failedRedmineTimeEntriesIds = redmineBatch.getFailedRedmineTimeEntriesIds();
+    String failedAosTimesheetLineIds = redmineBatch.getFailedAosTimesheetLineIds();
 
     HashMap<Integer, String> redmineUserMap = new HashMap<>();
     HashMap<String, String> redmineUserLoginMap = new HashMap<>();
@@ -134,19 +136,23 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
               redmineManager, lastBatchEndDate, failedRedmineTimeEntriesIds);
 
       // EXPORT PROCESS
+      if (isDirectionExport(redmineBatch)) {
+        LOG.debug("Start timesheetlines export process from AOS to Redmine..");
 
-      LOG.debug("Start timesheetlines export process from AOS to Redmine..");
+        failedAosTimesheetLineIds =
+            redmineExportTimeSpentService.exportTimesheetLines(
+                methodParameters, redmineUserLoginMap);
+      }
 
-      String failedAosTimesheetLineIds =
-          redmineExportTimeSpentService.exportTimesheetLines(methodParameters, redmineUserLoginMap);
       methodParameters.setBatch(batchRepo.find(batch.getId()));
 
       // IMPORT PROCESS
+      if (isDirectionImport(redmineBatch)) {
+        LOG.debug("Start timesheetlines import process from Redmine to AOS..");
 
-      LOG.debug("Start timesheetlines import process from Redmine to AOS..");
-
-      failedRedmineTimeEntriesIds =
-          redmineImportTimeSpentService.importTimeSpent(redmineTimeEntryList, methodParameters);
+        failedRedmineTimeEntriesIds =
+            redmineImportTimeSpentService.importTimeSpent(redmineTimeEntryList, methodParameters);
+      }
 
       // ATTACH ERROR LOG WITH BATCH
 
@@ -169,5 +175,27 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
     }
+  }
+
+  protected boolean isDirectionImport(RedmineBatch redmineBatch) {
+    return getDirection(
+        redmineBatch.getRedmineSynchronizationDirectionSelect(),
+        RedmineBatchRepository.SYNCHRONIZATION_DIRECTION_IMPORT,
+        RedmineBatchRepository.SYNCHRONIZATION_DIRECTION_BOTH);
+  }
+
+  protected boolean isDirectionExport(RedmineBatch redmineBatch) {
+    return getDirection(
+        redmineBatch.getRedmineSynchronizationDirectionSelect(),
+        RedmineBatchRepository.SYNCHRONIZATION_DIRECTION_EXPORT,
+        RedmineBatchRepository.SYNCHRONIZATION_DIRECTION_BOTH);
+  }
+
+  private boolean getDirection(Integer redmineBatchDirection, Integer... directionArray) {
+    if (redmineBatchDirection == null || directionArray == null) {
+      return false;
+    }
+
+    return Arrays.asList(directionArray).contains(redmineBatchDirection);
   }
 }

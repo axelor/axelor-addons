@@ -19,12 +19,17 @@
     <string name="failedRedmineTimeEntriesIds" large="true"/>
     <boolean name="isOverrideRecords" title="Override records"/>
     <string name="failedAosTimesheetLineIds" large="true"/>
+    <integer name="redmineSynchronizationDirectionSelect" title="Direction of the synchronization" selection="redmine.batch.action.type.select" default="0" help="Determines the direction of the synchronization:&lt;ul>&lt;li>Import from Redmine: data of AOS is updated with data from Redmine&lt;/li>&lt;li>Export to Redmine: data of Redmine is updated with data from AOS&lt;/li>&lt;li>Export and import: export and then import are performed&lt;/li>"/>
 
     <extra-code>
 			<![CDATA[
 				public static final int ACTION_SELECT_IMPORT_PROJECT = 0;
 				public static final int ACTION_SELECT_IMPORT_ISSUE = 1;
 				public static final int ACTION_SELECT_SYNC_TIME_ENTRIES = 2;
+
+				public static final int SYNCHRONIZATION_DIRECTION_IMPORT = 0;
+				public static final int SYNCHRONIZATION_DIRECTION_EXPORT = 1;
+				public static final int SYNCHRONIZATION_DIRECTION_BOTH = 2;
 			]]>
     </extra-code>
 
