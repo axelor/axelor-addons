@@ -18,16 +18,22 @@
 package com.axelor.apps.redmine.service;
 
 import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PriceListService;
 import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.base.service.publicHoliday.PublicHolidayService;
+import com.axelor.apps.base.service.weeklyplanning.WeeklyPlanningService;
 import com.axelor.apps.businessproduction.service.TimesheetBusinessProductionServiceImpl;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.app.AppHumanResourceService;
 import com.axelor.apps.hr.service.config.HRConfigService;
+import com.axelor.apps.hr.service.leave.LeaveRequestComputeDurationService;
+import com.axelor.apps.hr.service.leave.LeaveRequestService;
+import com.axelor.apps.hr.service.publicHoliday.PublicHolidayHrService;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.axelor.apps.hr.service.user.UserHrService;
 import com.axelor.apps.project.db.repo.ProjectPlanningTimeRepository;
@@ -58,7 +64,14 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
       ProductCompanyService productCompanyService,
       TimesheetLineRepository timesheetLineRepo,
       TimesheetRepository timeSheetRepository,
-      ProjectService projectService) {
+      ProjectService projectService,
+      LeaveRequestService leaveRequestService,
+      PublicHolidayHrService publicHolidayHrService,
+      PublicHolidayService publicHolidayService,
+      PartnerPriceListService partnerPriceListService,
+      UnitConversionService unitConversionService,
+      WeeklyPlanningService weeklyPlanningService,
+      LeaveRequestComputeDurationService leaveRequestComputeDurationService) {
     super(
         priceListService,
         appHumanResourceService,
@@ -73,7 +86,14 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
         productCompanyService,
         timesheetLineRepo,
         timeSheetRepository,
-        projectService);
+        projectService,
+        leaveRequestService,
+        publicHolidayHrService,
+        publicHolidayService,
+        partnerPriceListService,
+        unitConversionService,
+        weeklyPlanningService,
+        leaveRequestComputeDurationService);
   }
 
   @Override
