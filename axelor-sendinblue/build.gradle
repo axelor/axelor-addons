@@ -1,0 +1,21 @@
+apply plugin: "com.axelor.app-module"
+
+apply from: "../libs.gradle"
+apply from: "../version.gradle"
+
+apply {
+	version = addonsVersion
+}
+
+axelor {
+	title "Axelor Sendinblue"
+	description "Axelor SendinBlue Module"
+}
+
+dependencies {
+    api project(":modules:axelor-marketing")
+
+    implementation libs.commons_lang3
+    implementation libs.sendinblue
+}
+
