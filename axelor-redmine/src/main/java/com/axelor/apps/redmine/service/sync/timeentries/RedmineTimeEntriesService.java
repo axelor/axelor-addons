@@ -17,6 +17,7 @@
  */
 package com.axelor.apps.redmine.service.sync.timeentries;
 
+import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
 import com.taskadapter.redmineapi.RedmineManager;
 import java.util.function.Consumer;
@@ -24,8 +25,9 @@ import java.util.function.Consumer;
 public interface RedmineTimeEntriesService {
 
   public void redmineImportTimeEntries(
-      Batch batch,
-      RedmineManager redmineManager,
-      Consumer<Object> onSuccess,
-      Consumer<Throwable> onError);
+          Batch batch,
+          RedmineManager redmineManager,
+          Consumer<Object> onSuccess,
+          Consumer<Throwable> onError,
+          AppRedmine appRedmine);
 }
