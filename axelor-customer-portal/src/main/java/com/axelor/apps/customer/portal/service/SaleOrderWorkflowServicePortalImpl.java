@@ -23,6 +23,7 @@ import com.axelor.apps.base.db.CancelReason;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.TraceBackRepository;
 import com.axelor.apps.base.service.administration.SequenceService;
+import com.axelor.apps.base.service.birt.template.BirtTemplateService;
 import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.base.service.user.UserService;
 import com.axelor.apps.businessproduction.service.SaleOrderWorkflowServiceBusinessProductionImpl;
@@ -37,6 +38,7 @@ import com.axelor.apps.sale.exception.BlockedSaleOrderException;
 import com.axelor.apps.sale.service.app.AppSaleService;
 import com.axelor.apps.sale.service.config.SaleConfigService;
 import com.axelor.apps.sale.service.saleorder.SaleOrderLineService;
+import com.axelor.apps.sale.service.saleorder.SaleOrderService;
 import com.axelor.apps.supplychain.service.AccountingSituationSupplychainService;
 import com.axelor.apps.supplychain.service.PartnerSupplychainService;
 import com.axelor.apps.supplychain.service.SaleOrderCheckAnalyticService;
@@ -84,6 +86,8 @@ public class SaleOrderWorkflowServicePortalImpl
       ProductionOrderSaleOrderService productionOrderSaleOrderService,
       AppProductionService appProductionService,
       AnalyticMoveLineRepository analyticMoveLineRepository,
+      BirtTemplateService birtTemplateService,
+      SaleOrderService saleOrderService,
       AppCustomerPortalRepository appRepo,
       TemplateMessageService templateService,
       MessageService messageService,
@@ -105,7 +109,9 @@ public class SaleOrderWorkflowServicePortalImpl
         saleOrderCheckAnalyticService,
         productionOrderSaleOrderService,
         appProductionService,
-        analyticMoveLineRepository);
+        analyticMoveLineRepository,
+        birtTemplateService,
+        saleOrderService);
     this.appRepo = appRepo;
     this.templateService = templateService;
     this.messageService = messageService;
