@@ -199,18 +199,18 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
   protected Double calculateSum(ProjectVersion projectVersion) {
     return projectTaskRepo
-            .all()
-            .filter("self.targetVersion = :projectVersion", projectVersion)
-            .fetchStream()
-            .mapToLong(
-                    tt -> {
-                      if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
-                        return 100;
-                      } else {
-                        return tt.getProgressSelect();
-                      }
-                    })
-            .average()
-            .orElse(0);
+        .all()
+        .filter("self.targetVersion = :projectVersion", projectVersion)
+        .fetchStream()
+        .mapToLong(
+            tt -> {
+              if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
+                return 100;
+              } else {
+                return tt.getProgressSelect();
+              }
+            })
+        .average()
+        .orElse(0);
   }
 }

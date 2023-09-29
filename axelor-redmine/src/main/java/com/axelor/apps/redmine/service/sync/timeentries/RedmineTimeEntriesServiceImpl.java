@@ -28,11 +28,13 @@ import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.apps.redmine.service.imports.utils.FetchRedmineInfo;
+import com.axelor.apps.redmine.service.sync.timeentries.pojo.TimeEntriesRedmineParameters;
 import com.axelor.db.JPA;
 import com.axelor.exception.service.TraceBackService;
 import com.axelor.meta.db.MetaFile;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.TimeEntry;
 import com.taskadapter.redmineapi.bean.User;
@@ -80,7 +82,6 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
   Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
-  @Transactional
   public void redmineImportTimeEntries(
       Batch batch,
       RedmineManager redmineManager,
@@ -104,71 +105,121 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     HashMap<Integer, String> redmineUserMap = new HashMap<>();
     HashMap<String, String> redmineUserLoginMap = new HashMap<>();
 
+    TimeEntriesRedmineParameters timeEntriesRedmineParameters =
+        new TimeEntriesRedmineParameters(
+            onSuccess,
+            onError,
+            appRedmine,
+            redmineUserMap,
+            redmineUserLoginMap,
+            errorObjList,
+            lastBatchUpdatedOn,
+            lastBatchEndDate,
+            failedRedmineTimeEntriesIds,
+            failedAosTimesheetLineIds);
+
     LOG.debug("Fetching time entries from redmine..");
 
     try {
-      List<User> redmineUserList = new ArrayList<>();
-      Map<Integer, Boolean> includedIdsMap = new HashMap<>();
-
-      LOG.debug("Fetching Axelor users from Redmine...");
-
-      FetchRedmineInfo.fillUsersList(
-          redmineManager,
-          includedIdsMap,
-          redmineUserList,
-          FetchRedmineInfo.getFillUsersListParams(appRedmine));
-
-      for (User user : redmineUserList) {
-        fillRedmineUserInfo(user, redmineUserMap, redmineUserLoginMap);
-      }
-
-      MethodParameters methodParameters =
-          new MethodParameters(
-              onError,
-              onSuccess,
-              batch,
-              errorObjList,
-              lastBatchUpdatedOn,
-              redmineUserMap,
-              redmineManager);
-
-      // FETCH RECORDS TO IMPORT
-
-      LOG.debug("Start timeentries fetching process from Redmine..");
-
-      List<TimeEntry> redmineTimeEntryList =
-          redmineFetchDataService.fetchTimeEntryImportData(
-              redmineManager, lastBatchEndDate, failedRedmineTimeEntriesIds);
-
-      // EXPORT PROCESS
-      if (isDirectionExport(batch.getRedmineBatch())) {
-        failedAosTimesheetLineIds =
-            getFailedAosTimesheetLineIdsWhenExporting(methodParameters, redmineUserLoginMap);
-      }
-
-      methodParameters.setBatch(batchRepo.find(batch.getId()));
-
-      // IMPORT PROCESS
-      if (isDirectionImport(batch.getRedmineBatch())) {
-        failedRedmineTimeEntriesIds =
-            getFailedAosTimesheetLineIdsWhenImporting(redmineTimeEntryList, methodParameters);
-      }
-
-      // ATTACH ERROR LOG WITH BATCH
-
-      redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
-      redmineBatch.setFailedRedmineTimeEntriesIds(failedRedmineTimeEntriesIds);
-      redmineBatch.setFailedAosTimesheetLineIds(failedAosTimesheetLineIds);
-      redmineBatchRepo.save(redmineBatch);
-
-      LOG.debug("Prepare error log file to attach with batch..");
-
-      if (CollectionUtils.isNotEmpty(errorObjList)) {
-        setBatchError(batch, errorObjList);
-      }
-
+      extractTimesEntriesToSetRedmineBatch(
+          batch, redmineManager, timeEntriesRedmineParameters, redmineBatch);
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
+    }
+  }
+
+  private void extractTimesEntriesToSetRedmineBatch(
+      Batch batch,
+      RedmineManager redmineManager,
+      TimeEntriesRedmineParameters timeEntriesRedmineParameters,
+      RedmineBatch redmineBatch)
+      throws RedmineException {
+    manageRedmineUsers(
+        redmineManager,
+        timeEntriesRedmineParameters.getAppRedmine(),
+        timeEntriesRedmineParameters.getRedmineUserMap(),
+        timeEntriesRedmineParameters.getRedmineUserLoginMap());
+
+    MethodParameters methodParameters =
+        new MethodParameters(
+            timeEntriesRedmineParameters.getOnError(),
+            timeEntriesRedmineParameters.getOnSuccess(),
+            batch,
+            timeEntriesRedmineParameters.getErrorObjList(),
+            timeEntriesRedmineParameters.getLastBatchUpdatedOn(),
+            timeEntriesRedmineParameters.getRedmineUserMap(),
+            redmineManager);
+
+    // FETCH RECORDS TO IMPORT
+
+    LOG.debug("Start timeentries fetching process from Redmine..");
+
+    List<TimeEntry> redmineTimeEntryList =
+        redmineFetchDataService.fetchTimeEntryImportData(
+            redmineManager,
+            timeEntriesRedmineParameters.getLastBatchEndDate(),
+            timeEntriesRedmineParameters.getFailedRedmineTimeEntriesIds());
+
+    // EXPORT PROCESS
+    if (isDirectionExport(batch.getRedmineBatch())) {
+      timeEntriesRedmineParameters.setFailedAosTimesheetLineIds(
+          getFailedAosTimesheetLineIdsWhenExporting(
+              methodParameters, timeEntriesRedmineParameters.getRedmineUserLoginMap()));
+    }
+
+    methodParameters.setBatch(batchRepo.find(batch.getId()));
+
+    // IMPORT PROCESS
+    if (isDirectionImport(batch.getRedmineBatch())) {
+      timeEntriesRedmineParameters.setFailedRedmineTimeEntriesIds(
+          getFailedAosTimesheetLineIdsWhenImporting(redmineTimeEntryList, methodParameters));
+    }
+
+    // ATTACH ERROR LOG WITH BATCH
+
+    manageRedmineBatch(
+        redmineBatch,
+        timeEntriesRedmineParameters.getFailedRedmineTimeEntriesIds(),
+        timeEntriesRedmineParameters.getFailedAosTimesheetLineIds());
+
+    LOG.debug("Prepare error log file to attach with batch..");
+
+    if (CollectionUtils.isNotEmpty(timeEntriesRedmineParameters.getErrorObjList())) {
+      setBatchError(batch, timeEntriesRedmineParameters.getErrorObjList());
+    }
+  }
+
+  @Transactional
+  private void manageRedmineBatch(
+      RedmineBatch redmineBatch,
+      String failedRedmineTimeEntriesIds,
+      String failedAosTimesheetLineIds) {
+    redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
+    redmineBatch.setFailedRedmineTimeEntriesIds(failedRedmineTimeEntriesIds);
+    redmineBatch.setFailedAosTimesheetLineIds(failedAosTimesheetLineIds);
+    redmineBatchRepo.save(redmineBatch);
+  }
+
+  protected void manageRedmineUsers(
+      RedmineManager redmineManager,
+      AppRedmine appRedmine,
+      HashMap<Integer, String> redmineUserMap,
+      HashMap<String, String> redmineUserLoginMap)
+      throws RedmineException {
+    List<User> redmineUserList = new ArrayList<>();
+    Map<Integer, Boolean> includedIdsMap = new HashMap<>();
+
+    LOG.debug("Fetching Axelor users from Redmine...");
+
+    FetchRedmineInfo.fillUsersList(
+        redmineManager,
+        includedIdsMap,
+        redmineUserList,
+        FetchRedmineInfo.getFillUsersListParams(appRedmine));
+
+    for (User user : redmineUserList) {
+      LOG.debug("Fill redmine user info..");
+      fillRedmineUserInfo(user, redmineUserMap, redmineUserLoginMap);
     }
   }
 
@@ -217,6 +268,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     return JPA.em().createQuery(criteriaQuery).getSingleResult();
   }
 
+  @Transactional
   protected void setBatchError(Batch batch, List<Object[]> errorObjList) {
     MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
 
