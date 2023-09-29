@@ -25,9 +25,9 @@ import java.util.function.Consumer;
 public interface RedmineTimeEntriesService {
 
   public void redmineImportTimeEntries(
-          Batch batch,
-          RedmineManager redmineManager,
-          Consumer<Object> onSuccess,
-          Consumer<Throwable> onError,
-          AppRedmine appRedmine);
+      Batch batch,
+      RedmineManager redmineManager,
+      Consumer<Object> onSuccess,
+      Consumer<Throwable> onError,
+      AppRedmine appRedmine);
 }

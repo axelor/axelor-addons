@@ -115,7 +115,8 @@ public class RedmineServiceImpl implements RedmineService {
       TraceBackService.trace(e, "", batch.getId());
     }
 
-    redmineTimeEntriesService.redmineImportTimeEntries(batch, redmineManager, onSuccess, onError, appRedmine);
+    redmineTimeEntriesService.redmineImportTimeEntries(
+        batch, redmineManager, onSuccess, onError, appRedmine);
   }
 
   @Override
