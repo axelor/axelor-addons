@@ -47,4 +47,9 @@
     <option value="2">Export and Import</option>
   </selection>
 
+  <selection name="redmine.app.synchronised.type.select">
+    <option value="1">Redmine</option>
+    <option value="2">Easy Redmine</option>
+  </selection>
+
 </object-views>

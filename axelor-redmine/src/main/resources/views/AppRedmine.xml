@@ -9,13 +9,34 @@
       <field name="uri"/>
       <field name="apiAccessKey"/>
       <field name="serverTimezone" required="true"/>
+      <field name="synchronisedWith" required="true"/>
     </panel>
     <panel name="fieldsPanel">
       <field name="company" required="true"/>
       <field name="redmineUsersStatus" required="true"/>
       <field name="onUsersFilter"/>
     </panel>
-    <panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
+    <panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration"
+      showIf="synchronisedWith == 1">
+      <field name="redmineProjectInvoiceable" required="true"/>
+      <field name="redmineProjectClientPartner" required="true"/>
+      <field name="redmineProjectInvoicingSequenceSelect" required="true"/>
+      <field name="redmineProjectAssignedTo" required="true"/>
+      <field name="redmineVersionDeliveryDate" required="true"/>
+      <field name="redmineIssueProduct" required="true"/>
+      <field name="redmineIssueDueDate" required="true"/>
+      <field name="redmineIssueEstimatedTime" required="true"/>
+      <field name="redmineIssueInvoiced" required="true"/>
+      <field name="redmineIssueAccountedForMaintenance" required="true"/>
+      <field name="redmineIssueIsTaskAccepted" required="true"/>
+      <field name="redmineIssueIsOffered" required="true"/>
+      <field name="redmineIssueUnitPrice" required="true"/>
+      <field name="redmineTimeSpentProduct" required="true"/>
+      <field name="redmineTimeSpentDurationForCustomer" required="true"/>
+      <field name="redmineTimeSpentDurationUnit" required="true"/>
+    </panel>
+    <panel name="easyRedmineCustomFieldConfigPanel"
+      title="Easy Redmine custom field configuration" showIf="synchronisedWith == 2">
       <field name="redmineProjectInvoiceable" required="true"/>
       <field name="redmineProjectClientPartner" required="true"/>
       <field name="redmineProjectInvoicingSequenceSelect" required="true"/>
