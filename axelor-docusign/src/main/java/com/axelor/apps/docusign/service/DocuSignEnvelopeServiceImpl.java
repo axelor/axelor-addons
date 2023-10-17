@@ -59,6 +59,7 @@ import com.docusign.esign.client.ApiException;
 import com.docusign.esign.client.auth.OAuth;
 import com.docusign.esign.client.auth.OAuth.OAuthToken;
 import com.docusign.esign.client.auth.OAuth.UserInfo;
+import com.docusign.esign.model.CarbonCopy;
 import com.docusign.esign.model.Document;
 import com.docusign.esign.model.Envelope;
 import com.docusign.esign.model.EnvelopeDefinition;
@@ -221,6 +222,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     docuSignSigner.setIsRequired(signerSetting.getIsRequired());
     docuSignSigner.setSequence(signerSetting.getSequence());
     docuSignSigner.setIsInPersonSigner(signerSetting.getIsInPersonSigner());
+    docuSignSigner.setIsCCRecipient(signerSetting.getIsCCRecipient());
 
     if (ObjectUtils.notEmpty(scriptContext)) {
 
@@ -452,6 +454,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     List<Signer> signerList = createSigners(docuSignEnvelope.getDocuSignSignerList());
     List<InPersonSigner> inPersonSignerList =
         createInPersonSigners(docuSignEnvelope.getDocuSignSignerList());
+    List<CarbonCopy> carbonCopy = createCCRecipient(docuSignEnvelope.getDocuSignSignerList());
     updateSigners(signerList, inPersonSignerList, docuSignDocumentList);
     Recipients recipients = new Recipients();
     if (CollectionUtils.isNotEmpty(signerList)) {
@@ -460,6 +463,10 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     if (CollectionUtils.isNotEmpty(inPersonSignerList)) {
       recipients.setInPersonSigners(inPersonSignerList);
     }
+    if (CollectionUtils.isNotEmpty(carbonCopy)) {
+      recipients.setCarbonCopies(carbonCopy);
+    }
+
     envelopeDefinition.setRecipients(recipients);
 
     if (envelopeSetting.getActiveWebhook()) {
@@ -531,6 +538,10 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
               I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
         }
 
+        if (docuSignSigner.getIsCCRecipient()) {
+          continue;
+        }
+
         if (!docuSignSigner.getIsInPersonSigner()) {
           Signer signer = new Signer();
           signer.setRecipientId(recipientId);
@@ -576,6 +587,11 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
               TraceBackRepository.CATEGORY_INCONSISTENCY,
               I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
         }
+
+        if (docuSignSigner.getIsCCRecipient()) {
+          continue;
+        }
+
         if (docuSignSigner.getIsInPersonSigner()) {
           InPersonSigner inPersonSigner = new InPersonSigner();
           inPersonSigner.setRecipientId(recipientId);
@@ -604,6 +620,54 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
     }
 
     return inPersonSignerList;
+  }
+
+  protected List<CarbonCopy> createCCRecipient(List<DocuSignSigner> docuSignSignerList)
+      throws AxelorException {
+    if (ObjectUtils.isEmpty(docuSignSignerList)) {
+      return List.of();
+    }
+    List<CarbonCopy> ccList = new ArrayList<>();
+
+    for (DocuSignSigner docuSignSigner : docuSignSignerList) {
+
+      if (Boolean.FALSE.equals(docuSignSigner.getIsCCRecipient())) {
+        continue;
+      }
+
+      Partner signerPartner = docuSignSigner.getSigner();
+      String recipientId = docuSignSigner.getRecipientId();
+      if (signerPartner == null) {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_INCONSISTENCY,
+            I18n.get(IExceptionMessage.DOCUSIGN_ENVELOPE_SETTING_SIGNER_EMPTY));
+      }
+
+      CarbonCopy cc = new CarbonCopy();
+      cc.setRecipientId(recipientId);
+      cc.setAccessCode(docuSignSigner.getAccessCode());
+      if (ObjectUtils.notEmpty(docuSignSigner.getDocuSignEnvelope().getDocuSignEnvelopeSetting())
+          && Boolean.TRUE.equals(
+              docuSignSigner
+                  .getDocuSignEnvelope()
+                  .getDocuSignEnvelopeSetting()
+                  .getIsOrderedSigners())) {
+        cc.setRoutingOrder(String.valueOf(docuSignSigner.getSequence() + 1));
+      }
+
+      if (ObjectUtils.notEmpty(signerPartner.getEmailAddress())
+          && ObjectUtils.notEmpty(signerPartner.getEmailAddress().getAddress())) {
+        cc.setEmail(signerPartner.getEmailAddress().getAddress());
+      } else {
+        throw new AxelorException(
+            TraceBackRepository.CATEGORY_INCONSISTENCY,
+            I18n.get(IExceptionMessage.DOCUSIGN_EMAIL_ADDRESS_EMPTY));
+      }
+      cc.setName(signerPartner.getFullName());
+      ccList.add(cc);
+    }
+
+    return ccList;
   }
 
   protected void updateSigners(

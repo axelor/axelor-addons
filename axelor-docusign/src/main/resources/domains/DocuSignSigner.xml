@@ -19,6 +19,7 @@
     <integer name="sequence" title="Seq."/>
     <string name="accessCode" title="Access code"/>
     <boolean name="isInPersonSigner" title="In person signer"/>
+    <boolean name="isCCRecipient" title="Carbon copy recipient"/>
 
   </entity>
 

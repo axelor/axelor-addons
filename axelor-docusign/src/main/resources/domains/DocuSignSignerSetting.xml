@@ -18,6 +18,7 @@
       ref="com.axelor.apps.docusign.db.DocuSignFieldSetting" mappedBy="docuSignSignerSetting"/>
     <integer name="sequence" title="Seq."/>
     <boolean name="isInPersonSigner" title="In person signer"/>
+    <boolean name="isCCRecipient" title="Carbon copy recipient"/>
 
   </entity>
 
