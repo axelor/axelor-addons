@@ -17,13 +17,20 @@
       <field name="name"/>
       <field name="recipientId"/>
       <field name="company" form-view="company-form"/>
-      <field name="isRequired"/>
-      <field name="isInPersonSigner"/>
+      <field name="isRequired" colSpan="4"/>
+      <field name="isInPersonSigner" colSpan="4"
+        onChange="action-attrs-docusign-signer-reset-on-change"/>
+      <field name="isCCRecipient" colSpan="4" showIf="!isInPersonSigner"/>
       <field name="signer" form-view="partner-form"/>
       <field name="accessCode"/>
       <panel-related name="docuSignFieldListPanel" field="docuSignFieldList"
-        colSpan="12" grid-view="docusign-field-grid" form-view="docusign-field-form"/>
+        colSpan="12" grid-view="docusign-field-grid" form-view="docusign-field-form"
+        showIf="!isCCRecipient"/>
     </panel>
   </form>
+
+  <action-attrs name="action-attrs-docusign-signer-reset-on-change">
+    <attribute for="isCCRecipient" name="value" expr="eval:false" if="isInPersonSigner"/>
+  </action-attrs>
 
 </object-views>

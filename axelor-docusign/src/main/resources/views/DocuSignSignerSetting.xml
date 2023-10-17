@@ -16,13 +16,15 @@
     <panel name="mainPanel" colSpan="12">
       <field name="name"/>
       <field name="recipientId"/>
-      <field name="isRequired"/>
-      <field name="isInPersonSigner"/>
+      <field name="isRequired" colSpan="4"/>
+      <field name="isInPersonSigner" colSpan="4"
+        onChange="action-attrs-docusign-signer-reset-on-change"/>
+      <field name="isCCRecipient" colSpan="4" showIf="!isInPersonSigner"/>
       <field name="signerDefaultPath"/>
       <field name="companyDefaultPath"/>
       <panel-related name="docuSignFieldSettingListPanel"
         field="docuSignFieldSettingList" colSpan="12" grid-view="docusign-field-setting-grid"
-        form-view="docusign-field-setting-form" readonly="true"/>
+        form-view="docusign-field-setting-form" readonly="true" showIf="!isCCRecipient"/>
     </panel>
   </form>
 
