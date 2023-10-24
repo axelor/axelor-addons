@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://axelor.com/xml/ns/domain-models"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://axelor.com/xml/ns/domain-models http://axelor.com/xml/ns/domain-models/domain-models_5.3.xsd">
 
   <module name="redmine" package="com.axelor.apps.redmine.db"/>
 
@@ -11,20 +11,28 @@
     <many-to-one name="batchUser" ref="com.axelor.auth.db.User" title="User"/>
     <string name="description" title="Description" large="true"/>
     <one-to-many name="batchList" ref="com.axelor.apps.base.db.Batch"
-      mappedBy="redmineBatch" title="Batchs"/>
+                 mappedBy="redmineBatch" title="Batchs"/>
     <integer name="redmineActionSelect" title="Action"
-      selection="redmine.batch.action.select"/>
+             selection="redmine.batch.action.select"/>
     <boolean name="isImportIssuesWithActivities" title="Import issues with activities"/>
     <string name="failedRedmineIssuesIds" large="true"/>
     <string name="failedRedmineTimeEntriesIds" large="true"/>
     <boolean name="isOverrideRecords" title="Override records"/>
     <string name="failedAosTimesheetLineIds" large="true"/>
+    <integer name="redmineSynchronizationDirectionSelect"
+             title="Direction of the synchronization" selection="redmine.batch.action.type.select"
+             default="0"
+             help="Determines the direction of the synchronization:&lt;ul>&lt;li>Import from Redmine: data of AOS is updated with data from Redmine&lt;/li>&lt;li>Export to Redmine: data of Redmine is updated with data from AOS&lt;/li>&lt;li>Export and import: export and then import are performed&lt;/li>"/>
 
     <extra-code>
-			<![CDATA[
+      <![CDATA[
 				public static final int ACTION_SELECT_IMPORT_PROJECT = 0;
 				public static final int ACTION_SELECT_IMPORT_ISSUE = 1;
 				public static final int ACTION_SELECT_SYNC_TIME_ENTRIES = 2;
+
+				public static final int SYNCHRONIZATION_DIRECTION_IMPORT = 0;
+				public static final int SYNCHRONIZATION_DIRECTION_EXPORT = 1;
+				public static final int SYNCHRONIZATION_DIRECTION_BOTH = 2;
 			]]>
     </extra-code>
 
