@@ -422,7 +422,9 @@ public class ExportProductServiceImpl implements ExportProductService {
     for (Product localProduct : localProductList) {
       try {
         final int currentStock =
-            stockLocationService.getRealQty(localProduct.getId(), null, null).intValue();
+            stockLocationService
+                .getRealQtyOfProductInStockLocations(localProduct.getId(), null, null)
+                .intValue();
         logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
         PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
         if (remoteProduct == null) {
