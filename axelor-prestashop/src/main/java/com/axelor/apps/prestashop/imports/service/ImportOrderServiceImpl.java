@@ -503,7 +503,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           } else {
             Invoice invoice = invoices.get(0);
             if (BigDecimal.ZERO.compareTo(invoice.getAmountPaid()) == 0) {
-              invoicePaymentCreateService.createInvoicePayment(
+              invoicePaymentCreateService.createAndAddInvoicePayment(
                   invoice, invoice.getCompanyBankDetails());
             }
           }
