@@ -20,13 +20,16 @@ package com.axelor.apps.prestashop.imports.service;
 import com.axelor.apps.account.db.AccountManagement;
 import com.axelor.apps.account.db.Tax;
 import com.axelor.apps.account.db.TaxLine;
+import com.axelor.apps.account.db.repo.AccountManagementAccountRepository;
 import com.axelor.apps.account.db.repo.TaxRepository;
 import com.axelor.apps.base.db.AppPrestashop;
+import com.axelor.apps.base.db.Country;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.entities.PrestashopTax;
 import com.axelor.apps.prestashop.entities.PrestashopTaxRule;
+import com.axelor.apps.prestashop.entities.PrestashopTaxRuleGroup;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
 import com.axelor.auth.AuthUtils;
@@ -37,7 +40,6 @@ import com.google.inject.Singleton;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import java.io.Writer;
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -74,27 +76,27 @@ public class ImportTaxServiceImpl implements ImportTaxService {
 
     final List<PrestashopTax> remoteTaxes = ws.fetchAll(PrestashopResourceType.TAXES);
     final List<PrestashopTaxRule> remoteTaxRules = ws.fetchAll(PrestashopResourceType.TAX_RULES);
-    Map<Integer, PrestashopTaxRule> taxRulesByTaxId = new HashMap<>();
-    for (PrestashopTaxRule taxRule : remoteTaxRules) {
-      taxRulesByTaxId.put(taxRule.getTaxId(), taxRule);
+
+    final Map<Integer, PrestashopTax> taxesById = new HashMap<>();
+    for (PrestashopTax c : remoteTaxes) {
+      taxesById.put(c.getId(), c);
     }
 
-    final int language =
-        (appConfig.getTextsLanguage().getPrestaShopId() == null
-            ? 1
-            : appConfig.getTextsLanguage().getPrestaShopId());
+    final List<PrestashopTaxRuleGroup> remoteTaxRuleGroups =
+        ws.fetchAll(PrestashopResourceType.TAX_RULE_GROUPS);
 
-    for (PrestashopTax remoteTax : remoteTaxes) {
+    final Country defaultCountry = appConfig.getPrestaShopCountry();
+
+    for (PrestashopTaxRuleGroup remoteTaxRuleGroup : remoteTaxRuleGroups) {
       logWriter.write(
           String.format(
               "Importing tax %s (%s) – ",
-              remoteTax.getId(), remoteTax.getName().getTranslation(language)));
+              remoteTaxRuleGroup.getId(), remoteTaxRuleGroup.getName()));
 
       try {
-        Tax localTax =
-            taxRepo.findByPrestaShopId(taxRulesByTaxId.get(remoteTax.getId()).getTaxRuleGroupId());
+        Tax localTax = taxRepo.findByPrestaShopId(remoteTaxRuleGroup.getId());
         if (localTax == null) {
-          localTax = taxRepo.findByName(remoteTax.getName().getTranslation(language));
+          localTax = taxRepo.findByName(remoteTaxRuleGroup.getName());
           if (localTax == null) {
             logWriter.write("no ID and name not found, creating");
             localTax = new Tax();
@@ -102,27 +104,68 @@ public class ImportTaxServiceImpl implements ImportTaxService {
             logWriter.write(String.format("found locally using its name %s", localTax.getName()));
           }
           // update PrestaShop ID of new and existing ABS tax
-          localTax.setPrestaShopId(taxRulesByTaxId.get(remoteTax.getId()).getTaxRuleGroupId());
+          localTax.setPrestaShopId(remoteTaxRuleGroup.getId());
 
         } else {
-          if (!localTax.getName().equals(remoteTax.getName().getTranslation(language))) {
+          if (!localTax.getName().equals(remoteTaxRuleGroup.getName())) {
             log.error(
                 "Remote tax #{} has not the same name as the local one ({} vs {}), skipping",
                 localTax.getPrestaShopId(),
-                remoteTax.getName().getTranslation(language),
+                remoteTaxRuleGroup.getName(),
                 localTax.getName());
             logWriter.write(
                 String.format(
                     " [ERROR] Name mismatch: %s vs %s%n",
-                    remoteTax.getName().getTranslation(language), localTax.getName()));
+                    remoteTaxRuleGroup.getName(), localTax.getName()));
             ++errors;
             continue;
           }
         }
 
         if (localTax.getId() == null || appConfig.getPrestaShopMasterForTaxes()) {
-          localTax.setCode(String.format("PRESTA-%04d", remoteTax.getId()));
-          localTax.setName(remoteTax.getName().getTranslation(language));
+          int localTaxPrestashopId = localTax.getPrestaShopId();
+          PrestashopTaxRule remoteTaxRule = null;
+          if (defaultCountry.getPrestaShopId() != null) {
+            remoteTaxRule =
+                remoteTaxRules.stream()
+                    .filter(
+                        taxRule ->
+                            (taxRule.getCountryId().equals(defaultCountry.getPrestaShopId())
+                                && taxRule.getTaxRuleGroupId().equals(localTaxPrestashopId)))
+                    .findFirst()
+                    .orElse(null);
+          }
+
+          if (remoteTaxRule == null) {
+            log.error(
+                "No remote tax rule found for Country {} and tax rule group {}",
+                defaultCountry.getName(),
+                remoteTaxRuleGroup.getName());
+            logWriter.write(
+                String.format(
+                    "No remote tax rule found for Country %s and tax rule group %s%n",
+                    defaultCountry.getName(), remoteTaxRuleGroup.getName()));
+            ++errors;
+            continue;
+          }
+
+          PrestashopTax remoteTax = taxesById.get(remoteTaxRule.getTaxId());
+          if (remoteTax == null) {
+            log.error(
+                "No remote tax found for tax rule with Country {} and tax rule group {}",
+                defaultCountry.getName(),
+                remoteTaxRuleGroup.getName());
+            logWriter.write(
+                String.format(
+                    "No remote tax found for tax rule with Country %s and tax rule group %s%n",
+                    defaultCountry.getName(), remoteTaxRuleGroup.getName()));
+            ++errors;
+            continue;
+          }
+
+          localTax.setCode(String.format("PRESTA-%04d", remoteTaxRuleGroup.getId()));
+          localTax.setName(remoteTaxRuleGroup.getName());
+
           TaxLine localTaxLine =
               localTax.getId() == null
                   ? new TaxLine()
@@ -134,10 +177,7 @@ public class ImportTaxServiceImpl implements ImportTaxService {
           localTaxLine.setStartDate(
               appBaseService.getTodayDate(
                   AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany()));
-          localTaxLine.setValue(
-              localTax.getId() == null
-                  ? remoteTax.getRate().divide(new BigDecimal(100))
-                  : remoteTax.getRate());
+          localTaxLine.setValue(remoteTax.getRate());
           localTaxLine.setTax(localTax);
 
           if (remoteTax.isActive()) {
@@ -152,7 +192,7 @@ public class ImportTaxServiceImpl implements ImportTaxService {
             accountManagement = new AccountManagement();
           }
           accountManagement.setCompany(AuthUtils.getUser().getActiveCompany());
-          accountManagement.setTypeSelect(2);
+          accountManagement.setTypeSelect(AccountManagementAccountRepository.TYPE_TAX);
           accountManagement.setSaleAccount(appConfig.getDefaultSaleAccountForTax());
           localTax.addAccountManagementListItem(accountManagement);
 
@@ -173,7 +213,7 @@ public class ImportTaxServiceImpl implements ImportTaxService {
         log.error(
             String.format(
                 "Exception while synchronizing tax %s (%s)",
-                remoteTax.getId(), remoteTax.getName().getTranslation(language)),
+                remoteTaxRuleGroup.getId(), remoteTaxRuleGroup.getName()),
             e);
         ++errors;
       }
