@@ -18,11 +18,14 @@
 package com.axelor.apps.prestashop.imports.service;
 
 import com.axelor.apps.account.db.Invoice;
+import com.axelor.apps.account.db.InvoicePayment;
 import com.axelor.apps.account.db.PaymentCondition;
+import com.axelor.apps.account.db.repo.InvoicePaymentRepository;
 import com.axelor.apps.account.db.repo.PaymentConditionRepository;
 import com.axelor.apps.account.service.AccountingSituationService;
 import com.axelor.apps.account.service.invoice.InvoiceService;
 import com.axelor.apps.account.service.payment.invoice.payment.InvoicePaymentCreateService;
+import com.axelor.apps.account.service.payment.invoice.payment.InvoiceTermPaymentService;
 import com.axelor.apps.base.db.Address;
 import com.axelor.apps.base.db.AppPrestashop;
 import com.axelor.apps.base.db.Currency;
@@ -103,6 +106,9 @@ public class ImportOrderServiceImpl implements ImportOrderService {
   private StockMoveService stockMoveService;
   private SaleOrderMarginService saleOrderMarginService;
 
+  protected InvoiceTermPaymentService invoiceTermPaymentService;
+  protected InvoicePaymentRepository invoicePaymentRepository;
+
   @Inject
   public ImportOrderServiceImpl(
       AppBaseService appBaseService,
@@ -124,7 +130,9 @@ public class ImportOrderServiceImpl implements ImportOrderService {
       SaleOrderStockService deliveryService,
       SaleOrderWorkflowService saleOrderWorkflowService,
       StockMoveService stockMoveService,
-      SaleOrderMarginService saleOrderMarginService) {
+      SaleOrderMarginService saleOrderMarginService,
+      InvoiceTermPaymentService invoiceTermPaymentService,
+      InvoicePaymentRepository invoicePaymentRepository) {
     this.appBaseService = appBaseService;
     this.addressRepo = addressRepo;
     this.currencyRepo = currencyRepo;
@@ -145,6 +153,8 @@ public class ImportOrderServiceImpl implements ImportOrderService {
     this.saleOrderWorkflowService = saleOrderWorkflowService;
     this.stockMoveService = stockMoveService;
     this.saleOrderMarginService = saleOrderMarginService;
+    this.invoiceTermPaymentService = invoiceTermPaymentService;
+    this.invoicePaymentRepository = invoicePaymentRepository;
   }
 
   @Override
@@ -503,8 +513,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           } else {
             Invoice invoice = invoices.get(0);
             if (BigDecimal.ZERO.compareTo(invoice.getAmountPaid()) == 0) {
-              invoicePaymentCreateService.createAndAddInvoicePayment(
-                  invoice, invoice.getCompanyBankDetails());
+              this.createPrestashopInvoicePayment(invoice);
             }
           }
         }
@@ -568,6 +577,23 @@ public class ImportOrderServiceImpl implements ImportOrderService {
 
     logWriter.write(
         String.format("%n=== END OF ORDERS IMPORT, done: %d, errors: %d ===%n", done, errors));
+  }
+
+  protected InvoicePayment createPrestashopInvoicePayment(Invoice invoice) throws AxelorException {
+    InvoicePayment invoicePayment =
+        invoicePaymentCreateService.createInvoicePayment(
+            invoice,
+            invoice.getInTaxTotal().subtract(invoice.getAmountPaid()),
+            appBaseService.getTodayDate(invoice.getCompany()),
+            invoice.getCurrency(),
+            invoice.getPaymentMode(),
+            InvoicePaymentRepository.TYPE_PAYMENT);
+
+    invoicePayment.setCompanyBankDetails(invoice.getCompanyBankDetails());
+    invoice.addInvoicePaymentListItem(invoicePayment);
+    invoiceTermPaymentService.createInvoicePaymentTerms(invoicePayment, null);
+
+    return invoicePaymentRepository.save(invoicePayment);
   }
 
   private boolean importLines(
