@@ -27,7 +27,8 @@ import com.axelor.apps.hr.db.HrBatch;
 import com.axelor.apps.hr.db.LeaveRequest;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.service.batch.BatchStrategy;
-import com.axelor.apps.hr.service.leave.LeaveService;
+import com.axelor.apps.hr.service.leave.LeaveRequestComputeDurationService;
+import com.axelor.apps.hr.service.leave.LeaveRequestService;
 import com.axelor.apps.hr.service.publicHoliday.PublicHolidayHrService;
 import com.axelor.auth.db.repo.UserRepository;
 import com.google.inject.Inject;
@@ -44,8 +45,9 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
   @Inject protected DailyTimesheetRepository dailyTimesheetRepository;
   @Inject protected DailyTimesheetService dailyTimesheetService;
   @Inject protected WeeklyPlanningService weeklyPlanningService;
-  @Inject protected LeaveService leaveService;
+  @Inject protected LeaveRequestService leaveRequestService;
   @Inject protected PublicHolidayHrService publicHolidayHrService;
+  @Inject protected LeaveRequestComputeDurationService leaveRequestComputeDurationService;
 
   @Override
   @Transactional
@@ -97,13 +99,16 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
   protected boolean isFullDayLeave(Employee dailyTsEmployee, LocalDate dailyTsDate)
       throws AxelorException {
 
-    List<LeaveRequest> leaveRequestList = leaveService.getLeaves(dailyTsEmployee, dailyTsDate);
+    List<LeaveRequest> leaveRequestList =
+        leaveRequestService.getLeaves(dailyTsEmployee, dailyTsDate);
 
     if (CollectionUtils.isNotEmpty(leaveRequestList)) {
 
       for (LeaveRequest leave : leaveRequestList) {
 
-        if (leaveService.computeDuration(leave, dailyTsDate, dailyTsDate).compareTo(BigDecimal.ONE)
+        if (leaveRequestComputeDurationService
+                .computeDuration(leave, dailyTsDate, dailyTsDate)
+                .compareTo(BigDecimal.ONE)
             == 0) {
           return true;
         }
