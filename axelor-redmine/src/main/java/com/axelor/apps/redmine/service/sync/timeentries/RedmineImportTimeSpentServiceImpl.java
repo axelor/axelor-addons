@@ -207,9 +207,10 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
                         "("
                             + entry.getKey()
                             + ",TO_TIMESTAMP('"
-                            + entry.getValue()
+                            + entry
+                                .getValue()
                                 .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-                                + "', 'YYYY-MM-DD HH24:MI:SS'))")
+                            + "', 'YYYY-MM-DD HH24:MI:SS'))")
                 .collect(Collectors.joining(","));
 
         String query =
