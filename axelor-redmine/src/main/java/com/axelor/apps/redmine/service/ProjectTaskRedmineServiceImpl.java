@@ -66,6 +66,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
             frequencyRepo,
             frequencyService,
             appBaseService,
+            projectRepository,
             priceListLineRepo,
             priceListService,
             partnerPriceListService,
