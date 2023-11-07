@@ -11,7 +11,7 @@
     <many-to-one name="dailyTimesheetEmployee" ref="com.axelor.apps.hr.db.Employee"
       title="Employee"/>
     <one-to-many name="dailyTimesheetLineList" ref="com.axelor.apps.hr.db.TimesheetLine"
-      title="Timesheet Lines" mappedBy="dailyTimesheet"/>
+      title="Timesheet Lines" mappedBy="dailyTimesheet" orphanRemoval="false"/>
     <integer name="statusSelect" title="Status" selection="daily.timesheet.status.select"/>
     <many-to-one name="timesheet" ref="com.axelor.apps.hr.db.Timesheet"
       title="Time Sheet"/>
