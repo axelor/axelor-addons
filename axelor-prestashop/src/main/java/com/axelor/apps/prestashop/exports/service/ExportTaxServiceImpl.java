@@ -19,6 +19,7 @@ package com.axelor.apps.prestashop.exports.service;
 
 import com.axelor.apps.account.db.Tax;
 import com.axelor.apps.account.db.repo.TaxRepository;
+import com.axelor.apps.base.db.Country;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
@@ -77,120 +78,130 @@ public class ExportTaxServiceImpl implements ExportTaxService {
         new PSWebServiceClient(appConfig.getPrestaShopUrl(), appConfig.getPrestaShopKey());
 
     final PrestashopTax defaultTax = ws.fetchDefault(PrestashopResourceType.TAXES);
-    final int language =
-        (appConfig.getTextsLanguage().getPrestaShopId() == null
-            ? 1
-            : appConfig.getTextsLanguage().getPrestaShopId());
+    final Country defaultCountry = appConfig.getPrestaShopCountry();
 
     // First, fetch all remote taxes and put them into maps suitable for quick fetching
     // this will avoid round-trips with remote end and considerably speed up performances
     final List<PrestashopTax> remoteTaxes = ws.fetchAll(PrestashopResourceType.TAXES);
     final Map<Integer, PrestashopTax> taxesById = new HashMap<>();
-    final Map<String, PrestashopTax> taxesByName = new HashMap<>();
     for (PrestashopTax c : remoteTaxes) {
       taxesById.put(c.getId(), c);
-      taxesByName.put(c.getName().getTranslation(language), c);
     }
 
     final List<PrestashopTaxRule> remoteTaxRules = ws.fetchAll(PrestashopResourceType.TAX_RULES);
-    final Map<Integer, PrestashopTaxRule> taxRulesByTaxId = new HashMap<>();
-    for (PrestashopTaxRule taxRule : remoteTaxRules) {
-      taxRulesByTaxId.put(taxRule.getTaxId(), taxRule);
-    }
 
     final List<PrestashopTaxRuleGroup> remoteTaxRuleGroups =
         ws.fetchAll(PrestashopResourceType.TAX_RULE_GROUPS);
     final Map<Integer, PrestashopTaxRuleGroup> taxRuleGroupById = new HashMap<>();
+    final Map<String, PrestashopTaxRuleGroup> taxRuleGroupByName = new HashMap<>();
     for (PrestashopTaxRuleGroup taxRuleGroup : remoteTaxRuleGroups) {
       taxRuleGroupById.put(taxRuleGroup.getId(), taxRuleGroup);
+      taxRuleGroupByName.put(taxRuleGroup.getName(), taxRuleGroup);
     }
 
     for (Tax localTax : taxes) {
       logBuffer.write("Exporting tax " + localTax.getName() + " – ");
       try {
-        PrestashopTax remoteTax;
-        if (localTax.getPrestaShopId() != null) {
-          logBuffer.write("prestashop id=" + localTax.getPrestaShopId());
-          remoteTax = taxesById.get(localTax.getPrestaShopId());
-          if (remoteTax == null) {
+        PrestashopTaxRuleGroup remoteTaxRuleGroup;
+        Integer localTaxPrestashopId = localTax.getPrestaShopId();
+
+        if (localTaxPrestashopId != null) {
+          logBuffer.write("prestashop id=" + localTaxPrestashopId);
+
+          remoteTaxRuleGroup = taxRuleGroupById.get(localTaxPrestashopId);
+          if (remoteTaxRuleGroup == null) {
             logBuffer.write(String.format(" [ERROR] Not found remotely%n"));
             log.error(
-                "Unable to fetch remote tax #{} ({}), something's probably very wrong, skipping",
+                "Unable to fetch remote tax rule goup #{} ({}), something's probably very wrong, skipping",
                 localTax.getPrestaShopId(),
                 localTax.getName());
             ++errors;
             continue;
           } else {
-            if (!localTax.getName().equals(remoteTax.getName().getTranslation(language))) {
+            if (!localTax.getName().equals(remoteTaxRuleGroup.getName())) {
               log.error(
-                  "Remote tax #{} has not the same name as the local one ({} vs {}), skipping",
+                  "Remote tax rule group #{} has not the same name as the local one ({} vs {}), skipping",
                   localTax.getPrestaShopId(),
-                  remoteTax.getName().getTranslation(language),
+                  remoteTaxRuleGroup.getName(),
                   localTax.getName());
               logBuffer.write(
                   String.format(
                       " [ERROR] Name mismatch: %s vs %s%n",
-                      remoteTax.getName().getTranslation(language), localTax.getName()));
+                      remoteTaxRuleGroup.getName(), localTax.getName()));
               ++errors;
               continue;
             }
           }
         } else {
-          remoteTax = taxesByName.get(localTax.getCode());
-          if (remoteTax == null) {
-            logBuffer.write("no ID and code not found, creating");
-            remoteTax = new PrestashopTax();
+          remoteTaxRuleGroup = taxRuleGroupByName.get(localTax.getName());
+          if (remoteTaxRuleGroup == null) {
+            logBuffer.write("no ID and name not found, creating");
+            remoteTaxRuleGroup = new PrestashopTaxRuleGroup();
           } else {
             logBuffer.write(String.format("found remotely using its name %s", localTax.getName()));
           }
         }
 
-        if (remoteTax.getId() == null || !appConfig.getPrestaShopMasterForTaxes()) {
-          remoteTax.setName(defaultTax.getName().clone());
-          for (PrestashopTranslationEntry e : remoteTax.getName().getTranslations()) {
-            e.setTranslation(localTax.getCode());
-          }
-          remoteTax.setRate(
-              localTax.getActiveTaxLine() != null
-                  ? localTax.getActiveTaxLine().getValue().multiply(new BigDecimal(100))
-                  : !CollectionUtils.isEmpty(localTax.getTaxLineList())
-                      ? localTax.getTaxLineList().get(0).getValue().multiply(new BigDecimal(100))
-                      : BigDecimal.ZERO);
+        if (remoteTaxRuleGroup.getId() == null || !appConfig.getPrestaShopMasterForTaxes()) {
+          remoteTaxRuleGroup.setName(localTax.getName());
+          remoteTaxRuleGroup.setAddDate(localTax.getCreatedOn());
           if (localTax.getActiveTaxLine() != null) {
-            remoteTax.setActive(true);
+            remoteTaxRuleGroup.setActive(true);
           }
+          remoteTaxRuleGroup = ws.save(PrestashopResourceType.TAX_RULE_GROUPS, remoteTaxRuleGroup);
 
-          remoteTax = ws.save(PrestashopResourceType.TAXES, remoteTax);
+          PrestashopTax tax;
+          PrestashopTaxRule taxRule = null;
 
-          PrestashopTaxRule taxRule;
-          PrestashopTaxRuleGroup taxRuleGroup;
-          if (remoteTax.getId() != null) {
-            taxRule = taxRulesByTaxId.get(remoteTax.getId());
+          Integer remoteTaxRuleGroupId = remoteTaxRuleGroup.getId();
+          if (remoteTaxRuleGroupId != null) {
+            if (defaultCountry.getPrestaShopId() != null) {
+              taxRule =
+                  remoteTaxRules.stream()
+                      .filter(
+                          remoteTaxRule ->
+                              (remoteTaxRule.getCountryId().equals(defaultCountry.getPrestaShopId())
+                                  && remoteTaxRule
+                                      .getTaxRuleGroupId()
+                                      .equals(remoteTaxRuleGroupId)))
+                      .findFirst()
+                      .orElse(null);
+            }
             if (taxRule == null) {
+              tax = new PrestashopTax();
               taxRule = new PrestashopTaxRule();
-              taxRuleGroup = new PrestashopTaxRuleGroup();
             } else {
-              taxRuleGroup = taxRuleGroupById.get(taxRule.getTaxRuleGroupId());
+              tax = taxesById.get(taxRule.getTaxId());
             }
           } else {
-            taxRule = new PrestashopTaxRule();
-            taxRuleGroup = new PrestashopTaxRuleGroup();
+            log.error("Error while synchronizing tax {}, skipping", localTax.getName());
+            logBuffer.write(
+                String.format("Error while synchronizing tax %s, skipping", localTax.getName()));
+            ++errors;
+            continue;
           }
-          if (appConfig.getPrestaShopCountry().getPrestaShopId() != null) {
-            taxRule.setCountryId(appConfig.getPrestaShopCountry().getPrestaShopId());
+
+          tax.setName(defaultTax.getName().clone());
+          for (PrestashopTranslationEntry e : tax.getName().getTranslations()) {
+            e.setTranslation(localTax.getCode());
           }
-          taxRule.setTaxId(remoteTax.getId());
+          tax.setRate(
+              localTax.getActiveTaxLine() != null
+                  ? localTax.getActiveTaxLine().getValue()
+                  : !CollectionUtils.isEmpty(localTax.getTaxLineList())
+                      ? localTax.getTaxLineList().get(0).getValue()
+                      : BigDecimal.ZERO);
+          tax.setActive(remoteTaxRuleGroup.isActive());
+          tax = ws.save(PrestashopResourceType.TAXES, tax);
 
-          taxRuleGroup.setName(localTax.getName());
-          taxRuleGroup.setAddDate(localTax.getCreatedOn());
-          taxRuleGroup.setActive(remoteTax.isActive());
-
-          taxRuleGroup = ws.save(PrestashopResourceType.TAX_RULE_GROUPS, taxRuleGroup);
-
-          taxRule.setTaxRuleGroupId(taxRuleGroup.getId());
+          if (defaultCountry.getPrestaShopId() != null) {
+            taxRule.setCountryId(defaultCountry.getPrestaShopId());
+          }
+          taxRule.setTaxId(tax.getId());
+          taxRule.setTaxRuleGroupId(remoteTaxRuleGroupId);
           taxRule = ws.save(PrestashopResourceType.TAX_RULES, taxRule);
 
-          localTax.setPrestaShopId(taxRuleGroup.getId());
+          localTax.setPrestaShopId(remoteTaxRuleGroupId);
           localTax.setPrestaShopVersion(localTax.getVersion() + 1);
         } else {
           logBuffer.write(" — remote tax exists and taxes are managed on prestashop, skipping");

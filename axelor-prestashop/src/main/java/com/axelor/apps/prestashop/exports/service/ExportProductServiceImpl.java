@@ -67,12 +67,6 @@ import org.slf4j.LoggerFactory;
 public class ExportProductServiceImpl implements ExportProductService {
   private Logger log = LoggerFactory.getLogger(getClass());
 
-  /**
-   * Version from which BOOM-5826 is fixed. FIXME Not accurate right now as bug is not fixed in last
-   * version so we can just put lastVersion+1 until a fix is released
-   */
-  private static final String FIX_POSITION_IN_CATEGORY_VERSION = "1.7.3.5";
-
   private ProductRepository productRepo;
   private UnitConversionService unitConversionService;
   private CurrencyService currencyService;
@@ -230,7 +224,6 @@ public class ExportProductServiceImpl implements ExportProductService {
                     .replaceAll(" ", "-"));
             // TODO Should we update when product name changes?
             remoteProduct.setLinkRewrite(str);
-            remoteProduct.setPositionInCategory(0);
           } else {
             logBuffer.write(
                 String.format("found remotely using its reference %s", cleanedReference));
@@ -371,11 +364,6 @@ public class ExportProductServiceImpl implements ExportProductService {
           // TODO Should we handle supplier?
 
           remoteProduct.setUpdateDate(LocalDateTime.now());
-          if (ws.compareVersion(FIX_POSITION_IN_CATEGORY_VERSION) < 0) {
-            // Workaround Prestashop bug BOOM-5826 (position in category handling in prestashop's
-            // webservices is a joke). Trade-off is that we shuffle categories on each update…
-            remoteProduct.setPositionInCategory(0);
-          }
           remoteProduct.setLowStockAlert(true);
           remoteProduct = ws.save(PrestashopResourceType.PRODUCTS, remoteProduct);
           productsById.put(remoteProduct.getId(), remoteProduct);
@@ -432,7 +420,9 @@ public class ExportProductServiceImpl implements ExportProductService {
     for (Product localProduct : localProductList) {
       try {
         final int currentStock =
-            stockLocationService.getRealQty(localProduct.getId(), null, null).intValue();
+            stockLocationService
+                .getRealQtyOfProductInStockLocations(localProduct.getId(), null, null)
+                .intValue();
         logBuffer.write(String.format("Updating stock for %s", localProduct.getCode()));
         PrestashopProduct remoteProduct = productsById.get(localProduct.getPrestaShopId());
         if (remoteProduct == null) {

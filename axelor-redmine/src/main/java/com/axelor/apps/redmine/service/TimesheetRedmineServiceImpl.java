@@ -48,8 +48,6 @@ import java.math.BigDecimal;
 
 public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServiceImpl {
 
-  @Inject private UnitConversionService unitConversionService;
-
   @Inject
   public TimesheetRedmineServiceImpl(
       PriceListService priceListService,
@@ -61,9 +59,9 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
       UserHrService userHrService,
       TimesheetLineService timesheetLineService,
       ProjectPlanningTimeRepository projectPlanningTimeRepository,
-      ProjectTaskRepository projectTaskRepository,
+      ProjectTaskRepository projectTaskRepo,
       ProductCompanyService productCompanyService,
-      TimesheetLineRepository timesheetLineRepo,
+      TimesheetLineRepository timesheetlineRepo,
       TimesheetRepository timeSheetRepository,
       ProjectService projectService,
       LeaveRequestService leaveRequestService,
@@ -84,9 +82,9 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
         userHrService,
         timesheetLineService,
         projectPlanningTimeRepository,
-        projectTaskRepository,
+        projectTaskRepo,
         productCompanyService,
-        timesheetLineRepo,
+        timesheetlineRepo,
         timeSheetRepository,
         projectService,
         leaveRequestService,
