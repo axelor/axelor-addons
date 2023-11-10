@@ -71,7 +71,8 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
       UnitConversionService unitConversionService,
       WeeklyPlanningService weeklyPlanningService,
       LeaveRequestComputeDurationService leaveRequestComputeDurationService,
-      EmployeeService employeeService) {
+      EmployeeService employeeService,
+      AppBaseService appBaseService) {
     super(
         priceListService,
         appHumanResourceService,
@@ -94,7 +95,8 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
         unitConversionService,
         weeklyPlanningService,
         leaveRequestComputeDurationService,
-        employeeService);
+        employeeService,
+        appBaseService);
   }
 
   @Override
