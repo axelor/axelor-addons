@@ -190,7 +190,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
   }
 
   @Transactional
-  private void manageRedmineBatch(
+  protected void manageRedmineBatch(
       RedmineBatch redmineBatch,
       String failedRedmineTimeEntriesIds,
       String failedAosTimesheetLineIds) {
