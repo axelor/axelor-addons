@@ -268,13 +268,14 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     } else {
       LocalDateTime updatedOn = project.getUpdatedOn();
       if (lastBatchUpdatedOn != null
-            && updatedOn != null
-            && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
-            || (updatedOn.isAfter(lastBatchUpdatedOn) && updatedOn.isAfter(redmineUpdatedOn)))) {
+          && updatedOn != null
+          && (redmineUpdatedOn.isBefore(lastBatchUpdatedOn)
+              || (updatedOn.isAfter(lastBatchUpdatedOn) && updatedOn.isAfter(redmineUpdatedOn)))) {
 
         project.setRedmineUpdatedOn(redmineUpdatedOn);
-      updateExistingProject(redmineProject, project);
-      return;}
+        updateExistingProject(redmineProject, project);
+        return;
+      }
     }
 
     LOG.debug("Importing project: " + redmineProject.getIdentifier());
