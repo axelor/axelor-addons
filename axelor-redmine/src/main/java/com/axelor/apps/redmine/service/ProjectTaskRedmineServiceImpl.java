@@ -49,7 +49,7 @@ import java.util.Objects;
 public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
     implements ProjectTaskRedmineService {
 
-  @Inject public ProjectVersionRepository projectVersionRepository;
+  public ProjectVersionRepository projectVersionRepository;
 
   @Inject
   public ProjectTaskRedmineServiceImpl(
@@ -75,8 +75,8 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         priceListService,
         partnerPriceListService,
         productCompanyService,
-        null,
-        null);
+        timesheetLineRepository,
+        appBusinessProjectService);
     this.projectVersionRepository = projectVersionRepository;
   }
 
