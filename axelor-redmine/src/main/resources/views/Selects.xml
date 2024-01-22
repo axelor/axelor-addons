@@ -35,4 +35,10 @@
     <option value="1200">Redmine batch</option>
   </selection>
 
+  <selection name="redmine.app.users.status">
+    <option value="0">Inactive users</option>
+    <option value="1">Active users</option>
+    <option value="-1">All users</option>
+  </selection>
+
 </object-views>

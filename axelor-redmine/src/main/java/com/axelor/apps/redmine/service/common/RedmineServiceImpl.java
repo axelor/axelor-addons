@@ -17,16 +17,16 @@
  */
 package com.axelor.apps.redmine.service.common;
 
-import com.axelor.apps.base.db.AppRedmine;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.AppRedmineRepository;
+import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.imports.issues.RedmineIssueService;
 import com.axelor.apps.redmine.service.imports.projects.RedmineProjectService;
 import com.axelor.apps.redmine.service.sync.timeentries.RedmineTimeEntriesService;
 import com.axelor.common.StringUtils;
-import com.axelor.exception.service.TraceBackService;
 import com.axelor.i18n.I18n;
+import com.axelor.studio.db.AppRedmine;
+import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.CustomFieldManager;
 import com.taskadapter.redmineapi.NotFoundException;
@@ -51,7 +51,7 @@ public class RedmineServiceImpl implements RedmineService {
 
   @Override
   public void redmineImportProjects(
-          Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
+      Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
     RedmineManager redmineManager = null;
 
@@ -74,7 +74,7 @@ public class RedmineServiceImpl implements RedmineService {
 
   @Override
   public void redmineImportIssues(
-          Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
+      Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
     RedmineManager redmineManager = null;
 
@@ -97,7 +97,7 @@ public class RedmineServiceImpl implements RedmineService {
 
   @Override
   public void redmineSyncTimeEntries(
-          Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
+      Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
     RedmineManager redmineManager = null;
     AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
@@ -116,16 +116,16 @@ public class RedmineServiceImpl implements RedmineService {
     }
 
     redmineTimeEntriesService.redmineImportTimeEntries(
-            batch, redmineManager, onSuccess, onError, appRedmine);
+        batch, redmineManager, onSuccess, onError, appRedmine);
   }
 
   @Override
   public RedmineManager getRedmineManager(AppRedmine appRedmine) {
 
     if (!StringUtils.isBlank(appRedmine.getUri())
-            && !StringUtils.isBlank(appRedmine.getApiAccessKey())) {
+        && !StringUtils.isBlank(appRedmine.getApiAccessKey())) {
       RedmineManager redmineManager =
-              RedmineManagerFactory.createWithApiKey(appRedmine.getUri(), appRedmine.getApiAccessKey());
+          RedmineManagerFactory.createWithApiKey(appRedmine.getUri(), appRedmine.getApiAccessKey());
 
       try {
         redmineManager.getUserManager().getCurrentUser();
@@ -144,14 +144,14 @@ public class RedmineServiceImpl implements RedmineService {
   }
 
   public void validateProjectCustomFieldConfig(
-          CustomFieldManager customFieldManager, AppRedmine appRedmine) throws RedmineException {
+      CustomFieldManager customFieldManager, AppRedmine appRedmine) throws RedmineException {
 
     HashMap<String, Boolean> customFieldsValidationMap = new HashMap<String, Boolean>();
 
     customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectClientPartner(), false);
     customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectInvoiceable(), false);
     customFieldsValidationMap.put(
-            "project " + appRedmine.getRedmineProjectInvoicingSequenceSelect(), false);
+        "project " + appRedmine.getRedmineProjectInvoicingSequenceSelect(), false);
     customFieldsValidationMap.put("project " + appRedmine.getRedmineProjectAssignedTo(), false);
     customFieldsValidationMap.put("version " + appRedmine.getRedmineVersionDeliveryDate(), false);
 
@@ -159,7 +159,7 @@ public class RedmineServiceImpl implements RedmineService {
   }
 
   public void validateIssueCustomFieldConfig(
-          CustomFieldManager customFieldManager, AppRedmine appRedmine) throws RedmineException {
+      CustomFieldManager customFieldManager, AppRedmine appRedmine) throws RedmineException {
 
     HashMap<String, Boolean> customFieldsValidationMap = new HashMap<String, Boolean>();
 
@@ -168,7 +168,7 @@ public class RedmineServiceImpl implements RedmineService {
     customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueProduct(), false);
     customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueDueDate(), false);
     customFieldsValidationMap.put(
-            "issue " + appRedmine.getRedmineIssueAccountedForMaintenance(), false);
+        "issue " + appRedmine.getRedmineIssueAccountedForMaintenance(), false);
     customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsTaskAccepted(), false);
     customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueIsOffered(), false);
     customFieldsValidationMap.put("issue " + appRedmine.getRedmineIssueUnitPrice(), false);
@@ -177,25 +177,25 @@ public class RedmineServiceImpl implements RedmineService {
   }
 
   public void validateTimeEntryCustomFieldConfig(
-          CustomFieldManager customFieldManager, AppRedmine appRedmine) throws RedmineException {
+      CustomFieldManager customFieldManager, AppRedmine appRedmine) throws RedmineException {
 
     HashMap<String, Boolean> customFieldsValidationMap = new HashMap<String, Boolean>();
 
     customFieldsValidationMap.put(
-            "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
+        "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
     customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
     customFieldsValidationMap.put(
-            "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+        "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
 
     validateCustomFieldConfig(customFieldManager, customFieldsValidationMap);
   }
 
   public void validateCustomFieldConfig(
-          CustomFieldManager customFieldManager, HashMap<String, Boolean> customFieldsValidationMap)
-          throws RedmineException {
+      CustomFieldManager customFieldManager, HashMap<String, Boolean> customFieldsValidationMap)
+      throws RedmineException {
 
     List<CustomFieldDefinition> customFieldDefinitions =
-            customFieldManager.getCustomFieldDefinitions();
+        customFieldManager.getCustomFieldDefinitions();
 
     for (CustomFieldDefinition customFieldDefinition : customFieldDefinitions) {
       String customFieldName = customFieldDefinition.getName();
@@ -213,10 +213,10 @@ public class RedmineServiceImpl implements RedmineService {
         String key = entry.getKey();
 
         throw new PersistenceException(
-                String.format(
-                        I18n.get(IMessage.REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR),
-                        key.substring(key.indexOf(" ") + 1),
-                        key.substring(0, key.indexOf(" "))));
+            String.format(
+                I18n.get(IMessage.REDMINE_IMPORT_CUSTOM_FIELD_CONFIG_VALIDATION_ERROR),
+                key.substring(key.indexOf(" ") + 1),
+                key.substring(0, key.indexOf(" "))));
       }
     }
   }

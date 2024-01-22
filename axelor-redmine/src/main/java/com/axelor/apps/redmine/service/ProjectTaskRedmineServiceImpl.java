@@ -19,7 +19,7 @@ package com.axelor.apps.redmine.service;
 
 import static com.axelor.apps.base.service.administration.AbstractBatch.FETCH_LIMIT;
 
-import com.axelor.apps.base.db.AppBusinessProject;
+import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
 import com.axelor.apps.base.service.FrequencyService;
@@ -27,15 +27,17 @@ import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PriceListService;
 import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.businessproject.service.app.AppBusinessProjectService;
 import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
+import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.db.JPA;
 import com.axelor.db.Query;
-import com.axelor.exception.AxelorException;
+import com.axelor.studio.db.AppBusinessProject;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
@@ -45,39 +47,43 @@ import java.util.List;
 import java.util.Objects;
 
 public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
-        implements ProjectTaskRedmineService {
+    implements ProjectTaskRedmineService {
 
   @Inject public ProjectVersionRepository projectVersionRepository;
 
   @Inject
   public ProjectTaskRedmineServiceImpl(
-          ProjectTaskRepository projectTaskRepo,
-          FrequencyRepository frequencyRepo,
-          FrequencyService frequencyService,
-          AppBaseService appBaseService,
-          ProjectRepository projectRepository,
-          PriceListLineRepository priceListLineRepo,
-          PriceListService priceListService,
-          PartnerPriceListService partnerPriceListService,
-          ProductCompanyService productCompanyService,
-          ProjectVersionRepository projectVersionRepository) {
+      ProjectTaskRepository projectTaskRepo,
+      FrequencyRepository frequencyRepo,
+      FrequencyService frequencyService,
+      AppBaseService appBaseService,
+      ProjectRepository projectRepository,
+      PriceListLineRepository priceListLineRepo,
+      PriceListService priceListService,
+      PartnerPriceListService partnerPriceListService,
+      ProductCompanyService productCompanyService,
+      ProjectVersionRepository projectVersionRepository,
+      TimesheetLineRepository timesheetLineRepository,
+      AppBusinessProjectService appBusinessProjectService) {
     super(
-            projectTaskRepo,
-            frequencyRepo,
-            frequencyService,
-            appBaseService,
-            projectRepository,
-            priceListLineRepo,
-            priceListService,
-            partnerPriceListService,
-            productCompanyService);
+        projectTaskRepo,
+        frequencyRepo,
+        frequencyService,
+        appBaseService,
+        projectRepository,
+        priceListLineRepo,
+        priceListService,
+        partnerPriceListService,
+        productCompanyService,
+        null,
+        null);
     this.projectVersionRepository = projectVersionRepository;
   }
 
   @Transactional(rollbackOn = {AxelorException.class, Exception.class})
   @Override
   public ProjectTask updateTaskToInvoice(
-          ProjectTask projectTask, AppBusinessProject appBusinessProject) {
+      ProjectTask projectTask, AppBusinessProject appBusinessProject) {
     if (Boolean.FALSE.equals(projectTask.getIsOffered())) {
       return super.updateTaskToInvoice(projectTask, appBusinessProject);
     }
@@ -95,22 +101,22 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
     ProjectVersion targetVersion = projectTask.getTargetVersion();
     ProjectVersion targetVersionDb =
-            projectTaskDb != null ? projectTaskDb.getTargetVersion() : null;
+        projectTaskDb != null ? projectTaskDb.getTargetVersion() : null;
 
     if (projectTaskDb == null
-            || !Objects.equals(projectTaskDb.getProgressSelect(), projectTask.getProgressSelect())
-            || !projectTaskDb.getStatus().equals(projectTask.getStatus())
-            || (targetVersionDb == null && targetVersion != null)
-            || (targetVersionDb != null && (!targetVersionDb.equals(targetVersion)))) {
+        || !Objects.equals(projectTaskDb.getProgressSelect(), projectTask.getProgressSelect())
+        || !projectTaskDb.getStatus().equals(projectTask.getStatus())
+        || (targetVersionDb == null && targetVersion != null)
+        || (targetVersionDb != null && (!targetVersionDb.equals(targetVersion)))) {
 
       updateTargetCondition(projectTask, targetVersion, targetVersionDb);
     }
   }
 
   private void updateTargetCondition(
-          ProjectTask projectTask, ProjectVersion targetVersion, ProjectVersion targetVersionDb) {
+      ProjectTask projectTask, ProjectVersion targetVersion, ProjectVersion targetVersionDb) {
     if (targetVersion != null
-            && (targetVersionDb == null || targetVersionDb.equals(targetVersion))) {
+        && (targetVersionDb == null || targetVersionDb.equals(targetVersion))) {
       updateTargetVerionProgress(targetVersion, projectTask, true);
     } else if (targetVersion != null) {
       updateTargetVerionProgress(targetVersion, projectTask, true);
@@ -123,7 +129,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
   @Override
   @Transactional
   public void updateTargetVerionProgress(
-          ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd) {
+      ProjectVersion targetVersion, ProjectTask projectTask, boolean isAdd) {
 
     DoubleSummaryStatistics stats = calculateStatistics(targetVersion, projectTask);
 
@@ -136,41 +142,41 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
     }
 
     targetVersion.setTotalProgress(
-            count != 0
-                    ? BigDecimal.valueOf(sum / count).setScale(0, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO);
+        count != 0
+            ? BigDecimal.valueOf(sum / count).setScale(0, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO);
 
     projectVersionRepository.save(targetVersion);
   }
 
   protected DoubleSummaryStatistics calculateStatistics(
-          ProjectVersion targetVersion, ProjectTask projectTask) {
+      ProjectVersion targetVersion, ProjectTask projectTask) {
     return projectTaskRepo
-            .all()
-            .filter(
-                    projectTask.getId() != null
-                            ? "self.targetVersion = :targetVersion and self.id != :id"
-                            : "self.targetVersion = :targetVersion",
-                    targetVersion,
-                    projectTask.getId())
-            .fetchStream()
-            .mapToDouble(
-                    tt -> {
-                      if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
-                        return 100;
-                      } else {
-                        return tt.getProgressSelect();
-                      }
-                    })
-            .summaryStatistics();
+        .all()
+        .filter(
+            projectTask.getId() != null
+                ? "self.targetVersion = :targetVersion and self.id != :id"
+                : "self.targetVersion = :targetVersion",
+            targetVersion,
+            projectTask.getId())
+        .fetchStream()
+        .mapToDouble(
+            tt -> {
+              if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
+                return 100;
+              } else {
+                return tt.getProgressSelect();
+              }
+            })
+        .summaryStatistics();
   }
 
   protected static double calculateSum(ProjectTask projectTask, double sum) {
     sum =
-            sum
-                    + (Boolean.TRUE.equals(projectTask.getStatus().getIsCompleted())
-                    ? 100
-                    : projectTask.getProgressSelect());
+        sum
+            + (Boolean.TRUE.equals(projectTask.getStatus().getIsCompleted())
+                ? 100
+                : projectTask.getProgressSelect());
     return sum;
   }
 
@@ -200,18 +206,18 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
 
   protected Double calculateSum(ProjectVersion projectVersion) {
     return projectTaskRepo
-            .all()
-            .filter("self.targetVersion = :projectVersion", projectVersion)
-            .fetchStream()
-            .mapToLong(
-                    tt -> {
-                      if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
-                        return 100;
-                      } else {
-                        return tt.getProgressSelect();
-                      }
-                    })
-            .average()
-            .orElse(0);
+        .all()
+        .filter("self.targetVersion = :projectVersion", projectVersion)
+        .fetchStream()
+        .mapToLong(
+            tt -> {
+              if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
+                return 100;
+              } else {
+                return tt.getProgressSelect();
+              }
+            })
+        .average()
+        .orElse(0);
   }
 }

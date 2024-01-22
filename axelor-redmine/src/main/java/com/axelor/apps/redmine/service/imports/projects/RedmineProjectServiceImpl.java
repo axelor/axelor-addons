@@ -23,9 +23,11 @@ import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.common.RedmineErrorLogService;
 import com.axelor.apps.redmine.service.imports.fetch.RedmineFetchDataService;
-import com.axelor.meta.db.MetaFile;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
+import com.axelor.apps.redmine.service.imports.utils.FetchRedmineInfo;
+import com.axelor.studio.db.AppRedmine;
+import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import com.taskadapter.redmineapi.RedmineException;
 import com.taskadapter.redmineapi.RedmineManager;
 import com.taskadapter.redmineapi.bean.User;
@@ -33,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,24 +46,26 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
   protected RedmineFetchDataService redmineFetchDataService;
   protected RedmineErrorLogService redmineErrorLogService;
   protected BatchRepository batchRepo;
+  protected AppRedmineRepository appRedmineRepository;
 
   @Inject
   public RedmineProjectServiceImpl(
       RedmineImportProjectService redmineImportProjectService,
       RedmineFetchDataService redmineFetchDataService,
       RedmineErrorLogService redmineErrorLogService,
-      BatchRepository batchRepo) {
+      BatchRepository batchRepo,
+      AppRedmineRepository appRedmineRepository) {
 
     this.redmineImportProjectService = redmineImportProjectService;
     this.redmineFetchDataService = redmineFetchDataService;
     this.redmineErrorLogService = redmineErrorLogService;
     this.batchRepo = batchRepo;
+    this.appRedmineRepository = appRedmineRepository;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
-  @Transactional
   public void redmineImportProject(
       Batch batch,
       RedmineManager redmineManager,
@@ -69,6 +74,7 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
 
     RedmineCommonService.setResult("");
 
+    AppRedmine appRedmine = appRedmineRepository.all().fetchOne();
     // LOGGER FOR REDMINE IMPORT ERROR DATA
 
     List<Object[]> errorObjList = new ArrayList<Object[]>();
@@ -95,41 +101,39 @@ public class RedmineProjectServiceImpl implements RedmineProjectService {
     try {
       importProjectList = redmineFetchDataService.fetchProjectImportData(redmineManager);
 
-      List<User> redmineUserList = redmineManager.getUserManager().getUsers();
+      List<User> redmineUserList = new ArrayList<>();
+      Map<Integer, Boolean> includedIdsMap = new HashMap<>();
+
+      LOG.debug("Fetching Axelor users from Redmine...");
+
+      FetchRedmineInfo.fillUsersList(
+          redmineManager,
+          includedIdsMap,
+          redmineUserList,
+          FetchRedmineInfo.getFillUsersListParams(appRedmine));
 
       for (User user : redmineUserList) {
         redmineUserMap.put(user.getId(), user.getMail());
       }
+
     } catch (RedmineException e) {
       TraceBackService.trace(e, "", batch.getId());
     }
 
-    // CREATE MAP FOR PASS TO THE METHODS
+    // CREATE POJO FOR PASS TO THE METHODS
 
-    HashMap<String, Object> paramsMap = new HashMap<String, Object>();
-
-    paramsMap.put("onError", onError);
-    paramsMap.put("onSuccess", onSuccess);
-    paramsMap.put("batch", batch);
-    paramsMap.put("errorObjList", errorObjList);
-    paramsMap.put("lastBatchUpdatedOn", lastBatchUpdatedOn);
-    paramsMap.put("redmineUserMap", redmineUserMap);
-    paramsMap.put("redmineProjectManager", redmineManager.getProjectManager());
+    MethodParameters methodParameters =
+        new MethodParameters(
+            onError,
+            onSuccess,
+            batch,
+            errorObjList,
+            lastBatchUpdatedOn,
+            redmineUserMap,
+            redmineManager);
 
     // IMPORT PROCESS
 
-    redmineImportProjectService.importProject(importProjectList, paramsMap);
-
-    // ATTACH ERROR LOG WITH BATCH
-
-    if (errorObjList != null && errorObjList.size() > 0) {
-      MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
-
-      if (errorMetaFile != null) {
-        batch = batchRepo.find(batch.getId());
-        batch.setErrorLogFile(errorMetaFile);
-        batchRepo.save(batch);
-      }
-    }
+    redmineImportProjectService.importProject(importProjectList, methodParameters);
   }
 }

@@ -17,11 +17,11 @@
  */
 package com.axelor.apps.redmine.service.sync.timeentries;
 
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.taskadapter.redmineapi.bean.TimeEntry;
-import java.util.HashMap;
 import java.util.List;
 
 public interface RedmineImportTimeSpentService {
 
-  String importTimeSpent(List<TimeEntry> importTimeEntryList, HashMap<String, Object> paramsMap);
+  String importTimeSpent(List<TimeEntry> importTimeEntryList, MethodParameters methodParameters);
 }

@@ -14,6 +14,9 @@
     <string name="uri" title="URI"/>
     <string name="apiAccessKey" title="Api Access Key"/>
     <many-to-one name="company" ref="com.axelor.apps.base.db.Company" title="Company"/>
+    <string name="redmineUsersStatus" title="Redmine users status"
+      selection="redmine.app.users.status"/>
+    <string name="onUsersFilter" title="Filters for users name/email"/>
 
     <!-- REDMINE CUSTOM FIELD CONFIGURATION DETAILS -->
     <string name="redmineProjectInvoiceable"/>
