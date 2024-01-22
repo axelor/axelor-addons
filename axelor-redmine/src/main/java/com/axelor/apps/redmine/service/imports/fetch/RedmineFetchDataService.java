@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import org.apache.commons.collections.CollectionUtils;
 
 public class RedmineFetchDataService {
@@ -71,28 +72,57 @@ public class RedmineFetchDataService {
           .add("v[updated_on][]", endOn.toString());
 
       if (!StringUtils.isEmpty(failedRedmineIssuesIds)) {
-        params.add("f[]", "issue_id").add("op[issue_id]", "!");
-
-        for (String failedId : failedRedmineIssuesIds.split(",")) {
-          params.add("v[issue_id][]", failedId);
-        }
-
         Params errorIdsParams =
-            new Params()
-                .add("set_filter", "1")
-                .add("f[]", "issue_id")
-                .add("op[issue_id]", "=")
-                .add("v[issue_id][]", failedRedmineIssuesIds);
+            new Params().add("set_filter", "1").add("f[]", "issue_id").add("op[issue_id]", "=");
+        addErrorIdsIssues(errorIdsParams, failedRedmineIssuesIds, importIssueList);
 
-        addIssues(importIssueList, errorIdsParams);
+        params.add("f[]", "issue_id").add("op[issue_id]", "!");
+        addUpdatedOnIssues(params, failedRedmineIssuesIds, importIssueList);
       }
     } else {
       params.add("status_id", "*");
+      addIssues(importIssueList, params);
     }
 
-    addIssues(importIssueList, params);
-
     return importIssueList;
+  }
+
+  private void addErrorIdsIssues(
+      Params errorIdsParams, String failedRedmineIssuesIds, List<Issue> importIssueList)
+      throws RedmineException {
+
+    int index = 0;
+    StringJoiner joiner = new StringJoiner(",");
+
+    for (String failedId : failedRedmineIssuesIds.split(",")) {
+      if (index == FETCH_LIMIT) {
+        errorIdsParams.add("v[issue_id][]", joiner.toString());
+
+        addIssues(importIssueList, errorIdsParams);
+
+        errorIdsParams.getList().removeIf(p -> p.getName().equals("v[issue_id][]"));
+        joiner = new StringJoiner(",");
+        index = 0;
+      }
+      joiner.add(failedId);
+      index++;
+    }
+  }
+
+  private void addUpdatedOnIssues(
+      Params params, String failedRedmineIssuesIds, List<Issue> importIssueList)
+      throws RedmineException {
+
+    int index = 0;
+    for (String failedId : failedRedmineIssuesIds.split(",")) {
+      if (index == FETCH_LIMIT) {
+        addIssues(importIssueList, params);
+        params.getList().removeIf(p -> p.getName().equals("v[issue_id][]"));
+        index = 0;
+      }
+      params.add("v[issue_id][]", failedId);
+      index++;
+    }
   }
 
   private void addIssues(List<Issue> importIssueList, Params params) throws RedmineException {
@@ -104,6 +134,7 @@ public class RedmineFetchDataService {
 
       List<Issue> tempIssueList = redmineIssueManager.getIssues(params).getResults();
       if (tempIssueList == null || tempIssueList.isEmpty()) {
+        params.getList().removeIf(p -> p.getName().equals("offset"));
         break;
       }
       importIssueList.addAll(tempIssueList);
