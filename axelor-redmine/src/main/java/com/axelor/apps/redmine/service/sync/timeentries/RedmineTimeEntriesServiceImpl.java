@@ -128,7 +128,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     }
   }
 
-  private void extractTimesEntriesToSetRedmineBatch(
+  protected void extractTimesEntriesToSetRedmineBatch(
       Batch batch,
       RedmineManager redmineManager,
       TimeEntriesRedmineParameters timeEntriesRedmineParameters,

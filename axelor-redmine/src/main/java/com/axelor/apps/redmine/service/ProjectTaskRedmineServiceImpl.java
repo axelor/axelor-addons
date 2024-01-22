@@ -107,7 +107,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
     }
   }
 
-  private void updateTargetCondition(
+  protected void updateTargetCondition(
       ProjectTask projectTask, ProjectVersion targetVersion, ProjectVersion targetVersionDb) {
     if (targetVersion != null
         && (targetVersionDb == null || targetVersionDb.equals(targetVersion))) {
