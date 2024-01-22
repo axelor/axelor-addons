@@ -100,9 +100,9 @@ public class RedmineServiceImpl implements RedmineService {
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
     RedmineManager redmineManager = null;
+    AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
     try {
-      AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       redmineManager = getRedmineManager(appRedmine);
 
       if (redmineManager == null) {
@@ -115,7 +115,8 @@ public class RedmineServiceImpl implements RedmineService {
       TraceBackService.trace(e, "", batch.getId());
     }
 
-    redmineTimeEntriesService.redmineImportTimeEntries(batch, redmineManager, onSuccess, onError);
+    redmineTimeEntriesService.redmineImportTimeEntries(
+        batch, redmineManager, onSuccess, onError, appRedmine);
   }
 
   @Override

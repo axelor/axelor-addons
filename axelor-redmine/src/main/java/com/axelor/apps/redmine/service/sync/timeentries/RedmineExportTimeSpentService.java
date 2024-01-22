@@ -17,9 +17,11 @@
  */
 package com.axelor.apps.redmine.service.sync.timeentries;
 
-import java.util.Map;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
+import java.util.HashMap;
 
 public interface RedmineExportTimeSpentService {
 
-  public String exportTimesheetLines(Map<String, Object> paramsMap);
+  public String exportTimesheetLines(
+      MethodParameters methodParameters, HashMap<String, String> redmineUserLoginMap);
 }

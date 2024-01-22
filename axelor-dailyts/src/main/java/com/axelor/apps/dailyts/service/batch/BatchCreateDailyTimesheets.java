@@ -46,8 +46,8 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
   @Inject protected DailyTimesheetService dailyTimesheetService;
   @Inject protected WeeklyPlanningService weeklyPlanningService;
   @Inject protected LeaveRequestService leaveRequestService;
-  @Inject protected PublicHolidayHrService publicHolidayHrService;
   @Inject protected LeaveRequestComputeDurationService leaveRequestComputeDurationService;
+  @Inject protected PublicHolidayHrService publicHolidayHrService;
 
   @Override
   @Transactional

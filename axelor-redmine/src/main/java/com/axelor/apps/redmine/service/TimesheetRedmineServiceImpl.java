@@ -101,7 +101,7 @@ public class TimesheetRedmineServiceImpl extends TimesheetBusinessProductionServ
 
   @Override
   public BigDecimal computeDurationForCustomer(TimesheetLine timesheetLine) throws AxelorException {
-    return unitConversionService.convert(
+    return super.unitConversionService.convert(
         timesheetLine.getDurationUnit(),
         appHumanResourceService.getAppBase().getUnitHours(),
         timesheetLine.getDurationForCustomer(),
