@@ -36,6 +36,7 @@ import com.axelor.exception.service.TraceBackService;
 import com.google.common.collect.ObjectArrays;
 import com.google.inject.Inject;
 import com.taskadapter.redmineapi.IssueManager;
+import com.taskadapter.redmineapi.ProjectManager;
 import com.taskadapter.redmineapi.bean.CustomField;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -95,6 +96,7 @@ public class RedmineCommonService {
   protected int fail = 0;
 
   protected MethodParameters methodParameters;
+  protected ProjectManager redmineProjectManager;
   protected IssueManager redmineIssueManager;
   protected Map<String, String> redmineCustomFieldsMap;
   protected HashMap<String, Object> selectionMap;
