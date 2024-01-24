@@ -205,11 +205,12 @@ public class RedmineCommonService {
   protected void updateTransaction() {
 
     Batch batch = methodParameters.getBatch();
-    JPA.em().getTransaction().commit();
 
     if (!JPA.em().getTransaction().isActive()) {
       JPA.em().getTransaction().begin();
     }
+
+    JPA.em().getTransaction().commit();
 
     JPA.clear();
 
