@@ -146,6 +146,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       this.fieldMap = new HashMap<>();
       this.selectionMap = new HashMap<>();
       this.methodParameters = methodParameters;
+      this.redmineProjectManager = methodParameters.getRedmineManager().getProjectManager();
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       isAppBusinessSupport = appBaseService.isApp("business-support");
@@ -387,7 +388,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       project.setClientPartner(null);
     }
 
-    getMembersAndTrackers(redmineProject, project);
     importProjectMembersAndTrackers(redmineProject, project);
 
     ProjectStatus projectStatus;
@@ -452,18 +452,12 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
   public void importProjectMembersAndTrackers(
       com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
-    getMembersAndTrackers(redmineProject, project);
-  }
 
-  // Import members
-  protected void getMembersAndTrackers(
-      com.taskadapter.redmineapi.bean.Project redmineProject, Project project) {
+    // Import members
+
     try {
       List<Membership> redmineProjectMembers =
-          methodParameters
-              .getRedmineManager()
-              .getProjectManager()
-              .getProjectMembers(redmineProject.getId());
+          redmineProjectManager.getProjectMembers(redmineProject.getId());
 
       if (redmineProjectMembers != null && !redmineProjectMembers.isEmpty()) {
 
@@ -504,8 +498,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   public void importProjectVersions(Integer redmineProjectId, Project project) {
 
     try {
-      List<Version> redmineVersionList =
-          methodParameters.getRedmineManager().getProjectManager().getVersions(redmineProjectId);
+      List<Version> redmineVersionList = fetchRedmineProjectVersionList(redmineProjectId);
 
       if (CollectionUtils.isNotEmpty(redmineVersionList)) {
 
@@ -548,6 +541,34 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     } catch (RedmineException e) {
       methodParameters.getOnError().accept(e);
       TraceBackService.trace(e, "", methodParameters.getBatch().getId());
+    }
+  }
+  /**
+   * This method is used to fix 'Bad categories response Throttled' error occurred during import
+   * from Easy Redmine
+   */
+  public List<Version> fetchRedmineProjectVersionList(Integer redmineProjectId)
+      throws RedmineException {
+
+    int count = 0;
+    int maxTries = 10;
+
+    while (true) {
+      try {
+        return redmineProjectManager.getVersions(redmineProjectId);
+      } catch (Exception e) {
+        sleep();
+        if (++count == maxTries) throw e;
+      }
+    }
+  }
+
+  protected void sleep() {
+
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
 }
