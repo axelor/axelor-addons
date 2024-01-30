@@ -676,35 +676,40 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       List<DocuSignDocument> docuSignDocumentList)
       throws AxelorException {
 
-    if (CollectionUtils.isNotEmpty(docuSignDocumentList)) {
+    if (CollectionUtils.isEmpty(docuSignDocumentList)) {
+      return;
+    }
 
-      for (DocuSignDocument docuSignDocument : docuSignDocumentList) {
+    for (DocuSignDocument docuSignDocument : docuSignDocumentList) {
 
-        if (CollectionUtils.isNotEmpty(docuSignDocument.getDocuSignFieldList())) {
-          for (DocuSignField docuSignField : docuSignDocument.getDocuSignFieldList()) {
-            if (ObjectUtils.notEmpty(docuSignField.getDocuSignSigner())) {
-              String recipientId = docuSignField.getDocuSignSigner().getRecipientId();
-              if (docuSignField.getDocuSignSigner().getIsInPersonSigner()) {
-                InPersonSigner inPersonSigner = findInPersonSigner(inPersonSignerList, recipientId);
-                if (ObjectUtils.notEmpty(inPersonSigner)) {
-                  updateInPersonSigner(inPersonSigner, docuSignField);
-                } else {
-                  throw new AxelorException(
-                      TraceBackRepository.CATEGORY_INCONSISTENCY,
-                      I18n.get(IExceptionMessage.DOCUSIGN_IN_PERSON_SIGNER_NOT_FOUND));
-                }
+      if (CollectionUtils.isEmpty(docuSignDocument.getDocuSignFieldList())) {
+        continue;
+      }
+      for (DocuSignField docuSignField : docuSignDocument.getDocuSignFieldList()) {
+        DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
 
-              } else {
-                Signer signer = findSigner(signerList, recipientId);
-                if (ObjectUtils.notEmpty(signer)) {
-                  updateSigner(signer, docuSignField);
-                } else {
-                  throw new AxelorException(
-                      TraceBackRepository.CATEGORY_INCONSISTENCY,
-                      I18n.get(IExceptionMessage.DOCUSIGN_SIGNER_NOT_FOUND));
-                }
-              }
-            }
+        if (docuSignSigner == null || docuSignSigner.getIsCCRecipient()) {
+          continue;
+        }
+
+        String recipientId = docuSignSigner.getRecipientId();
+        if (docuSignSigner.getIsInPersonSigner()) {
+          InPersonSigner inPersonSigner = findInPersonSigner(inPersonSignerList, recipientId);
+          if (ObjectUtils.notEmpty(inPersonSigner)) {
+            updateInPersonSigner(inPersonSigner, docuSignField);
+          } else {
+            throw new AxelorException(
+                TraceBackRepository.CATEGORY_INCONSISTENCY,
+                I18n.get(IExceptionMessage.DOCUSIGN_IN_PERSON_SIGNER_NOT_FOUND));
+          }
+        } else {
+          Signer signer = findSigner(signerList, recipientId);
+          if (ObjectUtils.notEmpty(signer)) {
+            updateSigner(signer, docuSignField);
+          } else {
+            throw new AxelorException(
+                TraceBackRepository.CATEGORY_INCONSISTENCY,
+                I18n.get(IExceptionMessage.DOCUSIGN_SIGNER_NOT_FOUND));
           }
         }
       }
