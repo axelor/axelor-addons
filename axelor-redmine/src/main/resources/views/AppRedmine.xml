@@ -9,29 +9,50 @@
       <field name="uri"/>
       <field name="apiAccessKey"/>
       <field name="serverTimezone" required="true"/>
+      <field name="synchronisedWith" required="true"/>
     </panel>
     <panel name="fieldsPanel">
       <field name="company" required="true"/>
       <field name="redmineUsersStatus" required="true"/>
       <field name="onUsersFilter"/>
     </panel>
-    <panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration">
-      <field name="redmineProjectInvoiceable" required="true"/>
-      <field name="redmineProjectClientPartner" required="true"/>
-      <field name="redmineProjectInvoicingSequenceSelect" required="true"/>
-      <field name="redmineProjectAssignedTo" required="true"/>
-      <field name="redmineVersionDeliveryDate" required="true"/>
-      <field name="redmineIssueProduct" required="true"/>
-      <field name="redmineIssueDueDate" required="true"/>
-      <field name="redmineIssueEstimatedTime" required="true"/>
-      <field name="redmineIssueInvoiced" required="true"/>
-      <field name="redmineIssueAccountedForMaintenance" required="true"/>
-      <field name="redmineIssueIsTaskAccepted" required="true"/>
-      <field name="redmineIssueIsOffered" required="true"/>
-      <field name="redmineIssueUnitPrice" required="true"/>
-      <field name="redmineTimeSpentProduct" required="true"/>
-      <field name="redmineTimeSpentDurationForCustomer" required="true"/>
-      <field name="redmineTimeSpentDurationUnit" required="true"/>
+    <panel name="redmineCustomFieldConfigPanel" title="Redmine custom field configuration"
+      showIf="synchronisedWith == 1">
+      <field name="redmineProjectInvoiceable" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineProjectClientPartner" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineProjectInvoicingSequenceSelect" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineProjectAssignedTo" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineVersionDeliveryDate" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueProduct" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueDueDate" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueEstimatedTime" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueInvoiced" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueAccountedForMaintenance" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueIsTaskAccepted" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueIsOffered" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineIssueUnitPrice" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineTimeSpentProduct" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineTimeSpentDurationForCustomer" requiredIf="synchronisedWith == 1"/>
+      <field name="redmineTimeSpentDurationUnit" requiredIf="synchronisedWith == 1"/>
+    </panel>
+    <panel name="easyRedmineCustomFieldConfigPanel"
+      title="Easy Redmine custom field configuration" showIf="synchronisedWith == 2">
+      <field name="redmineProjectInvoiceable" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineProjectClientPartner" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineProjectInvoicingSequenceSelect" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineProjectAssignedTo" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineVersionDeliveryDate" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueProduct" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueDueDate" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueEstimatedTime" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueInvoiced" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueAccountedForMaintenance" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueIsTaskAccepted" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueIsOffered" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineIssueUnitPrice" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineTimeSpentProduct" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineTimeSpentDurationForCustomer" requiredIf="synchronisedWith == 2"/>
+      <field name="redmineTimeSpentDurationUnit" requiredIf="synchronisedWith == 2"/>
     </panel>
     <panel name="redmineCustomFieldDefaultPanel" title="Redmine custom field defaults">
       <field name="redmineProjectClientPartnerDefault"/>

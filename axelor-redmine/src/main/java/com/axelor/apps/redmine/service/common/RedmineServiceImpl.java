@@ -181,11 +181,20 @@ public class RedmineServiceImpl implements RedmineService {
 
     HashMap<String, Boolean> customFieldsValidationMap = new HashMap<String, Boolean>();
 
-    customFieldsValidationMap.put(
-        "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
-    customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
-    customFieldsValidationMap.put(
-        "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+    if (appRedmine.getSynchronisedWith().equals(AppRedmineRepository.SYNCHRONISED_WITH_REDMINE)) {
+      customFieldsValidationMap.put(
+          "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
+      customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
+      customFieldsValidationMap.put(
+          "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+    } else {
+      customFieldsValidationMap.put(
+          "time_entry_activity " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
+      customFieldsValidationMap.put(
+          "time_entry_activity " + appRedmine.getRedmineTimeSpentProduct(), false);
+      customFieldsValidationMap.put(
+          "time_entry_activity " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+    }
 
     validateCustomFieldConfig(customFieldManager, customFieldsValidationMap);
   }
