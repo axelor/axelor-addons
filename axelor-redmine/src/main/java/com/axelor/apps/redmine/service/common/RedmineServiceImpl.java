@@ -100,9 +100,9 @@ public class RedmineServiceImpl implements RedmineService {
       Batch batch, Consumer<Object> onSuccess, Consumer<Throwable> onError) {
 
     RedmineManager redmineManager = null;
+    AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
     try {
-      AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
       redmineManager = getRedmineManager(appRedmine);
 
       if (redmineManager == null) {
@@ -115,7 +115,8 @@ public class RedmineServiceImpl implements RedmineService {
       TraceBackService.trace(e, "", batch.getId());
     }
 
-    redmineTimeEntriesService.redmineImportTimeEntries(batch, redmineManager, onSuccess, onError);
+    redmineTimeEntriesService.redmineImportTimeEntries(
+        batch, redmineManager, onSuccess, onError, appRedmine);
   }
 
   @Override
@@ -180,11 +181,20 @@ public class RedmineServiceImpl implements RedmineService {
 
     HashMap<String, Boolean> customFieldsValidationMap = new HashMap<String, Boolean>();
 
-    customFieldsValidationMap.put(
-        "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
-    customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
-    customFieldsValidationMap.put(
-        "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+    if (appRedmine.getSynchronisedWith().equals(AppRedmineRepository.SYNCHRONISED_WITH_REDMINE)) {
+      customFieldsValidationMap.put(
+          "time_entry " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
+      customFieldsValidationMap.put("time_entry " + appRedmine.getRedmineTimeSpentProduct(), false);
+      customFieldsValidationMap.put(
+          "time_entry " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+    } else {
+      customFieldsValidationMap.put(
+          "time_entry_activity " + appRedmine.getRedmineTimeSpentDurationForCustomer(), false);
+      customFieldsValidationMap.put(
+          "time_entry_activity " + appRedmine.getRedmineTimeSpentProduct(), false);
+      customFieldsValidationMap.put(
+          "time_entry_activity " + appRedmine.getRedmineTimeSpentDurationUnit(), false);
+    }
 
     validateCustomFieldConfig(customFieldManager, customFieldsValidationMap);
   }

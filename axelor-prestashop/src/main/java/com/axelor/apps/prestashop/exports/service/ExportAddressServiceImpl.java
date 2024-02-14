@@ -119,7 +119,7 @@ public class ExportAddressServiceImpl implements ExportAddressService {
           } else {
             /* localAddress not yet exported */
             remoteAddress.setAlias(
-                I18n.getBundle(new Locale(partnerService.getPartnerLanguageCode(customer)))
+                I18n.getBundle(new Locale(partnerService.getPartnerLocale(customer)))
                         .getString("Main address")
                     + " #"
                     + i++);

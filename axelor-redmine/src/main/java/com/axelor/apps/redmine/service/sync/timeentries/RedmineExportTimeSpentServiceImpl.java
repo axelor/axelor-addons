@@ -36,6 +36,7 @@ import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
 import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
+import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.common.StringUtils;
@@ -123,13 +124,16 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
   protected String failedAosTimesheetLineIds;
 
   @Override
-  public String exportTimesheetLines(Map<String, Object> paramsMap) {
+  public String exportTimesheetLines(
+      MethodParameters methodParameters, HashMap<String, String> redmineUserLoginMap) {
 
-    RedmineManager redmineManager = (RedmineManager) paramsMap.get("redmineManager");
+    this.methodParameters = methodParameters;
+    this.redmineUserLoginMap = redmineUserLoginMap;
 
-    setDefaultValuesAndMaps(redmineManager, paramsMap);
+    RedmineManager redmineManager = methodParameters.getRedmineManager();
+    //    setDefaultValuesAndMaps(redmineManager);
 
-    RedmineBatch redmineBatch = batch.getRedmineBatch();
+    RedmineBatch redmineBatch = methodParameters.getBatch().getRedmineBatch();
 
     List<Long> failedAosTimesheetLineIdList =
         Stream.of(
@@ -140,17 +144,17 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
             .map(Long::parseLong)
             .collect(Collectors.toList());
     String baseFilter =
-        Boolean.FALSE.equals(redmineBatch.getIsOverrideRecords())
-            ? "self.project != null AND (self.redmineId = null OR self.redmineId = 0)"
-            : "self.project != null";
+        !redmineBatch.getIsOverrideRecords()
+            ? "self.project IS NOT NULL AND (self.redmineId = null OR self.redmineId = 0)"
+            : "self.project IS NOT NULL";
 
     Query<TimesheetLine> query =
-        lastBatchUpdatedOn != null
+        methodParameters.getLastBatchUpdatedOn() != null
             ? timesheetLineRepo
                 .all()
                 .filter(
                     "(" + baseFilter + " AND self.updatedOn > ?1) OR self.id IN (?2)",
-                    lastBatchUpdatedOn,
+                    methodParameters.getLastBatchUpdatedOn(),
                     failedAosTimesheetLineIdList)
                 .order("id")
             : timesheetLineRepo.all().filter(baseFilter).order("id");
@@ -171,8 +175,8 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
               failedAosTimesheetLineIds == null
                   ? timesheetLine.getId().toString()
                   : failedAosTimesheetLineIds + "," + timesheetLine.getId().toString();
-          TraceBackService.trace(e, "", batch.getId());
-          onError.accept(e);
+          TraceBackService.trace(e, "", methodParameters.getBatch().getId());
+          methodParameters.getOnError().accept(e);
         }
       }
 
@@ -193,21 +197,21 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
   public void setDefaultValuesAndMaps(
       RedmineManager redmineManager, Map<String, Object> paramsMap) {
 
-    lastBatchUpdatedOn = (LocalDateTime) paramsMap.get("lastBatchUpdatedOn");
+    methodParameters.setLastBatchUpdatedOn((LocalDateTime) paramsMap.get("lastBatchUpdatedOn"));
     redmineUserLoginMap = (HashMap<String, String>) paramsMap.get("redmineUserLoginMap");
     redmineUserEmailMap =
         (HashMap<String, Integer>)
             MapUtils.invertMap((HashMap<Integer, String>) paramsMap.get("redmineUserMap"));
-    onError = (Consumer<Throwable>) paramsMap.get("onError");
-    onSuccess = (Consumer<Object>) paramsMap.get("onSuccess");
-    batch = (Batch) paramsMap.get("batch");
-    errorObjList = (List<Object[]>) paramsMap.get("errorObjList");
+    methodParameters.setOnError((Consumer<Throwable>) paramsMap.get("onError"));
+    methodParameters.setOnSuccess((Consumer<Object>) paramsMap.get("onSuccess"));
+    methodParameters.setBatch((Batch) paramsMap.get("batch"));
+    methodParameters.setErrorObjList((List<Object[]>) paramsMap.get("errorObjList"));
 
     serverTimeZone = appRedmineRepo.all().fetchOne().getServerTimezone();
 
     redmineTimeEntryManager = redmineManager.getTimeEntryManager();
     redmineIssueManager = redmineManager.getIssueManager();
-    redmineProjectManager = redmineManager.getProjectManager();
+    methodParameters.setRedmineManager(redmineManager);
 
     redmineProjectIdValidationMap.put(0, Boolean.FALSE);
     redmineIssueIdValidationMap.put(0, Boolean.FALSE);
@@ -224,8 +228,8 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
         }
       }
     } catch (RedmineException e) {
-      TraceBackService.trace(e, "", batch.getId());
-      onError.accept(e);
+      TraceBackService.trace(e, "", methodParameters.getBatch().getId());
+      methodParameters.getOnError().accept(e);
     }
 
     fieldMap = new HashMap<>();
@@ -313,7 +317,12 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
 
       try {
         redmineProjectIdValidationMap.put(
-            redmineProjectManager.getProjectById(redmineProjectId).getId(), Boolean.TRUE);
+            methodParameters
+                .getRedmineManager()
+                .getProjectManager()
+                .getProjectById(redmineProjectId)
+                .getId(),
+            Boolean.TRUE);
       } catch (RedmineException e) {
         redmineProjectIdValidationMap.put(redmineProjectId, Boolean.FALSE);
       }
@@ -392,7 +401,7 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
     createOrUpdateRedmineTimeEntry(redmineTimeEntry, timesheetLine);
 
     success++;
-    onSuccess.accept(timesheetLine);
+    methodParameters.getOnSuccess().accept(timesheetLine);
   }
 
   @Transactional
@@ -402,10 +411,10 @@ public class RedmineExportTimeSpentServiceImpl extends RedmineCommonService
     if (redmineTimeEntry.getId() == null) {
       redmineTimeEntry = redmineTimeEntry.create();
       timesheetLine.setRedmineId(redmineTimeEntry.getId());
-      timesheetLine.addCreatedExportBatchSetItem(batch);
+      timesheetLine.addCreatedExportBatchSetItem(methodParameters.getBatch());
     } else {
       redmineTimeEntry.update();
-      timesheetLine.addUpdatedExportBatchSetItem(batch);
+      timesheetLine.addUpdatedExportBatchSetItem(methodParameters.getBatch());
     }
 
     timesheetLineRepo.save(timesheetLine);

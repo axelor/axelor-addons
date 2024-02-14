@@ -24,11 +24,11 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.Card;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 public interface StripePaymentService {
@@ -59,6 +59,6 @@ public interface StripePaymentService {
       throws StripeException, AxelorException;
 
   public Charge checkout(Invoice invoice, Customer customer, String cardId, BigDecimal payAmount)
-      throws StripeException, AxelorException, JAXBException, IOException,
-          DatatypeConfigurationException;
+      throws StripeException, AxelorException, IOException, DatatypeConfigurationException,
+          JAXBException;
 }

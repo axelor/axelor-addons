@@ -57,7 +57,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.io.IOException;
 import javax.mail.MessagingException;
-import wslite.json.JSONException;
 
 public class SaleOrderWorkflowServicePortalImpl
     extends SaleOrderWorkflowServiceBusinessProductionImpl {
@@ -137,7 +136,7 @@ public class SaleOrderWorkflowServicePortalImpl
             message, SaleOrder.class.getCanonicalName(), saleOrder.getId());
         message = messageService.sendMessage(message);
       }
-    } catch (ClassNotFoundException | IOException | JSONException e) {
+    } catch (ClassNotFoundException | IOException e) {
       throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
   }

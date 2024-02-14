@@ -8,12 +8,17 @@
   <entity name="AppRedmine" lang="java" cacheable="true">
 
     <one-to-one ref="com.axelor.studio.db.App" name="app"/>
-    <string name="serverTimezone" title="Redmine server timezone"/>
+    <string name="serverTimezone" title="Redmine/Easy Redmine server timezone"/>
 
     <!-- REDMINE CONFIGURATION DETAILS -->
     <string name="uri" title="URI"/>
     <string name="apiAccessKey" title="Api Access Key"/>
     <many-to-one name="company" ref="com.axelor.apps.base.db.Company" title="Company"/>
+    <string name="redmineUsersStatus" title="Redmine/Easy Redmine users status"
+      selection="redmine.app.users.status"/>
+    <string name="onUsersFilter" title="Filters for users name/email"/>
+    <integer name="synchronisedWith" title="Synchronised with"
+      selection="redmine.app.synchronised.type.select"/>
 
     <!-- REDMINE CUSTOM FIELD CONFIGURATION DETAILS -->
     <string name="redmineProjectInvoiceable"/>
@@ -42,6 +47,13 @@
     <string name="redmineTimeSpentProductDefault"/>
     <decimal name="redmineIssueUnitPriceDefault"/>
     <string name="redmineTimeSpentDurationUnitDefault"/>
+
+    <extra-code>
+      <![CDATA[
+          public static final int SYNCHRONISED_WITH_REDMINE = 1;
+          public static final int SYNCHRONISED_WITH_EASY_REDMINE = 2;
+	  ]]>
+    </extra-code>
   </entity>
 
 </domain-models>

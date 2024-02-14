@@ -51,7 +51,7 @@ import com.axelor.meta.db.MetaFile;
 import com.axelor.meta.db.MetaModel;
 import com.axelor.meta.schema.actions.ActionView;
 import com.axelor.rpc.Context;
-import com.axelor.utils.StringTool;
+import com.axelor.utils.helpers.StringHelper;
 import com.axelor.utils.template.TemplateMaker;
 import com.docusign.esign.api.EnvelopesApi;
 import com.docusign.esign.client.ApiClient;
@@ -445,7 +445,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
 
     EnvelopeDefinition envelopeDefinition = new EnvelopeDefinition();
     envelopeDefinition.setEmailSubject(
-        StringTool.cutTooLongStringWithOffset(docuSignEnvelope.getEmailSubject(), 155));
+        StringHelper.cutTooLongStringWithOffset(docuSignEnvelope.getEmailSubject(), 155));
 
     List<DocuSignDocument> docuSignDocumentList = docuSignEnvelope.getDocuSignDocumentList();
     List<Document> documentList = createDocuments(docuSignDocumentList);
@@ -625,7 +625,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   protected List<CarbonCopy> createCCRecipient(List<DocuSignSigner> docuSignSignerList)
       throws AxelorException {
     if (ObjectUtils.isEmpty(docuSignSignerList)) {
-      return List.of();
+      return new ArrayList<>();
     }
     List<CarbonCopy> ccList = new ArrayList<>();
 
@@ -676,35 +676,40 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
       List<DocuSignDocument> docuSignDocumentList)
       throws AxelorException {
 
-    if (CollectionUtils.isNotEmpty(docuSignDocumentList)) {
+    if (CollectionUtils.isEmpty(docuSignDocumentList)) {
+      return;
+    }
 
-      for (DocuSignDocument docuSignDocument : docuSignDocumentList) {
+    for (DocuSignDocument docuSignDocument : docuSignDocumentList) {
 
-        if (CollectionUtils.isNotEmpty(docuSignDocument.getDocuSignFieldList())) {
-          for (DocuSignField docuSignField : docuSignDocument.getDocuSignFieldList()) {
-            if (ObjectUtils.notEmpty(docuSignField.getDocuSignSigner())) {
-              String recipientId = docuSignField.getDocuSignSigner().getRecipientId();
-              if (docuSignField.getDocuSignSigner().getIsInPersonSigner()) {
-                InPersonSigner inPersonSigner = findInPersonSigner(inPersonSignerList, recipientId);
-                if (ObjectUtils.notEmpty(inPersonSigner)) {
-                  updateInPersonSigner(inPersonSigner, docuSignField);
-                } else {
-                  throw new AxelorException(
-                      TraceBackRepository.CATEGORY_INCONSISTENCY,
-                      I18n.get(IExceptionMessage.DOCUSIGN_IN_PERSON_SIGNER_NOT_FOUND));
-                }
+      if (CollectionUtils.isEmpty(docuSignDocument.getDocuSignFieldList())) {
+        continue;
+      }
+      for (DocuSignField docuSignField : docuSignDocument.getDocuSignFieldList()) {
+        DocuSignSigner docuSignSigner = docuSignField.getDocuSignSigner();
 
-              } else {
-                Signer signer = findSigner(signerList, recipientId);
-                if (ObjectUtils.notEmpty(signer)) {
-                  updateSigner(signer, docuSignField);
-                } else {
-                  throw new AxelorException(
-                      TraceBackRepository.CATEGORY_INCONSISTENCY,
-                      I18n.get(IExceptionMessage.DOCUSIGN_SIGNER_NOT_FOUND));
-                }
-              }
-            }
+        if (docuSignSigner == null || docuSignSigner.getIsCCRecipient()) {
+          continue;
+        }
+
+        String recipientId = docuSignSigner.getRecipientId();
+        if (docuSignSigner.getIsInPersonSigner()) {
+          InPersonSigner inPersonSigner = findInPersonSigner(inPersonSignerList, recipientId);
+          if (ObjectUtils.notEmpty(inPersonSigner)) {
+            updateInPersonSigner(inPersonSigner, docuSignField);
+          } else {
+            throw new AxelorException(
+                TraceBackRepository.CATEGORY_INCONSISTENCY,
+                I18n.get(IExceptionMessage.DOCUSIGN_IN_PERSON_SIGNER_NOT_FOUND));
+          }
+        } else {
+          Signer signer = findSigner(signerList, recipientId);
+          if (ObjectUtils.notEmpty(signer)) {
+            updateSigner(signer, docuSignField);
+          } else {
+            throw new AxelorException(
+                TraceBackRepository.CATEGORY_INCONSISTENCY,
+                I18n.get(IExceptionMessage.DOCUSIGN_SIGNER_NOT_FOUND));
           }
         }
       }

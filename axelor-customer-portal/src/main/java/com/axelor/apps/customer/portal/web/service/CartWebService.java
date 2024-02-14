@@ -42,6 +42,7 @@ import com.axelor.message.db.EmailAddress;
 import com.axelor.studio.db.AppCustomerPortal;
 import com.google.common.collect.ImmutableMap;
 import com.stripe.exception.StripeException;
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -54,7 +55,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 

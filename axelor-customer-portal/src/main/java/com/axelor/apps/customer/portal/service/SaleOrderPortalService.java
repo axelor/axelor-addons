@@ -20,9 +20,9 @@ package com.axelor.apps.customer.portal.service;
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.sale.db.SaleOrder;
 import com.stripe.exception.StripeException;
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.Map;
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 
