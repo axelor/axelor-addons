@@ -21,4 +21,5 @@ dependencies {
   implementation "com.paypal.sdk:checkout-sdk:1.0.2"
   implementation "com.google.code.gson:gson:2.8.6"
   implementation "org.bouncycastle:bcprov-jdk15on:1.68"
+  implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
 }

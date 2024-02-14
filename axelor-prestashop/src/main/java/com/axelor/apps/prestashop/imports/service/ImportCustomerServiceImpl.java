@@ -87,7 +87,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
     Language defaultCustomerLanguage =
         appConfig.getTextsLanguage() != null
             ? appConfig.getTextsLanguage()
-            : appBaseService.getAppBase().getDefaultPartnerLanguage();
+            : appBaseService.getAppBase().getDefaultPartnerLocalization().getLanguage();
 
     for (PrestashopCustomer remoteCustomer : remoteCustomers) {
       logBuffer.write(
@@ -113,14 +113,16 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
           localCustomer.setIsCustomer(Boolean.TRUE);
           localCustomer.setContactPartnerSet(new HashSet<>());
           localCustomer.setCurrency(appConfig.getPrestaShopCurrency());
-          localCustomer.setLanguage(defaultCustomerLanguage);
+          localCustomer.setLocalization(
+              appBaseService.getAppBase().getDefaultPartnerLocalization());
           // Assign a company to generate an accounting situation
           localCustomer.addCompanySetItem(
               AbstractBatch.getCurrentBatch().getPrestaShopBatch().getCompany());
           if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
             localCustomer.setPartnerSeq(
                 Beans.get(SequenceService.class)
-                    .getSequenceNumber(SequenceRepository.PARTNER, null, null));
+                    .getSequenceNumber(
+                        SequenceRepository.PARTNER, Partner.class, "partnerSeq", localCustomer));
             if (localCustomer.getPartnerSeq() == null) {
               ++errors;
               logBuffer.write(
@@ -169,7 +171,8 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
               if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
                 mainContact.setPartnerSeq(
                     Beans.get(SequenceService.class)
-                        .getSequenceNumber(SequenceRepository.PARTNER, null, null));
+                        .getSequenceNumber(
+                            SequenceRepository.PARTNER, Partner.class, "partnerSeq", mainContact));
                 if (mainContact.getPartnerSeq() == null) {
                   ++errors;
                   logBuffer.write(

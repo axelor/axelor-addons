@@ -51,7 +51,7 @@ import com.axelor.meta.db.MetaFile;
 import com.axelor.meta.db.MetaModel;
 import com.axelor.meta.schema.actions.ActionView;
 import com.axelor.rpc.Context;
-import com.axelor.utils.StringTool;
+import com.axelor.utils.helpers.StringHelper;
 import com.axelor.utils.template.TemplateMaker;
 import com.docusign.esign.api.EnvelopesApi;
 import com.docusign.esign.client.ApiClient;
@@ -445,7 +445,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
 
     EnvelopeDefinition envelopeDefinition = new EnvelopeDefinition();
     envelopeDefinition.setEmailSubject(
-        StringTool.cutTooLongStringWithOffset(docuSignEnvelope.getEmailSubject(), 155));
+        StringHelper.cutTooLongStringWithOffset(docuSignEnvelope.getEmailSubject(), 155));
 
     List<DocuSignDocument> docuSignDocumentList = docuSignEnvelope.getDocuSignDocumentList();
     List<Document> documentList = createDocuments(docuSignDocumentList);
@@ -625,7 +625,7 @@ public class DocuSignEnvelopeServiceImpl implements DocuSignEnvelopeService {
   protected List<CarbonCopy> createCCRecipient(List<DocuSignSigner> docuSignSignerList)
       throws AxelorException {
     if (ObjectUtils.isEmpty(docuSignSignerList)) {
-      return List.of();
+      return new ArrayList<>();
     }
     List<CarbonCopy> ccList = new ArrayList<>();
 

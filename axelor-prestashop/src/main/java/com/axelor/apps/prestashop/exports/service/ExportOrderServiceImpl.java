@@ -209,8 +209,7 @@ public class ExportOrderServiceImpl implements ExportOrderService {
           } else {
             remoteOrder.setPayment(
                 I18n.getBundle(
-                        new Locale(
-                            partnerService.getPartnerLanguageCode(localOrder.getClientPartner())))
+                        new Locale(partnerService.getPartnerLocale(localOrder.getClientPartner())))
                     .getString("Unknown"));
           }
           remoteOrder.setModule(
