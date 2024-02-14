@@ -33,8 +33,8 @@ import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
+import com.axelor.apps.hr.service.timesheet.TimesheetCreateService;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
-import com.axelor.apps.hr.service.timesheet.TimesheetService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectRepository;
@@ -75,7 +75,8 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
 
   protected TimesheetLineRepository timesheetLineRepo;
   protected TimesheetRepository timesheetRepo;
-  protected TimesheetService timesheetService;
+
+  protected TimesheetCreateService timesheetCreateService;
   protected UnitRepository unitRepo;
   protected TimesheetLineService timesheetLineService;
   protected AppBaseService appBaseService;
@@ -91,7 +92,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
       PartnerRepository partnerRepo,
       TimesheetLineRepository timesheetLineRepo,
       TimesheetRepository timesheetRepo,
-      TimesheetService timesheetService,
+      TimesheetCreateService timesheetCreateService,
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo,
       UnitRepository unitRepo,
@@ -110,7 +111,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
         companyRepo);
     this.timesheetLineRepo = timesheetLineRepo;
     this.timesheetRepo = timesheetRepo;
-    this.timesheetService = timesheetService;
+    this.timesheetCreateService = timesheetCreateService;
     this.unitRepo = unitRepo;
     this.timesheetLineService = timesheetLineService;
     this.appBaseService = appBaseService;
@@ -406,7 +407,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
 
     try {
       if (timesheet == null) {
-        timesheet = timesheetService.createTimesheet(employee, redmineSpentOn, null);
+        timesheet = timesheetCreateService.createTimesheet(employee, redmineSpentOn, null);
 
         if (timesheet.getCompany() == null) {
           timesheet.setCompany(companyRepo.find(defaultCompanyId));

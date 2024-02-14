@@ -50,6 +50,7 @@ import com.stripe.net.RequestOptions;
 import com.stripe.param.ChargeCreateParams;
 import com.stripe.param.CustomerCreateParams;
 import com.stripe.param.CustomerUpdateParams;
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,7 +59,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 public class StripePaymentServiceImpl implements StripePaymentService {
@@ -284,8 +284,8 @@ public class StripePaymentServiceImpl implements StripePaymentService {
   @Override
   @Transactional
   public Charge checkout(Invoice invoice, Customer customer, String cardId, BigDecimal payAmount)
-      throws StripeException, AxelorException, JAXBException, IOException,
-          DatatypeConfigurationException {
+      throws StripeException, AxelorException, IOException, DatatypeConfigurationException,
+          JAXBException {
     Charge charge =
         createCharge(
             customer,

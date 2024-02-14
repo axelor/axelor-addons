@@ -30,17 +30,17 @@ import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
+import com.axelor.apps.hr.service.timesheet.TimesheetCreateService;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
-import com.axelor.apps.hr.service.timesheet.TimesheetService;
+import com.axelor.apps.hr.service.timesheet.TimesheetPeriodComputationService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
-import com.axelor.inject.Beans;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
 import com.axelor.studio.db.AppBase;
 import com.axelor.studio.db.repo.AppBaseRepository;
-import com.axelor.utils.date.DurationTool;
+import com.axelor.utils.helpers.date.DurationHelper;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import java.math.BigDecimal;
@@ -62,9 +62,10 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   public TimesheetLineService timesheetLineService;
   public ICalendarEventRepository iCalendarEventRepository;
   public TimesheetRepository timesheetRepository;
-  public TimesheetService timesheetService;
   public AppBaseRepository appBaseRepository;
   public DailyTimesheetRepository dailyTimesheetRepository;
+  public TimesheetCreateService timesheetCreateService;
+  public TimesheetPeriodComputationService timesheetPeriodComputationService;
 
   @Inject
   public DailyTimesheetServiceImpl(
@@ -75,9 +76,10 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       TimesheetLineService timesheetLineService,
       ICalendarEventRepository iCalendarEventRepository,
       TimesheetRepository timesheetRepository,
-      TimesheetService timesheetService,
       AppBaseRepository appBaseRepository,
-      DailyTimesheetRepository dailyTimesheetRepository) {
+      DailyTimesheetRepository dailyTimesheetRepository,
+      TimesheetCreateService timesheetCreateService,
+      TimesheetPeriodComputationService timesheetPeriodComputationService) {
     this.appBaseService = appBaseService;
     this.timesheetLineRepository = timesheetLineRepository;
     this.mailMessageRepository = mailMessageRepository;
@@ -85,9 +87,10 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     this.timesheetLineService = timesheetLineService;
     this.iCalendarEventRepository = iCalendarEventRepository;
     this.timesheetRepository = timesheetRepository;
-    this.timesheetService = timesheetService;
     this.appBaseRepository = appBaseRepository;
     this.dailyTimesheetRepository = dailyTimesheetRepository;
+    this.timesheetCreateService = timesheetCreateService;
+    this.timesheetPeriodComputationService = timesheetPeriodComputationService;
   }
 
   private final BigDecimal MINUTES_IN_ONE_DAY = new BigDecimal(1440);
@@ -330,7 +333,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
       BigDecimal minuteDuration =
           BigDecimal.valueOf(
-              DurationTool.computeDuration(
+              DurationHelper.computeDuration(
                       iCalendarEvent.getStartDateTime(), iCalendarEvent.getEndDateTime())
                   .toMinutes());
 
@@ -404,7 +407,8 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     try {
       if (timesheet == null) {
         timesheet =
-            timesheetService.createTimesheet(dailyTimesheetEmployee, dailyTimesheetDate, null);
+            timesheetCreateService.createTimesheet(
+                dailyTimesheetEmployee, dailyTimesheetDate, null);
         timesheetRepository.save(timesheet);
       }
     } catch (AxelorException e) {
@@ -442,7 +446,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   public Timesheet updateRelatedTimesheet(DailyTimesheet dailyTimesheet) {
 
     Timesheet timesheet = dailyTimesheet.getTimesheet();
-    timesheet.setPeriodTotal(Beans.get(TimesheetService.class).computePeriodTotal(timesheet));
+    timesheet.setPeriodTotal(timesheetPeriodComputationService.computePeriodTotal(timesheet));
 
     if (timesheet.getToDate() != null
         && timesheet.getToDate().isBefore(dailyTimesheet.getDailyTimesheetDate())) {

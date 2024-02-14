@@ -76,6 +76,7 @@ import com.paypal.orders.PurchaseUnit;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Charge;
 import com.stripe.model.Customer;
+import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -83,11 +84,9 @@ import java.util.List;
 import java.util.Map;
 import javax.mail.MessagingException;
 import javax.ws.rs.NotFoundException;
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
-import wslite.json.JSONException;
 
 public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
 
@@ -249,7 +248,7 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
             message, SaleOrder.class.getCanonicalName(), order.getId());
         message = messageService.sendMessage(message);
       }
-    } catch (ClassNotFoundException | IOException | JSONException | MessagingException e) {
+    } catch (ClassNotFoundException | IOException | MessagingException e) {
       throw new AxelorException(e.getCause(), TraceBackRepository.CATEGORY_CONFIGURATION_ERROR);
     }
 

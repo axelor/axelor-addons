@@ -26,7 +26,9 @@ import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
-import com.axelor.apps.hr.service.timesheet.TimesheetService;
+import com.axelor.apps.hr.service.timesheet.TimesheetLineGenerationService;
+import com.axelor.apps.hr.service.timesheet.TimesheetTimeComputationService;
+import com.axelor.apps.hr.service.timesheet.TimesheetWorkflowServiceImpl;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 import com.axelor.message.db.Message;
@@ -90,20 +92,21 @@ public class DailyTimesheetController {
           Beans.get(TimesheetRepository.class).find(dailyTimesheet.getTimesheet().getId());
 
       if (!timesheet.getStatusSelect().equals(TimesheetRepository.STATUS_VALIDATED)) {
-        TimesheetService timesheetService = Beans.get(TimesheetService.class);
 
-        timesheetService.checkEmptyPeriod(timesheet);
+        Beans.get(TimesheetLineGenerationService.class).checkEmptyPeriod(timesheet);
 
         if (timesheet.getTimesheetLineList() != null
             && !timesheet.getTimesheetLineList().isEmpty()) {
-          Beans.get(TimesheetService.class).computeTimeSpent(timesheet);
+          Beans.get(TimesheetTimeComputationService.class).computeTimeSpent(timesheet);
         }
 
         // Call this method to validate dates and fill toDate if it is empty before validating it
-        timesheetService.confirm(timesheet);
+        TimesheetWorkflowServiceImpl timesheetWorkflowService =
+            Beans.get(TimesheetWorkflowServiceImpl.class);
 
-        Message message = timesheetService.validateAndSendValidationEmail(timesheet);
+        timesheetWorkflowService.confirm(timesheet);
 
+        Message message = timesheetWorkflowService.validateAndSendValidationEmail(timesheet);
         if (message != null && message.getStatusSelect() == MessageRepository.STATUS_SENT) {
           response.setInfo(
               String.format(
