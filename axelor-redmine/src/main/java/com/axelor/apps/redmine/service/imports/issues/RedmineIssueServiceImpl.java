@@ -139,7 +139,10 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
       redmineImportIssueService.importIssue(
           redmineFetchDataService.fetchIssueImportData(
-              redmineManager, lastBatchEndDate, failedRedmineIssuesIds),
+              redmineManager,
+              lastBatchEndDate,
+              failedRedmineIssuesIds,
+              appRedmine.getSynchronisedWith()),
           methodParameters);
       failedRedmineIssuesIds = batch.getRedmineBatch().getFailedRedmineIssuesIds();
 
