@@ -159,7 +159,8 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
         redmineFetchDataService.fetchTimeEntryImportData(
             redmineManager,
             timeEntriesRedmineParameters.getLastBatchEndDate(),
-            timeEntriesRedmineParameters.getFailedRedmineTimeEntriesIds());
+            timeEntriesRedmineParameters.getFailedRedmineTimeEntriesIds(),
+            timeEntriesRedmineParameters.getAppRedmine().getSynchronisedWith());
 
     // EXPORT PROCESS
     if (isDirectionExport(batch.getRedmineBatch())) {
