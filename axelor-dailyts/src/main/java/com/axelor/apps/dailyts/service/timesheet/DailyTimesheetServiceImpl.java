@@ -31,7 +31,7 @@ import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetCreateService;
-import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
+import com.axelor.apps.hr.service.timesheet.TimesheetLineCreateService;
 import com.axelor.apps.hr.service.timesheet.TimesheetPeriodComputationService;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
@@ -59,7 +59,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
   public TimesheetLineRepository timesheetLineRepository;
   public MailMessageRepository mailMessageRepository;
   public ProjectTaskRepository projectTaskaRepo;
-  public TimesheetLineService timesheetLineService;
+  public TimesheetLineCreateService timesheetLineCreateService;
   public ICalendarEventRepository iCalendarEventRepository;
   public TimesheetRepository timesheetRepository;
   public AppBaseRepository appBaseRepository;
@@ -73,7 +73,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
       TimesheetLineRepository timesheetLineRepository,
       MailMessageRepository mailMessageRepository,
       ProjectTaskRepository projectTaskaRepo,
-      TimesheetLineService timesheetLineService,
+      TimesheetLineCreateService timesheetLineCreateService,
       ICalendarEventRepository iCalendarEventRepository,
       TimesheetRepository timesheetRepository,
       AppBaseRepository appBaseRepository,
@@ -84,7 +84,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     this.timesheetLineRepository = timesheetLineRepository;
     this.mailMessageRepository = mailMessageRepository;
     this.projectTaskaRepo = projectTaskaRepo;
-    this.timesheetLineService = timesheetLineService;
+    this.timesheetLineCreateService = timesheetLineCreateService;
     this.iCalendarEventRepository = iCalendarEventRepository;
     this.timesheetRepository = timesheetRepository;
     this.appBaseRepository = appBaseRepository;
@@ -316,7 +316,7 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
     }
 
     TimesheetLine timesheetLine =
-        timesheetLineService.createTimesheetLine(
+        timesheetLineCreateService.createTimesheetLine(
             project,
             dailyTimesheetEmployee != null ? dailyTimesheetEmployee.getProduct() : null,
             dailyTimesheetEmployee,
