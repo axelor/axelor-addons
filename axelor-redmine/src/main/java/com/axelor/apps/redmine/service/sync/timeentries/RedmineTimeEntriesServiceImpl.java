@@ -42,6 +42,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.function.Consumer;
+import javax.persistence.NoResultException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
@@ -265,7 +266,11 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
 
     criteriaQuery.where(predicate).orderBy(criteriaBuilder.desc(root.get("updatedOn")));
 
-    return JPA.em().createQuery(criteriaQuery).getSingleResult();
+    try {
+      return JPA.em().createQuery(criteriaQuery).setMaxResults(1).getSingleResult();
+    } catch (NoResultException e) {
+      return null;
+    }
   }
 
   @Transactional
