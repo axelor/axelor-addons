@@ -49,6 +49,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import javax.persistence.EntityTransaction;
 import net.java.textilej.parser.MarkupParser;
 import net.java.textilej.parser.builder.HtmlDocumentBuilder;
 import net.java.textilej.parser.markup.textile.TextileDialect;
@@ -205,16 +206,24 @@ public class RedmineCommonService {
   protected void updateTransaction() {
 
     Batch batch = methodParameters.getBatch();
-    JPA.em().getTransaction().commit();
 
-    if (!JPA.em().getTransaction().isActive()) {
-      JPA.em().getTransaction().begin();
-    }
+    EntityTransaction transaction = JPA.em().getTransaction();
+    transactionBegin(transaction);
+    transaction.commit();
 
     JPA.clear();
 
     if (!JPA.em().contains(batch)) {
       methodParameters.setBatch(JPA.find(Batch.class, batch.getId()));
+    }
+
+    transactionBegin(transaction);
+  }
+
+  protected void transactionBegin(EntityTransaction transaction) {
+
+    if (!transaction.isActive()) {
+      transaction.begin();
     }
   }
 
