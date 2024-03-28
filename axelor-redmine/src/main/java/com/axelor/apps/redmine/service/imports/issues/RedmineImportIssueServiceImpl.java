@@ -49,8 +49,6 @@ import com.axelor.db.JPA;
 import com.axelor.i18n.I18n;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
-import com.axelor.meta.MetaStore;
-import com.axelor.meta.schema.views.Selection.Option;
 import com.axelor.studio.db.AppRedmine;
 import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.common.base.Joiner;
@@ -76,9 +74,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -192,19 +188,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       this.redmineIssueEstimatedTimeDefault = appRedmine.getRedmineIssueEstimatedTimeDefault();
       this.redmineIssueUnitPriceDefault = appRedmine.getRedmineIssueUnitPriceDefault();
 
-      //      serverTimeZone = appRedmine.getServerTimezone();
-
-      List<Option> selectionList = new ArrayList<>();
-      selectionList.addAll(MetaStore.getSelectionList("project.task.status"));
-      selectionList.addAll(MetaStore.getSelectionList("project.task.priority"));
-
-      ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
-      ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
-
-      for (Option option : selectionList) {
-        selectionMap.put(fr.getString(option.getTitle()), option.getValue());
-        selectionMap.put(en.getString(option.getTitle()), option.getValue());
-      }
+      serverTimeZone = appRedmine.getServerTimezone();
 
       List<RedmineImportMapping> redmineImportMappingList =
           redmineImportMappingRepository
