@@ -137,6 +137,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
       List<TimeEntry> redmineTimeEntryList, MethodParameters methodParameters) {
 
     if (redmineTimeEntryList != null && !redmineTimeEntryList.isEmpty()) {
+      this.methodParameters = methodParameters;
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
 
       this.defaultCompanyId = appRedmine.getCompany().getId();
