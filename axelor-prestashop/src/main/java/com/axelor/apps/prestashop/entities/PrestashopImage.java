@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.prestashop.entities;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 /**
  * Only used as response body when an image is added. PrestaShop provides no way to edit image

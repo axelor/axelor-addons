@@ -30,8 +30,6 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.ParseException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
 import org.xml.sax.SAXException;
 
 @Singleton
@@ -52,7 +50,7 @@ public class PrestaShopController {
    * @throws AxelorException
    */
   public void importPrestShop(ActionRequest request, ActionResponse response)
-      throws PrestaShopWebserviceException, ParseException, TransformerException, AxelorException {
+      throws PrestaShopWebserviceException, ParseException, AxelorException {
 
     PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
     Batch batch =
@@ -78,9 +76,8 @@ public class PrestaShopController {
    * @throws AxelorException
    */
   public void exportPrestShop(ActionRequest request, ActionResponse response)
-      throws PrestaShopWebserviceException, TransformerException, NumberFormatException,
-          MalformedURLException, IOException, SAXException, ParserConfigurationException,
-          AxelorException {
+      throws PrestaShopWebserviceException, NumberFormatException, MalformedURLException,
+          IOException, SAXException, AxelorException {
 
     PrestaShopBatch prestaShopBatch = request.getContext().asType(PrestaShopBatch.class);
 

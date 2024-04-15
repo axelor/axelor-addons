@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.prestashop.entities;
 
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.math.BigDecimal;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "tax")
 public class PrestashopTax extends PrestashopIdentifiableEntity {
