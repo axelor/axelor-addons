@@ -85,7 +85,8 @@ public class ImportProductServiceImpl implements ImportProductService {
       ProductCategoryRepository productCategoryRepo,
       ProductRepository productRepo,
       CurrencyService currencyService,
-      UnitConversionService unitConversionService, UnitRepository unitRepository) {
+      UnitConversionService unitConversionService,
+      UnitRepository unitRepository) {
     this.metaFiles = metaFiles;
     this.taxRepo = taxRepo;
     this.productCategoryRepo = productCategoryRepo;
