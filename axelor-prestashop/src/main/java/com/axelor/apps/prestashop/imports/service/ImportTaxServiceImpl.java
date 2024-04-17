@@ -193,7 +193,10 @@ public class ImportTaxServiceImpl implements ImportTaxService {
           }
           accountManagement.setCompany(AuthUtils.getUser().getActiveCompany());
           accountManagement.setTypeSelect(AccountManagementAccountRepository.TYPE_TAX);
-          accountManagement.setSaleAccount(appConfig.getDefaultSaleAccountForTax());
+          accountManagement.setSaleAccount(appConfig.getDefaultSaleAccountForProduct());
+          accountManagement.setSaleTaxVatSystem1Account(appConfig.getDefaultSaleAccountForTax());
+          accountManagement.setSaleTaxVatSystem2Account(appConfig.getDefaultSaleAccountForTax());
+          accountManagement.setSaleVatRegulationAccount(appConfig.getDefaultSaleAccountForTax());
           localTax.addAccountManagementListItem(accountManagement);
 
           taxRepo.save(localTax);

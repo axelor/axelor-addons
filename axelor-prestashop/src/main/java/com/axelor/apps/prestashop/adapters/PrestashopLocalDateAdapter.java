@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.prestashop.adapters;
 
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import java.time.LocalDate;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 public class PrestashopLocalDateAdapter extends XmlAdapter<String, LocalDate> {
   private static final String NULL_DATE = "0000-00-00";

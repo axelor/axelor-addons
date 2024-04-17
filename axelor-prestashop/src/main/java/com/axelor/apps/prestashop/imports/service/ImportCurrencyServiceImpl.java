@@ -112,6 +112,8 @@ public class ImportCurrencyServiceImpl implements ImportCurrencyService {
 
       if (appConfig.getPrestaShopMasterForCurrencies() || localCurrency.getId() == null) {
         localCurrency.setName(remoteCurrency.getName());
+        localCurrency.setCodeISO(remoteCurrency.getCode());
+        localCurrency.setCode(remoteCurrency.getCode());
         currencyRepo.save(localCurrency);
         BigDecimal currentRate;
         try {

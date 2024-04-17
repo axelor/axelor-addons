@@ -284,7 +284,7 @@ public class ImportOrderServiceImpl implements ImportOrderService {
           boolean deliveryAddressFound = false;
           boolean invoicingAddressFound = false;
           for (ListIterator<PartnerAddress> it = customer.getPartnerAddressList().listIterator();
-              deliveryAddressFound == false && invoicingAddressFound && it.hasNext(); ) {
+              !deliveryAddressFound && !invoicingAddressFound && it.hasNext(); ) {
             PartnerAddress partnerAddress = it.next();
             if (partnerAddress.getAddress().getId() == localDeliveryAddress.getId()) {
               partnerAddress.setIsDeliveryAddr(Boolean.TRUE);
