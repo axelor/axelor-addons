@@ -160,6 +160,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
                   "local customer has no contact with the same lastname, adding a new one –");
               Partner mainContact = new Partner();
               mainContact.setIsContact(true);
+              mainContact.setPartnerTypeSelect(PartnerRepository.PARTNER_TYPE_INDIVIDUAL);
               mainContact.setTitleSelect(
                   remoteCustomer.getGenderId() == PrestashopCustomer.GENDER_FEMALE
                       ? PartnerRepository.PARTNER_TITLE_MS
@@ -167,6 +168,7 @@ public class ImportCustomerServiceImpl implements ImportCustomerService {
               mainContact.setFirstName(remoteCustomer.getFirstname());
               mainContact.setName(remoteCustomer.getLastname());
               mainContact.setFullName(partnerService.computeFullName(mainContact));
+              mainContact.setSimpleFullName(partnerService.computeSimpleFullName(mainContact));
               mainContact.setMainPartner(localCustomer);
               if (appBaseService.getAppBase().getGeneratePartnerSequence() == Boolean.TRUE) {
                 mainContact.setPartnerSeq(
