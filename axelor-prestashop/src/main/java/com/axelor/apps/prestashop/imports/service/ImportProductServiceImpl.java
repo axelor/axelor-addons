@@ -26,6 +26,7 @@ import com.axelor.apps.base.db.ProductCategory;
 import com.axelor.apps.base.db.Unit;
 import com.axelor.apps.base.db.repo.ProductCategoryRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
+import com.axelor.apps.base.db.repo.UnitRepository;
 import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.administration.AbstractBatch;
@@ -65,14 +66,17 @@ import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ImportProductServiceImpl implements ImportProductService {
+
   private Logger log = LoggerFactory.getLogger(getClass());
 
+  private static final String DEFAULT_UNIT = "Unit";
   private MetaFiles metaFiles;
   private TaxRepository taxRepo;
   private ProductCategoryRepository productCategoryRepo;
   private ProductRepository productRepo;
   private CurrencyService currencyService;
   private UnitConversionService unitConversionService;
+  private UnitRepository unitRepository;
 
   @Inject
   public ImportProductServiceImpl(
@@ -81,13 +85,14 @@ public class ImportProductServiceImpl implements ImportProductService {
       ProductCategoryRepository productCategoryRepo,
       ProductRepository productRepo,
       CurrencyService currencyService,
-      UnitConversionService unitConversionService) {
+      UnitConversionService unitConversionService, UnitRepository unitRepository) {
     this.metaFiles = metaFiles;
     this.taxRepo = taxRepo;
     this.productCategoryRepo = productCategoryRepo;
     this.productRepo = productRepo;
     this.currencyService = currencyService;
     this.unitConversionService = unitConversionService;
+    this.unitRepository = unitRepository;
   }
 
   @Override
@@ -175,6 +180,7 @@ public class ImportProductServiceImpl implements ImportProductService {
             localProduct = new Product();
             localProduct.setPrestaShopId(remoteProduct.getId());
             localProduct.setSellable(Boolean.TRUE);
+            localProduct.setUnit(unitRepository.findByName(DEFAULT_UNIT));
             localProduct.setProductSynchronizedInPrestashop(Boolean.TRUE);
           }
         }
