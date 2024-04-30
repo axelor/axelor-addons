@@ -13,8 +13,13 @@ axelor {
 }
 
 dependencies {
-	api project(":modules:axelor-business-support")
-   api project(":modules:axelor-business-production")
+	if (file("../../axelor-open-suite").exists()) {
+		api project(":modules:axelor-business-support")
+		api project(":modules:axelor-business-production")
+	} else {
+		api "com.axelor.apps:axelor-business-support:${openSuiteVersion}"
+		api "com.axelor.apps:axelor-business-production:${openSuiteVersion}"
+	}
 
 	implementation libs.commons_lang3
 	implementation libs.json

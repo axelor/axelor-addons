@@ -28,8 +28,15 @@ ext {
 }
 
 dependencies {
-	api project(":modules:axelor-base")
-	api project(":modules:axelor-sale")     
+
+
+    if (file("../../axelor-open-suite").exists()) {
+        api project(":modules:axelor-base")
+        api project(":modules:axelor-sale")
+    } else {
+        api "com.axelor.apps:axelor-base:${openSuiteVersion}"
+        api "com.axelor.apps:axelor-sale:${openSuiteVersion}"
+    }
  
 	docusignDeps "com.docusign:docusign-esign-java:${docusignVersion}"	                      
 	implementation files("${docusignJarDir}/${docusignJarName}")	
