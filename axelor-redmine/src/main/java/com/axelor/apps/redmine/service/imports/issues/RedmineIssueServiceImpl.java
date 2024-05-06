@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,6 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
   Logger LOG = LoggerFactory.getLogger(getClass());
 
   @Override
-  @Transactional
   public void redmineImportIssue(
       Batch batch,
       RedmineManager redmineManager,
@@ -152,21 +152,30 @@ public class RedmineIssueServiceImpl implements RedmineIssueService {
 
       // ATTACH ERROR LOG WITH BATCH
 
-      if (errorObjList != null && errorObjList.size() > 0) {
-        MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
-
-        redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
-        redmineBatch.setFailedRedmineIssuesIds(failedRedmineIssuesIds);
-        redmineBatchRepo.save(redmineBatch);
-
-        if (errorMetaFile != null) {
-          batch = batchRepo.find(batch.getId());
-          batch.setErrorLogFile(errorMetaFile);
-          batchRepo.save(batch);
-        }
-      }
+      attachErrorLogWithBatch(errorObjList, redmineBatch, failedRedmineIssuesIds, batch);
     } catch (Exception e) {
       TraceBackService.trace(e, "", batch.getId());
+    }
+  }
+
+  @Transactional
+  public void attachErrorLogWithBatch(
+      List<Object[]> errorObjList,
+      RedmineBatch redmineBatch,
+      String failedRedmineIssuesIds,
+      Batch batch) {
+
+    if (CollectionUtils.isNotEmpty(errorObjList)) {
+      MetaFile errorMetaFile = redmineErrorLogService.redmineErrorLogService(errorObjList);
+
+      redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
+      redmineBatch.setFailedRedmineIssuesIds(failedRedmineIssuesIds);
+
+      if (errorMetaFile != null) {
+        batch = batchRepo.find(batch.getId());
+        batch.setErrorLogFile(errorMetaFile);
+        batchRepo.save(batch);
+      }
     }
   }
 }

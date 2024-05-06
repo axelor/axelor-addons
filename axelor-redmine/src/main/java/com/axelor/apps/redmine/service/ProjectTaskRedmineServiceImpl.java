@@ -207,7 +207,8 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
   protected Double calculateSum(ProjectVersion projectVersion) {
     return projectTaskRepo
         .all()
-        .filter("self.targetVersion = :projectVersion", projectVersion)
+        .filter("self.targetVersion = :projectVersion")
+        .bind("projectVersion", projectVersion)
         .fetchStream()
         .mapToLong(
             tt -> {

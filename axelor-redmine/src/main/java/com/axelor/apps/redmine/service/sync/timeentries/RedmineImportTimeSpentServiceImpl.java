@@ -44,7 +44,6 @@ import com.axelor.apps.redmine.message.IMessage;
 import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
@@ -214,7 +213,7 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
                 "UPDATE hr_timesheet_line as timesheetline SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where timesheetline.id = v.id",
                 values);
 
-        JPA.em().createNativeQuery(query).executeUpdate();
+        executeUpdate(query);
       }
     }
 

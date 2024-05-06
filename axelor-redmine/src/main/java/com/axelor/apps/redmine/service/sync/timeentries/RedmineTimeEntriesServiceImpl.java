@@ -191,7 +191,6 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     }
   }
 
-  @Transactional
   private void manageRedmineBatch(
       RedmineBatch redmineBatch,
       String failedRedmineTimeEntriesIds,
@@ -199,7 +198,6 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     redmineBatch = redmineBatchRepo.find(redmineBatch.getId());
     redmineBatch.setFailedRedmineTimeEntriesIds(failedRedmineTimeEntriesIds);
     redmineBatch.setFailedAosTimesheetLineIds(failedAosTimesheetLineIds);
-    redmineBatchRepo.save(redmineBatch);
   }
 
   protected void manageRedmineUsers(
