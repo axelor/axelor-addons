@@ -216,8 +216,16 @@ public class RedmineCommonService {
     if (!JPA.em().contains(batch)) {
       methodParameters.setBatch(JPA.find(Batch.class, batch.getId()));
     }
+  }
 
+  protected void executeUpdate(String query) {
+
+    EntityTransaction transaction = JPA.em().getTransaction();
     transactionBegin(transaction);
+    JPA.em().createNativeQuery(query).executeUpdate();
+    transaction.commit();
+
+    JPA.clear();
   }
 
   protected void transactionBegin(EntityTransaction transaction) {

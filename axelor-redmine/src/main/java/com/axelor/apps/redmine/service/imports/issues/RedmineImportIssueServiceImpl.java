@@ -45,7 +45,6 @@ import com.axelor.apps.redmine.service.common.RedmineCommonService;
 import com.axelor.apps.redmine.service.imports.projects.pojo.MethodParameters;
 import com.axelor.auth.db.User;
 import com.axelor.auth.db.repo.UserRepository;
-import com.axelor.db.JPA;
 import com.axelor.i18n.I18n;
 import com.axelor.mail.db.MailMessage;
 import com.axelor.mail.db.repo.MailMessageRepository;
@@ -246,7 +245,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
                 "UPDATE project_project_task as projectTask SET updated_on = v.updated_on from (values %s) as v(id,updated_on) where projectTask.id = v.id",
                 values);
 
-        JPA.em().createNativeQuery(query).executeUpdate();
+        executeUpdate(query);
 
         if (redmineBatch.getIsImportIssuesWithActivities()) {
           deleteUnwantedMailMessages();
