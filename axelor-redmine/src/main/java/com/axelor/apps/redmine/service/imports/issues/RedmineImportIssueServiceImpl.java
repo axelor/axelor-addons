@@ -412,6 +412,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       projectTask = new ProjectTask();
       projectTask.setTypeSelect(ProjectTaskRepository.TYPE_TASK);
     } else if (methodParameters.getLastBatchUpdatedOn() != null
+        && projectTask.getUpdatedOn() != null
         && (redmineUpdatedOn.isBefore(methodParameters.getLastBatchUpdatedOn())
             || (projectTask.getUpdatedOn().isAfter(methodParameters.getLastBatchUpdatedOn())
                 && projectTask.getUpdatedOn().isAfter(redmineUpdatedOn)))) {
