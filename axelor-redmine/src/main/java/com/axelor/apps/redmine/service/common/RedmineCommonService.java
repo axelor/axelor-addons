@@ -164,8 +164,10 @@ public class RedmineCommonService {
         .filter(
             "self.contactPartner.emailAddress.address = ?1 "
                 + "OR self.user.email = ?1 "
-                + "OR self.user.partner.emailAddress.address = ?1",
-            methodParameters.getRedmineUserMap().get(redmineId))
+                + "OR self.user.partner.emailAddress.address = ?1 "
+                + "AND (self.archived IS NULL OR self.archived = ?2)",
+            methodParameters.getRedmineUserMap().get(redmineId),
+            false)
         .fetchOne();
   }
 
