@@ -37,9 +37,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RedmineFetchDataService {
-
+  Logger LOG = LoggerFactory.getLogger(getClass());
   private IssueManager redmineIssueManager;
   private TimeEntryManager redmineTimeEntryManager;
 
@@ -150,12 +152,17 @@ public class RedmineFetchDataService {
     Long count = 0L;
 
     do {
-      params.add("offset", count.toString());
+      Params localParams = new Params();
+      localParams.getList().addAll(params.getList());
+      localParams.add("offset", count.toString());
 
-      List<Issue> tempIssueList = redmineIssueManager.getIssues(params).getResults();
+      List<Issue> tempIssueList = redmineIssueManager.getIssues(localParams).getResults();
       if (tempIssueList == null || tempIssueList.isEmpty()) {
         break;
       }
+
+      LOG.debug("count {}", count);
+
       importIssueList.addAll(tempIssueList);
       count += tempIssueList.size();
     } while (true);
