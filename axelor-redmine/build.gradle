@@ -25,6 +25,6 @@ dependencies {
 	implementation libs.json
 	implementation libs.java_textile
 	
-	implementation fileTree(dir: 'libs', include: ['*.jar'])
+	implementation 'com.taskadapter:redmine-java-api:4.0.0.rc4'
 	implementation 'com.squareup.okhttp3:okhttp:3.14.1'
 }
