@@ -22,6 +22,7 @@ import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.businessproject.service.TimesheetProjectServiceImpl;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
 import com.google.inject.Inject;
 import java.math.BigDecimal;
 
@@ -32,7 +33,10 @@ public class TimesheetRedmineServiceImpl extends TimesheetProjectServiceImpl {
 
   @Inject
   public TimesheetRedmineServiceImpl(
-      UnitConversionService unitConversionService, AppBaseService appBaseService) {
+      TimesheetLineService timesheetLineService,
+      UnitConversionService unitConversionService,
+      AppBaseService appBaseService) {
+    super(timesheetLineService);
     this.unitConversionService = unitConversionService;
     this.appBaseService = appBaseService;
   }
