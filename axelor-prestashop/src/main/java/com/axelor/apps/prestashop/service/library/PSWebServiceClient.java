@@ -24,6 +24,8 @@ import com.axelor.apps.prestashop.entities.PrestashopIdentifiableEntity;
 import com.axelor.apps.prestashop.entities.PrestashopImage;
 import com.axelor.apps.prestashop.entities.PrestashopOrderInvoice;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,8 +35,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
@@ -101,6 +101,7 @@ public class PSWebServiceClient {
    *
    * @param url Root URL for the shop
    * @param key Authentification key
+   * @throws JAXBException
    */
   public PSWebServiceClient(String url, String key) {
     this.url = url;

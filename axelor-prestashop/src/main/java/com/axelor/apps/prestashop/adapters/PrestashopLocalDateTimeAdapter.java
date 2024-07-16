@@ -18,9 +18,9 @@
 package com.axelor.apps.prestashop.adapters;
 
 import com.axelor.common.StringUtils;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 public class PrestashopLocalDateTimeAdapter extends XmlAdapter<String, LocalDateTime> {
   private static final String NULL_DATETIME = "0000-00-00 00:00:00";

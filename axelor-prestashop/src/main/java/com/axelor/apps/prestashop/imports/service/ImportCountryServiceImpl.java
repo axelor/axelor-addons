@@ -17,12 +17,15 @@
  */
 package com.axelor.apps.prestashop.imports.service;
 
+import com.axelor.apps.base.db.AddressTemplate;
 import com.axelor.apps.base.db.Country;
+import com.axelor.apps.base.db.repo.AddressTemplateRepository;
 import com.axelor.apps.base.db.repo.CountryRepository;
 import com.axelor.apps.prestashop.entities.PrestashopCountry;
 import com.axelor.apps.prestashop.entities.PrestashopResourceType;
 import com.axelor.apps.prestashop.service.library.PSWebServiceClient;
 import com.axelor.apps.prestashop.service.library.PrestaShopWebserviceException;
+import com.axelor.common.ObjectUtils;
 import com.axelor.studio.db.AppPrestashop;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -37,10 +40,13 @@ public class ImportCountryServiceImpl implements ImportCountryService {
   private Logger log = LoggerFactory.getLogger(getClass());
 
   private CountryRepository countryRepo;
+  private AddressTemplateRepository addressTemplateRepo;
 
   @Inject
-  public ImportCountryServiceImpl(CountryRepository countryRepo) {
+  public ImportCountryServiceImpl(
+      CountryRepository countryRepo, AddressTemplateRepository addressTemplateRepo) {
     this.countryRepo = countryRepo;
+    this.addressTemplateRepo = addressTemplateRepo;
   }
 
   @Override
@@ -70,9 +76,16 @@ public class ImportCountryServiceImpl implements ImportCountryService {
       if (localCountry == null) {
         localCountry = countryRepo.findByAlpha2Code(remoteCountry.getIsoCode());
         if (localCountry == null) {
+          AddressTemplate addressTemplate = addressTemplateRepo.all().fetchOne();
+          if (ObjectUtils.isEmpty(addressTemplate)) {
+            logBuffer.write(String.format(" [ERROR] No default address template was found %n"));
+            ++errors;
+            continue;
+          }
           logBuffer.write("not found by ID and code not found, creating");
           localCountry = new Country();
           localCountry.setAlpha2Code(remoteCountry.getIsoCode());
+          localCountry.setAddressTemplate(addressTemplate);
         } else {
           logBuffer.write(
               String.format("found locally using its code %s", localCountry.getAlpha2Code()));
@@ -100,7 +113,7 @@ public class ImportCountryServiceImpl implements ImportCountryService {
 
       if (localCountry.getId() == null
           || appConfig.getPrestaShopMasterForCountries() == Boolean.TRUE) {
-        localCountry.setName(remoteCountry.getName().getTranslation(language));
+        localCountry.setName(remoteCountry.getName().getTranslation(language).toUpperCase());
         if (remoteCountry.getCallPrefix() != null) {
           localCountry.setPhonePrefix(remoteCountry.getCallPrefix().toString());
         }

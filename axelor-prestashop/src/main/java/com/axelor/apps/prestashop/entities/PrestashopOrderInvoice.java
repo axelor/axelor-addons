@@ -17,10 +17,10 @@
  */
 package com.axelor.apps.prestashop.entities;
 
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "order_invoice")
 public class PrestashopOrderInvoice extends PrestashopIdentifiableEntity {

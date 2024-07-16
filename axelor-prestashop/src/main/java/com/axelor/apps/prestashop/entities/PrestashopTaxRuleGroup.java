@@ -17,9 +17,9 @@
  */
 package com.axelor.apps.prestashop.entities;
 
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.time.LocalDateTime;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "tax_rule_group")
 public class PrestashopTaxRuleGroup extends PrestashopIdentifiableEntity {

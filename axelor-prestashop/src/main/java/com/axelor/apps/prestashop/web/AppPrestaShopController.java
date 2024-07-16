@@ -30,7 +30,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.LinkedList;
 import java.util.List;
-import javax.xml.transform.TransformerException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +50,7 @@ public class AppPrestaShopController {
    * @throws PrestaShopWebserviceException
    * @throws TransformerException
    */
-  public void testConnection(ActionRequest request, ActionResponse response)
-      throws TransformerException {
+  public void testConnection(ActionRequest request, ActionResponse response) {
     AppPrestashop appConfig = request.getContext().asType(AppPrestashop.class);
     final List<String> errors = new LinkedList<>();
     final List<String> warnings = new LinkedList<>();

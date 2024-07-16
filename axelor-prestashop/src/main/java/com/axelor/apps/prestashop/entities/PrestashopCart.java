@@ -18,9 +18,9 @@
 package com.axelor.apps.prestashop.entities;
 
 import com.axelor.apps.prestashop.entities.Associations.CartRowsAssociationsEntry;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.time.LocalDateTime;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Represents a cart in prestashop. We need it as every order is bound to a cart in the application…
