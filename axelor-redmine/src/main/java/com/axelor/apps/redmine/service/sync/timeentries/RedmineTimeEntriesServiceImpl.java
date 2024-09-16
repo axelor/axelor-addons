@@ -98,7 +98,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
     RedmineBatch redmineBatch = batch.getRedmineBatch();
     Batch lastBatch = getLastBatch(batch);
 
-    ZonedDateTime lastBatchEndDate = lastBatch != null ? lastBatch.getEndDate() : null;
+    ZonedDateTime lastBatchStartDate = lastBatch != null ? lastBatch.getStartDate() : null;
     LocalDateTime lastBatchUpdatedOn = lastBatch != null ? lastBatch.getUpdatedOn() : null;
     String failedRedmineTimeEntriesIds = batch.getRedmineBatch().getFailedRedmineTimeEntriesIds();
     String failedAosTimesheetLineIds = batch.getRedmineBatch().getFailedAosTimesheetLineIds();
@@ -115,7 +115,7 @@ public class RedmineTimeEntriesServiceImpl implements RedmineTimeEntriesService 
             redmineUserLoginMap,
             errorObjList,
             lastBatchUpdatedOn,
-            lastBatchEndDate,
+            lastBatchStartDate,
             failedRedmineTimeEntriesIds,
             failedAosTimesheetLineIds);
 
