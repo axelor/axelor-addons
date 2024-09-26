@@ -63,6 +63,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
@@ -351,9 +352,18 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
         redmineTimeEntry.getSpentOn().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     timesheetLine.setDate(redmineSpentOn);
 
-    String value = redmineCustomFieldsMap.get(redmineTimeSpentDurationForCustomer);
-    timesheetLine.setDurationForCustomer(
-        value != null && !value.equals("") ? new BigDecimal(value) : duration);
+    String value =
+        Optional.ofNullable(redmineCustomFieldsMap.get(redmineTimeSpentDurationForCustomer))
+            .orElseGet(String::new)
+            .trim();
+
+    if (!value.isEmpty()) {
+      try {
+        timesheetLine.setDurationForCustomer(new BigDecimal(value.trim()));
+      } catch (NumberFormatException e) {
+        TraceBackService.trace(e, "", methodParameters.getBatch().getId());
+      }
+    }
 
     value = redmineCustomFieldsMap.get(redmineTimeSpentDurationUnit);
 
