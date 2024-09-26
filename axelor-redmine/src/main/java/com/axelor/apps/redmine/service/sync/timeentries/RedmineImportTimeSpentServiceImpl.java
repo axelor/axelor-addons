@@ -359,10 +359,12 @@ public class RedmineImportTimeSpentServiceImpl extends RedmineCommonService
 
     if (!value.isEmpty()) {
       try {
-        timesheetLine.setDurationForCustomer(new BigDecimal(value.trim()));
+        timesheetLine.setDurationForCustomer(new BigDecimal(value));
       } catch (NumberFormatException e) {
         TraceBackService.trace(e, "", methodParameters.getBatch().getId());
       }
+    } else {
+      timesheetLine.setDurationForCustomer(duration);
     }
 
     value = redmineCustomFieldsMap.get(redmineTimeSpentDurationUnit);
