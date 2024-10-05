@@ -30,6 +30,7 @@ import com.axelor.apps.account.service.payment.invoice.payment.InvoiceTermPaymen
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Address;
 import com.axelor.apps.base.db.Company;
+import com.axelor.apps.base.db.Currency;
 import com.axelor.apps.base.db.Partner;
 import com.axelor.apps.base.db.Product;
 import com.axelor.apps.base.db.repo.AddressRepository;
@@ -358,11 +359,16 @@ public class SaleOrderPortalServiceImpl implements SaleOrderPortalService {
           I18n.get(IExceptionMessage.ADDRESS_MISSING));
     }
 
+    Currency currency = clientPartner.getCurrency();
+    if (currency == null && company != null) {
+      currency = company.getCurrency();
+    }
+
     return saleOrdeCreateService.createSaleOrder(
         userService.getUser(),
         company,
         contactPartner,
-        company != null ? company.getCurrency() : null,
+        currency,
         null,
         null,
         null,
