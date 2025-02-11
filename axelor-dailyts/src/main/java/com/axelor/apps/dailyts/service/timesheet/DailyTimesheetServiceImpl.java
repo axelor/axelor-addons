@@ -455,4 +455,18 @@ public class DailyTimesheetServiceImpl implements DailyTimesheetService {
 
     return timesheet;
   }
+
+  @Override
+  public DailyTimesheet getRelatedDailyTs(TimesheetLine timesheetLine) {
+
+    return dailyTimesheetRepository
+        .all()
+        .filter(
+            "self.dailyTimesheetEmployee = ?1 AND self.dailyTimesheetDate = ?2 AND self.timesheet = ?3",
+            timesheetLine.getEmployee(),
+            timesheetLine.getDate(),
+            timesheetLine.getTimesheet())
+        .order("-dailyTimesheetDate")
+        .fetchOne();
+  }
 }

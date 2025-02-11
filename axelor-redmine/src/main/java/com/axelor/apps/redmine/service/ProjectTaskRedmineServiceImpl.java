@@ -27,14 +27,18 @@ import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PriceListService;
 import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.app.AppBaseService;
-import com.axelor.apps.businessproject.service.app.AppBusinessProjectService;
-import com.axelor.apps.businesssupport.db.ProjectVersion;
-import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.businesssupport.service.ProjectTaskBusinessSupportServiceImpl;
 import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
 import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.ProjectVersion;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.project.db.repo.ProjectVersionRepository;
+import com.axelor.apps.project.db.repo.TaskStatusProgressByCategoryRepository;
+import com.axelor.apps.project.service.ProjectTimeUnitService;
+import com.axelor.apps.project.service.TaskStatusToolService;
+import com.axelor.apps.project.service.TaskTemplateService;
+import com.axelor.apps.project.service.app.AppProjectService;
 import com.axelor.db.JPA;
 import com.axelor.db.Query;
 import com.axelor.studio.db.AppBusinessProject;
@@ -44,7 +48,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
-import java.util.Objects;
 
 public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportServiceImpl
     implements ProjectTaskRedmineService {
@@ -58,25 +61,34 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
       FrequencyService frequencyService,
       AppBaseService appBaseService,
       ProjectRepository projectRepository,
+      AppProjectService appProjectService,
+      TaskStatusToolService taskStatusToolService,
+      TaskStatusProgressByCategoryRepository taskStatusProgressByCategoryRepository,
       PriceListLineRepository priceListLineRepo,
       PriceListService priceListService,
       PartnerPriceListService partnerPriceListService,
       ProductCompanyService productCompanyService,
-      ProjectVersionRepository projectVersionRepository,
       TimesheetLineRepository timesheetLineRepository,
-      AppBusinessProjectService appBusinessProjectService) {
+      ProjectTimeUnitService projectTimeUnitService,
+      TaskTemplateService taskTemplateService,
+      ProjectVersionRepository projectVersionRepository) {
+
     super(
         projectTaskRepo,
         frequencyRepo,
         frequencyService,
         appBaseService,
         projectRepository,
+        appProjectService,
+        taskStatusToolService,
+        taskStatusProgressByCategoryRepository,
         priceListLineRepo,
         priceListService,
         partnerPriceListService,
         productCompanyService,
         timesheetLineRepository,
-        appBusinessProjectService);
+        projectTimeUnitService,
+        taskTemplateService);
     this.projectVersionRepository = projectVersionRepository;
   }
 
@@ -104,7 +116,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         projectTaskDb != null ? projectTaskDb.getTargetVersion() : null;
 
     if (projectTaskDb == null
-        || !Objects.equals(projectTaskDb.getProgressSelect(), projectTask.getProgressSelect())
+        || projectTaskDb.getProgress().compareTo(projectTask.getProgress()) != 0
         || !projectTaskDb.getStatus().equals(projectTask.getStatus())
         || (targetVersionDb == null && targetVersion != null)
         || (targetVersionDb != null && (!targetVersionDb.equals(targetVersion)))) {
@@ -165,7 +177,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
               if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
                 return 100;
               } else {
-                return tt.getProgressSelect();
+                return tt.getProgress().doubleValue();
               }
             })
         .summaryStatistics();
@@ -176,7 +188,7 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         sum
             + (Boolean.TRUE.equals(projectTask.getStatus().getIsCompleted())
                 ? 100
-                : projectTask.getProgressSelect());
+                : projectTask.getProgress().doubleValue());
     return sum;
   }
 
@@ -210,12 +222,12 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         .filter("self.targetVersion = :projectVersion")
         .bind("projectVersion", projectVersion)
         .fetchStream()
-        .mapToLong(
+        .mapToDouble(
             tt -> {
               if (Boolean.TRUE.equals(tt.getStatus().getIsCompleted())) {
                 return 100;
               } else {
-                return tt.getProgressSelect();
+                return tt.getProgress().doubleValue();
               }
             })
         .average()

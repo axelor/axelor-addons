@@ -19,6 +19,7 @@ package com.axelor.apps.dailyts.service.timesheet;
 
 import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.Timesheet;
+import com.axelor.apps.hr.db.TimesheetLine;
 import java.math.BigDecimal;
 
 public interface DailyTimesheetService {
@@ -38,4 +39,6 @@ public interface DailyTimesheetService {
   public void confirmDailyTimesheet(DailyTimesheet dailyTimesheet);
 
   public Timesheet updateRelatedTimesheet(DailyTimesheet dailyTimesheet);
+
+  public DailyTimesheet getRelatedDailyTs(TimesheetLine timesheetLine);
 }

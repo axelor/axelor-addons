@@ -23,22 +23,22 @@ import com.axelor.apps.base.db.repo.CompanyRepository;
 import com.axelor.apps.base.db.repo.PartnerRepository;
 import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
-import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.exception.TraceBackService;
-import com.axelor.apps.businesssupport.db.ProjectVersion;
-import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectPriority;
 import com.axelor.apps.project.db.ProjectStatus;
 import com.axelor.apps.project.db.ProjectTaskCategory;
+import com.axelor.apps.project.db.ProjectVersion;
 import com.axelor.apps.project.db.TaskStatus;
 import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectStatusRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.project.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.repo.TaskStatusRepository;
+import com.axelor.apps.project.service.app.AppProjectService;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
 import com.axelor.apps.redmine.db.repo.RedmineImportMappingRepository;
@@ -81,7 +81,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
   protected RedmineImportMappingRepository redmineImportMappingRepository;
   protected ProjectVersionRepository projectVersionRepo;
-  protected AppBaseService appBaseService;
+  protected AppProjectService appProjectService;
   protected TaskStatusRepository taskStatusRepo;
   protected ProjectStatusRepository projectStatusRepo;
   protected ProjectPriorityRepository projectPriorityRepo;
@@ -99,7 +99,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       AppRedmineRepository appRedmineRepo,
       CompanyRepository companyRepo,
       ProjectVersionRepository projectVersionRepo,
-      AppBaseService appBaseService,
+      AppProjectService appProjectService,
       ProjectPriorityRepository projectPriorityRepo,
       TaskStatusRepository taskStatusRepo,
       ProjectStatusRepository projectStatusRepo) {
@@ -116,7 +116,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
         companyRepo);
     this.redmineImportMappingRepository = redmineImportMappingRepository;
     this.projectVersionRepo = projectVersionRepo;
-    this.appBaseService = appBaseService;
+    this.appProjectService = appProjectService;
     this.taskStatusRepo = taskStatusRepo;
     this.projectStatusRepo = projectStatusRepo;
     this.projectPriorityRepo = projectPriorityRepo;
@@ -137,7 +137,6 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   protected List<Integer> redmineProjectVersionIdList = new ArrayList<>();
 
   @Override
-  @SuppressWarnings("unchecked")
   public void importProject(
       List<com.taskadapter.redmineapi.bean.Project> redmineProjectList,
       MethodParameters methodParameters) {
@@ -148,7 +147,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       this.methodParameters = methodParameters;
 
       AppRedmine appRedmine = appRedmineRepo.all().fetchOne();
-      isAppBusinessSupport = appBaseService.isApp("business-support");
+      isAppBusinessSupport = appProjectService.isApp("business-support");
 
       this.redmineProjectInvoiceable = appRedmine.getRedmineProjectInvoiceable();
       this.redmineProjectClientPartner = appRedmine.getRedmineProjectClientPartner();
@@ -202,7 +201,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
 
   protected void fillSelectionMapWithSelectionList() {
     ArrayList<Option> selectionList =
-        new ArrayList<>(MetaStore.getSelectionList("support.project.version.status.select"));
+        new ArrayList<>(MetaStore.getSelectionList("project.version.status.select"));
     ResourceBundle fr = I18n.getBundle(Locale.FRANCE);
     ResourceBundle en = I18n.getBundle(Locale.ENGLISH);
 
@@ -393,12 +392,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     ProjectStatus projectStatus;
 
     if (redmineProject.getStatus().equals(REDMINE_PROJECT_STATUS_CLOSED)) {
-      projectStatus =
-          projectStatusRepo
-              .all()
-              .filter("self.isDefaultCompleted = true")
-              .order("sequence")
-              .fetchOne();
+      projectStatus = appProjectService.getAppProject().getCompletedProjectStatus();
     } else {
       projectStatus = projectStatusRepo.all().order("sequence").fetchOne();
     }
