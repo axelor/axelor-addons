@@ -10,7 +10,7 @@
       <attribute name="onNew"
         value="action-hr-default-timesheet-line-timesheet,action-redmine-timesheet-line-attrs-set-duration-unit"/>
     </extend>
-    <extend target="//field[@name='user']">
+    <extend target="//field[@name='employee']">
       <insert position="after">
         <field name="durationUnit" hidden="true"/>
       </insert>

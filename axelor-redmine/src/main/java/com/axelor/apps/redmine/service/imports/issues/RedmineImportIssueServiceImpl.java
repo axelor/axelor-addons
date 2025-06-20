@@ -24,16 +24,16 @@ import com.axelor.apps.base.db.repo.ProductRepository;
 import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.app.AppBaseService;
 import com.axelor.apps.base.service.exception.TraceBackService;
-import com.axelor.apps.businesssupport.db.ProjectVersion;
-import com.axelor.apps.businesssupport.db.repo.ProjectVersionRepository;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.Project;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.ProjectTaskCategory;
+import com.axelor.apps.project.db.ProjectVersion;
 import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
+import com.axelor.apps.project.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.repo.TaskStatusRepository;
 import com.axelor.apps.redmine.db.RedmineBatch;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
@@ -503,7 +503,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       }
 
       projectTask.setAssignedTo(assignedTo);
-      projectTask.setProgressSelect(redmineIssue.getDoneRatio());
+      projectTask.setProgress(new BigDecimal(redmineIssue.getDoneRatio()));
 
       Float estimatedHours = redmineIssue.getEstimatedHours();
       projectTask.setBudgetedTime(
@@ -819,7 +819,7 @@ public class RedmineImportIssueServiceImpl extends RedmineCommonService
       } else if (name.equals("start_date")) {
         return new String[] {"taskDate", "Task date"};
       } else if (name.equals("done_ratio")) {
-        return new String[] {"progressSelect", "Progress"};
+        return new String[] {"progress", "Progress"};
       } else if (name.equals("estimated_hours")) {
         return new String[] {"budgetedTime", "Estimated time"};
       } else if (name.equals("tracker_id")) {

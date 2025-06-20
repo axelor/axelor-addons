@@ -27,7 +27,6 @@ import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.TimesheetRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineGenerationService;
-import com.axelor.apps.hr.service.timesheet.TimesheetTimeComputationService;
 import com.axelor.apps.hr.service.timesheet.TimesheetWorkflowServiceImpl;
 import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
@@ -95,10 +94,10 @@ public class DailyTimesheetController {
 
         Beans.get(TimesheetLineGenerationService.class).checkEmptyPeriod(timesheet);
 
-        if (timesheet.getTimesheetLineList() != null
-            && !timesheet.getTimesheetLineList().isEmpty()) {
-          Beans.get(TimesheetTimeComputationService.class).computeTimeSpent(timesheet);
-        }
+        //        if (timesheet.getTimesheetLineList() != null
+        //            && !timesheet.getTimesheetLineList().isEmpty()) {
+        //          Beans.get(TimesheetTimeComputationService.class).computeTimeSpent(timesheet);
+        //        }
 
         // Call this method to validate dates and fill toDate if it is empty before validating it
         TimesheetWorkflowServiceImpl timesheetWorkflowService =

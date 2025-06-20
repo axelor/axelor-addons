@@ -17,8 +17,8 @@
  */
 package com.axelor.apps.redmine.service;
 
-import com.axelor.apps.businesssupport.db.ProjectVersion;
 import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.ProjectVersion;
 
 public interface ProjectTaskRedmineService {
 

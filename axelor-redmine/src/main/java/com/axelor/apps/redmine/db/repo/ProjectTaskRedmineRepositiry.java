@@ -17,13 +17,22 @@
  */
 package com.axelor.apps.redmine.db.repo;
 
-import com.axelor.apps.businesssupport.db.ProjectVersion;
+import com.axelor.apps.businessproject.service.projecttask.ProjectTaskProgressUpdateService;
 import com.axelor.apps.businesssupport.db.repo.ProjectTaskBusinessSupportRepository;
 import com.axelor.apps.project.db.ProjectTask;
+import com.axelor.apps.project.db.ProjectVersion;
 import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
 import com.axelor.inject.Beans;
+import com.google.inject.Inject;
 
 public class ProjectTaskRedmineRepositiry extends ProjectTaskBusinessSupportRepository {
+
+  @Inject
+  public ProjectTaskRedmineRepositiry(
+      ProjectTaskProgressUpdateService projectTaskProgressUpdateService) {
+
+    super(projectTaskProgressUpdateService);
+  }
 
   @Override
   public ProjectTask save(ProjectTask projectTask) {

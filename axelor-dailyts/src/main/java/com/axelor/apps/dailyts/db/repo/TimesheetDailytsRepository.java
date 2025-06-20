@@ -17,18 +17,26 @@
  */
 package com.axelor.apps.dailyts.db.repo;
 
+import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.db.repo.TimesheetHRRepository;
+import com.axelor.apps.hr.service.timesheet.TimesheetLineComputeNameService;
+import com.axelor.apps.hr.service.timesheet.TimesheetPeriodComputationService;
+import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import java.util.List;
 
 public class TimesheetDailytsRepository extends TimesheetHRRepository {
 
-  @Inject protected TimesheetLineDailytsRepository timesheetLineDailytsRepo;
-  @Inject protected DailyTimesheetRepository dailyTimesheetRepo;
+  @Inject
+  public TimesheetDailytsRepository(
+      TimesheetLineComputeNameService timesheetLineComputeNameService,
+      TimesheetPeriodComputationService timesheetPeriodComputationService) {
+    super(timesheetLineComputeNameService, timesheetPeriodComputationService);
+  }
 
   @Override
   public Timesheet save(Timesheet timesheet) {
@@ -36,13 +44,16 @@ public class TimesheetDailytsRepository extends TimesheetHRRepository {
     List<TimesheetLine> timesheetLineList = timesheet.getTimesheetLineList();
 
     if (timesheetLineList != null) {
+      DailyTimesheetService dailyTimesheetService = Beans.get(DailyTimesheetService.class);
 
       for (TimesheetLine timesheetLine : timesheetLineList) {
-        timesheetLine.setDailyTimesheet(timesheetLineDailytsRepo.getRelatedDailyTs(timesheetLine));
+        timesheetLine.setDailyTimesheet(dailyTimesheetService.getRelatedDailyTs(timesheetLine));
       }
     }
 
     timesheet = super.save(timesheet);
+
+    DailyTimesheetRepository dailyTimesheetRepo = Beans.get(DailyTimesheetRepository.class);
 
     List<DailyTimesheet> dailyTsList =
         dailyTimesheetRepo.all().filter("self.timesheet = ?1", timesheet).fetch();
