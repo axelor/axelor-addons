@@ -9,7 +9,7 @@
     <extend target="//panel[@name='informationsPanel']">
       <insert position="before">
         <panel name="dailyTimesheetCreatePanel" title="Create daily timesheets"
-          showIf="actionSelect == 8">
+          showIf="actionSelect == 20">
           <field name="dailyTsDate"/>
           <field name="dailyTsEmployeeSet" colSpan="12" widget="TagSelect" canNew="false"
             form-view="employee-form" grid-view="employee-grid"/>

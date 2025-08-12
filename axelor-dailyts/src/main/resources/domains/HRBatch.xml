@@ -13,7 +13,7 @@
 
     <extra-code><![CDATA[
 	   		// ACTION TYPE
-        	public static final int ACTION_CREATE_DAILY_TIMESHEETS = 8;
+        	public static final int ACTION_CREATE_DAILY_TIMESHEETS = 20;
 		]]></extra-code>
 
   </entity>

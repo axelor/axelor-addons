@@ -19,13 +19,10 @@ package com.axelor.apps.dailyts.service.batch;
 
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.Batch;
-import com.axelor.apps.base.db.repo.TraceBackRepository;
-import com.axelor.apps.base.exceptions.BaseExceptionMessage;
 import com.axelor.apps.hr.db.HrBatch;
 import com.axelor.apps.hr.db.repo.HrBatchRepository;
 import com.axelor.apps.hr.service.batch.HrBatchService;
 import com.axelor.db.Model;
-import com.axelor.i18n.I18n;
 import com.axelor.inject.Beans;
 
 public class DailytsHrBatchService extends HrBatchService {
@@ -34,42 +31,12 @@ public class DailytsHrBatchService extends HrBatchService {
   public Batch run(Model batchModel) throws AxelorException {
 
     HrBatch hrBatch = (HrBatch) batchModel;
-    Batch batch = null;
 
-    switch (hrBatch.getActionSelect()) {
-      case HrBatchRepository.ACTION_LEAVE_MANAGEMENT:
-        batch = leaveManagement(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_SENIORITY_LEAVE_MANAGEMENT:
-        batch = seniorityLeaveManagement(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_PAYROLL_PREPARATION_GENERATION:
-        batch = payrollPreparationGeneration(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_PAYROLL_PREPARATION_EXPORT:
-        batch = payrollPreparationExport(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_LEAVE_MANAGEMENT_RESET:
-        batch = leaveManagementReset(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_EMPLOYMENT_CONTRACT_EXPORT:
-        batch = employmentContractExport(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_TIMESHEET_REMINDER:
-        batch = runTimesheetReminderBatch(hrBatch);
-        break;
-      case HrBatchRepository.ACTION_CREATE_DAILY_TIMESHEETS:
-        batch = createDailyTimesheets(hrBatch);
-        break;
-      default:
-        throw new AxelorException(
-            TraceBackRepository.CATEGORY_INCONSISTENCY,
-            I18n.get(BaseExceptionMessage.BASE_BATCH_1),
-            hrBatch.getActionSelect(),
-            hrBatch.getCode());
+    if (hrBatch.getActionSelect() == HrBatchRepository.ACTION_CREATE_DAILY_TIMESHEETS) {
+      return createDailyTimesheets(hrBatch);
     }
 
-    return batch;
+    return super.run(batchModel);
   }
 
   public Batch createDailyTimesheets(HrBatch hrBatch) {
