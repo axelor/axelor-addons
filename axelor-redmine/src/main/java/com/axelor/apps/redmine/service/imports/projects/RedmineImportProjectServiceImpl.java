@@ -26,11 +26,9 @@ import com.axelor.apps.base.service.administration.AbstractBatch;
 import com.axelor.apps.base.service.exception.TraceBackService;
 import com.axelor.apps.hr.db.repo.EmployeeRepository;
 import com.axelor.apps.project.db.Project;
-import com.axelor.apps.project.db.ProjectPriority;
 import com.axelor.apps.project.db.ProjectStatus;
 import com.axelor.apps.project.db.ProjectTaskCategory;
 import com.axelor.apps.project.db.ProjectVersion;
-import com.axelor.apps.project.db.TaskStatus;
 import com.axelor.apps.project.db.repo.ProjectPriorityRepository;
 import com.axelor.apps.project.db.repo.ProjectRepository;
 import com.axelor.apps.project.db.repo.ProjectStatusRepository;
@@ -38,6 +36,7 @@ import com.axelor.apps.project.db.repo.ProjectTaskCategoryRepository;
 import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.axelor.apps.project.db.repo.ProjectVersionRepository;
 import com.axelor.apps.project.db.repo.TaskStatusRepository;
+import com.axelor.apps.project.service.ProjectTaskToolService;
 import com.axelor.apps.project.service.app.AppProjectService;
 import com.axelor.apps.redmine.db.RedmineImportMapping;
 import com.axelor.apps.redmine.db.repo.RedmineImportConfigRepository;
@@ -50,6 +49,7 @@ import com.axelor.auth.db.repo.UserRepository;
 import com.axelor.i18n.I18n;
 import com.axelor.meta.MetaStore;
 import com.axelor.meta.schema.views.Selection.Option;
+import com.axelor.studio.db.AppProject;
 import com.axelor.studio.db.AppRedmine;
 import com.axelor.studio.db.repo.AppRedmineRepository;
 import com.google.common.collect.ObjectArrays;
@@ -65,12 +65,12 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Stream;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -85,6 +85,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
   protected TaskStatusRepository taskStatusRepo;
   protected ProjectStatusRepository projectStatusRepo;
   protected ProjectPriorityRepository projectPriorityRepo;
+  protected ProjectTaskToolService projectTaskToolService;
 
   @Inject
   public RedmineImportProjectServiceImpl(
@@ -102,7 +103,8 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       AppProjectService appProjectService,
       ProjectPriorityRepository projectPriorityRepo,
       TaskStatusRepository taskStatusRepo,
-      ProjectStatusRepository projectStatusRepo) {
+      ProjectStatusRepository projectStatusRepo,
+      ProjectTaskToolService projectTaskToolService) {
 
     super(
         userRepo,
@@ -120,6 +122,7 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
     this.taskStatusRepo = taskStatusRepo;
     this.projectStatusRepo = projectStatusRepo;
     this.projectPriorityRepo = projectPriorityRepo;
+    this.projectTaskToolService = projectTaskToolService;
   }
 
   Logger LOG = LoggerFactory.getLogger(getClass());
@@ -249,21 +252,19 @@ public class RedmineImportProjectServiceImpl extends RedmineCommonService
       project.setCode(redmineProject.getIdentifier().toUpperCase());
       project.setRedmineUpdatedOn(redmineUpdatedOn);
 
-      List<TaskStatus> taskStatuses = taskStatusRepo.all().fetch();
-      List<ProjectPriority> projectPriorities = projectPriorityRepo.all().fetch();
-
-      Project finalProject = project;
-      Stream.concat(taskStatuses.stream(), projectPriorities.stream())
-          .filter(Objects::nonNull)
-          .forEach(
-              item -> {
-                if (item instanceof ProjectStatus) {
-                  finalProject.addProjectTaskStatusSetItem((TaskStatus) item);
-                } else if (item instanceof ProjectPriority) {
-                  finalProject.addProjectTaskPrioritySetItem((ProjectPriority) item);
-                }
-              });
-
+      AppProject appProject = appProjectService.getAppProject();
+      project.setProjectTaskStatusSet(
+          Optional.ofNullable(appProject.getDefaultTaskStatusSet())
+              .map(HashSet::new)
+              .orElseGet(HashSet::new));
+      project.setProjectTaskPrioritySet(
+          Optional.ofNullable(appProject.getDefaultPrioritySet())
+              .map(HashSet::new)
+              .orElseGet(HashSet::new));
+      projectTaskToolService
+          .getCompletedTaskStatus(
+              appProject.getCompletedTaskStatus(), appProject.getDefaultTaskStatusSet())
+          .ifPresent(project::setCompletedTaskStatus);
     } else {
       LocalDateTime updatedOn = project.getUpdatedOn();
       if (lastBatchUpdatedOn != null
