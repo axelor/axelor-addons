@@ -18,11 +18,11 @@
 package com.axelor.apps.prestashop.entities;
 
 import com.axelor.apps.prestashop.entities.Associations.OrderRowsAssociationElement;
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * Contains all information describing an order row from Prestashop.

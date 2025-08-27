@@ -17,7 +17,7 @@
  */
 package com.axelor.apps.prestashop.adapters;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import jakarta.xml.bind.annotation.adapters.XmlAdapter;
 
 /** Adapter for brainfucked Prestashop boolean rendering */
 public class PrestashopBooleanAdapter extends XmlAdapter<Integer, Boolean> {
