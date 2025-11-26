@@ -18,25 +18,50 @@
 package com.axelor.apps.redmine.service;
 
 import com.axelor.apps.base.AxelorException;
+import com.axelor.apps.base.service.ProductCompanyService;
 import com.axelor.apps.base.service.UnitConversionService;
 import com.axelor.apps.base.service.app.AppBaseService;
+import com.axelor.apps.businessproject.service.EmployeeHourlyCostService;
+import com.axelor.apps.businessproject.service.ProjectInitialSalesService;
+import com.axelor.apps.businessproject.service.ProjectPriceService;
 import com.axelor.apps.businessproject.service.TimesheetProjectServiceImpl;
+import com.axelor.apps.businessproject.service.app.AppBusinessProjectService;
 import com.axelor.apps.hr.db.TimesheetLine;
+import com.axelor.apps.hr.db.repo.TimesheetLineRepository;
+import com.axelor.apps.hr.service.app.AppHumanResourceService;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineService;
+import com.axelor.apps.project.db.repo.ProjectTaskRepository;
 import com.google.inject.Inject;
 import java.math.BigDecimal;
 
 public class TimesheetRedmineServiceImpl extends TimesheetProjectServiceImpl {
 
-  private UnitConversionService unitConversionService;
   private AppBaseService appBaseService;
 
   @Inject
   public TimesheetRedmineServiceImpl(
       TimesheetLineService timesheetLineService,
+      ProductCompanyService productCompanyService,
+      ProjectPriceService projectPriceService,
+      AppBusinessProjectService appBusinessProjectService,
       UnitConversionService unitConversionService,
+      EmployeeHourlyCostService employeeHourlyCostService,
+      ProjectInitialSalesService projectInitialSalesService,
+      TimesheetLineRepository timesheetLineRepository,
+      AppHumanResourceService appHumanResourceService,
+      ProjectTaskRepository projectTaskRepo,
       AppBaseService appBaseService) {
-    super(timesheetLineService);
+    super(
+        timesheetLineService,
+        productCompanyService,
+        projectPriceService,
+        appBusinessProjectService,
+        unitConversionService,
+        employeeHourlyCostService,
+        projectInitialSalesService,
+        timesheetLineRepository,
+        appHumanResourceService,
+        projectTaskRepo);
     this.unitConversionService = unitConversionService;
     this.appBaseService = appBaseService;
   }
