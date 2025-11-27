@@ -17,42 +17,36 @@
  */
 package com.axelor.apps.redmine.db.repo;
 
-import com.axelor.apps.businessproject.service.projecttask.ProjectTaskProgressUpdateService;
-import com.axelor.apps.businesssupport.db.repo.ProjectTaskBusinessSupportRepository;
 import com.axelor.apps.project.db.ProjectTask;
 import com.axelor.apps.project.db.ProjectVersion;
 import com.axelor.apps.redmine.service.ProjectTaskRedmineService;
 import com.axelor.inject.Beans;
-import com.google.inject.Inject;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
+import javax.persistence.PreRemove;
 
-public class ProjectTaskRedmineRepositiry extends ProjectTaskBusinessSupportRepository {
+public class ProjectTaskRedmineListner {
 
-  @Inject
-  public ProjectTaskRedmineRepositiry(
-      ProjectTaskProgressUpdateService projectTaskProgressUpdateService) {
-
-    super(projectTaskProgressUpdateService);
-  }
-
-  @Override
-  public ProjectTask save(ProjectTask projectTask) {
-
-    super.save(projectTask);
+  @PostPersist
+  public void onPostPersist(ProjectTask projectTask) {
 
     if (projectTask.getRedmineId() != 0) {
       projectTask.setFullName(projectTask.getName());
     }
-
-    return projectTask;
   }
 
-  @Override
+  @PostUpdate
+  public void onPostUpdate(ProjectTask projectTask) {
+
+    if (projectTask.getRedmineId() != 0) {
+      projectTask.setFullName(projectTask.getName());
+    }
+  }
+
+  @PreRemove
   public void remove(ProjectTask projectTask) {
 
     ProjectVersion targetVersion = projectTask.getTargetVersion();
-
-    super.remove(projectTask);
-
     if (targetVersion != null) {
       Beans.get(ProjectTaskRedmineService.class)
           .updateTargetVerionProgress(targetVersion, projectTask, false);

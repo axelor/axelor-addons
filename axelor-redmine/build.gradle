@@ -16,13 +16,13 @@ dependencies {
   if (findProject(":modules:axelor-business-support") != null) {
 	  api project(":modules:axelor-business-support")
   }else {
-	  api "com.axelor.apps.enterprise:axelor-business-support:8.5.1"
+	  api "com.axelor.apps.enterprise:axelor-business-support:8.5.2"
   }
 
   if (findProject(":modules:axelor-business-production") != null) {
 	  api project(":modules:axelor-business-production")
   }else {
-	  api "com.axelor.apps.enterprise:axelor-business-production:8.5.1"
+	  api "com.axelor.apps.enterprise:axelor-business-production:8.5.2"
   }
 
 	implementation libs.commons_lang3
