@@ -19,6 +19,7 @@ package com.axelor.apps.dailyts.service.batch;
 
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.service.exception.TraceBackService;
+import com.axelor.apps.base.service.publicHoliday.PublicHolidayService;
 import com.axelor.apps.base.service.weeklyplanning.WeeklyPlanningService;
 import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.hr.db.DailyTimesheet;
@@ -29,7 +30,6 @@ import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
 import com.axelor.apps.hr.service.batch.BatchStrategy;
 import com.axelor.apps.hr.service.leave.LeaveRequestService;
 import com.axelor.apps.hr.service.leave.compute.LeaveRequestComputeDurationService;
-import com.axelor.apps.hr.service.publicHoliday.PublicHolidayHrService;
 import com.axelor.auth.db.repo.UserRepository;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -47,7 +47,7 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
   @Inject protected WeeklyPlanningService weeklyPlanningService;
   @Inject protected LeaveRequestService leaveRequestService;
   @Inject protected LeaveRequestComputeDurationService leaveRequestComputeDurationService;
-  @Inject protected PublicHolidayHrService publicHolidayHrService;
+  @Inject protected PublicHolidayService publicHolidayService;
 
   @Override
   @Transactional
@@ -80,7 +80,7 @@ public class BatchCreateDailyTimesheets extends BatchStrategy {
                     dailyTsEmployee.getWeeklyPlanning(), dailyTsDate)
                 > 0
             && !isFullDayLeave(dailyTsEmployee, dailyTsDate)
-            && !publicHolidayHrService.checkPublicHolidayDay(
+            && !publicHolidayService.checkPublicHolidayDay(
                 dailyTsDate, dailyTsEmployee.getPublicHolidayEventsPlanning())) {
           DailyTimesheet dailyTimesheet = new DailyTimesheet();
           dailyTimesheet.setDailyTimesheetDate(dailyTsDate);

@@ -17,19 +17,19 @@
  */
 package com.axelor.apps.dailyts.db.repo;
 
+import com.axelor.apps.businessproject.db.repo.TimesheetBusinessProjectRepository;
 import com.axelor.apps.dailyts.service.timesheet.DailyTimesheetService;
 import com.axelor.apps.hr.db.DailyTimesheet;
 import com.axelor.apps.hr.db.Timesheet;
 import com.axelor.apps.hr.db.TimesheetLine;
 import com.axelor.apps.hr.db.repo.DailyTimesheetRepository;
-import com.axelor.apps.hr.db.repo.TimesheetHRRepository;
 import com.axelor.apps.hr.service.timesheet.TimesheetLineComputeNameService;
 import com.axelor.apps.hr.service.timesheet.TimesheetPeriodComputationService;
 import com.axelor.inject.Beans;
 import com.google.inject.Inject;
 import java.util.List;
 
-public class TimesheetDailytsRepository extends TimesheetHRRepository {
+public class TimesheetDailytsRepository extends TimesheetBusinessProjectRepository {
 
   @Inject
   public TimesheetDailytsRepository(

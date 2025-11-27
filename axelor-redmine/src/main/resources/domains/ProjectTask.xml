@@ -21,6 +21,9 @@
 
     <finder-method name="findByRedmineId" using="redmineId"/>
 
+    <entity-listener
+      class="com.axelor.apps.redmine.db.repo.ProjectTaskRedmineListner"/>
+
   </entity>
 
 </domain-models>

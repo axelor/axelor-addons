@@ -22,6 +22,8 @@ import static com.axelor.apps.base.service.administration.AbstractBatch.FETCH_LI
 import com.axelor.apps.base.AxelorException;
 import com.axelor.apps.base.db.repo.FrequencyRepository;
 import com.axelor.apps.base.db.repo.PriceListLineRepository;
+import com.axelor.apps.base.service.CurrencyScaleService;
+import com.axelor.apps.base.service.CurrencyService;
 import com.axelor.apps.base.service.FrequencyService;
 import com.axelor.apps.base.service.PartnerPriceListService;
 import com.axelor.apps.base.service.PriceListService;
@@ -71,8 +73,9 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
       TimesheetLineRepository timesheetLineRepository,
       ProjectTimeUnitService projectTimeUnitService,
       TaskTemplateService taskTemplateService,
+      CurrencyService currencyService,
+      CurrencyScaleService currencyScaleService,
       ProjectVersionRepository projectVersionRepository) {
-
     super(
         projectTaskRepo,
         frequencyRepo,
@@ -88,7 +91,9 @@ public class ProjectTaskRedmineServiceImpl extends ProjectTaskBusinessSupportSer
         productCompanyService,
         timesheetLineRepository,
         projectTimeUnitService,
-        taskTemplateService);
+        taskTemplateService,
+        currencyService,
+        currencyScaleService);
     this.projectVersionRepository = projectVersionRepository;
   }
 
