@@ -13,5 +13,9 @@ axelor {
 }
 
 dependencies {
-  api project(":modules:axelor-customer-portal")
+  if (file("../../axelor-open-suite").exists()) {
+    api project(":modules:axelor-customer-portal")
+  } else {
+    api "com.axelor.apps:axelor-customer-portal:${openSuiteVersion}"
+  }
 }
