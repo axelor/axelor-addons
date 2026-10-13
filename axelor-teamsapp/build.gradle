@@ -10,5 +10,9 @@ axelor {
 }
 
 dependencies {
-	api project(":modules:axelor-project")
+	if (file("../../axelor-open-suite").exists()) {
+		api project(":modules:axelor-project")
+	} else {
+		api "com.axelor.apps:axelor-project:${openSuiteVersion}"
+	}
 }

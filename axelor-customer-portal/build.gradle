@@ -13,9 +13,16 @@ axelor {
 }
 
 dependencies {
-  api project(":modules:axelor-business-production")
-  api project(":modules:axelor-business-support")
-  api project(":modules:axelor-client-portal")
+
+  if (file("../../axelor-open-suite").exists()) {
+    api project(":modules:axelor-business-production")
+    api project(":modules:axelor-business-support")
+    api project(":modules:axelor-client-portal")
+  } else {
+    api "com.axelor.apps:axelor-business-production:${openSuiteVersion}"
+    api "com.axelor.apps:axelor-business-support:${openSuiteVersion}"
+    api "com.axelor.apps:axelor-client-portal:${openSuiteVersion}"
+  }
 
   implementation "com.stripe:stripe-java:20.72.0"
   implementation "com.paypal.sdk:checkout-sdk:1.0.2"

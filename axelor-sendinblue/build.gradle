@@ -13,7 +13,11 @@ axelor {
 }
 
 dependencies {
-    api project(":modules:axelor-marketing")
+    if (file("../../axelor-open-suite").exists()) {
+        api project(":modules:axelor-marketing")
+    } else {
+        api "com.axelor.apps:axelor-marketing:${openSuiteVersion}"
+    }
 
     implementation libs.commons_lang3
     implementation libs.sendinblue
